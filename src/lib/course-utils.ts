@@ -159,3 +159,119 @@ export function generateCertificateNumber(): string {
   const rand = crypto.randomBytes(4).toString("hex").toUpperCase();
   return `LL-${ts}-${rand}`;
 }
+
+/**
+ * Default certificate settings used when a course has no explicit
+ * CertificateTemplate configured. The admin can either:
+ *   - Leave the course without a template → this default is used
+ *   - Create a template with isEnabled=true  → the template is used
+ *   - Create a template with isEnabled=false → no certificate is issued
+ */
+export const DEFAULT_CERTIFICATE = {
+  title: "Certificate of Completion",
+  bodyText:
+    "This certificate is proudly presented to {{studentName}} for successfully completing the course {{courseName}}.",
+  organizationName: "Lumina Learning",
+};
+
+/**
+ * Issue a certificate to a student for a completed course.
+ *
+ * This is called automatically when the student completes the LAST required
+ * video lesson in a course. It handles three scenarios:
+ *
+ *   1. Course has a CertificateTemplate with isEnabled=true → use the template
+ *   2. Course has a CertificateTemplate with isEnabled=false → do NOT issue
+ *   3. Course has NO template → auto-generate using defaults (student name,
+ *      course name, organization name)
+ *
+ * The function is idempotent — if a certificate already exists for the
+ * (studentId, courseId) pair, it returns the existing one without creating
+ * a duplicate.
+ *
+ * Returns `{ issued: boolean; certificateId: string | null; alreadyExisted: boolean }`.
+ */
+export async function issueCertificateIfNeeded(
+  studentId: string,
+  courseId: string
+): Promise<{
+  issued: boolean;
+  certificateId: string | null;
+  alreadyExisted: boolean;
+}> {
+  // 1. Check if a certificate already exists (idempotent — no duplicates)
+  const existing = await db.certificate.findUnique({
+    where: { studentId_courseId: { studentId, courseId } },
+    select: { id: true },
+  });
+  if (existing) {
+    return { issued: false, certificateId: existing.id, alreadyExisted: true };
+  }
+
+  // 2. Verify the course is actually completed (all required videos watched)
+  const completed = await isCourseCompletedByStudent(studentId, courseId);
+  if (!completed) {
+    return { issued: false, certificateId: null, alreadyExisted: false };
+  }
+
+  // 3. Fetch the course + any certificate template
+  const course = await db.course.findUnique({
+    where: { id: courseId },
+    select: {
+      id: true,
+      title: true,
+      certificateTemplate: true,
+    },
+  });
+  if (!course) return { issued: false, certificateId: null, alreadyExisted: false };
+
+  // 4. Fetch the student name
+  const student = await db.user.findUnique({
+    where: { id: studentId },
+    select: { name: true },
+  });
+  if (!student) return { issued: false, certificateId: null, alreadyExisted: false };
+
+  // 5. Determine which template to use
+  const tmpl = course.certificateTemplate;
+  // If a template exists but is explicitly disabled → do not issue
+  if (tmpl && !tmpl.isEnabled) {
+    return { issued: false, certificateId: null, alreadyExisted: false };
+  }
+
+  // Use the template if it exists; otherwise fall back to defaults
+  const certTitle = tmpl?.title || DEFAULT_CERTIFICATE.title;
+  const certBodyText = tmpl?.bodyText || DEFAULT_CERTIFICATE.bodyText;
+  const orgName = tmpl?.organizationName || DEFAULT_CERTIFICATE.organizationName;
+
+  // 6. Generate the certificate
+  const certNumber = generateCertificateNumber();
+  const issueDateStr = new Date().toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+
+  // Replace placeholders in the body text
+  const renderedText = certBodyText
+    .replace(/\{\{studentName\}\}/g, student.name)
+    .replace(/\{\{courseName\}\}/g, course.title)
+    .replace(/\{\{issueDate\}\}/g, issueDateStr)
+    .replace(/\{\{certificateNumber\}\}/g, certNumber)
+    .replace(/\{\{organizationName\}\}/g, orgName);
+
+  const cert = await db.certificate.create({
+    data: {
+      studentId,
+      courseId,
+      templateTitle: certTitle,
+      templateText: renderedText,
+      organizationName: orgName,
+      certificateNumber: certNumber,
+      issuedAt: new Date(),
+    },
+  });
+
+  return { issued: true, certificateId: cert.id, alreadyExisted: false };
+}
+

@@ -544,6 +544,8 @@ function VideoPlayer({
           progress: VideoProgressInfo;
           justCompleted: boolean;
           rejectedCompletion: boolean;
+          certificateIssued: boolean;
+          certificateId: string | null;
         }>("/api/student/progress", {
           videoId: video.id,
           lastPosition: videoRef.current?.currentTime || 0,
@@ -565,6 +567,14 @@ function VideoPlayer({
             variant: "destructive",
           });
         }
+        // ─── Certificate auto-issued upon course completion ───
+        if (res.certificateIssued && res.certificateId) {
+          toast({
+            title: "🎉 Certificate Issued!",
+            description:
+              "Congratulations! You've completed the course and your certificate has been automatically generated. View it in My Certificates.",
+          });
+        }
       } catch {
         // apiPost already surfaces errors
       } finally {
@@ -582,6 +592,8 @@ function VideoPlayer({
         progress: VideoProgressInfo;
         justCompleted: boolean;
         rejectedCompletion: boolean;
+        certificateIssued: boolean;
+        certificateId: string | null;
       }>("/api/student/progress", {
         videoId: video.id,
         lastPosition: durationRef.current,
@@ -607,6 +619,14 @@ function VideoPlayer({
           description:
             "You need to keep the video playing for at least 85% of its duration.",
           variant: "destructive",
+        });
+      }
+      // Certificate auto-issued upon course completion
+      if (res.certificateIssued && res.certificateId) {
+        toast({
+          title: "🎉 Certificate Issued!",
+          description:
+            "Congratulations! You've completed the course and your certificate has been automatically generated. View it in My Certificates.",
         });
       }
     } catch {

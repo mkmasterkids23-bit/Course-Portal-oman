@@ -5,7 +5,7 @@ import {
   handleAuthError,
   errorResponse,
 } from "@/lib/auth";
-import { canStudentAccessCourse } from "@/lib/course-utils";
+import { canStudentAccessCourse, issueCertificateIfNeeded } from "@/lib/course-utils";
 
 /**
  * Video progress tracking with strict completion rules.
@@ -101,6 +101,28 @@ export async function POST(req: Request) {
       },
     });
 
+    // ─── Auto-issue certificate when the course is completed ───
+    // When a video is marked complete (justCompleted), check if this was the
+    // LAST required video. If so, automatically issue a certificate:
+    //   - If the course has a certificate template → use it
+    //   - If no template exists → auto-generate with defaults (student name,
+    //     course name, organization name)
+    //   - If a template exists but is disabled → don't issue
+    // The function is idempotent (won't create duplicates).
+    let certificateIssued = false;
+    let certificateId: string | null = null;
+    const justCompletedTransition = isCompleted && !existing?.isCompleted;
+    if (justCompletedTransition) {
+      try {
+        const result = await issueCertificateIfNeeded(user.id, video.courseId);
+        certificateIssued = result.issued;
+        certificateId = result.certificateId;
+      } catch (e) {
+        // Don't fail the progress save if certificate issuance fails
+        console.error("[student/progress] certificate issue error:", e);
+      }
+    }
+
     // Mark clientCompleted=false if backend disagrees — important for UX feedback.
     return NextResponse.json({
       progress: {
@@ -111,10 +133,13 @@ export async function POST(req: Request) {
         completedAt: progress.completedAt,
       },
       // Tell the client whether THIS update triggered a completion transition.
-      justCompleted: isCompleted && !existing?.isCompleted,
+      justCompleted: justCompletedTransition,
       // And whether the client's "isCompleted" hint was rejected.
       rejectedCompletion:
         clientCompleted === true && !isCompleted && !existing?.isCompleted,
+      // Certificate auto-issue result
+      certificateIssued,
+      certificateId,
     });
   } catch (e) {
     const authErr = await handleAuthError(e);

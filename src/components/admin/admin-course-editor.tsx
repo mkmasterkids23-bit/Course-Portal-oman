@@ -31,7 +31,7 @@ import { formatDate, formatDateTime, type SubscriptionPlanPublic } from "@/types
 import {
   ArrowLeft, Plus, Pencil, Trash2, ChevronUp, ChevronDown, Video as VideoIcon,
   FileText, ClipboardList, Award, Settings, BookOpen, Upload, Eye, EyeOff,
-  GripVertical, ExternalLink, Save,
+  GripVertical, ExternalLink, Save, Info,
 } from "lucide-react";
 
 interface CourseDetail {
@@ -1364,8 +1364,25 @@ function CertificateTab({ course, onRefresh }: { course: CourseDetail; onRefresh
             <CardDescription>Use placeholders for dynamic content.</CardDescription>
           </CardHeader>
           <CardContent className="p-0 space-y-3">
+            {/* Info banner explaining the three certificate modes */}
+            <div className="rounded-lg border border-accent/20 bg-accent/5 p-3">
+              <div className="flex items-start gap-2">
+                <Info className="h-4 w-4 text-accent shrink-0 mt-0.5" />
+                <div className="text-xs space-y-1.5">
+                  <p className="font-medium text-foreground">How certificates work</p>
+                  <p className="text-muted-foreground">
+                    Certificates are <strong>automatically issued</strong> to students when they complete all video lessons in this course. You have three options:
+                  </p>
+                  <ul className="space-y-1 text-muted-foreground pl-3">
+                    <li><strong>Save a template (enabled)</strong> → Your custom design is used.</li>
+                    <li><strong>Save a template (disabled)</strong> → No certificate is issued.</li>
+                    <li><strong>Don&apos;t save a template</strong> → A default certificate with the student&apos;s name is auto-generated.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
             <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
-              <Label htmlFor="c-enabled" className="text-sm">Enable certificates</Label>
+              <Label htmlFor="c-enabled" className="text-sm">Enable certificates for this course</Label>
               <Switch id="c-enabled" checked={isEnabled} onCheckedChange={setIsEnabled} />
             </div>
             <div className="space-y-1.5">

@@ -9,7 +9,7 @@ import {
 import {
   canStudentAccessCourse,
   isCourseCompletedByStudent,
-  generateCertificateNumber,
+  issueCertificateIfNeeded,
 } from "@/lib/course-utils";
 import { saveUploadedFile, ALLOWED_DOC_EXT, validateExt } from "@/lib/storage";
 
@@ -24,11 +24,7 @@ export async function POST(
     const assignment = await db.assignment.findUnique({
       where: { id },
       include: {
-        course: {
-          include: {
-            certificateTemplate: true,
-          },
-        },
+        course: { select: { id: true, title: true } },
       },
     });
     if (!assignment) return errorResponse("Assignment not found", 404);
@@ -117,53 +113,15 @@ export async function POST(
       },
     });
 
-    // Auto-issue certificate if template exists and is enabled
+    // Auto-issue certificate (idempotent — uses shared helper that handles
+    // template/no-template/disabled-template logic and prevents duplicates).
+    // The certificate may have already been issued when the course was completed;
+    // in that case this is a no-op that returns the existing certificate ID.
     let certificateIssued = false;
     let certificateId: string | undefined;
-    const tmpl = assignment.course.certificateTemplate;
-    if (tmpl && tmpl.isEnabled) {
-      const existingCert = await db.certificate.findUnique({
-        where: {
-          studentId_courseId: {
-            studentId: user.id,
-            courseId: assignment.courseId,
-          },
-        },
-        select: { id: true },
-      });
-      if (!existingCert) {
-        const certNumber = generateCertificateNumber();
-        const issueDateStr = new Date().toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "long",
-          year: "numeric",
-        });
-        const renderedText = tmpl.bodyText
-          .replace(/\{\{studentName\}\}/g, user.name)
-          .replace(/\{\{courseName\}\}/g, assignment.course.title)
-          .replace(/\{\{issueDate\}\}/g, issueDateStr)
-          .replace(/\{\{certificateNumber\}\}/g, certNumber)
-          .replace(/\{\{organizationName\}\}/g, tmpl.organizationName);
-
-        const cert = await db.certificate.create({
-          data: {
-            studentId: user.id,
-            courseId: assignment.courseId,
-            templateTitle: tmpl.title,
-            templateText: renderedText,
-            organizationName: tmpl.organizationName,
-            certificateNumber: certNumber,
-            issuedAt: new Date(),
-          },
-        });
-        certificateIssued = true;
-        certificateId = cert.id;
-      } else {
-        // Already had a certificate from a previous submission — surface its id.
-        certificateIssued = true;
-        certificateId = existingCert.id;
-      }
-    }
+    const certResult = await issueCertificateIfNeeded(user.id, assignment.courseId);
+    certificateIssued = certResult.issued || certResult.alreadyExisted;
+    certificateId = certResult.certificateId || undefined;
 
     return NextResponse.json({
       submission: {
