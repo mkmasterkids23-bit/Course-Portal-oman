@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
+  // Puppeteer ships native binaries that must not be bundled by webpack.
+  // This tells Next.js to resolve them at runtime from node_modules instead.
+  serverExternalPackages: ["puppeteer"],
 };
 
 export default nextConfig;

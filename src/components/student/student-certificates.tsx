@@ -145,7 +145,7 @@ export function StudentCertificates() {
                 >
                   <a
                     href={`/api/student/certificates/${c.id}/pdf`}
-                    target="_blank"
+                    download
                     rel="noreferrer"
                   >
                     <Download className="h-4 w-4" /> PDF
@@ -169,7 +169,7 @@ export function StudentCertificates() {
               <Button asChild size="sm" className="gap-2 shadow-sm">
                 <a
                   href={`/api/student/certificates/${previewCert.id}/pdf`}
-                  target="_blank"
+                  download
                   rel="noreferrer"
                 >
                   <Download className="h-4 w-4" /> Download PDF
