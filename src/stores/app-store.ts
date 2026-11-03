@@ -47,7 +47,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   setAuthLoading: (b) => set({ authLoading: b }),
   refreshUser: async () => {
     try {
-      const res = await fetch("/api/auth/me", { cache: "no-store" });
+      const res = await fetch("/api/auth/me", {
+        cache: "no-store",
+        credentials: "include",
+      });
       if (!res.ok) {
         set({ user: null });
         return;

@@ -35,7 +35,7 @@ export function useApiFetch<T>(
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setError(null);
-    fetch(url, { cache: "no-store" })
+    fetch(url, { cache: "no-store", credentials: "include" })
       .then(async (res) => {
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || `Request failed (${res.status})`);
@@ -71,7 +71,7 @@ export async function apiPost<T = any>(
     method,
     headers: opts?.rawBody ? undefined : { "Content-Type": "application/json" },
     body: opts?.rawBody ? (body as BodyInit) : body ? JSON.stringify(body) : undefined,
-    credentials: "same-origin",
+    credentials: "include",
   });
   const json = await res.json();
   if (!res.ok) {
@@ -89,7 +89,7 @@ export async function apiUpload<T = any>(url: string, formData: FormData): Promi
   const res = await fetch(url, {
     method: "POST",
     body: formData,
-    credentials: "same-origin",
+    credentials: "include",
   });
   const json = await res.json();
   if (!res.ok) {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { hashPassword, signSession, SESSION_COOKIE } from "@/lib/auth/server";
+import { SESSION_COOKIE_OPTIONS } from "@/lib/auth/cookie-options";
 import { addDurationToDate } from "@/lib/course-utils";
 import { z } from "zod";
 
@@ -83,13 +84,7 @@ export async function POST(req: Request) {
         profilePhoto: null,
       },
     });
-    res.cookies.set(SESSION_COOKIE, token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
+    res.cookies.set(SESSION_COOKIE, token, SESSION_COOKIE_OPTIONS);
     return res;
   } catch (e) {
     console.error("[register]", e);
