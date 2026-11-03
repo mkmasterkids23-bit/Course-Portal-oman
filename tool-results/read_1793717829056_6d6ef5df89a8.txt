@@ -1,0 +1,904 @@
+     1→"use client";
+     2→
+     3→import { useEffect, useMemo, useState } from "react";
+     4→import { Card, CardContent } from "@/components/ui/card";
+     5→import { Button } from "@/components/ui/button";
+     6→import { Input } from "@/components/ui/input";
+     7→import { Label } from "@/components/ui/label";
+     8→import { Badge } from "@/components/ui/badge";
+     9→import { Skeleton } from "@/components/ui/skeleton";
+    10→import { Textarea } from "@/components/ui/textarea";
+    11→import {
+    12→  Select,
+    13→  SelectContent,
+    14→  SelectItem,
+    15→  SelectTrigger,
+    16→  SelectValue,
+    17→} from "@/components/ui/select";
+    18→import {
+    19→  Table,
+    20→  TableBody,
+    21→  TableCell,
+    22→  TableHead,
+    23→  TableHeader,
+    24→  TableRow,
+    25→} from "@/components/ui/table";
+    26→import {
+    27→  Dialog,
+    28→  DialogContent,
+    29→  DialogDescription,
+    30→  DialogFooter,
+    31→  DialogHeader,
+    32→  DialogTitle,
+    33→} from "@/components/ui/dialog";
+    34→import {
+    35→  Sheet,
+    36→  SheetContent,
+    37→  SheetDescription,
+    38→  SheetHeader,
+    39→  SheetTitle,
+    40→} from "@/components/ui/sheet";
+    41→import {
+    42→  AlertDialog,
+    43→  AlertDialogAction,
+    44→  AlertDialogCancel,
+    45→  AlertDialogContent,
+    46→  AlertDialogDescription,
+    47→  AlertDialogFooter,
+    48→  AlertDialogHeader,
+    49→  AlertDialogTitle,
+    50→} from "@/components/ui/alert-dialog";
+    51→import {
+    52→  DropdownMenu,
+    53→  DropdownMenuContent,
+    54→  DropdownMenuItem,
+    55→  DropdownMenuLabel,
+    56→  DropdownMenuSeparator,
+    57→  DropdownMenuTrigger,
+    58→} from "@/components/ui/dropdown-menu";
+    59→import { EmptyState } from "@/components/shared/empty-state";
+    60→import { useApiFetch, apiPost } from "@/hooks/use-api";
+    61→import { useAppStore } from "@/stores/app-store";
+    62→import { toast } from "@/hooks/use-toast";
+    63→import { formatDate, formatDateTime, type SubscriptionPlanPublic } from "@/types";
+    64→import {
+    65→  Users, Search, Plus, MoreHorizontal, Eye, Pencil, Trash2, Mail,
+    66→  Phone, Calendar, Shield, Award, ClipboardList, BookOpen, User as UserIcon,
+    67→} from "lucide-react";
+    68→
+    69→interface StudentRow {
+    70→  id: string;
+    71→  name: string;
+    72→  email: string;
+    73→  phone: string | null;
+    74→  createdAt: string;
+    75→  subscription: {
+    76→    planName: string;
+    77→    startDate: string;
+    78→    expiryDate: string;
+    79→    status: "ACTIVE" | "EXPIRED";
+    80→    planId: string;
+    81→  } | null;
+    82→}
+    83→
+    84→interface StudentsResponse {
+    85→  students: StudentRow[];
+    86→}
+    87→
+    88→interface PlansResponse {
+    89→  plans: SubscriptionPlanPublic[];
+    90→}
+    91→
+    92→interface StudentProfile {
+    93→  student: {
+    94→    id: string;
+    95→    name: string;
+    96→    email: string;
+    97→    phone: string | null;
+    98→    bio: string | null;
+    99→    profilePhoto: string | null;
+   100→    createdAt: string;
+   101→  };
+   102→  subscription: {
+   103→    id: string;
+   104→    planId: string;
+   105→    planName: string;
+   106→    planPrice: number;
+   107→    planCurrency: string;
+   108→    planDuration: number;
+   109→    planDurationUnit: string;
+   110→    startDate: string;
+   111→    expiryDate: string;
+   112→    status: "ACTIVE" | "EXPIRED";
+   113→  } | null;
+   114→  availableCourses: {
+   115→    id: string;
+   116→    title: string;
+   117→    thumbnail: string | null;
+   118→    category: string | null;
+   119→    accessType: "FREE" | "PAID";
+   120→    accessible: boolean;
+   121→  }[];
+   122→  submissions: {
+   123→    id: string;
+   124→    assignmentTitle: string;
+   125→    courseTitle: string;
+   126→    submittedAt: string;
+   127→    status: "SUBMITTED" | "REVIEWED";
+   128→    fileUrl: string;
+   129→  }[];
+   130→  certificates: {
+   131→    id: string;
+   132→    courseTitle: string;
+   133→    certificateNumber: string;
+   134→    issuedAt: string;
+   135→    templateTitle: string;
+   136→  }[];
+   137→  stats: {
+   138→    accessibleCourseCount: number;
+   139→    submissionsCount: number;
+   140→    certificatesCount: number;
+   141→  };
+   142→}
+   143→
+   144→const PAGE_SIZE = 10;
+   145→
+   146→export function AdminStudents() {
+   147→  const query = useAppStore((s) => s.query);
+   148→  const [search, setSearch] = useState("");
+   149→  const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "EXPIRED">("ALL");
+   150→  const [planFilter, setPlanFilter] = useState<string>("ALL");
+   151→  const [page, setPage] = useState(1);
+   152→  const [addOpen, setAddOpen] = useState(false);
+   153→  const [editOpen, setEditOpen] = useState(false);
+   154→  const [profileId, setProfileId] = useState<string | null>(null);
+   155→  const [deleteTarget, setDeleteTarget] = useState<StudentRow | null>(null);
+   156→  const [editTarget, setEditTarget] = useState<StudentRow | null>(null);
+   157→
+   158→  const { data: plansData } = useApiFetch<PlansResponse>("/api/public/plans");
+   159→
+   160→  // Build query string
+   161→  const qs = useMemo(() => {
+   162→    const p = new URLSearchParams();
+   163→    if (search.trim()) p.set("q", search.trim());
+   164→    if (statusFilter !== "ALL") p.set("status", statusFilter);
+   165→    if (planFilter !== "ALL") p.set("planId", planFilter);
+   166→    const s = p.toString();
+   167→    return s ? `?${s}` : "";
+   168→  }, [search, statusFilter, planFilter]);
+   169→
+   170→  const { data, loading, error, refetch } = useApiFetch<StudentsResponse>(
+   171→    qs ? `/api/admin/students${qs}` : "/api/admin/students"
+   172→  );
+   173→
+   174→  // Auto-open Add dialog when query.action=new — React 19 "store previous value" pattern
+   175→  const [lastAction, setLastAction] = useState<string | undefined>(undefined);
+   176→  if (query.action !== lastAction) {
+   177→    setLastAction(query.action);
+   178→    if (query.action === "new") setAddOpen(true);
+   179→  }
+   180→
+   181→  const students = data?.students || [];
+   182→  const totalPages = Math.max(1, Math.ceil(students.length / PAGE_SIZE));
+   183→  const currentPage = Math.min(Math.max(1, page), totalPages);
+   184→  const pageItems = students.slice(
+   185→    (currentPage - 1) * PAGE_SIZE,
+   186→    currentPage * PAGE_SIZE
+   187→  );
+   188→
+   189→  return (
+   190→    <div className="space-y-4">
+   191→      {/* Toolbar */}
+   192→      <Card className="p-4">
+   193→        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+   194→          <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
+   195→            <div className="relative flex-1">
+   196→              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+   197→              <Input
+   198→                value={search}
+   199→                onChange={(e) => {
+   200→                  setSearch(e.target.value);
+   201→                  setPage(1);
+   202→                }}
+   203→                placeholder="Search by name, email or phone…"
+   204→                className="pl-9"
+   205→                aria-label="Search students"
+   206→              />
+   207→            </div>
+   208→            <Select
+   209→              value={statusFilter}
+   210→              onValueChange={(v) => {
+   211→                setStatusFilter(v as "ALL" | "ACTIVE" | "EXPIRED");
+   212→                setPage(1);
+   213→              }}
+   214→            >
+   215→              <SelectTrigger className="w-full sm:w-[140px]" aria-label="Filter by status">
+   216→                <SelectValue placeholder="All statuses" />
+   217→              </SelectTrigger>
+   218→              <SelectContent>
+   219→                <SelectItem value="ALL">All statuses</SelectItem>
+   220→                <SelectItem value="ACTIVE">Active</SelectItem>
+   221→                <SelectItem value="EXPIRED">Expired</SelectItem>
+   222→              </SelectContent>
+   223→            </Select>
+   224→            <Select
+   225→              value={planFilter}
+   226→              onValueChange={(v) => {
+   227→                setPlanFilter(v);
+   228→                setPage(1);
+   229→              }}
+   230→            >
+   231→              <SelectTrigger className="w-full sm:w-[180px]" aria-label="Filter by plan">
+   232→                <SelectValue placeholder="All plans" />
+   233→              </SelectTrigger>
+   234→              <SelectContent>
+   235→                <SelectItem value="ALL">All plans</SelectItem>
+   236→                {(plansData?.plans || []).map((p) => (
+   237→                  <SelectItem key={p.id} value={p.id}>
+   238→                    {p.name}
+   239→                  </SelectItem>
+   240→                ))}
+   241→              </SelectContent>
+   242→            </Select>
+   243→          </div>
+   244→          <Button className="gap-2" onClick={() => setAddOpen(true)}>
+   245→            <Plus className="h-4 w-4" /> Add Student
+   246→          </Button>
+   247→        </div>
+   248→      </Card>
+   249→
+   250→      {/* Content */}
+   251→      <Card className="p-0 overflow-hidden">
+   252→        {loading ? (
+   253→          <div className="space-y-2 p-4">
+   254→            {Array.from({ length: 6 }).map((_, i) => (
+   255→              <Skeleton key={i} className="h-12 w-full" />
+   256→            ))}
+   257→          </div>
+   258→        ) : error ? (
+   259→          <EmptyState
+   260→            className="m-4"
+   261→            icon={<Users className="h-5 w-5" />}
+   262→            title="Couldn't load students"
+   263→            description={error}
+   264→          />
+   265→        ) : students.length === 0 ? (
+   266→          <EmptyState
+   267→            className="m-4"
+   268→            icon={<Users className="h-5 w-5" />}
+   269→            title="No students yet"
+   270→            description="When students register, they will appear here."
+   271→            action={<Button onClick={() => setAddOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> Add Student</Button>}
+   272→          />
+   273→        ) : (
+   274→          <>
+   275→            <Table>
+   276→              <TableHeader>
+   277→                <TableRow>
+   278→                  <TableHead>Student</TableHead>
+   279→                  <TableHead>Plan</TableHead>
+   280→                  <TableHead className="hidden md:table-cell">Start</TableHead>
+   281→                  <TableHead>Expiry</TableHead>
+   282→                  <TableHead>Status</TableHead>
+   283→                  <TableHead className="text-right">Actions</TableHead>
+   284→                </TableRow>
+   285→              </TableHeader>
+   286→              <TableBody>
+   287→                {pageItems.map((s) => (
+   288→                  <TableRow
+   289→                    key={s.id}
+   290→                    className="cursor-pointer"
+   291→                    onClick={() => setProfileId(s.id)}
+   292→                  >
+   293→                    <TableCell>
+   294→                      <div className="flex items-center gap-3">
+   295→                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0">
+   296→                          {s.name
+   297→                            .split(" ")
+   298→                            .map((w) => w[0])
+   299→                            .slice(0, 2)
+   300→                            .join("")
+   301→                            .toUpperCase()}
+   302→                        </div>
+   303→                        <div className="min-w-0">
+   304→                          <p className="font-medium text-foreground truncate">{s.name}</p>
+   305→                          <p className="text-xs text-muted-foreground truncate">{s.email}</p>
+   306→                        </div>
+   307→                      </div>
+   308→                    </TableCell>
+   309→                    <TableCell>
+   310→                      {s.subscription ? (
+   311→                        <span className="text-sm text-foreground">{s.subscription.planName}</span>
+   312→                      ) : (
+   313→                        <Badge variant="outline" className="text-muted-foreground">No plan</Badge>
+   314→                      )}
+   315→                    </TableCell>
+   316→                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+   317→                      {s.subscription ? formatDate(s.subscription.startDate) : "—"}
+   318→                    </TableCell>
+   319→                    <TableCell className="text-sm text-muted-foreground">
+   320→                      {s.subscription ? formatDate(s.subscription.expiryDate) : "—"}
+   321→                    </TableCell>
+   322→                    <TableCell>
+   323→                      {!s.subscription ? (
+   324→                        <Badge variant="outline" className="text-muted-foreground">No plan</Badge>
+   325→                      ) : s.subscription.status === "ACTIVE" ? (
+   326→                        <Badge className="bg-success/15 text-success hover:bg-success/20">Active</Badge>
+   327→                      ) : (
+   328→                        <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/15">Expired</Badge>
+   329→                      )}
+   330→                    </TableCell>
+   331→                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+   332→                      <DropdownMenu>
+   333→                        <DropdownMenuTrigger asChild>
+   334→                          <Button variant="ghost" size="icon" aria-label={`Actions for ${s.name}`}>
+   335→                            <MoreHorizontal className="h-4 w-4" />
+   336→                          </Button>
+   337→                        </DropdownMenuTrigger>
+   338→                        <DropdownMenuContent align="end">
+   339→                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+   340→                          <DropdownMenuItem onClick={() => setProfileId(s.id)}>
+   341→                            <Eye className="h-4 w-4" /> View profile
+   342→                          </DropdownMenuItem>
+   343→                          <DropdownMenuItem
+   344→                            onClick={() => {
+   345→                              setEditTarget(s);
+   346→                              setEditOpen(true);
+   347→                            }}
+   348→                          >
+   349→                            <Pencil className="h-4 w-4" /> Edit
+   350→                          </DropdownMenuItem>
+   351→                          <DropdownMenuSeparator />
+   352→                          <DropdownMenuItem
+   353→                            variant="destructive"
+   354→                            onClick={() => setDeleteTarget(s)}
+   355→                          >
+   356→                            <Trash2 className="h-4 w-4" /> Delete
+   357→                          </DropdownMenuItem>
+   358→                        </DropdownMenuContent>
+   359→                      </DropdownMenu>
+   360→                    </TableCell>
+   361→                  </TableRow>
+   362→                ))}
+   363→              </TableBody>
+   364→            </Table>
+   365→
+   366→            {/* Pagination */}
+   367→            <div className="flex items-center justify-between gap-2 border-t border-border p-3">
+   368→              <p className="text-xs text-muted-foreground">
+   369→                Showing {(currentPage - 1) * PAGE_SIZE + 1}–
+   370→                {Math.min(currentPage * PAGE_SIZE, students.length)} of {students.length}
+   371→              </p>
+   372→              <div className="flex gap-1">
+   373→                <Button
+   374→                  variant="outline"
+   375→                  size="sm"
+   376→                  disabled={currentPage === 1}
+   377→                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+   378→                >
+   379→                  Previous
+   380→                </Button>
+   381→                <span className="px-3 py-1 text-xs text-muted-foreground self-center">
+   382→                  Page {currentPage} / {totalPages}
+   383→                </span>
+   384→                <Button
+   385→                  variant="outline"
+   386→                  size="sm"
+   387→                  disabled={currentPage >= totalPages}
+   388→                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+   389→                >
+   390→                  Next
+   391→                </Button>
+   392→              </div>
+   393→            </div>
+   394→          </>
+   395→        )}
+   396→      </Card>
+   397→
+   398→      {/* Add Student Dialog */}
+   399→      <AddStudentDialog
+   400→        open={addOpen}
+   401→        onOpenChange={setAddOpen}
+   402→        plans={plansData?.plans || []}
+   403→        onCreated={() => {
+   404→          refetch();
+   405→          toast({ title: "Student created", description: "The student account has been created." });
+   406→        }}
+   407→      />
+   408→
+   409→      {/* Edit Student Dialog */}
+   410→      <EditStudentDialog
+   411→        open={editOpen}
+   412→        onOpenChange={setEditOpen}
+   413→        target={editTarget}
+   414→        plans={plansData?.plans || []}
+   415→        onSaved={() => {
+   416→          refetch();
+   417→          toast({ title: "Student updated", description: "Changes have been saved." });
+   418→        }}
+   419→      />
+   420→
+   421→      {/* Student Profile Sheet */}
+   422→      <StudentProfileSheet
+   423→        studentId={profileId}
+   424→        onOpenChange={(open) => {
+   425→          if (!open) setProfileId(null);
+   426→        }}
+   427→        plans={plansData?.plans || []}
+   428→        onAssigned={() => refetch()}
+   429→      />
+   430→
+   431→      {/* Delete Confirmation */}
+   432→      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+   433→        <AlertDialogContent>
+   434→          <AlertDialogHeader>
+   435→            <AlertDialogTitle>Delete student?</AlertDialogTitle>
+   436→            <AlertDialogDescription>
+   437→              This will permanently delete <strong>{deleteTarget?.name}</strong> and all related
+   438→              subscriptions, submissions, certificates and progress records. This action cannot be undone.
+   439→            </AlertDialogDescription>
+   440→          </AlertDialogHeader>
+   441→          <AlertDialogFooter>
+   442→            <AlertDialogCancel>Cancel</AlertDialogCancel>
+   443→            <AlertDialogAction
+   444→              className="bg-destructive text-white hover:bg-destructive/90"
+   445→              onClick={async () => {
+   446→                if (!deleteTarget) return;
+   447→                try {
+   448→                  await apiPost(`/api/admin/students/${deleteTarget.id}`, null, {
+   449→                    method: "DELETE",
+   450→                  });
+   451→                  toast({ title: "Student deleted", description: `${deleteTarget.name}'s account has been removed.` });
+   452→                  setDeleteTarget(null);
+   453→                  refetch();
+   454→                } catch {
+   455→                  /* toast shown by apiPost */
+   456→                }
+   457→              }}
+   458→            >
+   459→              Delete
+   460→            </AlertDialogAction>
+   461→          </AlertDialogFooter>
+   462→        </AlertDialogContent>
+   463→      </AlertDialog>
+   464→    </div>
+   465→  );
+   466→}
+   467→
+   468→// ---------- Add Student Dialog ----------
+   469→function AddStudentDialog({
+   470→  open,
+   471→  onOpenChange,
+   472→  plans,
+   473→  onCreated,
+   474→}: {
+   475→  open: boolean;
+   476→  onOpenChange: (v: boolean) => void;
+   477→  plans: SubscriptionPlanPublic[];
+   478→  onCreated: () => void;
+   479→}) {
+   480→  const [name, setName] = useState("");
+   481→  const [email, setEmail] = useState("");
+   482→  const [password, setPassword] = useState("");
+   483→  const [planId, setPlanId] = useState<string>("NONE");
+   484→  const [saving, setSaving] = useState(false);
+   485→
+   486→  useEffect(() => {
+   487→    if (open) {
+   488→      setName("");
+   489→      setEmail("");
+   490→      setPassword("");
+   491→      setPlanId("NONE");
+   492→    }
+   493→  }, [open]);
+   494→
+   495→  async function submit() {
+   496→    if (!name.trim() || !email.trim() || !password) {
+   497→      toast({ title: "Missing fields", description: "Name, email and password are required.", variant: "destructive" });
+   498→      return;
+   499→    }
+   500→    setSaving(true);
+   501→    try {
+   502→      await apiPost("/api/admin/students", {
+   503→        name: name.trim(),
+   504→        email: email.trim(),
+   505→        password,
+   506→        planId: planId === "NONE" ? undefined : planId,
+   507→      });
+   508→      onCreated();
+   509→      onOpenChange(false);
+   510→    } catch {
+   511→      /* toast shown by apiPost */
+   512→    } finally {
+   513→      setSaving(false);
+   514→    }
+   515→  }
+   516→
+   517→  return (
+   518→    <Dialog open={open} onOpenChange={onOpenChange}>
+   519→      <DialogContent className="sm:max-w-md">
+   520→        <DialogHeader>
+   521→          <DialogTitle>Add New Student</DialogTitle>
+   522→          <DialogDescription>Create a student account. You can optionally assign a plan now.</DialogDescription>
+   523→        </DialogHeader>
+   524→        <div className="space-y-3">
+   525→          <div className="space-y-1.5">
+   526→            <Label htmlFor="as-name">Full Name</Label>
+   527→            <Input id="as-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Aisha Khalid" />
+   528→          </div>
+   529→          <div className="space-y-1.5">
+   530→            <Label htmlFor="as-email">Email</Label>
+   531→            <Input id="as-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="aisha@example.com" />
+   532→          </div>
+   533→          <div className="space-y-1.5">
+   534→            <Label htmlFor="as-pass">Password</Label>
+   535→            <Input id="as-pass" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Minimum 6 characters" />
+   536→          </div>
+   537→          <div className="space-y-1.5">
+   538→            <Label htmlFor="as-plan">Subscription Plan (optional)</Label>
+   539→            <Select value={planId} onValueChange={setPlanId}>
+   540→              <SelectTrigger id="as-plan" className="w-full">
+   541→                <SelectValue placeholder="No plan — student only" />
+   542→              </SelectTrigger>
+   543→              <SelectContent>
+   544→                <SelectItem value="NONE">No plan — student only</SelectItem>
+   545→                {plans.map((p) => (
+   546→                  <SelectItem key={p.id} value={p.id}>
+   547→                    {p.name}
+   548→                  </SelectItem>
+   549→                ))}
+   550→              </SelectContent>
+   551→            </Select>
+   552→          </div>
+   553→        </div>
+   554→        <DialogFooter>
+   555→          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+   556→          <Button disabled={saving} onClick={submit}>
+   557→            {saving ? "Creating…" : "Create Student"}
+   558→          </Button>
+   559→        </DialogFooter>
+   560→      </DialogContent>
+   561→    </Dialog>
+   562→  );
+   563→}
+   564→
+   565→// ---------- Edit Student Dialog ----------
+   566→function EditStudentDialog({
+   567→  open,
+   568→  onOpenChange,
+   569→  target,
+   570→  onSaved,
+   571→}: {
+   572→  open: boolean;
+   573→  onOpenChange: (v: boolean) => void;
+   574→  target: StudentRow | null;
+   575→  plans: SubscriptionPlanPublic[];
+   576→  onSaved: () => void;
+   577→}) {
+   578→  const [name, setName] = useState("");
+   579→  const [phone, setPhone] = useState("");
+   580→  const [bio, setBio] = useState("");
+   581→  const [saving, setSaving] = useState(false);
+   582→
+   583→  useEffect(() => {
+   584→    if (target) {
+   585→      setName(target.name);
+   586→      setPhone(target.phone || "");
+   587→      setBio("");
+   588→    }
+   589→  }, [target]);
+   590→
+   591→  async function submit() {
+   592→    if (!target) return;
+   593→    if (!name.trim()) {
+   594→      toast({ title: "Name required", variant: "destructive" });
+   595→      return;
+   596→    }
+   597→    setSaving(true);
+   598→    try {
+   599→      await apiPost(`/api/admin/students/${target.id}`, {
+   600→        name: name.trim(),
+   601→        phone: phone.trim() || null,
+   602→        bio: bio.trim() || null,
+   603→      }, { method: "PUT" });
+   604→      onSaved();
+   605→      onOpenChange(false);
+   606→    } catch {
+   607→      /* toast */
+   608→    } finally {
+   609→      setSaving(false);
+   610→    }
+   611→  }
+   612→
+   613→  return (
+   614→    <Dialog open={open} onOpenChange={onOpenChange}>
+   615→      <DialogContent className="sm:max-w-md">
+   616→        <DialogHeader>
+   617→          <DialogTitle>Edit Student</DialogTitle>
+   618→          <DialogDescription>Update profile details for {target?.email}</DialogDescription>
+   619→        </DialogHeader>
+   620→        <div className="space-y-3">
+   621→          <div className="space-y-1.5">
+   622→            <Label htmlFor="es-name">Full Name</Label>
+   623→            <Input id="es-name" value={name} onChange={(e) => setName(e.target.value)} />
+   624→          </div>
+   625→          <div className="space-y-1.5">
+   626→            <Label htmlFor="es-phone">Phone</Label>
+   627→            <Input id="es-phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+968 9XXX XXXX" />
+   628→          </div>
+   629→          <div className="space-y-1.5">
+   630→            <Label htmlFor="es-bio">Bio</Label>
+   631→            <Textarea id="es-bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Short bio (optional)" rows={3} />
+   632→          </div>
+   633→        </div>
+   634→        <DialogFooter>
+   635→          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+   636→          <Button disabled={saving} onClick={submit}>
+   637→            {saving ? "Saving…" : "Save Changes"}
+   638→          </Button>
+   639→        </DialogFooter>
+   640→      </DialogContent>
+   641→    </Dialog>
+   642→  );
+   643→}
+   644→
+   645→// ---------- Student Profile Sheet ----------
+   646→function StudentProfileSheet({
+   647→  studentId,
+   648→  onOpenChange,
+   649→  plans,
+   650→  onAssigned,
+   651→}: {
+   652→  studentId: string | null;
+   653→  onOpenChange: (v: boolean) => void;
+   654→  plans: SubscriptionPlanPublic[];
+   655→  onAssigned: () => void;
+   656→}) {
+   657→  const { data, loading, error, refetch } = useApiFetch<StudentProfile>(
+   658→    studentId ? `/api/admin/students/${studentId}` : null,
+   659→    { skip: !studentId }
+   660→  );
+   661→  const [assignPlanId, setAssignPlanId] = useState<string>("NONE");
+   662→  const [assigning, setAssigning] = useState(false);
+   663→
+   664→  useEffect(() => {
+   665→    setAssignPlanId("NONE");
+   666→  }, [studentId]);
+   667→
+   668→  async function assignPlan() {
+   669→    if (!studentId || !data || assignPlanId === "NONE") return;
+   670→    setAssigning(true);
+   671→    try {
+   672→      await apiPost(`/api/admin/students/${studentId}`, { planId: assignPlanId }, { method: "PUT" });
+   673→      toast({
+   674→        title: "Plan assigned",
+   675→        description: `New active subscription created for ${data.student.name}.`,
+   676→      });
+   677→      setAssignPlanId("NONE");
+   678→      refetch();
+   679→      onAssigned();
+   680→    } catch {
+   681→      /* toast */
+   682→    } finally {
+   683→      setAssigning(false);
+   684→    }
+   685→  }
+   686→
+   687→  const open = !!studentId;
+   688→
+   689→  return (
+   690→    <Sheet open={open} onOpenChange={onOpenChange}>
+   691→      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+   692→        <SheetHeader>
+   693→          <SheetTitle>Student Profile</SheetTitle>
+   694→          <SheetDescription>Detailed view of the student&apos;s account and activity.</SheetDescription>
+   695→        </SheetHeader>
+   696→
+   697→        {loading ? (
+   698→          <div className="space-y-3 px-4 pb-6">
+   699→            <Skeleton className="h-20 w-full" />
+   700→            <Skeleton className="h-32 w-full" />
+   701→            <Skeleton className="h-32 w-full" />
+   702→          </div>
+   703→        ) : error ? (
+   704→          <div className="px-4 pb-6">
+   705→            <EmptyState icon={<UserIcon className="h-5 w-5" />} title="Couldn't load profile" description={error} />
+   706→          </div>
+   707→        ) : data ? (
+   708→          <div className="space-y-4 px-4 pb-6">
+   709→            {/* Basic info */}
+   710→            <div className="flex items-start gap-3 rounded-lg border border-border bg-card p-4">
+   711→              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold shrink-0">
+   712→                {data.student.name
+   713→                  .split(" ")
+   714→                  .map((w) => w[0])
+   715→                  .slice(0, 2)
+   716→                  .join("")
+   717→                  .toUpperCase()}
+   718→              </div>
+   719→              <div className="min-w-0 flex-1">
+   720→                <p className="font-heading font-semibold text-foreground truncate">{data.student.name}</p>
+   721→                <p className="text-sm text-muted-foreground flex items-center gap-1.5 truncate">
+   722→                  <Mail className="h-3.5 w-3.5" /> {data.student.email}
+   723→                </p>
+   724→                {data.student.phone && (
+   725→                  <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-0.5">
+   726→                    <Phone className="h-3.5 w-3.5" /> {data.student.phone}
+   727→                  </p>
+   728→                )}
+   729→                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
+   730→                  <Calendar className="h-3.5 w-3.5" /> Joined {formatDate(data.student.createdAt)}
+   731→                </p>
+   732→              </div>
+   733→            </div>
+   734→
+   735→            {/* Subscription */}
+   736→            <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+   737→              <div className="flex items-center justify-between">
+   738→                <h4 className="font-heading text-sm font-semibold text-foreground flex items-center gap-1.5">
+   739→                  <Shield className="h-4 w-4 text-accent" /> Subscription
+   740→                </h4>
+   741→                {data.subscription && (
+   742→                  data.subscription.status === "ACTIVE" ? (
+   743→                    <Badge className="bg-success/15 text-success">Active</Badge>
+   744→                  ) : (
+   745→                    <Badge className="bg-destructive/10 text-destructive">Expired</Badge>
+   746→                  )
+   747→                )}
+   748→              </div>
+   749→              {data.subscription ? (
+   750→                <div className="grid grid-cols-2 gap-2 text-sm">
+   751→                  <div>
+   752→                    <p className="text-xs text-muted-foreground">Plan</p>
+   753→                    <p className="font-medium text-foreground">{data.subscription.planName}</p>
+   754→                  </div>
+   755→                  <div>
+   756→                    <p className="text-xs text-muted-foreground">Price</p>
+   757→                    <p className="font-medium text-foreground">
+   758→                      {data.subscription.planPrice.toLocaleString()} {data.subscription.planCurrency} /{" "}
+   759→                      {data.subscription.planDuration} {data.subscription.planDurationUnit.toLowerCase()}
+   760→                    </p>
+   761→                  </div>
+   762→                  <div>
+   763→                    <p className="text-xs text-muted-foreground">Start</p>
+   764→                    <p className="font-medium text-foreground">{formatDate(data.subscription.startDate)}</p>
+   765→                  </div>
+   766→                  <div>
+   767→                    <p className="text-xs text-muted-foreground">Expiry</p>
+   768→                    <p className="font-medium text-foreground">{formatDate(data.subscription.expiryDate)}</p>
+   769→                  </div>
+   770→                </div>
+   771→              ) : (
+   772→                <p className="text-sm text-muted-foreground">No subscription assigned.</p>
+   773→              )}
+   774→
+   775→              <div className="border-t border-border pt-3 space-y-2">
+   776→                <Label htmlFor="assign-plan" className="text-xs text-muted-foreground">
+   777→                  Assign / Replace Plan
+   778→                </Label>
+   779→                <div className="flex gap-2">
+   780→                  <Select value={assignPlanId} onValueChange={setAssignPlanId}>
+   781→                    <SelectTrigger id="assign-plan" className="flex-1">
+   782→                      <SelectValue placeholder="Select a plan…" />
+   783→                    </SelectTrigger>
+   784→                    <SelectContent>
+   785→                      <SelectItem value="NONE">No selection</SelectItem>
+   786→                      {plans.map((p) => (
+   787→                        <SelectItem key={p.id} value={p.id}>
+   788→                          {p.name}
+   789→                        </SelectItem>
+   790→                      ))}
+   791→                    </SelectContent>
+   792→                  </Select>
+   793→                  <Button
+   794→                    size="sm"
+   795→                    disabled={assigning || assignPlanId === "NONE"}
+   796→                    onClick={assignPlan}
+   797→                  >
+   798→                    {assigning ? "Assigning…" : "Assign"}
+   799→                  </Button>
+   800→                </div>
+   801→                <p className="text-xs text-muted-foreground">
+   802→                  Assigning a plan creates a new active subscription starting today.
+   803→                </p>
+   804→              </div>
+   805→            </div>
+   806→
+   807→            {/* Stats row */}
+   808→            <div className="grid grid-cols-3 gap-2">
+   809→              <div className="rounded-lg border border-border bg-card p-3 text-center">
+   810→                <BookOpen className="h-4 w-4 mx-auto text-accent" />
+   811→                <p className="font-heading text-lg font-bold text-foreground mt-1">
+   812→                  {data.stats.accessibleCourseCount}
+   813→                </p>
+   814→                <p className="text-xs text-muted-foreground">Accessible Courses</p>
+   815→              </div>
+   816→              <div className="rounded-lg border border-border bg-card p-3 text-center">
+   817→                <ClipboardList className="h-4 w-4 mx-auto text-accent" />
+   818→                <p className="font-heading text-lg font-bold text-foreground mt-1">
+   819→                  {data.stats.submissionsCount}
+   820→                </p>
+   821→                <p className="text-xs text-muted-foreground">Submissions</p>
+   822→              </div>
+   823→              <div className="rounded-lg border border-border bg-card p-3 text-center">
+   824→                <Award className="h-4 w-4 mx-auto text-accent" />
+   825→                <p className="font-heading text-lg font-bold text-foreground mt-1">
+   826→                  {data.stats.certificatesCount}
+   827→                </p>
+   828→                <p className="text-xs text-muted-foreground">Certificates</p>
+   829→              </div>
+   830→            </div>
+   831→
+   832→            {/* Accessible courses */}
+   833→            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+   834→              <h4 className="font-heading text-sm font-semibold text-foreground">Courses Access</h4>
+   835→              {data.availableCourses.length === 0 ? (
+   836→                <p className="text-sm text-muted-foreground">No published courses available.</p>
+   837→              ) : (
+   838→                <ul className="space-y-1 max-h-48 overflow-y-auto">
+   839→                  {data.availableCourses.slice(0, 8).map((c) => (
+   840→                    <li key={c.id} className="flex items-center justify-between gap-2 text-sm py-1">
+   841→                      <span className="text-foreground truncate">{c.title}</span>
+   842→                      {c.accessible ? (
+   843→                        <Badge variant="outline" className="bg-success/15 text-success">Accessible</Badge>
+   844→                      ) : (
+   845→                        <Badge variant="outline" className="text-muted-foreground">Locked</Badge>
+   846→                      )}
+   847→                    </li>
+   848→                  ))}
+   849→                </ul>
+   850→              )}
+   851→            </div>
+   852→
+   853→            {/* Submissions */}
+   854→            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+   855→              <h4 className="font-heading text-sm font-semibold text-foreground">Recent Submissions</h4>
+   856→              {data.submissions.length === 0 ? (
+   857→                <p className="text-sm text-muted-foreground">No submissions yet.</p>
+   858→              ) : (
+   859→                <ul className="space-y-1">
+   860→                  {data.submissions.slice(0, 5).map((s) => (
+   861→                    <li key={s.id} className="flex items-center justify-between gap-2 text-sm py-1">
+   862→                      <div className="min-w-0">
+   863→                        <p className="font-medium text-foreground truncate">{s.assignmentTitle}</p>
+   864→                        <p className="text-xs text-muted-foreground truncate">{s.courseTitle}</p>
+   865→                      </div>
+   866→                      <Badge variant="outline" className={
+   867→                        s.status === "REVIEWED"
+   868→                          ? "bg-accent/15 text-accent"
+   869→                          : "bg-warning/15 text-warning"
+   870→                      }>
+   871→                        {s.status}
+   872→                      </Badge>
+   873→                    </li>
+   874→                  ))}
+   875→                </ul>
+   876→              )}
+   877→            </div>
+   878→
+   879→            {/* Certificates */}
+   880→            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+   881→              <h4 className="font-heading text-sm font-semibold text-foreground">Certificates</h4>
+   882→              {data.certificates.length === 0 ? (
+   883→                <p className="text-sm text-muted-foreground">No certificates issued yet.</p>
+   884→              ) : (
+   885→                <ul className="space-y-1">
+   886→                  {data.certificates.map((c) => (
+   887→                    <li key={c.id} className="flex items-center justify-between gap-2 text-sm py-1">
+   888→                      <div className="min-w-0">
+   889→                        <p className="font-medium text-foreground truncate">{c.courseTitle}</p>
+   890→                        <p className="text-xs text-muted-foreground truncate">{c.certificateNumber}</p>
+   891→                      </div>
+   892→                      <span className="text-xs text-muted-foreground">{formatDate(c.issuedAt)}</span>
+   893→                    </li>
+   894→                  ))}
+   895→                </ul>
+   896→              )}
+   897→            </div>
+   898→          </div>
+   899→        ) : null}
+   900→      </SheetContent>
+   901→    </Sheet>
+   902→  );
+   903→}
+   904→

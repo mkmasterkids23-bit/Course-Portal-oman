@@ -116,7 +116,7 @@ export function AdminSubmissions() {
 
   return (
     <div className="space-y-4">
-      <Card className="p-4">
+      <Card className="border-border bg-card p-4 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative flex-1">
@@ -125,12 +125,12 @@ export function AdminSubmissions() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by student, assignment or course…"
-                className="pl-9"
+                className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Search submissions"
               />
             </div>
             <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as "ALL" | "SUBMITTED" | "REVIEWED")}>
-              <SelectTrigger className="w-full sm:w-[140px]" aria-label="Filter by status">
+              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[140px]" aria-label="Filter by status">
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
@@ -140,7 +140,7 @@ export function AdminSubmissions() {
               </SelectContent>
             </Select>
             <Select value={courseFilter} onValueChange={setCourseFilter}>
-              <SelectTrigger className="w-full sm:w-[180px]" aria-label="Filter by course">
+              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[180px]" aria-label="Filter by course">
                 <SelectValue placeholder="All courses" />
               </SelectTrigger>
               <SelectContent>
@@ -162,7 +162,7 @@ export function AdminSubmissions() {
         )}
       </Card>
 
-      <Card className="p-0 overflow-hidden">
+      <Card className="border-border bg-card p-0 shadow-sm overflow-hidden">
         {loading ? (
           <div className="space-y-2 p-4">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -181,27 +181,32 @@ export function AdminSubmissions() {
         ) : (
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead className="hidden md:table-cell">Course</TableHead>
-                <TableHead>Assignment</TableHead>
-                <TableHead className="hidden md:table-cell">Submitted</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Student</TableHead>
+                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Course</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Assignment</TableHead>
+                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Submitted</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {submissions.map((s) => (
-                <TableRow key={s.id}>
+                <TableRow key={s.id} className="hover:bg-muted/40">
                   <TableCell>
-                    <div className="min-w-0 max-w-[200px]">
-                      <p className="font-medium text-foreground truncate">{s.studentName}</p>
-                      <p className="text-xs text-muted-foreground truncate">{s.studentEmail}</p>
+                    <div className="flex items-center gap-3 min-w-0 max-w-[200px]">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0 ring-1 ring-border">
+                        {s.studentName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-foreground truncate">{s.studentName}</p>
+                        <p className="text-xs text-muted-foreground truncate">{s.studentEmail}</p>
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm text-foreground">{s.courseTitle}</TableCell>
+                  <TableCell className="hidden text-sm text-foreground md:table-cell">{s.courseTitle}</TableCell>
                   <TableCell className="text-sm text-foreground">{s.assignmentTitle}</TableCell>
-                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                  <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
                     {formatDateTime(s.submittedAt)}
                   </TableCell>
                   <TableCell>
@@ -217,24 +222,24 @@ export function AdminSubmissions() {
                         href={s.fileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-accent"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-accent"
                         aria-label="Download submission"
                       >
                         <Download className="h-3.5 w-3.5" />
                       </a>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" aria-label={`Actions for ${s.studentName}'s submission`}>
+                          <Button variant="ghost" size="icon" aria-label={`Actions for ${s.studentName}'s submission`} className="text-muted-foreground hover:text-foreground hover:bg-muted">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setViewId(s.id)}>
-                            <Eye className="h-4 w-4" /> View details
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem onClick={() => setViewId(s.id)} className="gap-2">
+                            <Eye className="h-4 w-4 text-muted-foreground" /> View details
                           </DropdownMenuItem>
                           {s.status === "SUBMITTED" && (
-                            <DropdownMenuItem onClick={() => setViewId(s.id)}>
-                              <CheckCircle2 className="h-4 w-4" /> Mark as reviewed
+                            <DropdownMenuItem onClick={() => setViewId(s.id)} className="gap-2">
+                              <CheckCircle2 className="h-4 w-4 text-muted-foreground" /> Mark as reviewed
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>
@@ -302,7 +307,7 @@ function SubmissionDetailDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Submission Details</DialogTitle>
+          <DialogTitle className="font-heading text-lg font-semibold">Submission Details</DialogTitle>
           <DialogDescription>
             {s ? `${s.student.name} — ${s.assignment.title}` : "Loading…"}
           </DialogDescription>
@@ -316,36 +321,41 @@ function SubmissionDetailDialog({
         ) : error ? (
           <EmptyState icon={<Inbox className="h-5 w-5" />} title="Couldn't load submission" description={error} />
         ) : s ? (
-          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
             {/* Student info */}
-            <div className="rounded-lg border border-border bg-card p-3">
-              <h4 className="font-heading text-sm font-semibold text-foreground mb-2">Student</h4>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <p className="text-xs text-muted-foreground">Name</p>
-                  <p className="font-medium text-foreground">{s.student.name}</p>
+            <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+              <h4 className="font-heading text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Student</h4>
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold shrink-0">
+                  {s.student.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Email</p>
-                  <p className="font-medium text-foreground truncate">{s.student.email}</p>
-                </div>
-                {s.student.phone && (
+                <div className="grid flex-1 grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="text-xs text-muted-foreground">Phone</p>
-                    <p className="font-medium text-foreground">{s.student.phone}</p>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Name</p>
+                    <p className="font-medium text-foreground mt-0.5">{s.student.name}</p>
                   </div>
-                )}
-                <div>
-                  <p className="text-xs text-muted-foreground">Joined</p>
-                  <p className="font-medium text-foreground">{formatDateTime(s.student.createdAt)}</p>
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Email</p>
+                    <p className="font-medium text-foreground mt-0.5 truncate">{s.student.email}</p>
+                  </div>
+                  {s.student.phone && (
+                    <div>
+                      <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Phone</p>
+                      <p className="font-medium text-foreground mt-0.5">{s.student.phone}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Joined</p>
+                    <p className="font-medium text-foreground mt-0.5">{formatDateTime(s.student.createdAt)}</p>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Assignment info */}
-            <div className="rounded-lg border border-border bg-card p-3">
-              <h4 className="font-heading text-sm font-semibold text-foreground mb-2">Assignment</h4>
-              <div className="space-y-1 text-sm">
+            <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+              <h4 className="font-heading text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Assignment</h4>
+              <div className="space-y-1.5 text-sm">
                 <p className="font-medium text-foreground">{s.assignment.title}</p>
                 <p className="text-xs text-muted-foreground">Course: {s.assignment.course.title}</p>
                 {s.assignment.dueDate && (
@@ -355,7 +365,7 @@ function SubmissionDetailDialog({
                   <p className="text-foreground mt-2">{s.assignment.description}</p>
                 )}
                 {s.assignment.instructions && (
-                  <div className="mt-2 rounded-md bg-muted/40 p-2 text-xs text-muted-foreground">
+                  <div className="mt-2 rounded-md bg-muted/40 p-3 text-xs text-muted-foreground border-l-2 border-accent/30">
                     {s.assignment.instructions}
                   </div>
                 )}
@@ -373,7 +383,7 @@ function SubmissionDetailDialog({
             </div>
 
             {/* Submission file */}
-            <div className="rounded-lg border border-border bg-card p-3">
+            <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="font-heading text-sm font-semibold text-foreground">Submitted Work</h4>
@@ -394,24 +404,24 @@ function SubmissionDetailDialog({
                   {s.status}
                 </Badge>
               </div>
-              <Separator className="my-2" />
+              <Separator className="my-3" />
               <a
                 href={s.fileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
               >
                 <Download className="h-4 w-4 text-accent" /> Download submission
               </a>
             </div>
 
             {/* Review form */}
-            <div className="rounded-lg border border-border bg-card p-3 space-y-3">
+            <div className="rounded-xl border border-border bg-card p-4 shadow-sm space-y-3">
               <h4 className="font-heading text-sm font-semibold text-foreground">Review</h4>
               <div className="space-y-1.5">
-                <Label htmlFor="sub-status">Status</Label>
+                <Label htmlFor="sub-status" className="text-xs font-medium text-muted-foreground">Status</Label>
                 <Select value={status} onValueChange={(v) => setStatus(v as "SUBMITTED" | "REVIEWED")}>
-                  <SelectTrigger id="sub-status" className="w-full">
+                  <SelectTrigger id="sub-status" className="w-full h-9 rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -421,18 +431,19 @@ function SubmissionDetailDialog({
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="sub-notes">Review Notes (visible to admin)</Label>
+                <Label htmlFor="sub-notes" className="text-xs font-medium text-muted-foreground">Review Notes (visible to admin)</Label>
                 <Textarea
                   id="sub-notes"
                   value={reviewNotes}
                   onChange={(e) => setReviewNotes(e.target.value)}
                   rows={4}
                   placeholder="Internal notes about this submission…"
+                  className="rounded-lg"
                 />
               </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                <Button disabled={saving} onClick={submitReview}>
+              <div className="flex justify-end gap-2 pt-1 border-t border-border">
+                <Button variant="outline" className="h-9 mt-3" onClick={() => onOpenChange(false)}>Cancel</Button>
+                <Button disabled={saving} className="h-9 mt-3" onClick={submitReview}>
                   {saving ? "Saving…" : "Save Review"}
                 </Button>
               </div>

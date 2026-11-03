@@ -189,7 +189,7 @@ export function AdminStudents() {
   return (
     <div className="space-y-4">
       {/* Toolbar */}
-      <Card className="p-4">
+      <Card className="border-border bg-card p-4 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative flex-1">
@@ -201,7 +201,7 @@ export function AdminStudents() {
                   setPage(1);
                 }}
                 placeholder="Search by name, email or phone…"
-                className="pl-9"
+                className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Search students"
               />
             </div>
@@ -212,7 +212,7 @@ export function AdminStudents() {
                 setPage(1);
               }}
             >
-              <SelectTrigger className="w-full sm:w-[140px]" aria-label="Filter by status">
+              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[140px]" aria-label="Filter by status">
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
@@ -228,7 +228,7 @@ export function AdminStudents() {
                 setPage(1);
               }}
             >
-              <SelectTrigger className="w-full sm:w-[180px]" aria-label="Filter by plan">
+              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[180px]" aria-label="Filter by plan">
                 <SelectValue placeholder="All plans" />
               </SelectTrigger>
               <SelectContent>
@@ -241,14 +241,14 @@ export function AdminStudents() {
               </SelectContent>
             </Select>
           </div>
-          <Button className="gap-2" onClick={() => setAddOpen(true)}>
+          <Button className="h-9 gap-2" onClick={() => setAddOpen(true)}>
             <Plus className="h-4 w-4" /> Add Student
           </Button>
         </div>
       </Card>
 
       {/* Content */}
-      <Card className="p-0 overflow-hidden">
+      <Card className="border-border bg-card p-0 shadow-sm overflow-hidden">
         {loading ? (
           <div className="space-y-2 p-4">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -274,25 +274,25 @@ export function AdminStudents() {
           <>
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Plan</TableHead>
-                  <TableHead className="hidden md:table-cell">Start</TableHead>
-                  <TableHead>Expiry</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Student</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Plan</TableHead>
+                  <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Start</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Expiry</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {pageItems.map((s) => (
                   <TableRow
                     key={s.id}
-                    className="cursor-pointer"
+                    className="cursor-pointer hover:bg-muted/40"
                     onClick={() => setProfileId(s.id)}
                   >
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold ring-1 ring-border shrink-0">
                           {s.name
                             .split(" ")
                             .map((w) => w[0])
@@ -308,12 +308,12 @@ export function AdminStudents() {
                     </TableCell>
                     <TableCell>
                       {s.subscription ? (
-                        <span className="text-sm text-foreground">{s.subscription.planName}</span>
+                        <span className="text-sm font-medium text-foreground">{s.subscription.planName}</span>
                       ) : (
                         <Badge variant="outline" className="text-muted-foreground">No plan</Badge>
                       )}
                     </TableCell>
-                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                    <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
                       {s.subscription ? formatDate(s.subscription.startDate) : "—"}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
@@ -331,27 +331,29 @@ export function AdminStudents() {
                     <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" aria-label={`Actions for ${s.name}`}>
+                          <Button variant="ghost" size="icon" aria-label={`Actions for ${s.name}`} className="text-muted-foreground hover:text-foreground hover:bg-muted">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => setProfileId(s.id)}>
-                            <Eye className="h-4 w-4" /> View profile
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => setProfileId(s.id)} className="gap-2">
+                            <Eye className="h-4 w-4 text-muted-foreground" /> View profile
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => {
                               setEditTarget(s);
                               setEditOpen(true);
                             }}
+                            className="gap-2"
                           >
-                            <Pencil className="h-4 w-4" /> Edit
+                            <Pencil className="h-4 w-4 text-muted-foreground" /> Edit
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             variant="destructive"
                             onClick={() => setDeleteTarget(s)}
+                            className="gap-2"
                           >
                             <Trash2 className="h-4 w-4" /> Delete
                           </DropdownMenuItem>
@@ -364,26 +366,28 @@ export function AdminStudents() {
             </Table>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between gap-2 border-t border-border p-3">
+            <div className="flex items-center justify-between gap-2 border-t border-border bg-muted/20 px-4 py-3">
               <p className="text-xs text-muted-foreground">
-                Showing {(currentPage - 1) * PAGE_SIZE + 1}–
-                {Math.min(currentPage * PAGE_SIZE, students.length)} of {students.length}
+                Showing <span className="font-medium text-foreground">{(currentPage - 1) * PAGE_SIZE + 1}</span>–
+                <span className="font-medium text-foreground">{Math.min(currentPage * PAGE_SIZE, students.length)}</span> of <span className="font-medium text-foreground">{students.length}</span>
               </p>
-              <div className="flex gap-1">
+              <div className="flex gap-1.5">
                 <Button
                   variant="outline"
                   size="sm"
+                  className="h-8"
                   disabled={currentPage === 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                 >
                   Previous
                 </Button>
-                <span className="px-3 py-1 text-xs text-muted-foreground self-center">
-                  Page {currentPage} / {totalPages}
+                <span className="px-3 py-1 text-xs font-medium text-muted-foreground self-center">
+                  Page <span className="text-foreground">{currentPage}</span> / {totalPages}
                 </span>
                 <Button
                   variant="outline"
                   size="sm"
+                  className="h-8"
                   disabled={currentPage >= totalPages}
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 >
@@ -518,26 +522,26 @@ function AddStudentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add New Student</DialogTitle>
+          <DialogTitle className="font-heading text-lg font-semibold">Add New Student</DialogTitle>
           <DialogDescription>Create a student account. You can optionally assign a plan now.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="as-name">Full Name</Label>
-            <Input id="as-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Aisha Khalid" />
+            <Label htmlFor="as-name" className="text-xs font-medium text-muted-foreground">Full Name</Label>
+            <Input id="as-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Aisha Khalid" className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="as-email">Email</Label>
-            <Input id="as-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="aisha@example.com" />
+            <Label htmlFor="as-email" className="text-xs font-medium text-muted-foreground">Email</Label>
+            <Input id="as-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="aisha@example.com" className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="as-pass">Password</Label>
-            <Input id="as-pass" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Minimum 6 characters" />
+            <Label htmlFor="as-pass" className="text-xs font-medium text-muted-foreground">Password</Label>
+            <Input id="as-pass" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Minimum 6 characters" className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="as-plan">Subscription Plan (optional)</Label>
+            <Label htmlFor="as-plan" className="text-xs font-medium text-muted-foreground">Subscription Plan (optional)</Label>
             <Select value={planId} onValueChange={setPlanId}>
-              <SelectTrigger id="as-plan" className="w-full">
+              <SelectTrigger id="as-plan" className="w-full h-9 rounded-lg">
                 <SelectValue placeholder="No plan — student only" />
               </SelectTrigger>
               <SelectContent>
@@ -552,8 +556,8 @@ function AddStudentDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button disabled={saving} onClick={submit}>
+          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button disabled={saving} className="h-9" onClick={submit}>
             {saving ? "Creating…" : "Create Student"}
           </Button>
         </DialogFooter>
@@ -614,26 +618,26 @@ function EditStudentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit Student</DialogTitle>
+          <DialogTitle className="font-heading text-lg font-semibold">Edit Student</DialogTitle>
           <DialogDescription>Update profile details for {target?.email}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="es-name">Full Name</Label>
-            <Input id="es-name" value={name} onChange={(e) => setName(e.target.value)} />
+            <Label htmlFor="es-name" className="text-xs font-medium text-muted-foreground">Full Name</Label>
+            <Input id="es-name" value={name} onChange={(e) => setName(e.target.value)} className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="es-phone">Phone</Label>
-            <Input id="es-phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+968 9XXX XXXX" />
+            <Label htmlFor="es-phone" className="text-xs font-medium text-muted-foreground">Phone</Label>
+            <Input id="es-phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+968 9XXX XXXX" className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="es-bio">Bio</Label>
-            <Textarea id="es-bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Short bio (optional)" rows={3} />
+            <Label htmlFor="es-bio" className="text-xs font-medium text-muted-foreground">Bio</Label>
+            <Textarea id="es-bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Short bio (optional)" rows={3} className="rounded-lg" />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button disabled={saving} onClick={submit}>
+          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button disabled={saving} className="h-9" onClick={submit}>
             {saving ? "Saving…" : "Save Changes"}
           </Button>
         </DialogFooter>
@@ -688,9 +692,9 @@ function StudentProfileSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
         <SheetHeader>
-          <SheetTitle>Student Profile</SheetTitle>
+          <SheetTitle className="font-heading text-lg font-semibold">Student Profile</SheetTitle>
           <SheetDescription>Detailed view of the student&apos;s account and activity.</SheetDescription>
         </SheetHeader>
 
@@ -707,8 +711,8 @@ function StudentProfileSheet({
         ) : data ? (
           <div className="space-y-4 px-4 pb-6">
             {/* Basic info */}
-            <div className="flex items-start gap-3 rounded-lg border border-border bg-card p-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold shrink-0">
+            <div className="flex items-start gap-3 rounded-xl border border-border bg-gradient-to-br from-primary/5 to-accent/5 p-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold shrink-0 ring-2 ring-accent/20">
                 {data.student.name
                   .split(" ")
                   .map((w) => w[0])
@@ -719,21 +723,21 @@ function StudentProfileSheet({
               <div className="min-w-0 flex-1">
                 <p className="font-heading font-semibold text-foreground truncate">{data.student.name}</p>
                 <p className="text-sm text-muted-foreground flex items-center gap-1.5 truncate">
-                  <Mail className="h-3.5 w-3.5" /> {data.student.email}
+                  <Mail className="h-3.5 w-3.5 shrink-0" /> {data.student.email}
                 </p>
                 {data.student.phone && (
                   <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-0.5">
-                    <Phone className="h-3.5 w-3.5" /> {data.student.phone}
+                    <Phone className="h-3.5 w-3.5 shrink-0" /> {data.student.phone}
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
-                  <Calendar className="h-3.5 w-3.5" /> Joined {formatDate(data.student.createdAt)}
+                  <Calendar className="h-3.5 w-3.5 shrink-0" /> Joined {formatDate(data.student.createdAt)}
                 </p>
               </div>
             </div>
 
             {/* Subscription */}
-            <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+            <div className="rounded-xl border border-border bg-card p-4 space-y-3 shadow-sm">
               <div className="flex items-center justify-between">
                 <h4 className="font-heading text-sm font-semibold text-foreground flex items-center gap-1.5">
                   <Shield className="h-4 w-4 text-accent" /> Subscription
@@ -749,23 +753,23 @@ function StudentProfileSheet({
               {data.subscription ? (
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <p className="text-xs text-muted-foreground">Plan</p>
-                    <p className="font-medium text-foreground">{data.subscription.planName}</p>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Plan</p>
+                    <p className="font-medium text-foreground mt-0.5">{data.subscription.planName}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Price</p>
-                    <p className="font-medium text-foreground">
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Price</p>
+                    <p className="font-medium text-foreground mt-0.5">
                       {data.subscription.planPrice.toLocaleString()} {data.subscription.planCurrency} /{" "}
                       {data.subscription.planDuration} {data.subscription.planDurationUnit.toLowerCase()}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Start</p>
-                    <p className="font-medium text-foreground">{formatDate(data.subscription.startDate)}</p>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Start</p>
+                    <p className="font-medium text-foreground mt-0.5">{formatDate(data.subscription.startDate)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Expiry</p>
-                    <p className="font-medium text-foreground">{formatDate(data.subscription.expiryDate)}</p>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Expiry</p>
+                    <p className="font-medium text-foreground mt-0.5">{formatDate(data.subscription.expiryDate)}</p>
                   </div>
                 </div>
               ) : (
@@ -773,12 +777,12 @@ function StudentProfileSheet({
               )}
 
               <div className="border-t border-border pt-3 space-y-2">
-                <Label htmlFor="assign-plan" className="text-xs text-muted-foreground">
+                <Label htmlFor="assign-plan" className="text-[11px] uppercase tracking-wider text-muted-foreground">
                   Assign / Replace Plan
                 </Label>
                 <div className="flex gap-2">
                   <Select value={assignPlanId} onValueChange={setAssignPlanId}>
-                    <SelectTrigger id="assign-plan" className="flex-1">
+                    <SelectTrigger id="assign-plan" className="h-9 rounded-lg flex-1">
                       <SelectValue placeholder="Select a plan…" />
                     </SelectTrigger>
                     <SelectContent>
@@ -792,6 +796,7 @@ function StudentProfileSheet({
                   </Select>
                   <Button
                     size="sm"
+                    className="h-9"
                     disabled={assigning || assignPlanId === "NONE"}
                     onClick={assignPlan}
                   >
@@ -806,36 +811,45 @@ function StudentProfileSheet({
 
             {/* Stats row */}
             <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-lg border border-border bg-card p-3 text-center">
-                <BookOpen className="h-4 w-4 mx-auto text-accent" />
-                <p className="font-heading text-lg font-bold text-foreground mt-1">
+              <div className="rounded-xl border border-border bg-card p-3 text-center shadow-sm">
+                <div className="mx-auto flex h-7 w-7 items-center justify-center rounded-md bg-accent/10 text-accent mb-1">
+                  <BookOpen className="h-3.5 w-3.5" />
+                </div>
+                <p className="font-heading text-lg font-bold text-foreground">
                   {data.stats.accessibleCourseCount}
                 </p>
-                <p className="text-xs text-muted-foreground">Accessible Courses</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Courses</p>
               </div>
-              <div className="rounded-lg border border-border bg-card p-3 text-center">
-                <ClipboardList className="h-4 w-4 mx-auto text-accent" />
-                <p className="font-heading text-lg font-bold text-foreground mt-1">
+              <div className="rounded-xl border border-border bg-card p-3 text-center shadow-sm">
+                <div className="mx-auto flex h-7 w-7 items-center justify-center rounded-md bg-warning/15 text-warning mb-1">
+                  <ClipboardList className="h-3.5 w-3.5" />
+                </div>
+                <p className="font-heading text-lg font-bold text-foreground">
                   {data.stats.submissionsCount}
                 </p>
-                <p className="text-xs text-muted-foreground">Submissions</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Submissions</p>
               </div>
-              <div className="rounded-lg border border-border bg-card p-3 text-center">
-                <Award className="h-4 w-4 mx-auto text-accent" />
-                <p className="font-heading text-lg font-bold text-foreground mt-1">
+              <div className="rounded-xl border border-border bg-card p-3 text-center shadow-sm">
+                <div className="mx-auto flex h-7 w-7 items-center justify-center rounded-md bg-success/15 text-success mb-1">
+                  <Award className="h-3.5 w-3.5" />
+                </div>
+                <p className="font-heading text-lg font-bold text-foreground">
                   {data.stats.certificatesCount}
                 </p>
-                <p className="text-xs text-muted-foreground">Certificates</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Certificates</p>
               </div>
             </div>
 
             {/* Accessible courses */}
-            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
-              <h4 className="font-heading text-sm font-semibold text-foreground">Courses Access</h4>
+            <div className="rounded-xl border border-border bg-card p-4 space-y-2 shadow-sm">
+              <h4 className="font-heading text-sm font-semibold text-foreground flex items-center justify-between">
+                <span>Courses Access</span>
+                <span className="text-xs font-normal text-muted-foreground">{data.availableCourses.length} total</span>
+              </h4>
               {data.availableCourses.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No published courses available.</p>
               ) : (
-                <ul className="space-y-1 max-h-48 overflow-y-auto">
+                <ul className="space-y-1 max-h-48 overflow-y-auto scrollbar-thin">
                   {data.availableCourses.slice(0, 8).map((c) => (
                     <li key={c.id} className="flex items-center justify-between gap-2 text-sm py-1">
                       <span className="text-foreground truncate">{c.title}</span>
@@ -851,7 +865,7 @@ function StudentProfileSheet({
             </div>
 
             {/* Submissions */}
-            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+            <div className="rounded-xl border border-border bg-card p-4 space-y-2 shadow-sm">
               <h4 className="font-heading text-sm font-semibold text-foreground">Recent Submissions</h4>
               {data.submissions.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No submissions yet.</p>
@@ -877,7 +891,7 @@ function StudentProfileSheet({
             </div>
 
             {/* Certificates */}
-            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+            <div className="rounded-xl border border-border bg-card p-4 space-y-2 shadow-sm">
               <h4 className="font-heading text-sm font-semibold text-foreground">Certificates</h4>
               {data.certificates.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No certificates issued yet.</p>

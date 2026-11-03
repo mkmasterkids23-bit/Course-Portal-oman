@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, BookOpen, PlayCircle, ClipboardList, CreditCard,
-  Award, User, LogOut
+  Award, User, LogOut, GraduationCap
 } from "lucide-react";
 import { apiPost } from "@/hooks/use-api";
 
@@ -32,18 +32,25 @@ export function StudentSidebar({ onNavigate }: { onNavigate?: () => void }) {
   }
 
   return (
-    <aside className="relative flex h-full w-full flex-col border-r border-sidebar-border bg-gradient-to-b from-card via-muted/20 to-muted/50">
+    <aside className="relative flex h-full w-full flex-col border-r border-sidebar-border bg-gradient-to-b from-card via-card to-muted/40">
       {/* Subtle accent right edge */}
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-accent/0 via-accent/40 to-accent/0" />
-      {/* Logo header */}
-      <div className="flex h-16 items-center border-b border-sidebar-border/80 px-5">
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-accent/0 via-accent/30 to-accent/0" />
+
+      {/* Logo header — premium gradient accent */}
+      <div className="relative flex h-16 items-center border-b border-sidebar-border/80 px-5">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-accent/5 via-transparent to-transparent" />
         <BrandLogo onClick={() => { navigate(["student", "overview"]); onNavigate?.(); }} />
       </div>
+
       <ScrollArea className="flex-1 px-3 py-5">
         <nav className="space-y-1">
-          <p className="px-3 pb-2.5 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground/60">
-            Learning Hub
-          </p>
+          {/* Elegant section label */}
+          <div className="flex items-center gap-2 px-3 pb-2.5">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
+              Learning Hub
+            </span>
+            <span className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
+          </div>
           {NAV.map((item) => {
             const active = current === item.segments[1];
             return (
@@ -53,12 +60,12 @@ export function StudentSidebar({ onNavigate }: { onNavigate?: () => void }) {
                 className={cn(
                   "group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200",
                   active
-                    ? "bg-accent/10 text-accent font-semibold"
-                    : "font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                    ? "bg-light-teal text-accent font-semibold shadow-sm"
+                    : "font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground"
                 )}
               >
                 {active && (
-                  <span className="absolute left-0 top-1/2 h-6 -translate-y-1/2 w-1 rounded-r-full bg-accent" />
+                  <span className="absolute left-0 top-1/2 h-7 -translate-y-1/2 w-1 rounded-r-full bg-accent shadow-[0_0_0_3px_rgba(15,118,110,0.12)]" />
                 )}
                 <item.icon className={cn(
                   "h-4 w-4 shrink-0 transition-colors duration-200",
@@ -66,12 +73,29 @@ export function StudentSidebar({ onNavigate }: { onNavigate?: () => void }) {
                     ? "text-accent"
                     : "text-muted-foreground/70 group-hover:text-foreground"
                 )} />
-                <span>{item.label}</span>
+                <span className="flex-1 text-left">{item.label}</span>
+                {active && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-accent ring-2 ring-accent/20" />
+                )}
               </button>
             );
           })}
         </nav>
+
+        {/* Premium upsell card */}
+        <div className="mt-6 rounded-xl border border-accent/20 bg-gradient-to-br from-light-teal to-accent/[0.04] p-4">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/15 text-accent">
+              <GraduationCap className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-foreground">Keep learning</p>
+              <p className="text-[11px] text-muted-foreground">Stay consistent, every day.</p>
+            </div>
+          </div>
+        </div>
       </ScrollArea>
+
       {/* Logout footer with separator */}
       <div className="relative border-t border-sidebar-border/80 p-3">
         <button
@@ -79,7 +103,7 @@ export function StudentSidebar({ onNavigate }: { onNavigate?: () => void }) {
           className="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-destructive/5 hover:text-destructive"
         >
           <LogOut className="h-4 w-4 shrink-0 transition-colors duration-200 group-hover:text-destructive" />
-          Logout
+          <span>Logout</span>
         </button>
       </div>
     </aside>

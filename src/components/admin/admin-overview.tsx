@@ -89,24 +89,27 @@ export function AdminOverview() {
   return (
     <div className="space-y-6">
       {/* Premium welcome header */}
-      <div className="relative overflow-hidden rounded-xl border border-border bg-gradient-to-br from-primary to-primary/80 p-6 text-primary-foreground">
+      <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary via-primary to-primary/85 p-6 text-primary-foreground shadow-sm">
         <div
-          className="absolute inset-0 opacity-20"
+          className="absolute inset-0 opacity-25"
           style={{
             backgroundImage:
-              "radial-gradient(circle at 20% 50%, rgba(15,118,110,0.4), transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1), transparent 40%)",
+              "radial-gradient(circle at 20% 50%, rgba(15,118,110,0.5), transparent 55%), radial-gradient(circle at 85% 15%, rgba(255,255,255,0.12), transparent 45%), radial-gradient(circle at 70% 90%, rgba(15,118,110,0.3), transparent 50%)",
           }}
         />
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="font-heading text-2xl font-bold tracking-tight">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary-foreground/70">
+              Admin Console
+            </p>
+            <h2 className="font-heading mt-1 text-2xl font-bold tracking-tight sm:text-[28px]">
               Welcome back, Administrator
             </h2>
-            <p className="mt-1 text-sm text-primary-foreground/80">
-              Here&apos;s a snapshot of your platform today.
+            <p className="mt-1.5 text-sm text-primary-foreground/75 max-w-md">
+              Here&apos;s a snapshot of your platform today. Monitor learners, courses and engagement at a glance.
             </p>
           </div>
-          <Badge className="self-start bg-primary-foreground/15 text-primary-foreground border-primary-foreground/20 backdrop-blur gap-1.5">
+          <Badge className="self-start gap-1.5 border-primary-foreground/20 bg-primary-foreground/10 px-3 py-1.5 text-xs font-medium text-primary-foreground backdrop-blur">
             <Sparkles className="h-3.5 w-3.5" />
             {new Date().toLocaleDateString("en-GB", {
               weekday: "long",
@@ -171,17 +174,17 @@ export function AdminOverview() {
           {/* Charts row */}
           <div className="grid gap-4 lg:grid-cols-5">
             {/* Course Performance — bar chart */}
-            <Card className="lg:col-span-3 overflow-hidden">
+            <Card className="overflow-hidden border-border bg-card shadow-sm lg:col-span-3">
               <div className="flex items-center justify-between border-b border-border p-5">
                 <div>
                   <h3 className="font-heading text-base font-semibold text-foreground">
                     Course Performance
                   </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     Lessons & certificates per course
                   </p>
                 </div>
-                <Button variant="ghost" size="sm" className="gap-1 text-xs" onClick={() => navigate(["admin", "courses"])}>
+                <Button variant="ghost" size="sm" className="gap-1 text-xs text-muted-foreground hover:text-accent" onClick={() => navigate(["admin", "courses"])}>
                   View courses <ArrowRight className="h-3 w-3" />
                 </Button>
               </div>
@@ -228,13 +231,13 @@ export function AdminOverview() {
             </Card>
 
             {/* Student Completion — donut chart */}
-            <Card className="lg:col-span-2 overflow-hidden">
+            <Card className="overflow-hidden border-border bg-card shadow-sm lg:col-span-2">
               <div className="flex items-center justify-between border-b border-border p-5">
                 <div>
                   <h3 className="font-heading text-base font-semibold text-foreground">
                     Student Completion
                   </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     Learning progress distribution
                   </p>
                 </div>
@@ -295,10 +298,10 @@ export function AdminOverview() {
           {/* Recent activity — two columns */}
           <div className="grid gap-4 lg:grid-cols-2">
             {/* Recent Students */}
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden border-border bg-card shadow-sm">
               <div className="flex items-center justify-between border-b border-border p-5">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10 text-accent">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 text-accent">
                     <Users className="h-4 w-4" />
                   </div>
                   <div>
@@ -306,7 +309,7 @@ export function AdminOverview() {
                     <p className="text-xs text-muted-foreground">Latest enrollments</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" className="gap-1 text-xs" onClick={() => navigate(["admin", "students"])}>
+                <Button variant="ghost" size="sm" className="gap-1 text-xs text-muted-foreground hover:text-accent" onClick={() => navigate(["admin", "students"])}>
                   View all <ArrowRight className="h-3 w-3" />
                 </Button>
               </div>
@@ -316,7 +319,7 @@ export function AdminOverview() {
                 ) : (
                   <ul className="divide-y divide-border">
                     {data.recentStudents.slice(0, 5).map((s) => (
-                      <li key={s.id} className="flex items-center gap-3 px-3 py-3 hover:bg-muted/40 transition-colors rounded-md">
+                      <li key={s.id} className="flex items-center gap-3 px-3 py-3 transition-colors duration-200 rounded-md hover:bg-muted/40">
                         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0">
                           {s.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
                         </div>
@@ -324,7 +327,7 @@ export function AdminOverview() {
                           <p className="text-sm font-medium text-foreground truncate">{s.name}</p>
                           <p className="text-xs text-muted-foreground truncate">{s.email}</p>
                         </div>
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        <span className="text-[11px] text-muted-foreground whitespace-nowrap">
                           {formatDateTime(s.createdAt)}
                         </span>
                       </li>
@@ -335,10 +338,10 @@ export function AdminOverview() {
             </Card>
 
             {/* Recent Submissions */}
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden border-border bg-card shadow-sm">
               <div className="flex items-center justify-between border-b border-border p-5">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-warning/15 text-warning">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-warning/15 text-warning">
                     <ClipboardList className="h-4 w-4" />
                   </div>
                   <div>
@@ -346,7 +349,7 @@ export function AdminOverview() {
                     <p className="text-xs text-muted-foreground">Latest student submissions</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" className="gap-1 text-xs" onClick={() => navigate(["admin", "submissions"])}>
+                <Button variant="ghost" size="sm" className="gap-1 text-xs text-muted-foreground hover:text-accent" onClick={() => navigate(["admin", "submissions"])}>
                   View all <ArrowRight className="h-3 w-3" />
                 </Button>
               </div>
@@ -356,7 +359,7 @@ export function AdminOverview() {
                 ) : (
                   <ul className="divide-y divide-border">
                     {data.recentSubmissions.slice(0, 5).map((s) => (
-                      <li key={s.id} className="flex items-center gap-3 px-3 py-3 hover:bg-muted/40 transition-colors rounded-md">
+                      <li key={s.id} className="flex items-center gap-3 px-3 py-3 transition-colors duration-200 rounded-md hover:bg-muted/40">
                         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground shrink-0">
                           <FileText className="h-4 w-4" />
                         </div>
@@ -364,7 +367,7 @@ export function AdminOverview() {
                           <p className="text-sm font-medium text-foreground truncate">{s.studentName}</p>
                           <p className="text-xs text-muted-foreground truncate">{s.assignmentTitle}</p>
                         </div>
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        <span className="text-[11px] text-muted-foreground whitespace-nowrap">
                           {formatDateTime(s.submittedAt)}
                         </span>
                       </li>
@@ -376,11 +379,14 @@ export function AdminOverview() {
           </div>
 
           {/* Quick actions */}
-          <Card className="border-dashed bg-card">
+          <Card className="border-dashed border-border bg-card/50 shadow-sm">
             <CardContent className="p-5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h3 className="font-heading text-sm font-semibold text-foreground">Quick Actions</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-heading text-sm font-semibold text-foreground">Quick Actions</h3>
+                    <Badge variant="outline" className="text-[10px] uppercase tracking-wider text-muted-foreground">Shortcuts</Badge>
+                  </div>
                   <p className="text-xs text-muted-foreground mt-0.5">Jump straight into common tasks</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -423,17 +429,17 @@ function PremiumStatCard({
   const borderClass = urgent ? "ring-1 ring-warning/30" : "";
 
   return (
-    <Card className={`overflow-hidden p-5 transition-shadow hover:shadow-md ${borderClass}`}>
+    <Card className={`group overflow-hidden border-border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${borderClass}`}>
       <div className="flex flex-col gap-3">
-        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${toneClasses[tone]}`}>
+        <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${toneClasses[tone]} transition-transform duration-200 group-hover:scale-105`}>
           {icon}
         </div>
         <div>
-          <p className="font-heading text-3xl font-bold text-foreground leading-none">
+          <p className="font-heading text-[28px] font-bold text-foreground leading-none tracking-tight">
             {value.toLocaleString()}
           </p>
-          <p className="text-xs font-medium text-muted-foreground mt-1.5">{label}</p>
-          {hint && <p className="text-[11px] text-muted-foreground/80 mt-0.5">{hint}</p>}
+          <p className="mt-1.5 text-[13px] font-medium text-foreground/90">{label}</p>
+          {hint && <p className="mt-0.5 text-[11px] text-muted-foreground">{hint}</p>}
         </div>
       </div>
     </Card>
@@ -442,7 +448,7 @@ function PremiumStatCard({
 
 function QuickActionButton({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
   return (
-    <Button variant="outline" size="sm" className="gap-2 h-9" onClick={onClick}>
+    <Button variant="outline" size="sm" className="h-9 gap-2 border-border bg-card transition-all duration-200 hover:border-accent/30 hover:bg-light-teal/40" onClick={onClick}>
       <span className="text-accent">{icon}</span>
       {label}
     </Button>

@@ -1,0 +1,1107 @@
+     1→     1→"use client";
+     2→     2→
+     3→     3→import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+     4→     4→import { useAppStore } from "@/stores/app-store";
+     5→     5→import { Button } from "@/components/ui/button";
+     6→     6→import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+     7→     7→import { Badge } from "@/components/ui/badge";
+     8→     8→import { Progress } from "@/components/ui/progress";
+     9→     9→import { Skeleton } from "@/components/ui/skeleton";
+    10→    10→import { EmptyState } from "@/components/shared/empty-state";
+    11→    11→import {
+    12→    12→  Accordion, AccordionItem, AccordionTrigger, AccordionContent,
+    13→    13→} from "@/components/ui/accordion";
+    14→    14→import {
+    15→    15→  Tooltip, TooltipTrigger, TooltipContent,
+    16→    16→} from "@/components/ui/tooltip";
+    17→    17→import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
+    18→    18→import { toast } from "@/hooks/use-toast";
+    19→    19→import {
+    20→    20→  ArrowLeft, PlayCircle, CheckCircle2, Lock, FileText, Download, Link as LinkIcon,
+    21→    21→  Upload, Award, ClipboardList, AlertTriangle, Clock, Video as VideoIcon, Info,
+    22→    22→  Maximize2, Minimize2, X,
+    23→    23→} from "lucide-react";
+    24→    24→import { formatDateTime } from "@/types";
+    25→    25→
+    26→    26→interface VideoProgressInfo {
+    27→    27→  lastPosition: number;
+    28→    28→  watchTimeSeconds: number;
+    29→    29→  duration: number;
+    30→    30→  isCompleted: boolean;
+    31→    31→  completedAt: string | null;
+    32→    32→}
+    33→    33→
+    34→    34→interface VideoItem {
+    35→    35→  id: string;
+    36→    36→  title: string;
+    37→    37→  description: string | null;
+    38→    38→  source: "UPLOAD" | "YOUTUBE" | "URL";
+    39→    39→  videoUrl: string;
+    40→    40→  thumbnail: string | null;
+    41→    41→  displayOrder: number;
+    42→    42→  duration: number;
+    43→    43→  progress: VideoProgressInfo | null;
+    44→    44→}
+    45→    45→
+    46→    46→interface TopicItem {
+    47→    47→  id: string;
+    48→    48→  title: string;
+    49→    49→  description: string | null;
+    50→    50→  displayOrder: number;
+    51→    51→  videos: VideoItem[];
+    52→    52→  materials: MaterialItem[];
+    53→    53→}
+    54→    54→
+    55→    55→interface MaterialItem {
+    56→    56→  id: string;
+    57→    57→  title: string;
+    58→    58→  description: string | null;
+    59→    59→  type: string;
+    60→    60→  fileUrl: string;
+    61→    61→  topic?: { id: string; title: string } | null;
+    62→    62→}
+    63→    63→
+    64→    64→interface AssignmentInfo {
+    65→    65→  id: string;
+    66→    66→  title: string | null;
+    67→    67→  description: string | null;
+    68→    68→  instructions: string | null;
+    69→    69→  fileUrl: string | null;
+    70→    70→  dueDate: string | null;
+    71→    71→  isPublished: boolean;
+    72→    72→  allowResubmission: boolean;
+    73→    73→}
+    74→    74→
+    75→    75→interface SubmissionInfo {
+    76→    76→  id: string;
+    77→    77→  fileUrl: string;
+    78→    78→  submittedAt: string;
+    79→    79→  status: "SUBMITTED" | "REVIEWED";
+    80→    80→  reviewNotes: string | null;
+    81→    81→  reviewedAt: string | null;
+    82→    82→}
+    83→    83→
+    84→    84→interface CourseDetail {
+    85→    85→  id: string;
+    86→    86→  title: string;
+    87→    87→  description: string | null;
+    88→    88→  thumbnail: string | null;
+    89→    89→  category: string | null;
+    90→    90→  accessType: "FREE" | "PAID";
+    91→    91→  topics: TopicItem[];
+    92→    92→  materials: MaterialItem[];
+    93→    93→  assignment: AssignmentInfo | null;
+    94→    94→  submission: SubmissionInfo | null;
+    95→    95→  courseCompletion: {
+    96→    96→    totalVideos: number;
+    97→    97→    completedVideos: number;
+    98→    98→    percent: number;
+    99→    99→    allCompleted: boolean;
+   100→   100→  };
+   101→   101→  certificateTemplate: {
+   102→   102→    id: string;
+   103→   103→    isEnabled: boolean;
+   104→   104→    title: string;
+   105→   105→    bodyText: string;
+   106→   106→    organizationName: string;
+   107→   107→  } | null;
+   108→   108→}
+   109→   109→
+   110→   110→interface CourseResponse { course: CourseDetail }
+   111→   111→
+   112→   112→export function StudentLearning({ courseId, onBack }: { courseId: string; onBack: () => void }) {
+   113→   113→  const { data, loading, error, refetch, setData } = useApiFetch<CourseResponse>(
+   114→   114→    `/api/student/courses/${courseId}`
+   115→   115→  );
+   116→   116→
+   117→   117→  // Pick the initial video: last watched, or first available.
+   118→   118→  const initialVideoId = (() => {
+   119→   119→    if (!data?.course) return null;
+   120→   120→    // 1) lastWatchedVideoId is implicitly captured via progress; find the
+   121→   121→    //    most recently updated progress entry in the topics tree.
+   122→   122→    let candidate: VideoItem | null = null;
+   123→   123→    for (const t of data.course.topics) {
+   124→   124→      for (const v of t.videos) {
+   125→   125→        if (v.progress && !v.progress.isCompleted) {
+   126→   126→          if (!candidate || (v.progress.watchTimeSeconds > (candidate.progress?.watchTimeSeconds || 0))) {
+   127→   127→            candidate = v;
+   128→   128→          }
+   129→   129→        }
+   130→   130→      }
+   131→   131→    }
+   132→   132→    if (candidate) return candidate.id;
+   133→   133→    // 2) First video of the first topic
+   134→   134→    return data.course.topics[0]?.videos[0]?.id ?? null;
+   135→   135→  })();
+   136→   136→
+   137→   137→  const [userSelectedVideoId, setUserSelectedVideoId] = useState<string | null>(null);
+   138→   138→  // Reset user selection when courseId changes — "adjust state during render"
+   139→   139→  // pattern (avoids setState-in-effect warnings).
+   140→   140→  const [prevCourseId, setPrevCourseId] = useState(courseId);
+   141→   141→  if (courseId !== prevCourseId) {
+   142→   142→    setPrevCourseId(courseId);
+   143→   143→    setUserSelectedVideoId(null);
+   144→   144→  }
+   145→   145→  // Effective active video: explicit user selection overrides the auto-pick
+   146→   146→  // (which is the last-watched or first video). When data loads and we have an
+   147→   147→  // initial pick, this falls back to it without needing an effect.
+   148→   148→  const activeVideoId = userSelectedVideoId ?? initialVideoId;
+   149→   149→
+   150→   150→  if (loading) {
+   151→   151→    return (
+   152→   152→      <div className="space-y-4">
+   153→   153→        <Skeleton className="h-12 w-32 rounded-md" />
+   154→   154→        <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
+   155→   155→          <Skeleton className="h-[480px] rounded-xl" />
+   156→   156→          <Skeleton className="h-[480px] rounded-xl" />
+   157→   157→        </div>
+   158→   158→      </div>
+   159→   159→    );
+   160→   160→  }
+   161→   161→
+   162→   162→  if (error) {
+   163→   163→    return (
+   164→   164→      <div className="space-y-4">
+   165→   165→        <Button variant="outline" size="sm" onClick={onBack} className="gap-2">
+   166→   166→          <ArrowLeft className="h-4 w-4" /> Back to courses
+   167→   167→        </Button>
+   168→   168→        <EmptyState
+   169→   169→          icon={<AlertTriangle className="h-5 w-5" />}
+   170→   170→          title="Couldn't open course"
+   171→   171→          description={error}
+   172→   172→          action={<Button onClick={onBack}>Back to courses</Button>}
+   173→   173→        />
+   174→   174→      </div>
+   175→   175→    );
+   176→   176→  }
+   177→   177→
+   178→   178→  if (!data?.course) {
+   179→   179→    return (
+   180→   180→      <EmptyState
+   181→   181→        icon={<PlayCircle className="h-5 w-5" />}
+   182→   182→        title="Course not found"
+   183→   183→        description="This course may have been removed or is not accessible."
+   184→   184→        action={<Button onClick={onBack}>Back to courses</Button>}
+   185→   185→      />
+   186→   186→    );
+   187→   187→  }
+   188→   188→
+   189→   189→  const course = data.course;
+   190→   190→  const allVideos = course.topics.flatMap((t) => t.videos);
+   191→   191→  const activeVideo =
+   192→   192→    allVideos.find((v) => v.id === activeVideoId) || allVideos[0] || null;
+   193→   193→
+   194→   194→  // Find the topic containing the active video
+   195→   195→  const activeTopic = course.topics.find((t) =>
+   196→   196→    t.videos.some((v) => v.id === activeVideo?.id)
+   197→   197→  );
+   198→   198→
+   199→   199→  function handleProgressUpdate(updated: {
+   200→   200→    videoId: string;
+   201→   201→    progress: VideoProgressInfo;
+   202→   202→    justCompleted: boolean;
+   203→   203→  }) {
+   204→   204→    if (!data) return;
+   205→   205→    const newCourse = {
+   206→   206→      ...data.course,
+   207→   207→      topics: data.course.topics.map((t) => ({
+   208→   208→        ...t,
+   209→   209→        videos: t.videos.map((v) =>
+   210→   210→          v.id === updated.videoId ? { ...v, progress: updated.progress } : v
+   211→   211→        ),
+   212→   212→      })),
+   213→   213→      courseCompletion: (() => {
+   214→   214→        // Recompute local snapshot
+   215→   215→        const videos = data.course.topics.flatMap((t) => t.videos);
+   216→   216→        const completed = videos.filter(
+   217→   217→          (v) =>
+   218→   218→            v.id === updated.videoId
+   219→   219→              ? updated.progress.isCompleted
+   220→   220→              : v.progress?.isCompleted
+   221→   221→        ).length;
+   222→   222→        const total = videos.length;
+   223→   223→        const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+   224→   224→        return {
+   225→   225→          totalVideos: total,
+   226→   226→          completedVideos: completed,
+   227→   227→          percent,
+   228→   228→          allCompleted: total > 0 && completed === total,
+   229→   229→        };
+   230→   230→      })(),
+   231→   231→    };
+   232→   232→    setData({ course: newCourse });
+   233→   233→
+   234→   234→    if (updated.justCompleted) {
+   235→   235→      toast({
+   236→   236→        title: "Lesson completed",
+   237→   237→        description: "Great work! Your progress has been saved.",
+   238→   238→      });
+   239→   239→    }
+   240→   240→  }
+   241→   241→
+   242→   242→  async function handleSubmissionSuccess() {
+   243→   243→    await refetch();
+   244→   244→    toast({
+   245→   245→      title: "Assignment submitted",
+   246→   246→      description: "Your submission has been received.",
+   247→   247→    });
+   248→   248→  }
+   249→   249→
+   250→   250→  return (
+   251→   251→    <div className="space-y-4">
+   252→   252→      {/* Top bar */}
+   253→   253→      <div className="flex flex-wrap items-center justify-between gap-3">
+   254→   254→        <Button variant="outline" size="sm" onClick={onBack} className="gap-2">
+   255→   255→          <ArrowLeft className="h-4 w-4" /> Back to courses
+   256→   256→        </Button>
+   257→   257→        <div className="flex items-center gap-3 min-w-0 flex-1">
+   258→   258→          <h1 className="font-heading text-lg md:text-xl font-semibold text-foreground truncate">
+   259→   259→            {course.title}
+   260→   260→          </h1>
+   261→   261→        </div>
+   262→   262→        <div className="flex items-center gap-3 shrink-0">
+   263→   263→          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+   264→   264→            <span>{course.courseCompletion.completedVideos}/{course.courseCompletion.totalVideos} lessons</span>
+   265→   265→          </div>
+   266→   266→          <div className="flex items-center gap-2 min-w-[120px]">
+   267→   267→            <Progress value={course.courseCompletion.percent} className="h-2 w-24" />
+   268→   268→            <span className="text-sm font-medium text-foreground">{course.courseCompletion.percent}%</span>
+   269→   269→          </div>
+   270→   270→        </div>
+   271→   271→      </div>
+   272→   272→
+   273→   273→      {/* Mobile: stacked. Desktop: split. */}
+   274→   274→      <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
+   275→   275→        {/* Left: player + materials + assignment */}
+   276→   276→        <div className="space-y-4 min-w-0">
+   277→   277→          {activeVideo ? (
+   278→   278→            <VideoPlayer
+   279→   279→              key={activeVideo.id}
+   280→   280→              video={activeVideo}
+   281→   281→              onProgress={handleProgressUpdate}
+   282→   282→            />
+   283→   283→          ) : (
+   284→   284→            <EmptyState
+   285→   285→              icon={<VideoIcon className="h-5 w-5" />}
+   286→   286→              title="No videos in this course"
+   287→   287→              description="This course doesn't have any published video lessons yet."
+   288→   288→            />
+   289→   289→          )}
+   290→   290→
+   291→   291→          {/* Materials */}
+   292→   292→          {activeTopic && activeTopic.materials.length > 0 && (
+   293→   293→            <Card>
+   294→   294→              <CardHeader>
+   295→   295→                <CardTitle className="text-base flex items-center gap-2">
+   296→   296→                  <FileText className="h-4 w-4 text-accent" />
+   297→   297→                  Materials for {activeTopic.title}
+   298→   298→                </CardTitle>
+   299→   299→                <CardDescription>Reference documents for this topic</CardDescription>
+   300→   300→              </CardHeader>
+   301→   301→              <CardContent>
+   302→   302→                <ul className="space-y-2">
+   303→   303→                  {activeTopic.materials.map((m) => (
+   304→   304→                    <MaterialRow key={m.id} material={m} />
+   305→   305→                  ))}
+   306→   306→                </ul>
+   307→   307→              </CardContent>
+   308→   308→            </Card>
+   309→   309→          )}
+   310→   310→
+   311→   311→          {/* Assignment panel — completely hidden until ALL videos are completed.
+   312→   312→              Before completion, show a locked placeholder that does NOT reveal
+   313→   313→              the assignment title, description, or instructions. */}
+   314→   314→          {course.assignment && course.courseCompletion.allCompleted ? (
+   315→   315→            <AssignmentPanel
+   316→   316→              course={course}
+   317→   317→              onSubmitted={handleSubmissionSuccess}
+   318→   318→            />
+   319→   319→          ) : course.assignment ? (
+   320→   320→            <LockedAssignmentCard
+   321→   321→              completedVideos={course.courseCompletion.completedVideos}
+   322→   322→              totalVideos={course.courseCompletion.totalVideos}
+   323→   323→              percent={course.courseCompletion.percent}
+   324→   324→            />
+   325→   325→          ) : null}
+   326→   326→
+   327→   327→          {/* All materials (course-level) */}
+   328→   328→          {course.materials.length > 0 && (
+   329→   329→            <Card>
+   330→   330→              <CardHeader>
+   331→   331→                <CardTitle className="text-base flex items-center gap-2">
+   332→   332→                  <FileText className="h-4 w-4 text-accent" />
+   333→   333→                  All Course Materials
+   334→   334→                </CardTitle>
+   335→   335→                <CardDescription>
+   336→   336→                  {course.materials.length} document{course.materials.length > 1 ? "s" : ""} attached to this course
+   337→   337→                </CardDescription>
+   338→   338→              </CardHeader>
+   339→   339→              <CardContent>
+   340→   340→                <ul className="space-y-2">
+   341→   341→                  {course.materials.map((m) => (
+   342→   342→                    <MaterialRow key={m.id} material={m} />
+   343→   343→                  ))}
+   344→   344→                </ul>
+   345→   345→              </CardContent>
+   346→   346→            </Card>
+   347→   347→          )}
+   348→   348→        </div>
+   349→   349→
+   350→   350→        {/* Right: topic sidebar */}
+   351→   351→        <Card className="lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-6rem)] flex flex-col">
+   352→   352→          <CardHeader className="border-b border-border pb-3">
+   353→   353→            <CardTitle className="text-base">Course Lessons</CardTitle>
+   354→   354→            <CardDescription>
+   355→   355→              {course.topics.length} topic{course.topics.length > 1 ? "s" : ""} · {course.courseCompletion.totalVideos} lessons
+   356→   356→            </CardDescription>
+   357→   357→          </CardHeader>
+   358→   358→          <CardContent className="p-0 overflow-y-auto max-h-[70vh] lg:max-h-[calc(100vh-12rem)] scrollbar-thin">
+   359→   359→            {course.topics.length === 0 ? (
+   360→   360→              <p className="text-sm text-muted-foreground p-6 text-center">
+   361→   361→                No topics published yet.
+   362→   362→              </p>
+   363→   363→            ) : (
+   364→   364→              <Accordion
+   365→   365→                type="multiple"
+   366→   366→                defaultValue={[course.topics[0]?.id].filter(Boolean) as string[]}
+   367→   367→                className="px-3"
+   368→   368→              >
+   369→   369→                {course.topics.map((topic) => {
+   370→   370→                  const completedInTopic = topic.videos.filter(
+   371→   371→                    (v) => v.progress?.isCompleted
+   372→   372→                  ).length;
+   373→   373→                  const isActiveTopic = topic.id === activeTopic?.id;
+   374→   374→                  return (
+   375→   375→                    <AccordionItem key={topic.id} value={topic.id} className="border-b border-border last:border-b-0">
+   376→   376→                      <AccordionTrigger className="hover:no-underline px-2">
+   377→   377→                        <div className="flex-1 min-w-0 text-left">
+   378→   378→                          <p className={`text-sm font-semibold truncate ${isActiveTopic ? "text-accent" : "text-foreground"}`}>
+   379→   379→                            {topic.title}
+   380→   380→                          </p>
+   381→   381→                          <p className="text-xs text-muted-foreground mt-0.5">
+   382→   382→                            {completedInTopic}/{topic.videos.length} videos
+   383→   383→                          </p>
+   384→   384→                        </div>
+   385→   385→                      </AccordionTrigger>
+   386→   386→                      <AccordionContent className="pb-2">
+   387→   387→                        <ul className="space-y-0.5">
+   388→   388→                          {topic.videos.map((video) => {
+   389→   389→                            const isActive = video.id === activeVideo?.id;
+   390→   390→                            const completed = video.progress?.isCompleted;
+   391→   391→                            return (
+   392→   392→                              <li key={video.id}>
+   393→   393→                                <button
+   394→   394→                                  onClick={() => setUserSelectedVideoId(video.id)}
+   395→   395→                                  className={`flex w-full items-start gap-2 rounded-md px-2 py-2 text-left text-sm transition-colors ${
+   396→   396→                                    isActive
+   397→   397→                                      ? "bg-accent/10 text-accent"
+   398→   398→                                      : "text-foreground hover:bg-muted"
+   399→   399→                                  }`}
+   400→   400→                                >
+   401→   401→                                  <span className="mt-0.5 shrink-0">
+   402→   402→                                    {completed ? (
+   403→   403→                                      <CheckCircle2 className="h-4 w-4 text-success" />
+   404→   404→                                    ) : isActive ? (
+   405→   405→                                      <PlayCircle className="h-4 w-4 text-accent" />
+   406→   406→                                    ) : (
+   407→   407→                                      <PlayCircle className="h-4 w-4 text-muted-foreground" />
+   408→   408→                                    )}
+   409→   409→                                  </span>
+   410→   410→                                  <span className="min-w-0 flex-1">
+   411→   411→                                    <span className="block truncate font-medium">{video.title}</span>
+   412→   412→                                    {video.duration > 0 && (
+   413→   413→                                      <span className="block text-xs text-muted-foreground mt-0.5">
+   414→   414→                                        {formatVideoDuration(video.duration)}
+   415→   415→                                      </span>
+   416→   416→                                    )}
+   417→   417→                                  </span>
+   418→   418→                                </button>
+   419→   419→                              </li>
+   420→   420→                            );
+   421→   421→                          })}
+   422→   422→                        </ul>
+   423→   423→                      </AccordionContent>
+   424→   424→                    </AccordionItem>
+   425→   425→                  );
+   426→   426→                })}
+   427→   427→              </Accordion>
+   428→   428→            )}
+   429→   429→          </CardContent>
+   430→   430→        </Card>
+   431→   431→      </div>
+   432→   432→    </div>
+   433→   433→  );
+   434→   434→}
+   435→   435→
+   436→   436→/* ===================== Video player ===================== */
+   437→   437→
+   438→   438→function VideoPlayer({
+   439→   439→  video,
+   440→   440→  onProgress,
+   441→   441→}: {
+   442→   442→  video: VideoItem;
+   443→   443→  onProgress: (update: {
+   444→   444→    videoId: string;
+   445→   445→    progress: VideoProgressInfo;
+   446→   446→    justCompleted: boolean;
+   447→   447→  }) => void;
+   448→   448→}) {
+   449→   449→  const videoRef = useRef<HTMLVideoElement>(null);
+   450→   450→  const lastTimeRef = useRef<number>(0);
+   451→   451→  const watchTimeRef = useRef<number>(0);
+   452→   452→  const durationRef = useRef<number>(0);
+   453→   453→  const lastPostRef = useRef<number>(0);
+   454→   454→  const resumeAppliedRef = useRef<boolean>(false);
+   455→   455→  const [expanded, setExpanded] = useState(false);
+   456→   456→
+   457→   457→  // YouTube completion timer
+   458→   458→  const ytStartRef = useRef<number | null>(null);
+   459→   459→  const ytTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+   460→   460→  const ytWatchSecondsRef = useRef<number>(0);
+   461→   461→  const [ytCanMarkComplete, setYtCanMarkComplete] = useState(false);
+   462→   462→
+   463→   463→  // Local UI state
+   464→   464→  const [localCompleted, setLocalCompleted] = useState<boolean>(
+   465→   465→    video.progress?.isCompleted || false
+   466→   466→  );
+   467→   467→  const [posting, setPosting] = useState(false);
+   468→   468→
+   469→   469→  // Reset on video change
+   470→   470→  useEffect(() => {
+   471→   471→    lastTimeRef.current = 0;
+   472→   472→    watchTimeRef.current = video.progress?.watchTimeSeconds || 0;
+   473→   473→    durationRef.current = video.duration || video.progress?.duration || 0;
+   474→   474→    lastPostRef.current = 0;
+   475→   475→    resumeAppliedRef.current = false;
+   476→   476→    setLocalCompleted(video.progress?.isCompleted || false);
+   477→   477→    setYtCanMarkComplete(false);
+   478→   478→    ytWatchSecondsRef.current = 0;
+   479→   479→    if (ytTimerRef.current) {
+   480→   480→      clearInterval(ytTimerRef.current);
+   481→   481→      ytTimerRef.current = null;
+   482→   482→    }
+   483→   483→  }, [video.id]);
+   484→   484→
+   485→   485→  // For HTML5 video: apply resume position once metadata is loaded.
+   486→   486→  const handleLoadedMetadata = () => {
+   487→   487→    const el = videoRef.current;
+   488→   488→    if (!el) return;
+   489→   489→    durationRef.current = el.duration || durationRef.current;
+   490→   490→    if (!resumeAppliedRef.current && video.progress?.lastPosition) {
+   491→   491→      // resume within (duration - 2) so we don't immediately fire ended
+   492→   492→      const target = Math.min(
+   493→   493→        video.progress.lastPosition,
+   494→   494→        Math.max(0, (el.duration || 0) - 3)
+   495→   495→      );
+   496→   496→      try {
+   497→   497→        el.currentTime = target;
+   498→   498→      } catch {}
+   499→   499→      lastTimeRef.current = target;
+   500→   500→      resumeAppliedRef.current = true;
+   501→   501→    }
+   502→   502→  };
+   503→   503→
+   504→   504→  // Core: timeupdate handler — accumulate real watch time.
+   505→   505→  const handleTimeUpdate = () => {
+   506→   506→    const el = videoRef.current;
+   507→   507→    if (!el) return;
+   508→   508→    const cur = el.currentTime;
+   509→   509→    const last = lastTimeRef.current;
+   510→   510→    const delta = cur - last;
+   511→   511→    // Only count normal playback deltas (0 to 1.5s). This rejects both seeks
+   512→   512→    // (large positive deltas) and rewinds (negative deltas).
+   513→   513→    if (delta > 0 && delta <= 1.5) {
+   514→   514→      watchTimeRef.current += delta;
+   515→   515→    }
+   516→   516→    // Update lastTime to current — even on seek, so next delta is small.
+   517→   517→    lastTimeRef.current = cur;
+   518→   518→
+   519→   519→    // Throttled server POST every 5 seconds
+   520→   520→    const now = Date.now();
+   521→   521→    if (now - lastPostRef.current > 5000) {
+   522→   522→      lastPostRef.current = now;
+   523→   523→      void postProgress(false);
+   524→   524→    }
+   525→   525→  };
+   526→   526→
+   527→   527→  // Seeked event — log; backend rejects completion if watchTime < 85%.
+   528→   528→  const handleSeeked = () => {
+   529→   529→    const el = videoRef.current;
+   530→   530→    if (!el) return;
+   531→   531→    lastTimeRef.current = el.currentTime;
+   532→   532→  };
+   533→   533→
+   534→   534→  // Ended event — submit final progress with completion hint.
+   535→   535→  const handleEnded = () => {
+   536→   536→    void postProgress(true);
+   537→   537→  };
+   538→   538→
+   539→   539→  const postProgress = useCallback(
+   540→   540→    async (isCompletionHint: boolean) => {
+   541→   541→      setPosting(true);
+   542→   542→      try {
+   543→   543→        const res = await apiPost<{
+   544→   544→          progress: VideoProgressInfo;
+   545→   545→          justCompleted: boolean;
+   546→   546→          rejectedCompletion: boolean;
+   547→   547→          certificateIssued: boolean;
+   548→   548→          certificateId: string | null;
+   549→   549→        }>("/api/student/progress", {
+   550→   550→          videoId: video.id,
+   551→   551→          lastPosition: videoRef.current?.currentTime || 0,
+   552→   552→          watchTimeSeconds: watchTimeRef.current,
+   553→   553→          duration: durationRef.current,
+   554→   554→          isCompleted: isCompletionHint,
+   555→   555→        });
+   556→   556→        setLocalCompleted(res.progress.isCompleted);
+   557→   557→        onProgress({
+   558→   558→          videoId: video.id,
+   559→   559→          progress: res.progress,
+   560→   560→          justCompleted: res.justCompleted,
+   561→   561→        });
+   562→   562→        if (isCompletionHint && res.rejectedCompletion) {
+   563→   563→          toast({
+   564→   564→            title: "Completion not recorded",
+   565→   565→            description:
+   566→   566→              "You need to watch at least 85% of the video before it's marked complete.",
+   567→   567→            variant: "destructive",
+   568→   568→          });
+   569→   569→        }
+   570→   570→        // ─── Certificate auto-issued upon course completion ───
+   571→   571→        if (res.certificateIssued && res.certificateId) {
+   572→   572→          toast({
+   573→   573→            title: "🎉 Certificate Issued!",
+   574→   574→            description:
+   575→   575→              "Congratulations! You've completed the course and your certificate has been automatically generated. View it in My Certificates.",
+   576→   576→          });
+   577→   577→        }
+   578→   578→      } catch {
+   579→   579→        // apiPost already surfaces errors
+   580→   580→      } finally {
+   581→   581→        setPosting(false);
+   582→   582→      }
+   583→   583→    },
+   584→   584→    [video.id, onProgress]
+   585→   585→  );
+   586→   586→
+   587→   587→  // Manual "Mark complete" for YouTube videos
+   588→   588→  const markYtComplete = async () => {
+   589→   589→    setPosting(true);
+   590→   590→    try {
+   591→   591→      const res = await apiPost<{
+   592→   592→        progress: VideoProgressInfo;
+   593→   593→        justCompleted: boolean;
+   594→   594→        rejectedCompletion: boolean;
+   595→   595→        certificateIssued: boolean;
+   596→   596→        certificateId: string | null;
+   597→   597→      }>("/api/student/progress", {
+   598→   598→        videoId: video.id,
+   599→   599→        lastPosition: durationRef.current,
+   600→   600→        watchTimeSeconds: ytWatchSecondsRef.current,
+   601→   601→        duration: durationRef.current,
+   602→   602→        isCompleted: true,
+   603→   603→      });
+   604→   604→      setLocalCompleted(res.progress.isCompleted);
+   605→   605→      onProgress({
+   606→   606→        videoId: video.id,
+   607→   607→        progress: res.progress,
+   608→   608→        justCompleted: res.justCompleted,
+   609→   609→      });
+   610→   610→      if (res.justCompleted) {
+   611→   611→        toast({
+   612→   612→          title: "Lesson completed",
+   613→   613→          description: "Great work! Your progress has been saved.",
+   614→   614→        });
+   615→   615→      }
+   616→   616→      if (res.rejectedCompletion) {
+   617→   617→        toast({
+   618→   618→          title: "Completion not recorded",
+   619→   619→          description:
+   620→   620→            "You need to keep the video playing for at least 85% of its duration.",
+   621→   621→          variant: "destructive",
+   622→   622→        });
+   623→   623→      }
+   624→   624→      // Certificate auto-issued upon course completion
+   625→   625→      if (res.certificateIssued && res.certificateId) {
+   626→   626→        toast({
+   627→   627→          title: "🎉 Certificate Issued!",
+   628→   628→          description:
+   629→   629→            "Congratulations! You've completed the course and your certificate has been automatically generated. View it in My Certificates.",
+   630→   630→        });
+   631→   631→      }
+   632→   632→    } catch {
+   633→   633→    } finally {
+   634→   634→      setPosting(false);
+   635→   635→    }
+   636→   636→  };
+   637→   637→
+   638→   638→  /* YouTube handling */
+   639→   639→  const ytEmbedUrl = useMemo(() => toYouTubeEmbed(video.videoUrl), [video.videoUrl]);
+   640→   640→  const isYouTube = video.source === "YOUTUBE" && ytEmbedUrl !== null;
+   641→   641→
+   642→   642→  // YouTube timer: accumulate watch time + enable mark-complete after 85%.
+   643→   643→  useEffect(() => {
+   644→   644→    if (!isYouTube) return;
+   645→   645→    if (ytTimerRef.current) clearInterval(ytTimerRef.current);
+   646→   646→    ytStartRef.current = Date.now();
+   647→   647→
+   648→   648→    ytTimerRef.current = setInterval(() => {
+   649→   649→      ytWatchSecondsRef.current = (Date.now() - (ytStartRef.current || Date.now())) / 1000;
+   650→   650→      const dur = durationRef.current;
+   651→   651→      if (dur > 0 && ytWatchSecondsRef.current >= dur * 0.85) {
+   652→   652→        setYtCanMarkComplete(true);
+   653→   653→      }
+   654→   654→    }, 1000);
+   655→   655→
+   656→   656→    return () => {
+   657→   657→      if (ytTimerRef.current) {
+   658→   658→        clearInterval(ytTimerRef.current);
+   659→   659→        ytTimerRef.current = null;
+   660→   660→      }
+   661→   661→    };
+   662→   662→  }, [isYouTube, video.id]);
+   663→   663→
+   664→   664→  // Render the right player
+   665→   665→  return (
+   666→   666→    <>
+   667→   667→      {/* Expanded fullscreen overlay — rendered as a portal-like fixed layer */}
+   668→   668→      {expanded && (
+   669→   669→        <div className="fixed inset-0 z-50 bg-black flex flex-col">
+   670→   670→          {/* Top bar with title + close */}
+   671→   671→          <div className="flex items-center justify-between px-4 py-3 bg-black/80 backdrop-blur">
+   672→   672→            <div className="min-w-0 flex-1">
+   673→   673→              <p className="text-sm font-medium text-white truncate">{video.title}</p>
+   674→   674→            </div>
+   675→   675→            <div className="flex items-center gap-2 shrink-0">
+   676→   676→              {localCompleted && (
+   677→   677→                <Badge className="bg-success/20 text-success border-transparent">
+   678→   678→                  <CheckCircle2 className="h-3 w-3" /> Completed
+   679→   679→                </Badge>
+   680→   680→              )}
+   681→   681→              <button
+   682→   682→                onClick={() => setExpanded(false)}
+   683→   683→                className="flex items-center gap-1.5 rounded-md bg-white/10 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/20 transition-colors"
+   684→   684→                aria-label="Exit fullscreen"
+   685→   685→              >
+   686→   686→                <Minimize2 className="h-4 w-4" />
+   687→   687→                <span className="hidden sm:inline">Exit fullscreen</span>
+   688→   688→              </button>
+   689→   689→            </div>
+   690→   690→          </div>
+   691→   691→          {/* Video fills the remaining space */}
+   692→   692→          <div className="flex-1 flex items-center justify-center p-2 sm:p-4">
+   693→   693→            <div className="relative w-full h-full flex items-center justify-center">
+   694→   694→              {video.source === "YOUTUBE" && ytEmbedUrl ? (
+   695→   695→                <iframe
+   696→   696→                  key={video.id}
+   697→   697→                  src={ytEmbedUrl}
+   698→   698→                  title={video.title}
+   699→   699→                  className="w-full h-full max-w-[1600px]"
+   700→   700→                  style={{ aspectRatio: "16 / 9" }}
+   701→   701→                  frameBorder={0}
+   702→   702→                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+   703→   703→                  allowFullScreen
+   704→   704→                />
+   705→   705→              ) : (
+   706→   706→                <video
+   707→   707→                  key={video.id}
+   708→   708→                  ref={videoRef}
+   709→   709→                  src={video.videoUrl}
+   710→   710→                  poster={video.thumbnail || undefined}
+   711→   711→                  controls
+   712→   712→                  autoPlay
+   713→   713→                  className="w-full h-full max-h-full object-contain"
+   714→   714→                  onLoadedMetadata={handleLoadedMetadata}
+   715→   715→                  onTimeUpdate={handleTimeUpdate}
+   716→   716→                  onSeeked={handleSeeked}
+   717→   717→                  onEnded={handleEnded}
+   718→   718→                />
+   719→   719→              )}
+   720→   720→            </div>
+   721→   721→          </div>
+   722→   722→        </div>
+   723→   723→      )}
+   724→   724→
+   725→   725→      {/* Default compact view */}
+   726→   726→      <Card className="overflow-hidden p-0">
+   727→   727→        {/* Compact video area — small, with expand button */}
+   728→   728→        <div className="relative bg-black rounded-t-lg overflow-hidden mx-auto" style={{ maxWidth: "640px" }}>
+   729→   729→          <div className="aspect-video w-full flex items-center justify-center relative">
+   730→   730→            {video.source === "YOUTUBE" && ytEmbedUrl ? (
+   731→   731→              <iframe
+   732→   732→                key={video.id}
+   733→   733→                src={ytEmbedUrl}
+   734→   734→                title={video.title}
+   735→   735→                className="w-full h-full"
+   736→   736→                frameBorder={0}
+   737→   737→                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+   738→   738→                allowFullScreen
+   739→   739→              />
+   740→   740→            ) : (
+   741→   741→              <video
+   742→   742→                key={video.id}
+   743→   743→                ref={videoRef}
+   744→   744→                src={video.videoUrl}
+   745→   745→                poster={video.thumbnail || undefined}
+   746→   746→                controls
+   747→   747→                className="w-full h-full"
+   748→   748→                onLoadedMetadata={handleLoadedMetadata}
+   749→   749→                onTimeUpdate={handleTimeUpdate}
+   750→   750→                onSeeked={handleSeeked}
+   751→   751→                onEnded={handleEnded}
+   752→   752→              />
+   753→   753→            )}
+   754→   754→            {/* Expand button overlay */}
+   755→   755→            <button
+   756→   756→              onClick={() => setExpanded(true)}
+   757→   757→              className="absolute bottom-2 right-2 flex items-center gap-1.5 rounded-md bg-black/70 px-2.5 py-1.5 text-xs font-medium text-white backdrop-blur hover:bg-black/90 transition-colors z-10"
+   758→   758→              aria-label="Expand video to fullscreen"
+   759→   759→            >
+   760→   760→              <Maximize2 className="h-3.5 w-3.5" />
+   761→   761→              <span className="hidden sm:inline">Expand</span>
+   762→   762→            </button>
+   763→   763→          </div>
+   764→   764→        </div>
+   765→   765→        <CardContent className="p-5 space-y-4">
+   766→   766→          <div className="flex flex-wrap items-start justify-between gap-3">
+   767→   767→            <div className="min-w-0 flex-1">
+   768→   768→              <h2 className="font-heading text-lg font-semibold text-foreground">{video.title}</h2>
+   769→   769→              {video.description && (
+   770→   770→                <p className="text-sm text-muted-foreground mt-1.5">{video.description}</p>
+   771→   771→              )}
+   772→   772→            </div>
+   773→   773→            <div className="flex items-center gap-2 shrink-0">
+   774→   774→              {posting && (
+   775→   775→                <span className="text-xs text-muted-foreground flex items-center gap-1">
+   776→   776→                  <Clock className="h-3 w-3 animate-spin" /> Saving...
+   777→   777→                </span>
+   778→   778→              )}
+   779→   779→              {localCompleted ? (
+   780→   780→                <Badge className="bg-success/15 text-success border-transparent">
+   781→   781→                  <CheckCircle2 className="h-3 w-3" /> Completed
+   782→   782→                </Badge>
+   783→   783→              ) : (
+   784→   784→                <Badge variant="outline" className="text-muted-foreground">
+   785→   785→                  <PlayCircle className="h-3 w-3" /> In progress
+   786→   786→                </Badge>
+   787→   787→              )}
+   788→   788→            </div>
+   789→   789→          </div>
+   790→   790→
+   791→   791→          {/* YouTube: explain limitation + show manual mark-complete */}
+   792→   792→          {isYouTube && (
+   793→   793→            <div className="rounded-lg border border-warning/30 bg-warning/5 p-3 space-y-2">
+   794→   794→              <div className="flex items-start gap-2">
+   795→   795→                <Info className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+   796→   796→                <div>
+   797→   797→                  <p className="text-sm font-medium text-foreground">
+   798→   798→                    YouTube video tracking
+   799→   799→                  </p>
+   800→   800→                  <p className="text-xs text-muted-foreground mt-0.5">
+   801→   801→                    YouTube videos cannot report precise playback events to us. The
+   802→   802→                    &quot;Mark as complete&quot; button below unlocks after you have
+   803→   803→                    kept this page open for at least 85% of the video&apos;s duration.
+   804→   804→                  </p>
+   805→   805→                </div>
+   806→   806→              </div>
+   807→   807→              <div className="flex items-center gap-2 pl-6">
+   808→   808→                <Tooltip>
+   809→   809→                  <TooltipTrigger asChild>
+   810→   810→                    <span tabIndex={0} className="inline-flex">
+   811→   811→                      <Button
+   812→   812→                        size="sm"
+   813→   813→                        onClick={markYtComplete}
+   814→   814→                        disabled={!ytCanMarkComplete || localCompleted || posting}
+   815→   815→                        className="gap-2"
+   816→   816→                      >
+   817→   817→                        <CheckCircle2 className="h-4 w-4" />
+   818→   818→                        {localCompleted ? "Completed" : ytCanMarkComplete ? "Mark as complete" : `Keep watching (${Math.round((ytWatchSecondsRef.current / Math.max(1, durationRef.current)) * 100)}%)`}
+   819→   819→                      </Button>
+   820→   820→                    </span>
+   821→   821→                  </TooltipTrigger>
+   822→   822→                  <TooltipContent>
+   823→   823→                    {ytCanMarkComplete
+   824→   824→                      ? "You can now mark this video complete."
+   825→   825→                      : "Available after watching at least 85% of the video duration."}
+   826→   826→                  </TooltipContent>
+   827→   827→                </Tooltip>
+   828→   828→              </div>
+   829→   829→            </div>
+   830→   830→          )}
+   831→   831→        </CardContent>
+   832→   832→      </Card>
+   833→   833→    </>
+   834→   834→  );
+   835→   835→}
+   836→   836→
+   837→   837→/* ===================== Helpers ===================== */
+   838→   838→
+   839→   839→function MaterialRow({ material }: { material: MaterialItem }) {
+   840→   840→  const isLink = material.type === "LINK";
+   841→   841→  const Icon = isLink ? LinkIcon : FileText;
+   842→   842→  return (
+   843→   843→    <li>
+   844→   844→      <a
+   845→   845→        href={material.fileUrl}
+   846→   846→        target="_blank"
+   847→   847→        rel="noreferrer"
+   848→   848→        className="flex items-start gap-3 rounded-md border border-border p-3 hover:bg-muted/40 transition-colors"
+   849→   849→      >
+   850→   850→        <div className="flex h-9 w-9 items-center justify-center rounded-md bg-accent/10 text-accent shrink-0">
+   851→   851→          <Icon className="h-4 w-4" />
+   852→   852→        </div>
+   853→   853→        <div className="min-w-0 flex-1">
+   854→   854→          <p className="text-sm font-medium text-foreground line-clamp-1">{material.title}</p>
+   855→   855→          {material.description && (
+   856→   856→            <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{material.description}</p>
+   857→   857→          )}
+   858→   858→          {material.topic && (
+   859→   859→            <p className="text-xs text-muted-foreground mt-0.5">Topic: {material.topic.title}</p>
+   860→   860→          )}
+   861→   861→        </div>
+   862→   862→        <span className="text-xs text-accent flex items-center gap-1 shrink-0">
+   863→   863→          {isLink ? "Open" : "Download"} <Download className="h-3 w-3" />
+   864→   864→        </span>
+   865→   865→      </a>
+   866→   866→    </li>
+   867→   867→  );
+   868→   868→}
+   869→   869→
+   870→   870→/* ===================== Locked Assignment Placeholder ===================== */
+   871→   871→
+   872→   872→function LockedAssignmentCard({
+   873→   873→  completedVideos,
+   874→   874→  totalVideos,
+   875→   875→  percent,
+   876→   876→}: {
+   877→   877→  completedVideos: number;
+   878→   878→  totalVideos: number;
+   879→   879→  percent: number;
+   880→   880→}) {
+   881→   881→  return (
+   882→   882→    <Card className="border-dashed">
+   883→   883→      <CardContent className="p-6">
+   884→   884→        <div className="flex items-start gap-4">
+   885→   885→          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-muted-foreground shrink-0">
+   886→   886→            <Lock className="h-6 w-6" />
+   887→   887→          </div>
+   888→   888→          <div className="flex-1 min-w-0">
+   889→   889→            <h3 className="font-heading text-base font-semibold text-foreground">
+   890→   890→              Assignment Locked
+   891→   891→            </h3>
+   892→   892→            <p className="text-sm text-muted-foreground mt-1">
+   893→   893→              Complete all video lessons in this course to unlock your assignment.
+   894→   894→              The assignment details will appear here once you finish every lesson.
+   895→   895→            </p>
+   896→   896→            <div className="mt-4">
+   897→   897→              <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
+   898→   898→                <span>{completedVideos}/{totalVideos} lessons completed</span>
+   899→   899→                <span className="font-medium text-foreground">{percent}%</span>
+   900→   900→              </div>
+   901→   901→              <Progress value={percent} className="h-2" />
+   902→   902→            </div>
+   903→   903→          </div>
+   904→   904→        </div>
+   905→   905→      </CardContent>
+   906→   906→    </Card>
+   907→   907→  );
+   908→   908→}
+   909→   909→
+   910→   910→function AssignmentPanel({
+   911→   911→  course,
+   912→   912→  onSubmitted,
+   913→   913→}: {
+   914→   914→  course: CourseDetail;
+   915→   915→  onSubmitted: () => void;
+   916→   916→}) {
+   917→   917→  const navigate = useAppStore((s) => s.navigate);
+   918→   918→  const [uploading, setUploading] = useState(false);
+   919→   919→  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+   920→   920→
+   921→   921→  const assignment = course.assignment!;
+   922→   922→  const submission = course.submission;
+   923→   923→  const completed = course.courseCompletion.allCompleted;
+   924→   924→
+   925→   925→  async function handleSubmit() {
+   926→   926→    if (!selectedFile) {
+   927→   927→      toast({ title: "Select a file", description: "Please choose a file to upload.", variant: "destructive" });
+   928→   928→      return;
+   929→   929→    }
+   930→   930→    setUploading(true);
+   931→   931→    try {
+   932→   932→      const fd = new FormData();
+   933→   933→      fd.append("file", selectedFile);
+   934→   934→      const res = await apiUpload<{
+   935→   935→        certificateIssued: boolean;
+   936→   936→        certificateId?: string;
+   937→   937→      }>(`/api/student/assignments/${assignment.id}/submit`, fd);
+   938→   938→      setSelectedFile(null);
+   939→   939→      await onSubmitted();
+   940→   940→      if (res.certificateIssued) {
+   941→   941→        toast({
+   942→   942→          title: "Submitted & certificate issued!",
+   943→   943→          description: "Your submission was received and a certificate was automatically issued.",
+   944→   944→        });
+   945→   945→      } else {
+   946→   946→        toast({
+   947→   947→          title: "Submission received",
+   948→   948→          description: "Your assignment has been submitted for review.",
+   949→   949→        });
+   950→   950→      }
+   951→   951→    } catch {
+   952→   952→    } finally {
+   953→   953→      setUploading(false);
+   954→   954→    }
+   955→   955→  }
+   956→   956→
+   957→   957→  return (
+   958→   958→    <Card>
+   959→   959→      <CardHeader>
+   960→   960→        <CardTitle className="text-base flex items-center gap-2">
+   961→   961→          <ClipboardList className="h-4 w-4 text-accent" />
+   962→   962→          {assignment.title}
+   963→   963→        </CardTitle>
+   964→   964→        <CardDescription>
+   965→   965→          Course assignment · {completed ? "Unlocked" : "Locked"}
+   966→   966→        </CardDescription>
+   967→   967→      </CardHeader>
+   968→   968→      <CardContent className="space-y-4">
+   969→   969→        {!completed ? (
+   970→   970→          <div className="rounded-lg border border-border bg-muted/40 p-4">
+   971→   971→            <div className="flex items-start gap-3">
+   972→   972→              <Lock className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+   973→   973→              <div className="flex-1">
+   974→   974→                <p className="font-medium text-foreground">Assignment locked</p>
+   975→   975→                <p className="text-sm text-muted-foreground mt-1">
+   976→   976→                  Complete all video lessons in this course to unlock your assignment.
+   977→   977→                </p>
+   978→   978→                <div className="mt-3">
+   979→   979→                  <div className="flex justify-between text-xs text-muted-foreground mb-1">
+   980→   980→                    <span>{course.courseCompletion.completedVideos}/{course.courseCompletion.totalVideos} lessons</span>
+   981→   981→                    <span>{course.courseCompletion.percent}%</span>
+   982→   982→                  </div>
+   983→   983→                  <Progress value={course.courseCompletion.percent} className="h-1.5" />
+   984→   984→                </div>
+   985→   985→              </div>
+   986→   986→            </div>
+   987→   987→          </div>
+   988→   988→        ) : submission ? (
+   989→   989→          <div className="space-y-3">
+   990→   990→            <div className="flex items-center gap-2">
+   991→   991→              <Badge className="bg-success/15 text-success border-transparent">
+   992→   992→                <CheckCircle2 className="h-3 w-3" /> Submitted
+   993→   993→              </Badge>
+   994→   994→              {submission.status === "REVIEWED" && (
+   995→   995→                <Badge className="bg-accent/10 text-accent border-transparent">Reviewed</Badge>
+   996→   996→              )}
+   997→   997→            </div>
+   998→   998→            <p className="text-sm text-muted-foreground">
+   999→   999→              Submitted on {formatDateTime(submission.submittedAt)}
+  1000→  1000→            </p>
+  1001→  1001→            <a
+  1002→  1002→              href={submission.fileUrl}
+  1003→  1003→              target="_blank"
+  1004→  1004→              rel="noreferrer"
+  1005→  1005→              className="inline-flex items-center gap-2 text-sm text-accent hover:underline"
+  1006→  1006→            >
+  1007→  1007→              <Download className="h-3 w-3" /> View your submission
+  1008→  1008→            </a>
+  1009→  1009→            {submission.reviewNotes && (
+  1010→  1010→              <div className="rounded-md border border-border bg-card p-3">
+  1011→  1011→                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Reviewer notes</p>
+  1012→  1012→                <p className="text-sm text-foreground">{submission.reviewNotes}</p>
+  1013→  1013→              </div>
+  1014→  1014→            )}
+  1015→  1015→            {course.certificateTemplate?.isEnabled && (
+  1016→  1016→              <Button variant="outline" size="sm" onClick={() => navigate(["student", "certificates"])} className="gap-2">
+  1017→  1017→                <Award className="h-4 w-4" /> View your certificate
+  1018→  1018→              </Button>
+  1019→  1019→            )}
+  1020→  1020→            {assignment.allowResubmission && (
+  1021→  1021→              <p className="text-xs text-muted-foreground">
+  1022→  1022→                Resubmission is allowed — pick a new file below to replace your submission.
+  1023→  1023→              </p>
+  1024→  1024→            )}
+  1025→  1025→          </div>
+  1026→  1026→        ) : null}
+  1027→  1027→
+  1028→  1028→        {completed && (!submission || assignment.allowResubmission) && (
+  1029→  1029→          <div className="space-y-3">
+  1030→  1030→            {assignment.description && (
+  1031→  1031→              <p className="text-sm text-foreground">{assignment.description}</p>
+  1032→  1032→            )}
+  1033→  1033→            {assignment.instructions && (
+  1034→  1034→              <div className="rounded-md border border-border bg-muted/40 p-3">
+  1035→  1035→                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Instructions</p>
+  1036→  1036→                <p className="text-sm text-foreground whitespace-pre-wrap">{assignment.instructions}</p>
+  1037→  1037→              </div>
+  1038→  1038→            )}
+  1039→  1039→            {assignment.fileUrl && (
+  1040→  1040→              <a
+  1041→  1041→                href={assignment.fileUrl}
+  1042→  1042→                target="_blank"
+  1043→  1043→                rel="noreferrer"
+  1044→  1044→                className="inline-flex items-center gap-2 text-sm text-accent hover:underline"
+  1045→  1045→              >
+  1046→  1046→                <Download className="h-3 w-3" /> Download assignment brief
+  1047→  1047→              </a>
+  1048→  1048→            )}
+  1049→  1049→            {assignment.dueDate && (
+  1050→  1050→              <p className="text-xs text-muted-foreground flex items-center gap-1">
+  1051→  1051→                <Clock className="h-3 w-3" /> Due {formatDateTime(assignment.dueDate)}
+  1052→  1052→              </p>
+  1053→  1053→            )}
+  1054→  1054→            <div className="border-t border-border pt-3 space-y-3">
+  1055→  1055→              <label className="text-sm font-medium text-foreground">Upload your submission</label>
+  1056→  1056→              <input
+  1057→  1057→                type="file"
+  1058→  1058→                accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
+  1059→  1059→                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+  1060→  1060→                className="block w-full text-sm text-foreground file:mr-3 file:py-1.5 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer"
+  1061→  1061→              />
+  1062→  1062→              {selectedFile && (
+  1063→  1063→                <p className="text-xs text-muted-foreground">
+  1064→  1064→                  Selected: {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
+  1065→  1065→                </p>
+  1066→  1066→              )}
+  1067→  1067→              <Button onClick={handleSubmit} disabled={!selectedFile || uploading} className="gap-2">
+  1068→  1068→                <Upload className="h-4 w-4" />
+  1069→  1069→                {uploading ? "Uploading..." : "Submit Assignment"}
+  1070→  1070→              </Button>
+  1071→  1071→            </div>
+  1072→  1072→          </div>
+  1073→  1073→        )}
+  1074→  1074→      </CardContent>
+  1075→  1075→    </Card>
+  1076→  1076→  );
+  1077→  1077→}
+  1078→  1078→
+  1079→  1079→// Local helper for YouTube URL parsing
+  1080→  1080→function toYouTubeEmbed(url: string): string | null {
+  1081→  1081→  try {
+  1082→  1082→    const u = new URL(url);
+  1083→  1083→    if (u.hostname === "youtu.be") {
+  1084→  1084→      const id = u.pathname.slice(1);
+  1085→  1085→      return `https://www.youtube.com/embed/${id}?rel=0`;
+  1086→  1086→    }
+  1087→  1087→    if (u.hostname.includes("youtube.com")) {
+  1088→  1088→      const id = u.searchParams.get("v");
+  1089→  1089→      if (id) return `https://www.youtube.com/embed/${id}?rel=0`;
+  1090→  1090→      // /embed/ID or /shorts/ID
+  1091→  1091→      const m = u.pathname.match(/\/(embed|shorts)\/([\w-]+)/);
+  1092→  1092→      if (m) return `https://www.youtube.com/embed/${m[2]}?rel=0`;
+  1093→  1093→    }
+  1094→  1094→    return null;
+  1095→  1095→  } catch {
+  1096→  1096→    return null;
+  1097→  1097→  }
+  1098→  1098→}
+  1099→  1099→
+  1100→  1100→function formatVideoDuration(seconds: number): string {
+  1101→  1101→  if (seconds <= 0) return "";
+  1102→  1102→  const m = Math.floor(seconds / 60);
+  1103→  1103→  const s = Math.floor(seconds % 60);
+  1104→  1104→  if (m === 0) return `${s}s`;
+  1105→  1105→  return `${m}:${s.toString().padStart(2, "0")}`;
+  1106→  1106→}
+  1107→  1107→

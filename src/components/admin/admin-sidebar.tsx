@@ -10,16 +10,31 @@ import {
 } from "lucide-react";
 import { apiPost } from "@/hooks/use-api";
 
-const NAV = [
-  { label: "Overview", icon: LayoutDashboard, segments: ["admin", "overview"] },
-  { label: "Students", icon: Users, segments: ["admin", "students"] },
-  { label: "Courses", icon: BookOpen, segments: ["admin", "courses"] },
-  { label: "Learning Materials", icon: FileText, segments: ["admin", "materials"] },
-  { label: "Assignments", icon: ClipboardList, segments: ["admin", "assignments"] },
-  { label: "Submissions", icon: Inbox, segments: ["admin", "submissions"] },
-  { label: "Subscription Plans", icon: CreditCard, segments: ["admin", "plans"] },
-  { label: "Certificates", icon: Award, segments: ["admin", "certificates"] },
-  { label: "Settings", icon: Settings, segments: ["admin", "settings"] },
+const NAV_SECTIONS = [
+  {
+    label: "Management",
+    items: [
+      { label: "Overview", icon: LayoutDashboard, segments: ["admin", "overview"] },
+      { label: "Students", icon: Users, segments: ["admin", "students"] },
+      { label: "Courses", icon: BookOpen, segments: ["admin", "courses"] },
+      { label: "Learning Materials", icon: FileText, segments: ["admin", "materials"] },
+    ],
+  },
+  {
+    label: "Assessment",
+    items: [
+      { label: "Assignments", icon: ClipboardList, segments: ["admin", "assignments"] },
+      { label: "Submissions", icon: Inbox, segments: ["admin", "submissions"] },
+    ],
+  },
+  {
+    label: "Platform",
+    items: [
+      { label: "Subscription Plans", icon: CreditCard, segments: ["admin", "plans"] },
+      { label: "Certificates", icon: Award, segments: ["admin", "certificates"] },
+      { label: "Settings", icon: Settings, segments: ["admin", "settings"] },
+    ],
+  },
 ];
 
 export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
@@ -38,43 +53,50 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
     <aside className="relative flex h-full w-full flex-col border-r border-sidebar-border bg-gradient-to-b from-card via-muted/20 to-muted/50">
       {/* Subtle accent right edge */}
       <div className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-accent/0 via-accent/40 to-accent/0" />
+
       {/* Logo header */}
       <div className="flex h-16 items-center border-b border-sidebar-border/80 px-5">
         <BrandLogo onClick={() => { navigate(["admin", "overview"]); onNavigate?.(); }} />
       </div>
+
       <ScrollArea className="flex-1 px-3 py-5">
-        <nav className="space-y-1">
-          <p className="px-3 pb-2.5 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground/60">
-            Management
-          </p>
-          {NAV.map((item) => {
-            const active = current === item.segments[1];
-            return (
-              <button
-                key={item.label}
-                onClick={() => { navigate(item.segments); onNavigate?.(); }}
-                className={cn(
-                  "group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200",
-                  active
-                    ? "bg-accent/10 text-accent font-semibold"
-                    : "font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-                )}
-              >
-                {active && (
-                  <span className="absolute left-0 top-1/2 h-6 -translate-y-1/2 w-1 rounded-r-full bg-accent" />
-                )}
-                <item.icon className={cn(
-                  "h-4 w-4 shrink-0 transition-colors duration-200",
-                  active
-                    ? "text-accent"
-                    : "text-muted-foreground/70 group-hover:text-foreground"
-                )} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
+        <nav className="space-y-6">
+          {NAV_SECTIONS.map((section) => (
+            <div key={section.label} className="space-y-1">
+              <p className="px-3 pb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground/60">
+                {section.label}
+              </p>
+              {section.items.map((item) => {
+                const active = current === item.segments[1];
+                return (
+                  <button
+                    key={item.label}
+                    onClick={() => { navigate(item.segments); onNavigate?.(); }}
+                    className={cn(
+                      "group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200",
+                      active
+                        ? "bg-light-teal text-accent font-semibold"
+                        : "font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                    )}
+                  >
+                    {active && (
+                      <span className="absolute left-0 top-1/2 h-6 -translate-y-1/2 w-1 rounded-r-full bg-accent" />
+                    )}
+                    <item.icon className={cn(
+                      "h-4 w-4 shrink-0 transition-colors duration-200",
+                      active
+                        ? "text-accent"
+                        : "text-muted-foreground/70 group-hover:text-foreground"
+                    )} />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </nav>
       </ScrollArea>
+
       {/* Logout footer with separator */}
       <div className="relative border-t border-sidebar-border/80 p-3">
         <button

@@ -42,6 +42,11 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-deep-navy: var(--deep-navy);
+  --color-secondary-slate: var(--secondary-slate);
+  --color-muted-text: var(--muted-text);
+  --color-light-teal: var(--light-teal);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -49,45 +54,60 @@
 }
 
 :root {
-  /* Brand palette per design spec */
-  --radius: 0.5rem;
-  /* Primary: Deep Navy #172554 */
-  --background: #F8FAFC;
-  --foreground: #1E293B;
-  --card: #FFFFFF;
-  --card-foreground: #1E293B;
+  /* ─── Exact colour palette from design spec ─── */
+  --radius: 0.625rem; /* 10px standard card radius */
+
+  /* Backgrounds & surfaces */
+  --background: #F8FAFC;       /* Main Background */
+  --foreground: #0F172A;       /* Primary Text */
+  --card: #FFFFFF;             /* White Surface */
+  --card-foreground: #0F172A;  /* Primary Text on cards */
   --popover: #FFFFFF;
-  --popover-foreground: #1E293B;
-  /* Primary: Deep Navy */
-  --primary: #172554;
+  --popover-foreground: #0F172A;
+
+  /* Brand colours */
+  --primary: #172554;          /* Primary Navy */
   --primary-foreground: #F8FAFC;
-  /* Secondary: Slate Blue */
-  --secondary: #E2E8F0;
-  --secondary-foreground: #1E293B;
+  --secondary: #E2E8F0;        /* Light border-level surface */
+  --secondary-foreground: #1E293B; /* Deep Navy */
   --muted: #F1F5F9;
-  --muted-foreground: #64748B;
-  /* Accent: Muted Teal */
-  --accent: #0F766E;
+  --muted-foreground: #64748B; /* Secondary Text */
+  --accent: #0F766E;           /* Muted Teal */
   --accent-foreground: #F8FAFC;
-  --destructive: #B91C1C;
+
+  /* Extended palette tokens */
+  --deep-navy: #1E293B;
+  --secondary-slate: #334155;
+  --muted-text: #94A3B8;       /* Muted Text */
+  --light-teal: #F0FDFA;       /* Light Teal Surface */
+  --info: #2563EB;             /* Information */
+
+  /* Status colours */
+  --destructive: #B91C1C;      /* Error */
+  --success: #15803D;          /* Success */
+  --success-foreground: #F8FAFC;
+  --warning: #B45309;          /* Warning */
+  --warning-foreground: #F8FAFC;
+
+  /* Borders & inputs */
   --border: #E2E8F0;
   --input: #E2E8F0;
   --ring: #0F766E;
-  --success: #15803D;
-  --success-foreground: #F8FAFC;
-  --warning: #B45309;
-  --warning-foreground: #F8FAFC;
-  --chart-1: #0F766E;
-  --chart-2: #172554;
-  --chart-3: #475569;
-  --chart-4: #B45309;
-  --chart-5: #15803D;
+
+  /* Charts — use brand palette */
+  --chart-1: #172554;  /* Primary Navy */
+  --chart-2: #0F766E;  /* Muted Teal */
+  --chart-3: #334155;  /* Secondary Slate */
+  --chart-4: #B45309;  /* Warning */
+  --chart-5: #15803D;  /* Success */
+
+  /* Sidebar */
   --sidebar: #FFFFFF;
-  --sidebar-foreground: #1E293B;
+  --sidebar-foreground: #0F172A;
   --sidebar-primary: #172554;
   --sidebar-primary-foreground: #F8FAFC;
-  --sidebar-accent: #F1F5F9;
-  --sidebar-accent-foreground: #172554;
+  --sidebar-accent: #F0FDFA;   /* Light Teal Surface for active items */
+  --sidebar-accent-foreground: #0F766E;
   --sidebar-border: #E2E8F0;
   --sidebar-ring: #0F766E;
 }
@@ -134,14 +154,68 @@
   }
   html {
     scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
   }
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    text-rendering: optimizeLegibility;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
+    color: var(--foreground);
+  }
+  /* Consistent focus-visible ring across all interactive elements */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  /* Remove default button/input styling residue */
+  button { cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
+}
+
+/* ─── Premium component polish layer ─── */
+@layer components {
+  /* Consistent card elevation */
+  .card-elevated {
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+  }
+  .card-elevated:hover {
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06), 0 2px 4px rgba(15, 23, 42, 0.03);
+  }
+
+  /* Premium stat card icon container */
+  .stat-icon {
+    @apply flex h-10 w-10 items-center justify-center rounded-xl shrink-0;
+  }
+
+  /* Consistent section divider */
+  .section-divider {
+    @apply h-px w-full bg-border;
+  }
+
+  /* Premium table styling */
+  .premium-table thead th {
+    @apply text-xs font-semibold uppercase tracking-wider text-muted-foreground;
+  }
+  .premium-table tbody tr {
+    @apply transition-colors;
+  }
+
+  /* Status badge base */
+  .status-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  /* Subtle entrance animation */
+  .animate-entrance {
+    animation: entrance 0.3s ease-out both;
+  }
+  @keyframes entrance {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 }
 

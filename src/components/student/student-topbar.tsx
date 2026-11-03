@@ -2,7 +2,7 @@
 
 import { useAppStore } from "@/stores/app-store";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, LogOut, ChevronDown, GraduationCap } from "lucide-react";
+import { Menu, LogOut, ChevronDown, GraduationCap, User as UserIcon, CreditCard } from "lucide-react";
 import { apiPost } from "@/hooks/use-api";
 
 const TITLES: Record<string, string> = {
@@ -46,7 +46,10 @@ export function StudentTopbar({ onToggleSidebar }: { onToggleSidebar: () => void
     .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border/80 bg-background/70 px-4 shadow-sm backdrop-blur-xl transition-shadow duration-300 md:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border/80 bg-background/80 px-4 shadow-sm backdrop-blur-xl transition-shadow duration-300 md:px-6">
+      {/* Subtle accent underline */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"
@@ -59,20 +62,24 @@ export function StudentTopbar({ onToggleSidebar }: { onToggleSidebar: () => void
         </Button>
         <div className="flex flex-col gap-0.5">
           <h1 className="font-heading text-xl font-semibold leading-tight tracking-tight text-foreground">{title}</h1>
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground/80">Student Dashboard</p>
+          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground/80">Student Dashboard</p>
         </div>
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="hidden items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-medium text-accent shadow-sm transition-colors duration-200 sm:flex">
-          <GraduationCap className="h-3 w-3" />
+        {/* Accent "Student" badge */}
+        <div className="hidden items-center gap-1.5 rounded-full border border-accent/20 bg-gradient-to-r from-accent/10 to-accent/5 px-3 py-1 text-xs font-semibold text-accent shadow-sm transition-colors duration-200 sm:flex">
+          <GraduationCap className="h-3.5 w-3.5" />
           <span>Student</span>
         </div>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 rounded-lg p-1 pr-2 transition-all duration-200 hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
-              <Avatar className="h-8 w-8 ring-1 ring-border transition-shadow duration-200">
-                <AvatarFallback className="bg-accent text-xs font-semibold text-accent-foreground">{initials}</AvatarFallback>
+              {/* Ringed avatar */}
+              <Avatar className="h-8 w-8 ring-2 ring-accent/30 ring-offset-2 ring-offset-background transition-shadow duration-200">
+                {user?.profilePhoto ? <AvatarImage src={user.profilePhoto} alt={user?.name || ""} /> : null}
+                <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-xs font-semibold text-primary-foreground">{initials}</AvatarFallback>
               </Avatar>
               <div className="hidden text-left md:block">
                 <p className="text-sm font-semibold leading-none text-foreground">{user?.name}</p>
@@ -82,16 +89,18 @@ export function StudentTopbar({ onToggleSidebar }: { onToggleSidebar: () => void
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Account</DropdownMenuLabel>
+            <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Account
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate(["student", "profile"])} className="gap-2">
-              My Profile
+              <UserIcon className="h-4 w-4" /> My Profile
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate(["student", "subscription"])} className="gap-2">
-              My Subscription
+              <CreditCard className="h-4 w-4" /> My Subscription
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout} className="text-destructive gap-2">
+            <DropdownMenuItem onClick={logout} className="text-destructive gap-2 focus:text-destructive">
               <LogOut className="h-4 w-4" />
               Logout
             </DropdownMenuItem>

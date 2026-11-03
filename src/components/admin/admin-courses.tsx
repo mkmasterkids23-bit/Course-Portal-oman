@@ -128,7 +128,7 @@ export function AdminCourses() {
 
   return (
     <div className="space-y-4">
-      <Card className="p-4">
+      <Card className="border-border bg-card p-4 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative flex-1">
@@ -137,12 +137,12 @@ export function AdminCourses() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search courses…"
-                className="pl-9"
+                className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Search courses"
               />
             </div>
             <Select value={category || "ALL"} onValueChange={(v) => setCategory(v === "ALL" ? "" : v)}>
-              <SelectTrigger className="w-full sm:w-[160px]" aria-label="Filter by category">
+              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[160px]" aria-label="Filter by category">
                 <SelectValue placeholder="All categories" />
               </SelectTrigger>
               <SelectContent>
@@ -156,7 +156,7 @@ export function AdminCourses() {
               value={published}
               onValueChange={(v) => setPublished(v as "ALL" | "true" | "false")}
             >
-              <SelectTrigger className="w-full sm:w-[140px]" aria-label="Filter by published state">
+              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[140px]" aria-label="Filter by published state">
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
@@ -166,7 +166,7 @@ export function AdminCourses() {
               </SelectContent>
             </Select>
           </div>
-          <Button className="gap-2" onClick={() => setAddOpen(true)}>
+          <Button className="h-9 gap-2" onClick={() => setAddOpen(true)}>
             <Plus className="h-4 w-4" /> Create Course
           </Button>
         </div>
@@ -184,7 +184,7 @@ export function AdminCourses() {
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="overflow-hidden p-0">
+            <Card key={i} className="overflow-hidden border-border p-0">
               <Skeleton className="h-36 w-full rounded-none" />
               <div className="p-5 space-y-3">
                 <Skeleton className="h-4 w-1/3" />
@@ -430,7 +430,7 @@ function CourseFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit Course" : "Create New Course"}</DialogTitle>
+          <DialogTitle className="font-heading text-lg font-semibold">{isEdit ? "Edit Course" : "Create New Course"}</DialogTitle>
           <DialogDescription>
             {isEdit
               ? "Update course details. Plan assignment and content can be edited in the course manager."
@@ -439,22 +439,22 @@ function CourseFormDialog({
         </DialogHeader>
         <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
           <div className="space-y-1.5">
-            <Label htmlFor="cf-title">Title</Label>
-            <Input id="cf-title" value={values.title} onChange={(e) => setValues({ ...values, title: e.target.value })} placeholder="e.g. Digital Marketing Fundamentals" />
+            <Label htmlFor="cf-title" className="text-xs font-medium text-muted-foreground">Title</Label>
+            <Input id="cf-title" value={values.title} onChange={(e) => setValues({ ...values, title: e.target.value })} placeholder="e.g. Digital Marketing Fundamentals" className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="cf-desc">Description</Label>
-            <Textarea id="cf-desc" value={values.description} onChange={(e) => setValues({ ...values, description: e.target.value })} placeholder="Short summary shown on course cards" rows={3} />
+            <Label htmlFor="cf-desc" className="text-xs font-medium text-muted-foreground">Description</Label>
+            <Textarea id="cf-desc" value={values.description} onChange={(e) => setValues({ ...values, description: e.target.value })} placeholder="Short summary shown on course cards" rows={3} className="rounded-lg" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="cf-cat">Category</Label>
-              <Input id="cf-cat" value={values.category} onChange={(e) => setValues({ ...values, category: e.target.value })} placeholder="e.g. Marketing" />
+              <Label htmlFor="cf-cat" className="text-xs font-medium text-muted-foreground">Category</Label>
+              <Input id="cf-cat" value={values.category} onChange={(e) => setValues({ ...values, category: e.target.value })} placeholder="e.g. Marketing" className="h-9 rounded-lg" />
             </div>
             <div className="space-y-1.5">
-              <Label>Access Type</Label>
+              <Label className="text-xs font-medium text-muted-foreground">Access Type</Label>
               <Select value={values.accessType} onValueChange={(v) => setValues({ ...values, accessType: v as "FREE" | "PAID" })}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full h-9 rounded-lg">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -466,17 +466,17 @@ function CourseFormDialog({
           </div>
 
           {values.accessType === "PAID" && (
-            <div className="space-y-2 rounded-md border border-border p-3 bg-muted/30">
-              <Label className="text-xs text-muted-foreground">Required Plans</Label>
+            <div className="space-y-2 rounded-lg border border-border p-3 bg-muted/30">
+              <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Required Plans</Label>
               <p className="text-xs text-muted-foreground -mt-1">
                 Students with any of these plans can access this course.
               </p>
               {plans.length === 0 ? (
                 <p className="text-xs text-destructive">No subscription plans exist yet. Create one first.</p>
               ) : (
-                <div className="space-y-2 max-h-32 overflow-y-auto">
+                <div className="space-y-2 max-h-32 overflow-y-auto scrollbar-thin">
                   {plans.map((p) => (
-                    <label key={p.id} className="flex items-center gap-2 cursor-pointer">
+                    <label key={p.id} className="flex items-center gap-2 cursor-pointer rounded-md p-1.5 transition-colors hover:bg-background">
                       <Checkbox
                         checked={values.planIds.includes(p.id)}
                         onCheckedChange={() => togglePlan(p.id)}
@@ -492,9 +492,9 @@ function CourseFormDialog({
 
           {/* Thumbnail */}
           <div className="space-y-1.5">
-            <Label>Thumbnail</Label>
+            <Label className="text-xs font-medium text-muted-foreground">Thumbnail</Label>
             <div className="flex items-center gap-3">
-              <div className="h-16 w-24 overflow-hidden rounded-md bg-muted flex items-center justify-center shrink-0">
+              <div className="h-16 w-24 overflow-hidden rounded-lg bg-muted flex items-center justify-center shrink-0 ring-1 ring-border">
                 {values.thumbnail ? (
                   <img src={values.thumbnail} alt="" className="h-full w-full object-cover" />
                 ) : (
@@ -506,6 +506,7 @@ function CourseFormDialog({
                   value={values.thumbnail}
                   onChange={(e) => setValues({ ...values, thumbnail: e.target.value })}
                   placeholder="Paste image URL or upload below"
+                  className="h-9 rounded-lg"
                 />
                 <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs text-accent hover:underline">
                   <Upload className="h-3.5 w-3.5" />
@@ -529,10 +530,10 @@ function CourseFormDialog({
           </div>
 
           {/* Published switch */}
-          <div className="flex items-center justify-between rounded-md border border-border p-3">
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <div>
-              <Label htmlFor="cf-pub" className="text-sm">Publish immediately</Label>
-              <p className="text-xs text-muted-foreground">If off, course stays as a draft.</p>
+              <Label htmlFor="cf-pub" className="text-sm font-medium">Publish immediately</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">If off, course stays as a draft.</p>
             </div>
             <Switch
               id="cf-pub"
@@ -542,8 +543,8 @@ function CourseFormDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button disabled={saving} onClick={submit}>
+          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button disabled={saving} className="h-9" onClick={submit}>
             {saving ? "Saving…" : isEdit ? "Save Changes" : "Create Course"}
           </Button>
         </DialogFooter>
@@ -567,7 +568,7 @@ function CourseCard({
   onDelete: () => void;
 }) {
   return (
-    <Card className="group flex flex-col overflow-hidden p-0 transition-all duration-200 hover:shadow-lg hover:border-accent/30">
+    <Card className="group flex flex-col overflow-hidden border-border p-0 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-accent/30">
       {/* Cover image */}
       <button onClick={onManage} className="relative h-36 overflow-hidden bg-muted text-left">
         {course.thumbnail ? (
@@ -584,23 +585,23 @@ function CourseCard({
         {/* Badge overlays */}
         <div className="absolute top-3 left-3 flex gap-1.5">
           {course.accessType === "FREE" ? (
-            <Badge className="bg-success/90 text-success-foreground backdrop-blur shadow-sm">Free</Badge>
+            <Badge className="border-0 bg-success/95 text-success-foreground backdrop-blur shadow-sm">Free</Badge>
           ) : (
-            <Badge className="bg-primary/90 text-primary-foreground backdrop-blur shadow-sm">Paid</Badge>
+            <Badge className="border-0 bg-primary/95 text-primary-foreground backdrop-blur shadow-sm">Paid</Badge>
           )}
           {course.category && (
-            <Badge variant="outline" className="bg-background/80 backdrop-blur shadow-sm">
+            <Badge variant="outline" className="border-0 bg-background/85 text-foreground backdrop-blur shadow-sm">
               {course.category}
             </Badge>
           )}
         </div>
         <div className="absolute top-3 right-3">
           {course.isPublished ? (
-            <Badge className="bg-success/90 text-success-foreground backdrop-blur shadow-sm gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-success-foreground" /> Published
+            <Badge className="border-0 bg-success/95 text-success-foreground backdrop-blur shadow-sm gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-success-foreground animate-pulse" /> Published
             </Badge>
           ) : (
-            <Badge variant="outline" className="bg-background/80 backdrop-blur shadow-sm text-muted-foreground">
+            <Badge variant="outline" className="border-0 bg-background/85 text-muted-foreground backdrop-blur shadow-sm">
               Draft
             </Badge>
           )}
@@ -608,9 +609,9 @@ function CourseCard({
       </button>
 
       {/* Content */}
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex flex-1 flex-col p-5">
         <button onClick={onManage} className="text-left">
-          <h3 className="font-heading font-semibold text-foreground line-clamp-1 group-hover:text-accent transition-colors">
+          <h3 className="font-heading font-semibold text-foreground line-clamp-1 transition-colors duration-200 group-hover:text-accent">
             {course.title}
           </h3>
           <p className="mt-1 text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
@@ -619,51 +620,51 @@ function CourseCard({
         </button>
 
         {/* Stats row */}
-        <div className="mt-3 flex items-center gap-4 border-t border-border pt-3 text-xs">
+        <div className="mt-4 flex items-center gap-4 border-t border-border pt-3 text-xs">
           <span className="flex items-center gap-1 text-muted-foreground">
             <Layers className="h-3.5 w-3.5 text-accent" />
-            <span className="font-medium text-foreground">{course.topicsCount}</span> {course.topicsCount === 1 ? "topic" : "topics"}
+            <span className="font-semibold text-foreground">{course.topicsCount}</span> {course.topicsCount === 1 ? "topic" : "topics"}
           </span>
           <span className="flex items-center gap-1 text-muted-foreground">
             <Video className="h-3.5 w-3.5 text-accent" />
-            <span className="font-medium text-foreground">{course.videosCount}</span> {course.videosCount === 1 ? "lesson" : "lessons"}
+            <span className="font-semibold text-foreground">{course.videosCount}</span> {course.videosCount === 1 ? "lesson" : "lessons"}
           </span>
           {course.accessType === "PAID" && course.planNames.length > 0 && (
             <span className="flex items-center gap-1 text-muted-foreground truncate">
               <CreditCard className="h-3.5 w-3.5 text-accent" />
-              <span className="font-medium text-foreground">{course.planNames.length}</span> {course.planNames.length === 1 ? "plan" : "plans"}
+              <span className="font-semibold text-foreground">{course.planNames.length}</span> {course.planNames.length === 1 ? "plan" : "plans"}
             </span>
           )}
         </div>
 
         {/* Actions */}
         <div className="mt-4 flex items-center gap-2">
-          <Button size="sm" className="flex-1 gap-1.5" onClick={onManage}>
+          <Button size="sm" className="h-9 flex-1 gap-1.5" onClick={onManage}>
             <Settings2 className="h-3.5 w-3.5" /> Manage
           </Button>
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={onEdit}>
+          <Button variant="outline" size="sm" className="h-9 gap-1.5" onClick={onEdit} aria-label="Edit">
             <Pencil className="h-3.5 w-3.5" />
             <span className="sr-only">Edit</span>
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="px-2" aria-label={`More actions for ${course.title}`}>
+              <Button variant="outline" size="sm" className="h-9 px-2" aria-label={`More actions for ${course.title}`}>
                 <MoreHorizontal className="h-3.5 w-3.5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onTogglePublish}>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={onTogglePublish} className="gap-2">
                 {course.isPublished ? (
-                  <><EyeOff className="h-4 w-4" /> Unpublish</>
+                  <><EyeOff className="h-4 w-4 text-muted-foreground" /> Unpublish</>
                 ) : (
-                  <><Eye className="h-4 w-4" /> Publish</>
+                  <><Eye className="h-4 w-4 text-muted-foreground" /> Publish</>
                 )}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onEdit}>
-                <Pencil className="h-4 w-4" /> Edit details
+              <DropdownMenuItem onClick={onEdit} className="gap-2">
+                <Pencil className="h-4 w-4 text-muted-foreground" /> Edit details
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive" onClick={onDelete}>
+              <DropdownMenuItem variant="destructive" onClick={onDelete} className="gap-2">
                 <Trash2 className="h-4 w-4" /> Delete
               </DropdownMenuItem>
             </DropdownMenuContent>

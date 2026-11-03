@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -37,7 +37,7 @@ export function StudentCertificates() {
     return (
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-56 rounded-xl" />
+          <Skeleton key={i} className="h-64 rounded-xl" />
         ))}
       </div>
     );
@@ -68,33 +68,53 @@ export function StudentCertificates() {
 
   return (
     <div className="space-y-6">
-      <Card className="border-accent/20 bg-accent/[0.03]">
-        <CardContent className="p-5 flex items-start gap-3">
-          <ShieldCheck className="h-5 w-5 text-accent shrink-0 mt-0.5" />
-          <div>
-            <p className="font-medium text-foreground">{certs.length} certificate{certs.length > 1 ? "s" : ""} earned</p>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Each certificate has a unique ID and can be verified by reference. Click
-              &quot;View&quot; to preview or &quot;Download PDF&quot; to save or print.
-            </p>
-          </div>
-        </CardContent>
+      {/* Header banner */}
+      <Card className="overflow-hidden border-accent/20 shadow-sm">
+        <div className="relative bg-gradient-to-br from-light-teal via-accent/[0.06] to-card">
+          <div
+            className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full opacity-50"
+            style={{ background: "radial-gradient(circle, rgba(15,118,110,0.18), transparent 70%)" }}
+          />
+          <CardContent className="relative p-5 flex items-start gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15 text-accent shrink-0 ring-1 ring-accent/20">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-heading font-semibold text-foreground">
+                {certs.length} certificate{certs.length > 1 ? "s" : ""} earned
+              </p>
+              <p className="text-sm text-muted-foreground mt-0.5 max-w-2xl">
+                Each certificate has a unique ID and can be verified by reference. Click
+                &quot;View&quot; to preview or &quot;Download PDF&quot; to save or print.
+              </p>
+            </div>
+          </CardContent>
+        </div>
       </Card>
 
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {certs.map((c) => (
-          <Card key={c.id} className="overflow-hidden p-0">
-            <div className="relative h-32 bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Award className="h-10 w-10 text-primary-foreground/90" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_60%)] pointer-events-none" />
-              <Badge className="absolute top-3 right-3 bg-background/20 backdrop-blur text-primary-foreground border-transparent">
-                Verified
+          <Card key={c.id} className="group overflow-hidden p-0 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-1">
+            {/* Premium ribbon header */}
+            <div className="relative h-32 bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center overflow-hidden">
+              {/* Decorative pattern */}
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.25),transparent_60%)] pointer-events-none" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(15,118,110,0.35),transparent_50%)] pointer-events-none" />
+              {/* Subtle pattern */}
+              <div className="pointer-events-none absolute inset-0 opacity-20" style={{ backgroundImage: "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(255,255,255,0.05) 10px, rgba(255,255,255,0.05) 20px)" }} />
+              <Award className="relative h-12 w-12 text-primary-foreground drop-shadow-lg transition-transform duration-300 group-hover:scale-110" />
+              <Badge className="absolute top-3 right-3 bg-white/15 backdrop-blur text-primary-foreground border border-white/20">
+                <ShieldCheck className="h-3 w-3" /> Verified
               </Badge>
+              {/* Certificate icon accent */}
+              <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex h-12 w-12 items-center justify-center rounded-full bg-card ring-4 ring-card shadow-md">
+                <Award className="h-6 w-6 text-accent" />
+              </div>
             </div>
-            <CardContent className="p-5 space-y-3">
+            <CardContent className="p-5 pt-8 space-y-3">
               <div>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">{c.templateTitle}</p>
-                <h3 className="font-heading font-semibold text-foreground line-clamp-2 mt-1">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{c.templateTitle}</p>
+                <h3 className="font-heading text-base font-semibold text-foreground line-clamp-2 mt-1.5 min-h-[2.5rem]">
                   {c.courseTitle}
                 </h3>
               </div>
@@ -109,18 +129,18 @@ export function StudentCertificates() {
                   <ShieldCheck className="h-3 w-3 text-accent" /> {c.organizationName}
                 </p>
               </div>
-              <div className="flex gap-2 pt-2 border-t border-border">
+              <div className="flex gap-2 pt-3 border-t border-border">
                 <Button
                   size="sm"
                   variant="outline"
-                  className="flex-1 gap-2"
+                  className="flex-1 gap-2 shadow-sm"
                   onClick={() => setPreviewCert(c)}
                 >
                   <Eye className="h-4 w-4" /> View
                 </Button>
                 <Button
                   size="sm"
-                  className="flex-1 gap-2"
+                  className="flex-1 gap-2 shadow-sm"
                   asChild
                 >
                   <a
@@ -140,13 +160,13 @@ export function StudentCertificates() {
       {/* Preview dialog with iframe */}
       <Dialog open={!!previewCert} onOpenChange={(o) => !o && setPreviewCert(null)}>
         <DialogContent className="max-w-5xl w-full h-[90vh] flex flex-col p-0 gap-0">
-          <DialogHeader className="p-4 border-b border-border flex-row items-center justify-between space-y-0">
+          <DialogHeader className="p-4 border-b border-border flex-row items-center justify-between space-y-0 bg-gradient-to-r from-light-teal/60 to-card">
             <div>
               <DialogTitle className="text-base">{previewCert?.templateTitle}</DialogTitle>
               <DialogDescription>{previewCert?.courseTitle}</DialogDescription>
             </div>
             {previewCert && (
-              <Button asChild size="sm" className="gap-2">
+              <Button asChild size="sm" className="gap-2 shadow-sm">
                 <a
                   href={`/api/student/certificates/${previewCert.id}/pdf`}
                   target="_blank"

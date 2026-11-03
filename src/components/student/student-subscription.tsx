@@ -18,7 +18,7 @@ import {
 } from "@/types";
 import {
   CheckCircle2, CreditCard, Clock, ShieldCheck, AlertTriangle, Sparkles,
-  ArrowRight, History,
+  ArrowRight, History, CalendarDays,
 } from "lucide-react";
 
 interface SubscriptionInfo {
@@ -95,14 +95,18 @@ export function StudentSubscription() {
     <div className="space-y-6">
       {/* Current subscription card */}
       {sub ? (
-        <Card className={isExpired ? "border-destructive/30" : "border-accent/30"}>
+        <Card className={`overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md ${isExpired ? "border-destructive/30" : "border-accent/30"}`}>
+          {/* Accent top border */}
+          <div className={`h-1 w-full ${isExpired ? "bg-destructive" : "bg-gradient-to-r from-accent to-primary"}`} />
           <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
             <div>
               <CardTitle className="text-base flex items-center gap-2">
-                <CreditCard className="h-4 w-4 text-accent" />
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10 text-accent">
+                  <CreditCard className="h-4 w-4" />
+                </span>
                 Current Plan
               </CardTitle>
-              <CardDescription className="mt-1">
+              <CardDescription className="mt-1.5">
                 {sub.planName} · {formatPrice(sub.planPrice, sub.planCurrency)}
               </CardDescription>
             </div>
@@ -117,20 +121,23 @@ export function StudentSubscription() {
             </Badge>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <MetaBox label="Plan duration" value={`${sub.planDuration} ${durationUnitLabel(sub.planDurationUnit).toLowerCase()}`} />
-              <MetaBox label="Started" value={formatDate(sub.startDate)} />
-              <MetaBox label="Expires" value={formatDate(sub.expiryDate)} />
-              <MetaBox label="Days left" value={`${sub.remainingDays}`} />
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <MetaBox label="Plan duration" value={`${sub.planDuration} ${durationUnitLabel(sub.planDurationUnit).toLowerCase()}`} icon={<Clock className="h-3.5 w-3.5" />} />
+              <MetaBox label="Started" value={formatDate(sub.startDate)} icon={<CalendarDays className="h-3.5 w-3.5" />} />
+              <MetaBox label="Expires" value={formatDate(sub.expiryDate)} icon={<CalendarDays className="h-3.5 w-3.5" />} />
+              <MetaBox label="Days left" value={`${sub.remainingDays}`} icon={<Clock className="h-3.5 w-3.5" />} highlight={!isExpired} />
             </div>
 
             <div>
               <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
                 <span>Subscription progress</span>
-                <span>{Math.round(sub.elapsedPercent)}% elapsed</span>
+                <span className="font-medium text-foreground">{Math.round(sub.elapsedPercent)}% elapsed</span>
               </div>
-              <Progress value={sub.elapsedPercent} className="h-2" />
-              <div className="flex justify-between text-xs text-muted-foreground mt-1">
+              <Progress
+                value={sub.elapsedPercent}
+                className={`h-2 bg-muted ${isExpired ? "[&_[data-slot=progress-indicator]]:bg-destructive" : "[&_[data-slot=progress-indicator]]:bg-accent"}`}
+              />
+              <div className="flex justify-between text-xs text-muted-foreground mt-1.5">
                 <span>{formatDate(sub.startDate)}</span>
                 <span>{formatDate(sub.expiryDate)}</span>
               </div>
@@ -140,17 +147,17 @@ export function StudentSubscription() {
               <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
                 <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <p className="font-medium text-foreground">Your subscription has expired</p>
+                  <p className="font-semibold text-foreground">Your subscription has expired</p>
                   <p className="text-sm text-muted-foreground mt-1">
                     Renew now to restore access to paid courses, assignments and certificates.
                   </p>
                 </div>
-                <Button onClick={() => setRenewOpen(true)} className="shrink-0 gap-2">
+                <Button onClick={() => setRenewOpen(true)} className="shrink-0 gap-2 shadow-sm">
                   <ArrowRight className="h-4 w-4" /> Renew Now
                 </Button>
               </div>
             ) : (
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-gradient-to-br from-light-teal/60 to-card p-4">
                 <div className="flex items-start gap-3">
                   <Clock className="h-5 w-5 text-accent shrink-0 mt-0.5" />
                   <div>
@@ -160,13 +167,13 @@ export function StudentSubscription() {
                     </p>
                   </div>
                 </div>
-                <Button variant="outline" onClick={() => setRenewOpen(true)} className="shrink-0 gap-2">
+                <Button variant="outline" onClick={() => setRenewOpen(true)} className="shrink-0 gap-2 shadow-sm">
                   <Sparkles className="h-4 w-4" /> Renew Early
                 </Button>
               </div>
             )}
 
-            <div className="flex items-start gap-3 rounded-lg border border-border bg-card p-3 text-sm text-muted-foreground">
+            <div className="flex items-start gap-3 rounded-lg border border-border bg-card p-3.5 text-sm text-muted-foreground">
               <History className="h-4 w-4 text-accent shrink-0 mt-0.5" />
               <span>
                 Your previous subscription records and learning history are preserved.
@@ -182,7 +189,7 @@ export function StudentSubscription() {
               icon={<CreditCard className="h-5 w-5" />}
               title="No active subscription"
               description="Choose a learning plan below to unlock paid courses, assignments and certificates."
-              action={<Button onClick={() => navigate(["student", "subscription"])} className="gap-2">
+              action={<Button onClick={() => navigate(["student", "subscription"])} className="gap-2 shadow-sm">
                 View Plans <ArrowRight className="h-4 w-4" />
               </Button>}
             />
@@ -267,11 +274,14 @@ export function StudentSubscription() {
   );
 }
 
-function MetaBox({ label, value }: { label: string; value: string }) {
+function MetaBox({ label, value, icon, highlight }: { label: string; value: string; icon?: React.ReactNode; highlight?: boolean }) {
   return (
-    <div className="rounded-lg border border-border bg-card p-3">
-      <p className="text-xs text-muted-foreground uppercase tracking-wider">{label}</p>
-      <p className="font-heading font-semibold text-foreground mt-1">{value}</p>
+    <div className={`rounded-lg border p-3.5 ${highlight ? "border-accent/30 bg-light-teal/60" : "border-border bg-card"}`}>
+      <p className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+        {icon && <span className="text-accent">{icon}</span>}
+        {label}
+      </p>
+      <p className={`font-heading font-semibold mt-1 ${highlight ? "text-accent" : "text-foreground"}`}>{value}</p>
     </div>
   );
 }
@@ -288,13 +298,13 @@ function PlanCard({
   const isCurrent = subscribing === plan.id;
   return (
     <Card
-      className={`relative p-6 flex flex-col ${
-        plan.isPopular ? "border-accent ring-1 ring-accent/30 shadow-md" : ""
+      className={`relative p-6 flex flex-col shadow-sm transition-all duration-200 hover:shadow-md ${
+        plan.isPopular ? "border-accent ring-2 ring-accent/30 shadow-md" : ""
       }`}
     >
       {plan.isPopular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <Badge className="bg-accent text-accent-foreground">★ Most Popular</Badge>
+          <Badge className="bg-accent text-accent-foreground shadow-sm">★ Most Popular</Badge>
         </div>
       )}
       <div className="mb-4">
@@ -329,7 +339,7 @@ function PlanCard({
         onClick={onSubscribe}
         disabled={busy}
         variant={plan.isPopular ? "default" : "outline"}
-        className="w-full gap-2"
+        className="w-full gap-2 shadow-sm"
       >
         {isCurrent ? "Activating..." : "Subscribe"}
         {!isCurrent && <ArrowRight className="h-4 w-4" />}

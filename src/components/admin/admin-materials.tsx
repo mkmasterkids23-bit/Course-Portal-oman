@@ -30,6 +30,7 @@ import { toast } from "@/hooks/use-toast";
 import { fileExtIcon, formatDate } from "@/types";
 import {
   FileText, Search, Plus, MoreHorizontal, Pencil, Trash2, ExternalLink,
+  FileType, FileType2, Presentation, Link as LinkIcon,
 } from "lucide-react";
 
 interface CourseListItem {
@@ -113,7 +114,7 @@ export function AdminMaterials() {
 
   return (
     <div className="space-y-4">
-      <Card className="p-4">
+      <Card className="border-border bg-card p-4 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative flex-1">
@@ -122,12 +123,12 @@ export function AdminMaterials() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search materials…"
-                className="pl-9"
+                className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Search materials"
               />
             </div>
             <Select value={courseFilter} onValueChange={setCourseFilter}>
-              <SelectTrigger className="w-full sm:w-[180px]" aria-label="Filter by course">
+              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[180px]" aria-label="Filter by course">
                 <SelectValue placeholder="All courses" />
               </SelectTrigger>
               <SelectContent>
@@ -138,7 +139,7 @@ export function AdminMaterials() {
               </SelectContent>
             </Select>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full sm:w-[140px]" aria-label="Filter by type">
+              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[140px]" aria-label="Filter by type">
                 <SelectValue placeholder="All types" />
               </SelectTrigger>
               <SelectContent>
@@ -150,13 +151,13 @@ export function AdminMaterials() {
               </SelectContent>
             </Select>
           </div>
-          <Button className="gap-2" onClick={openAdd}>
+          <Button className="h-9 gap-2" onClick={openAdd}>
             <Plus className="h-4 w-4" /> Add Material
           </Button>
         </div>
       </Card>
 
-      <Card className="p-0 overflow-hidden">
+      <Card className="border-border bg-card p-0 shadow-sm overflow-hidden">
         {loading ? (
           <div className="space-y-2 p-4">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -176,44 +177,38 @@ export function AdminMaterials() {
         ) : (
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Material</TableHead>
-                <TableHead className="hidden md:table-cell">Course</TableHead>
-                <TableHead className="hidden lg:table-cell">Topic</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead className="hidden md:table-cell">Added</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Material</TableHead>
+                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Course</TableHead>
+                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:table-cell">Topic</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</TableHead>
+                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Added</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {materials.map((m) => (
-                <TableRow key={m.id}>
+                <TableRow key={m.id} className="hover:bg-muted/40">
                   <TableCell>
-                    <div className="min-w-0 max-w-[240px]">
-                      <p className="font-medium text-foreground truncate">{m.title}</p>
-                      {m.description && (
-                        <p className="text-xs text-muted-foreground truncate">{m.description}</p>
-                      )}
+                    <div className="flex items-center gap-3">
+                      <FileTypeIcon type={m.type} />
+                      <div className="min-w-0 max-w-[240px]">
+                        <p className="font-medium text-foreground truncate">{m.title}</p>
+                        {m.description && (
+                          <p className="text-xs text-muted-foreground truncate">{m.description}</p>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm text-foreground">{m.course.title}</TableCell>
-                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                  <TableCell className="hidden text-sm text-foreground md:table-cell">{m.course.title}</TableCell>
+                  <TableCell className="hidden text-sm text-muted-foreground lg:table-cell">
                     {m.topic?.title || "—"}
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={
-                        m.type === "LINK"
-                          ? "bg-accent/10 text-accent"
-                          : "text-xs"
-                      }
-                    >
-                      {m.type === "LINK" ? "LINK" : fileExtIcon(m.type === "PDF" ? ".pdf" : m.type === "DOC" ? ".docx" : ".pptx")}
-                    </Badge>
+                    <FileTypeBadge type={m.type} />
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                  <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
                     {formatDate(m.createdAt)}
                   </TableCell>
                   <TableCell>
@@ -229,22 +224,22 @@ export function AdminMaterials() {
                         href={m.fileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-accent"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-accent"
                         aria-label="Open material"
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
                       </a>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" aria-label={`Actions for ${m.title}`}>
+                          <Button variant="ghost" size="icon" aria-label={`Actions for ${m.title}`} className="text-muted-foreground hover:text-foreground hover:bg-muted">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => openEdit(m)}>
-                            <Pencil className="h-4 w-4" /> Edit
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem onClick={() => openEdit(m)} className="gap-2">
+                            <Pencil className="h-4 w-4 text-muted-foreground" /> Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(m)}>
+                          <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(m)} className="gap-2">
                             <Trash2 className="h-4 w-4" /> Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -420,22 +415,22 @@ function GlobalMaterialFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{target ? "Edit Material" : "Add Learning Material"}</DialogTitle>
+          <DialogTitle className="font-heading text-lg font-semibold">{target ? "Edit Material" : "Add Learning Material"}</DialogTitle>
           <DialogDescription>Attach a downloadable file or external link to a course.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
           <div className="space-y-1.5">
-            <Label htmlFor="gm-title">Title</Label>
-            <Input id="gm-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <Label htmlFor="gm-title" className="text-xs font-medium text-muted-foreground">Title</Label>
+            <Input id="gm-title" value={title} onChange={(e) => setTitle(e.target.value)} className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="gm-desc">Description (optional)</Label>
-            <Input id="gm-desc" value={description} onChange={(e) => setDescription(e.target.value)} />
+            <Label htmlFor="gm-desc" className="text-xs font-medium text-muted-foreground">Description (optional)</Label>
+            <Input id="gm-desc" value={description} onChange={(e) => setDescription(e.target.value)} className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label>Course</Label>
+            <Label className="text-xs font-medium text-muted-foreground">Course</Label>
             <Select value={courseId} onValueChange={onCourseChange2}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full h-9 rounded-lg">
                 <SelectValue placeholder="Select course" />
               </SelectTrigger>
               <SelectContent>
@@ -447,9 +442,9 @@ function GlobalMaterialFormDialog({
           </div>
           {courseDetail && (
             <div className="space-y-1.5">
-              <Label>Topic (optional)</Label>
+              <Label className="text-xs font-medium text-muted-foreground">Topic (optional)</Label>
               <Select value={topicId} onValueChange={setTopicId}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full h-9 rounded-lg">
                   <SelectValue placeholder="No topic" />
                 </SelectTrigger>
                 <SelectContent>
@@ -463,9 +458,9 @@ function GlobalMaterialFormDialog({
           )}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Type</Label>
+              <Label className="text-xs font-medium text-muted-foreground">Type</Label>
               <Select value={type} onValueChange={(v) => setType(v as "PDF" | "DOC" | "PRESENTATION" | "LINK")}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full h-9 rounded-lg">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -476,19 +471,19 @@ function GlobalMaterialFormDialog({
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center justify-between rounded-md border border-border px-3">
-              <Label htmlFor="gm-pub" className="text-sm">Published</Label>
+            <div className="flex items-center justify-between rounded-lg border border-border px-3">
+              <Label htmlFor="gm-pub" className="text-sm font-medium">Published</Label>
               <Switch id="gm-pub" checked={isPublished} onCheckedChange={setIsPublished} />
             </div>
           </div>
           {type === "LINK" ? (
             <div className="space-y-1.5">
-              <Label htmlFor="gm-url">Link URL</Label>
-              <Input id="gm-url" value={fileUrl} onChange={(e) => setFileUrl(e.target.value)} placeholder="https://…" />
+              <Label htmlFor="gm-url" className="text-xs font-medium text-muted-foreground">Link URL</Label>
+              <Input id="gm-url" value={fileUrl} onChange={(e) => setFileUrl(e.target.value)} placeholder="https://…" className="h-9 rounded-lg" />
             </div>
           ) : (
             <div className="space-y-1.5">
-              <Label htmlFor="gm-file">File</Label>
+              <Label htmlFor="gm-file" className="text-xs font-medium text-muted-foreground">File</Label>
               <Input id="gm-file" type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" />
               {target && !file && (
                 <p className="text-xs text-muted-foreground">Leave empty to keep existing file.</p>
@@ -497,10 +492,41 @@ function GlobalMaterialFormDialog({
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button disabled={saving} onClick={submit}>{saving ? "Saving…" : target ? "Save Changes" : "Add Material"}</Button>
+          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button disabled={saving} className="h-9" onClick={submit}>{saving ? "Saving…" : target ? "Save Changes" : "Add Material"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// ─── File type helpers ─────────────────────────────────────────────────
+function FileTypeIcon({ type }: { type: "PDF" | "DOC" | "PRESENTATION" | "LINK" }) {
+  const config = {
+    PDF: { icon: FileType, bg: "bg-destructive/10", color: "text-destructive" },
+    DOC: { icon: FileType2, bg: "bg-accent/10", color: "text-accent" },
+    PRESENTATION: { icon: Presentation, bg: "bg-warning/15", color: "text-warning" },
+    LINK: { icon: LinkIcon, bg: "bg-success/15", color: "text-success" },
+  };
+  const c = config[type];
+  return (
+    <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${c.bg} ${c.color} shrink-0`}>
+      <c.icon className="h-4 w-4" />
+    </div>
+  );
+}
+
+function FileTypeBadge({ type }: { type: "PDF" | "DOC" | "PRESENTATION" | "LINK" }) {
+  const config = {
+    PDF: { label: "PDF", className: "bg-destructive/10 text-destructive" },
+    DOC: { label: fileExtIcon(".docx"), className: "bg-accent/10 text-accent" },
+    PRESENTATION: { label: fileExtIcon(".pptx"), className: "bg-warning/15 text-warning" },
+    LINK: { label: "LINK", className: "bg-success/15 text-success" },
+  };
+  const c = config[type];
+  return (
+    <Badge variant="outline" className={`border-0 ${c.className}`}>
+      {c.label}
+    </Badge>
   );
 }

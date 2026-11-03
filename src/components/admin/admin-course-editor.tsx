@@ -130,7 +130,7 @@ export function AdminCourseEditor({ courseId, onBack }: { courseId: string; onBa
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" onClick={onBack} aria-label="Back to courses list">
+          <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={onBack} aria-label="Back to courses list">
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="min-w-0">
@@ -145,14 +145,14 @@ export function AdminCourseEditor({ courseId, onBack }: { courseId: string; onBa
                   {course?.title || "Course"}
                 </h2>
                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-1">
-                  {course?.category && <Badge variant="outline">{course.category}</Badge>}
+                  {course?.category && <Badge variant="outline" className="text-[10px] uppercase tracking-wider">{course.category}</Badge>}
                   {course?.accessType === "FREE" ? (
                     <Badge className="bg-success/15 text-success">Free</Badge>
                   ) : (
                     <Badge className="bg-primary text-primary-foreground">Paid</Badge>
                   )}
                   {course?.isPublished ? (
-                    <Badge className="bg-success/15 text-success">Published</Badge>
+                    <Badge className="bg-success/15 text-success gap-1"><span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" /> Published</Badge>
                   ) : (
                     <Badge variant="outline" className="text-muted-foreground">Draft</Badge>
                   )}
@@ -166,7 +166,7 @@ export function AdminCourseEditor({ courseId, onBack }: { courseId: string; onBa
           variant="outline"
           size="sm"
           disabled
-          className="text-muted-foreground"
+          className="h-9 text-muted-foreground"
           title="Student preview is not available in admin view"
         >
           <Eye className="h-4 w-4" /> Open in student view
@@ -184,13 +184,15 @@ export function AdminCourseEditor({ courseId, onBack }: { courseId: string; onBa
         <Skeleton className="h-96 w-full" />
       ) : (
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full justify-start overflow-x-auto h-auto flex-wrap">
-            <TabsTrigger value="topics" className="gap-1.5"><VideoIcon className="h-3.5 w-3.5" /> Topics &amp; Videos</TabsTrigger>
-            <TabsTrigger value="materials" className="gap-1.5"><FileText className="h-3.5 w-3.5" /> Materials</TabsTrigger>
-            <TabsTrigger value="assignments" className="gap-1.5"><ClipboardList className="h-3.5 w-3.5" /> Assignments</TabsTrigger>
-            <TabsTrigger value="certificate" className="gap-1.5"><Award className="h-3.5 w-3.5" /> Certificate</TabsTrigger>
-            <TabsTrigger value="settings" className="gap-1.5"><Settings className="h-3.5 w-3.5" /> Settings</TabsTrigger>
-          </TabsList>
+          <div className="rounded-xl border border-border bg-card p-1 shadow-sm overflow-x-auto scrollbar-thin">
+            <TabsList className="w-full justify-start h-auto flex-wrap bg-transparent gap-1">
+              <TabsTrigger value="topics" className="gap-1.5 rounded-lg data-[state=active]:bg-light-teal data-[state=active]:text-accent data-[state=active]:shadow-sm"><VideoIcon className="h-3.5 w-3.5" /> Topics &amp; Videos</TabsTrigger>
+              <TabsTrigger value="materials" className="gap-1.5 rounded-lg data-[state=active]:bg-light-teal data-[state=active]:text-accent data-[state=active]:shadow-sm"><FileText className="h-3.5 w-3.5" /> Materials</TabsTrigger>
+              <TabsTrigger value="assignments" className="gap-1.5 rounded-lg data-[state=active]:bg-light-teal data-[state=active]:text-accent data-[state=active]:shadow-sm"><ClipboardList className="h-3.5 w-3.5" /> Assignments</TabsTrigger>
+              <TabsTrigger value="certificate" className="gap-1.5 rounded-lg data-[state=active]:bg-light-teal data-[state=active]:text-accent data-[state=active]:shadow-sm"><Award className="h-3.5 w-3.5" /> Certificate</TabsTrigger>
+              <TabsTrigger value="settings" className="gap-1.5 rounded-lg data-[state=active]:bg-light-teal data-[state=active]:text-accent data-[state=active]:shadow-sm"><Settings className="h-3.5 w-3.5" /> Settings</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="topics" className="mt-4">
             <TopicsTab course={course} onRefresh={refetch} />
@@ -248,11 +250,11 @@ function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () 
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-heading text-base font-semibold text-foreground">Course Topics</h3>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground mt-0.5">
             {course.topics.length} topic{course.topics.length === 1 ? "" : "s"} · {course.topics.reduce((a, t) => a + t.videos.length, 0)} videos
           </p>
         </div>
-        <Button className="gap-2" onClick={() => setAddTopicOpen(true)}>
+        <Button className="h-9 gap-2" onClick={() => setAddTopicOpen(true)}>
           <Plus className="h-4 w-4" /> Add Topic
         </Button>
       </div>
@@ -267,8 +269,8 @@ function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () 
       ) : (
         <div className="space-y-2">
           {course.topics.map((topic, idx) => (
-            <Card key={topic.id} className="overflow-hidden p-0">
-              <div className="flex items-center gap-2 p-3 bg-muted/30">
+            <Card key={topic.id} className="overflow-hidden border-border bg-card p-0 shadow-sm transition-shadow hover:shadow-md">
+              <div className="flex items-center gap-2 p-3 bg-gradient-to-r from-muted/40 to-muted/10">
                 <div className="flex flex-col">
                   <Button
                     variant="ghost" size="icon" className="h-5 w-5"
@@ -292,7 +294,7 @@ function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () 
                   className="flex flex-1 items-center gap-2 text-left min-w-0"
                   onClick={() => setExpandedId(expandedId === topic.id ? null : topic.id)}
                 >
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0 ring-1 ring-border">
                     {idx + 1}
                   </span>
                   <div className="min-w-0">
@@ -304,14 +306,14 @@ function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () 
                   </div>
                 </button>
                 <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="sm" className="gap-1" onClick={() => setAddVideoFor(topic)}>
+                  <Button variant="ghost" size="sm" className="h-8 gap-1 text-muted-foreground hover:text-accent" onClick={() => setAddVideoFor(topic)}>
                     <Plus className="h-3.5 w-3.5" /> Add Video
                   </Button>
-                  <Button variant="ghost" size="icon" aria-label="Edit topic" onClick={() => setEditTopic(topic)}>
+                  <Button variant="ghost" size="icon" aria-label="Edit topic" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setEditTopic(topic)}>
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
-                  <Button variant="ghost" size="icon" aria-label="Delete topic" onClick={() => setDeleteTopic(topic)}>
-                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  <Button variant="ghost" size="icon" aria-label="Delete topic" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTopic(topic)}>
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
@@ -324,15 +326,15 @@ function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () 
                   {topic.videos.length === 0 ? (
                     <div className="text-center py-6">
                       <p className="text-sm text-muted-foreground mb-2">No videos in this topic yet.</p>
-                      <Button variant="outline" size="sm" className="gap-1" onClick={() => setAddVideoFor(topic)}>
+                      <Button variant="outline" size="sm" className="h-8 gap-1" onClick={() => setAddVideoFor(topic)}>
                         <Plus className="h-3.5 w-3.5" /> Add first video
                       </Button>
                     </div>
                   ) : (
                     <ul className="space-y-1">
                       {topic.videos.map((v, vi) => (
-                        <li key={v.id} className="flex items-center gap-2 rounded-md border border-border p-2 hover:bg-muted/30 transition-colors">
-                          <div className="flex h-8 w-12 items-center justify-center rounded bg-muted overflow-hidden shrink-0">
+                        <li key={v.id} className="flex items-center gap-3 rounded-lg border border-border p-2 hover:bg-muted/40 transition-colors">
+                          <div className="flex h-9 w-14 items-center justify-center rounded bg-muted overflow-hidden shrink-0 ring-1 ring-border">
                             {v.thumbnail ? (
                               <img src={v.thumbnail} alt="" className="h-full w-full object-cover" />
                             ) : (
@@ -344,15 +346,20 @@ function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () 
                               <span className="text-muted-foreground mr-1.5">{vi + 1}.</span>
                               {v.title}
                             </p>
-                            <p className="text-xs text-muted-foreground">
-                              {v.source} · {v.isPublished ? "Published" : "Draft"}
-                            </p>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                              <Badge variant="outline" className="text-[10px] py-0 h-4">{v.source}</Badge>
+                              {v.isPublished ? (
+                                <span className="text-success">Published</span>
+                              ) : (
+                                <span>Draft</span>
+                              )}
+                            </div>
                           </div>
-                          <Button variant="ghost" size="icon" aria-label="Edit video" onClick={() => setEditVideo(v)}>
+                          <Button variant="ghost" size="icon" aria-label="Edit video" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setEditVideo(v)}>
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
-                          <Button variant="ghost" size="icon" aria-label="Delete video" onClick={() => setDeleteVideo(v)}>
-                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          <Button variant="ghost" size="icon" aria-label="Delete video" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteVideo(v)}>
+                            <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </li>
                       ))}
@@ -507,22 +514,22 @@ function TopicFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{target ? "Edit Topic" : "Add Topic"}</DialogTitle>
+          <DialogTitle className="font-heading text-lg font-semibold">{target ? "Edit Topic" : "Add Topic"}</DialogTitle>
           <DialogDescription>Group related video lessons under a topic.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="t-title">Title</Label>
-            <Input id="t-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Introduction to Design Principles" />
+            <Label htmlFor="t-title" className="text-xs font-medium text-muted-foreground">Title</Label>
+            <Input id="t-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Introduction to Design Principles" className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="t-desc">Description (optional)</Label>
-            <Textarea id="t-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+            <Label htmlFor="t-desc" className="text-xs font-medium text-muted-foreground">Description (optional)</Label>
+            <Textarea id="t-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="rounded-lg" />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button disabled={saving} onClick={submit}>{saving ? "Saving…" : target ? "Save" : "Add Topic"}</Button>
+          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button disabled={saving} className="h-9" onClick={submit}>{saving ? "Saving…" : target ? "Save" : "Add Topic"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -631,23 +638,23 @@ function VideoFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{target ? "Edit Video" : "Add Video Lesson"}</DialogTitle>
+          <DialogTitle className="font-heading text-lg font-semibold">{target ? "Edit Video" : "Add Video Lesson"}</DialogTitle>
           <DialogDescription>Upload a video file, embed a YouTube link, or stream from a direct URL.</DialogDescription>
         </DialogHeader>
-        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
           <div className="space-y-1.5">
-            <Label htmlFor="v-title">Title</Label>
-            <Input id="v-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Lesson 1: Design fundamentals" />
+            <Label htmlFor="v-title" className="text-xs font-medium text-muted-foreground">Title</Label>
+            <Input id="v-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Lesson 1: Design fundamentals" className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="v-desc">Description (optional)</Label>
-            <Textarea id="v-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
+            <Label htmlFor="v-desc" className="text-xs font-medium text-muted-foreground">Description (optional)</Label>
+            <Textarea id="v-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="rounded-lg" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Topic</Label>
+              <Label className="text-xs font-medium text-muted-foreground">Topic</Label>
               <Select value={topicId} onValueChange={setTopicId} disabled={!!fixedTopicId}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full h-9 rounded-lg">
                   <SelectValue placeholder="Select topic" />
                 </SelectTrigger>
                 <SelectContent>
@@ -658,9 +665,9 @@ function VideoFormDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Source</Label>
+              <Label className="text-xs font-medium text-muted-foreground">Source</Label>
               <Select value={source} onValueChange={(v) => setSource(v as "UPLOAD" | "YOUTUBE" | "URL")}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full h-9 rounded-lg">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -674,7 +681,7 @@ function VideoFormDialog({
 
           {source === "UPLOAD" ? (
             <div className="space-y-1.5">
-              <Label htmlFor="v-file">Video File (.mp4, .webm, .mov, .mkv)</Label>
+              <Label htmlFor="v-file" className="text-xs font-medium text-muted-foreground">Video File (.mp4, .webm, .mov, .mkv)</Label>
               <Input
                 id="v-file"
                 type="file"
@@ -687,7 +694,7 @@ function VideoFormDialog({
             </div>
           ) : (
             <div className="space-y-1.5">
-              <Label htmlFor="v-url">
+              <Label htmlFor="v-url" className="text-xs font-medium text-muted-foreground">
                 {source === "YOUTUBE" ? "YouTube URL" : "Video URL (.mp4 etc.)"}
               </Label>
               <Input
@@ -695,6 +702,7 @@ function VideoFormDialog({
                 value={videoUrl}
                 onChange={(e) => setVideoUrl(e.target.value)}
                 placeholder={source === "YOUTUBE" ? "https://www.youtube.com/watch?v=…" : "https://example.com/video.mp4"}
+                className="h-9 rounded-lg"
               />
               {source === "YOUTUBE" && (
                 <p className="text-xs text-muted-foreground">Accepts watch URLs, youtu.be links and embed URLs.</p>
@@ -703,7 +711,7 @@ function VideoFormDialog({
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="v-thumb">Thumbnail (optional)</Label>
+            <Label htmlFor="v-thumb" className="text-xs font-medium text-muted-foreground">Thumbnail (optional)</Label>
             <Input
               id="v-thumb"
               type="file"
@@ -714,18 +722,18 @@ function VideoFormDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="v-order">Display Order (optional)</Label>
-              <Input id="v-order" type="number" value={displayOrder} onChange={(e) => setDisplayOrder(e.target.value)} placeholder="auto" />
+              <Label htmlFor="v-order" className="text-xs font-medium text-muted-foreground">Display Order (optional)</Label>
+              <Input id="v-order" type="number" value={displayOrder} onChange={(e) => setDisplayOrder(e.target.value)} placeholder="auto" className="h-9 rounded-lg" />
             </div>
-            <div className="flex items-center justify-between rounded-md border border-border px-3">
-              <Label htmlFor="v-pub" className="text-sm">Published</Label>
+            <div className="flex items-center justify-between rounded-lg border border-border px-3">
+              <Label htmlFor="v-pub" className="text-sm font-medium">Published</Label>
               <Switch id="v-pub" checked={isPublished} onCheckedChange={setIsPublished} />
             </div>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button disabled={saving} onClick={submit}>{saving ? "Saving…" : target ? "Save Changes" : "Add Video"}</Button>
+          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button disabled={saving} className="h-9" onClick={submit}>{saving ? "Saving…" : target ? "Save Changes" : "Add Video"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -755,9 +763,9 @@ function MaterialsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: 
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-heading text-base font-semibold text-foreground">Learning Materials</h3>
-          <p className="text-xs text-muted-foreground">{course.materials.length} materials across this course</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{course.materials.length} materials across this course</p>
         </div>
-        <Button className="gap-2" onClick={() => setAddOpen(true)}>
+        <Button className="h-9 gap-2" onClick={() => setAddOpen(true)}>
           <Plus className="h-4 w-4" /> Add Material
         </Button>
       </div>
@@ -772,16 +780,16 @@ function MaterialsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: 
       ) : (
         <div className="space-y-3">
           {grouped.map((g) => (
-            <Card key={g.topicId} className="overflow-hidden p-0">
-              <div className="border-b border-border bg-muted/30 px-3 py-2">
-                <p className="text-xs font-semibold text-foreground">
+            <Card key={g.topicId} className="overflow-hidden border-border bg-card p-0 shadow-sm">
+              <div className="border-b border-border bg-muted/30 px-4 py-2.5">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {g.topicTitle || "Unassigned materials"}
                 </p>
               </div>
               <ul className="divide-y divide-border">
                 {g.items.map((m) => (
-                  <li key={m.id} className="flex items-center gap-3 p-3 hover:bg-muted/30">
-                    <Badge variant="outline" className="text-xs shrink-0">{m.type}</Badge>
+                  <li key={m.id} className="flex items-center gap-3 p-3 transition-colors hover:bg-muted/40">
+                    <Badge variant="outline" className="text-[10px] uppercase tracking-wider shrink-0 bg-muted/40">{m.type}</Badge>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-foreground truncate">{m.title}</p>
                       {m.description && (
@@ -792,16 +800,16 @@ function MaterialsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: 
                       href={m.fileUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-muted-foreground hover:text-accent"
+                      className="text-muted-foreground transition-colors hover:text-accent"
                       aria-label="Open material"
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
                     </a>
-                    <Button variant="ghost" size="icon" aria-label="Edit material" onClick={() => setEditTarget(m)}>
+                    <Button variant="ghost" size="icon" aria-label="Edit material" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setEditTarget(m)}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" aria-label="Delete material" onClick={() => setDeleteTarget(m)}>
-                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    <Button variant="ghost" size="icon" aria-label="Delete material" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(m)}>
+                      <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </li>
                 ))}
@@ -945,23 +953,23 @@ function MaterialFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{target ? "Edit Material" : "Add Learning Material"}</DialogTitle>
+          <DialogTitle className="font-heading text-lg font-semibold">{target ? "Edit Material" : "Add Learning Material"}</DialogTitle>
           <DialogDescription>Upload a downloadable file or attach an external link.</DialogDescription>
         </DialogHeader>
-        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
           <div className="space-y-1.5">
-            <Label htmlFor="m-title">Title</Label>
-            <Input id="m-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Lesson 1 — Reference Slides" />
+            <Label htmlFor="m-title" className="text-xs font-medium text-muted-foreground">Title</Label>
+            <Input id="m-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Lesson 1 — Reference Slides" className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="m-desc">Description (optional)</Label>
-            <Textarea id="m-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
+            <Label htmlFor="m-desc" className="text-xs font-medium text-muted-foreground">Description (optional)</Label>
+            <Textarea id="m-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="rounded-lg" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Topic (optional)</Label>
+              <Label className="text-xs font-medium text-muted-foreground">Topic (optional)</Label>
               <Select value={topicId} onValueChange={setTopicId}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full h-9 rounded-lg">
                   <SelectValue placeholder="No topic" />
                 </SelectTrigger>
                 <SelectContent>
@@ -973,9 +981,9 @@ function MaterialFormDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Type</Label>
+              <Label className="text-xs font-medium text-muted-foreground">Type</Label>
               <Select value={type} onValueChange={(v) => setType(v as "PDF" | "DOC" | "PRESENTATION" | "LINK")}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full h-9 rounded-lg">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -990,12 +998,12 @@ function MaterialFormDialog({
 
           {type === "LINK" ? (
             <div className="space-y-1.5">
-              <Label htmlFor="m-url">Link URL</Label>
-              <Input id="m-url" value={fileUrl} onChange={(e) => setFileUrl(e.target.value)} placeholder="https://…" />
+              <Label htmlFor="m-url" className="text-xs font-medium text-muted-foreground">Link URL</Label>
+              <Input id="m-url" value={fileUrl} onChange={(e) => setFileUrl(e.target.value)} placeholder="https://…" className="h-9 rounded-lg" />
             </div>
           ) : (
             <div className="space-y-1.5">
-              <Label htmlFor="m-file">File (.pdf, .doc, .docx, .ppt, .pptx, .txt)</Label>
+              <Label htmlFor="m-file" className="text-xs font-medium text-muted-foreground">File (.pdf, .doc, .docx, .ppt, .pptx, .txt)</Label>
               <Input
                 id="m-file"
                 type="file"
@@ -1008,14 +1016,14 @@ function MaterialFormDialog({
             </div>
           )}
 
-          <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
-            <Label htmlFor="m-pub" className="text-sm">Published</Label>
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <Label htmlFor="m-pub" className="text-sm font-medium">Published</Label>
             <Switch id="m-pub" checked={isPublished} onCheckedChange={setIsPublished} />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button disabled={saving} onClick={submit}>{saving ? "Saving…" : target ? "Save Changes" : "Add Material"}</Button>
+          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button disabled={saving} className="h-9" onClick={submit}>{saving ? "Saving…" : target ? "Save Changes" : "Add Material"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -1034,12 +1042,12 @@ function AssignmentsTab({ course, onRefresh }: { course: CourseDetail; onRefresh
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-heading text-base font-semibold text-foreground">Course Assignments</h3>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground mt-0.5">
             {course.assignments.length} assignment{course.assignments.length === 1 ? "" : "s"} ·{" "}
             {course.assignments.reduce((a, x) => a + x.submissionsCount, 0)} total submissions
           </p>
         </div>
-        <Button className="gap-2" onClick={() => setAddOpen(true)}>
+        <Button className="h-9 gap-2" onClick={() => setAddOpen(true)}>
           <Plus className="h-4 w-4" /> Add Assignment
         </Button>
       </div>
@@ -1054,7 +1062,7 @@ function AssignmentsTab({ course, onRefresh }: { course: CourseDetail; onRefresh
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {course.assignments.map((a) => (
-            <Card key={a.id} className="p-4 space-y-3">
+            <Card key={a.id} className="p-4 space-y-3 border-border bg-card shadow-sm transition-shadow hover:shadow-md">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="font-heading font-semibold text-foreground truncate">{a.title}</p>
@@ -1094,17 +1102,17 @@ function AssignmentsTab({ course, onRefresh }: { course: CourseDetail; onRefresh
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-1"
+                  className="h-8 gap-1"
                   onClick={() => navigate(["admin", "submissions"], { assignmentId: a.id })}
                 >
                   <ClipboardList className="h-3.5 w-3.5" /> View Submissions
                 </Button>
                 <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" aria-label="Edit assignment" onClick={() => setEditTarget(a)}>
+                  <Button variant="ghost" size="icon" aria-label="Edit assignment" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setEditTarget(a)}>
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
-                  <Button variant="ghost" size="icon" aria-label="Delete assignment" onClick={() => setDeleteTarget(a)}>
-                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  <Button variant="ghost" size="icon" aria-label="Delete assignment" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(a)}>
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
@@ -1240,28 +1248,28 @@ function AssignmentFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{target ? "Edit Assignment" : "Add Assignment"}</DialogTitle>
+          <DialogTitle className="font-heading text-lg font-semibold">{target ? "Edit Assignment" : "Add Assignment"}</DialogTitle>
           <DialogDescription>Create a task for students to complete and submit.</DialogDescription>
         </DialogHeader>
-        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
           <div className="space-y-1.5">
-            <Label htmlFor="a-title">Title</Label>
-            <Input id="a-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Final Project — Brand Identity" />
+            <Label htmlFor="a-title" className="text-xs font-medium text-muted-foreground">Title</Label>
+            <Input id="a-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Final Project — Brand Identity" className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="a-desc">Short Description</Label>
-            <Textarea id="a-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
+            <Label htmlFor="a-desc" className="text-xs font-medium text-muted-foreground">Short Description</Label>
+            <Textarea id="a-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="a-ins">Detailed Instructions</Label>
-            <Textarea id="a-ins" value={instructions} onChange={(e) => setInstructions(e.target.value)} rows={4} placeholder="Step-by-step instructions students will see…" />
+            <Label htmlFor="a-ins" className="text-xs font-medium text-muted-foreground">Detailed Instructions</Label>
+            <Textarea id="a-ins" value={instructions} onChange={(e) => setInstructions(e.target.value)} rows={4} placeholder="Step-by-step instructions students will see…" className="rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="a-due">Due Date (optional)</Label>
-            <Input id="a-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+            <Label htmlFor="a-due" className="text-xs font-medium text-muted-foreground">Due Date (optional)</Label>
+            <Input id="a-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="a-file">Attachment File (optional)</Label>
+            <Label htmlFor="a-file" className="text-xs font-medium text-muted-foreground">Attachment File (optional)</Label>
             <Input id="a-file" type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" />
             {target?.fileUrl && (
               <div className="flex items-center gap-2 text-xs">
@@ -1276,19 +1284,19 @@ function AssignmentFormDialog({
             )}
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="flex items-center justify-between rounded-md border border-border px-3">
-              <Label htmlFor="a-pub" className="text-sm">Published</Label>
+            <div className="flex items-center justify-between rounded-lg border border-border p-3">
+              <Label htmlFor="a-pub" className="text-sm font-medium">Published</Label>
               <Switch id="a-pub" checked={isPublished} onCheckedChange={setIsPublished} />
             </div>
-            <div className="flex items-center justify-between rounded-md border border-border px-3">
-              <Label htmlFor="a-resub" className="text-sm">Allow resubmission</Label>
+            <div className="flex items-center justify-between rounded-lg border border-border p-3">
+              <Label htmlFor="a-resub" className="text-sm font-medium">Allow resubmission</Label>
               <Switch id="a-resub" checked={allowResubmission} onCheckedChange={setAllowResubmission} />
             </div>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button disabled={saving} onClick={submit}>{saving ? "Saving…" : target ? "Save Changes" : "Add Assignment"}</Button>
+          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button disabled={saving} className="h-9" onClick={submit}>{saving ? "Saving…" : target ? "Save Changes" : "Add Assignment"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -1348,32 +1356,34 @@ function CertificateTab({ course, onRefresh }: { course: CourseDetail; onRefresh
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-heading text-base font-semibold text-foreground">Completion Certificate</h3>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Configure the template issued to students who complete this course.
           </p>
         </div>
-        <Button className="gap-2" disabled={saving} onClick={save}>
+        <Button className="h-9 gap-2" disabled={saving} onClick={save}>
           <Save className="h-4 w-4" /> {saving ? "Saving…" : "Save Template"}
         </Button>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="p-4 space-y-3">
+        <Card className="p-5 space-y-3 border-border bg-card shadow-sm">
           <CardHeader className="p-0">
-            <CardTitle className="text-sm">Template Settings</CardTitle>
-            <CardDescription>Use placeholders for dynamic content.</CardDescription>
+            <CardTitle className="text-sm font-heading font-semibold">Template Settings</CardTitle>
+            <CardDescription className="mt-1">Use placeholders for dynamic content.</CardDescription>
           </CardHeader>
           <CardContent className="p-0 space-y-3">
             {/* Info banner explaining the three certificate modes */}
-            <div className="rounded-lg border border-accent/20 bg-accent/5 p-3">
+            <div className="rounded-xl border border-accent/20 bg-light-teal/40 p-3">
               <div className="flex items-start gap-2">
-                <Info className="h-4 w-4 text-accent shrink-0 mt-0.5" />
+                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-accent/15 text-accent shrink-0 mt-0.5">
+                  <Info className="h-3.5 w-3.5" />
+                </div>
                 <div className="text-xs space-y-1.5">
-                  <p className="font-medium text-foreground">How certificates work</p>
+                  <p className="font-semibold text-foreground">How certificates work</p>
                   <p className="text-muted-foreground">
                     Certificates are <strong>automatically issued</strong> to students when they complete all video lessons in this course. You have three options:
                   </p>
-                  <ul className="space-y-1 text-muted-foreground pl-3">
+                  <ul className="space-y-1 text-muted-foreground pl-3 list-disc">
                     <li><strong>Save a template (enabled)</strong> → Your custom design is used.</li>
                     <li><strong>Save a template (disabled)</strong> → No certificate is issued.</li>
                     <li><strong>Don&apos;t save a template</strong> → A default certificate with the student&apos;s name is auto-generated.</li>
@@ -1381,17 +1391,17 @@ function CertificateTab({ course, onRefresh }: { course: CourseDetail; onRefresh
                 </div>
               </div>
             </div>
-            <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
-              <Label htmlFor="c-enabled" className="text-sm">Enable certificates for this course</Label>
+            <div className="flex items-center justify-between rounded-lg border border-border p-3">
+              <Label htmlFor="c-enabled" className="text-sm font-medium">Enable certificates for this course</Label>
               <Switch id="c-enabled" checked={isEnabled} onCheckedChange={setIsEnabled} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="c-title">Certificate Title</Label>
-              <Input id="c-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+              <Label htmlFor="c-title" className="text-xs font-medium text-muted-foreground">Certificate Title</Label>
+              <Input id="c-title" value={title} onChange={(e) => setTitle(e.target.value)} className="h-9 rounded-lg" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="c-body">Body Text</Label>
-              <Textarea id="c-body" value={bodyText} onChange={(e) => setBodyText(e.target.value)} rows={4} />
+              <Label htmlFor="c-body" className="text-xs font-medium text-muted-foreground">Body Text</Label>
+              <Textarea id="c-body" value={bodyText} onChange={(e) => setBodyText(e.target.value)} rows={4} className="rounded-lg" />
               <p className="text-xs text-muted-foreground">
                 Placeholders: <code className="bg-muted px-1 py-0.5 rounded">{"{{studentName}}"}</code>{" "}
                 <code className="bg-muted px-1 py-0.5 rounded">{"{{courseName}}"}</code>{" "}
@@ -1402,13 +1412,13 @@ function CertificateTab({ course, onRefresh }: { course: CourseDetail; onRefresh
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="c-org">Organization Name</Label>
-                <Input id="c-org" value={organizationName} onChange={(e) => setOrganizationName(e.target.value)} />
+                <Label htmlFor="c-org" className="text-xs font-medium text-muted-foreground">Organization Name</Label>
+                <Input id="c-org" value={organizationName} onChange={(e) => setOrganizationName(e.target.value)} className="h-9 rounded-lg" />
               </div>
               <div className="space-y-1.5">
-                <Label>Layout</Label>
+                <Label className="text-xs font-medium text-muted-foreground">Layout</Label>
                 <Select value={layout} onValueChange={(v) => setLayout(v as "CLASSIC" | "MODERN" | "MINIMAL")}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full h-9 rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1422,10 +1432,10 @@ function CertificateTab({ course, onRefresh }: { course: CourseDetail; onRefresh
           </CardContent>
         </Card>
 
-        <Card className="p-4 space-y-3">
+        <Card className="p-5 space-y-3 border-border bg-card shadow-sm">
           <CardHeader className="p-0">
-            <CardTitle className="text-sm">Live Preview</CardTitle>
-            <CardDescription>How the certificate will look.</CardDescription>
+            <CardTitle className="text-sm font-heading font-semibold">Live Preview</CardTitle>
+            <CardDescription className="mt-1">How the certificate will look.</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             <CertificatePreview
@@ -1578,29 +1588,29 @@ function SettingsTab({
 
   return (
     <div className="space-y-4">
-      <Card className="p-4 space-y-3">
+      <Card className="p-5 space-y-3 border-border bg-card shadow-sm">
         <CardHeader className="p-0">
-          <CardTitle className="text-base">Course Details</CardTitle>
-          <CardDescription>Update the basic information about this course.</CardDescription>
+          <CardTitle className="font-heading text-base font-semibold">Course Details</CardTitle>
+          <CardDescription className="mt-1">Update the basic information about this course.</CardDescription>
         </CardHeader>
         <CardContent className="p-0 space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="s-title">Title</Label>
-            <Input id="s-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <Label htmlFor="s-title" className="text-xs font-medium text-muted-foreground">Title</Label>
+            <Input id="s-title" value={title} onChange={(e) => setTitle(e.target.value)} className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="s-desc">Description</Label>
-            <Textarea id="s-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+            <Label htmlFor="s-desc" className="text-xs font-medium text-muted-foreground">Description</Label>
+            <Textarea id="s-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="rounded-lg" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="s-cat">Category</Label>
-              <Input id="s-cat" value={category} onChange={(e) => setCategory(e.target.value)} />
+              <Label htmlFor="s-cat" className="text-xs font-medium text-muted-foreground">Category</Label>
+              <Input id="s-cat" value={category} onChange={(e) => setCategory(e.target.value)} className="h-9 rounded-lg" />
             </div>
             <div className="space-y-1.5">
-              <Label>Access Type</Label>
+              <Label className="text-xs font-medium text-muted-foreground">Access Type</Label>
               <Select value={accessType} onValueChange={(v) => setAccessType(v as "FREE" | "PAID")}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full h-9 rounded-lg">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1612,14 +1622,14 @@ function SettingsTab({
           </div>
 
           {accessType === "PAID" && (
-            <div className="space-y-2 rounded-md border border-border p-3 bg-muted/30">
-              <Label className="text-xs text-muted-foreground">Required Plans</Label>
+            <div className="space-y-2 rounded-lg border border-border p-3 bg-muted/30">
+              <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Required Plans</Label>
               {plans.length === 0 ? (
                 <p className="text-xs text-destructive">No subscription plans exist. Create one in the Plans section first.</p>
               ) : (
-                <div className="space-y-2 max-h-32 overflow-y-auto">
+                <div className="space-y-2 max-h-32 overflow-y-auto scrollbar-thin">
                   {plans.map((p) => (
-                    <label key={p.id} className="flex items-center gap-2 cursor-pointer">
+                    <label key={p.id} className="flex items-center gap-2 cursor-pointer rounded-md p-1.5 transition-colors hover:bg-background">
                       <Checkbox
                         checked={planIds.includes(p.id)}
                         onCheckedChange={() => togglePlan(p.id)}
@@ -1632,16 +1642,16 @@ function SettingsTab({
             </div>
           )}
 
-          <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <div>
-              <Label htmlFor="s-pub" className="text-sm">Published</Label>
-              <p className="text-xs text-muted-foreground">Make this course visible to students.</p>
+              <Label htmlFor="s-pub" className="text-sm font-medium">Published</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">Make this course visible to students.</p>
             </div>
             <Switch id="s-pub" checked={isPublished} onCheckedChange={setIsPublished} />
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button disabled={saving} onClick={save} className="gap-2">
+            <Button disabled={saving} onClick={save} className="h-9 gap-2">
               <Save className="h-4 w-4" /> {saving ? "Saving…" : "Save Changes"}
             </Button>
           </div>
@@ -1649,23 +1659,23 @@ function SettingsTab({
       </Card>
 
       {/* Danger zone */}
-      <Card className="border-destructive/30 p-4">
+      <Card className="border-destructive/30 p-5 shadow-sm">
         <CardHeader className="p-0">
-          <CardTitle className="text-base text-destructive">Danger Zone</CardTitle>
-          <CardDescription>Permanent actions that cannot be undone.</CardDescription>
+          <CardTitle className="font-heading text-base font-semibold text-destructive">Danger Zone</CardTitle>
+          <CardDescription className="mt-1">Permanent actions that cannot be undone.</CardDescription>
         </CardHeader>
-        <CardContent className="p-0 mt-3">
-          <div className="flex items-center justify-between rounded-md border border-destructive/30 bg-destructive/5 p-3">
+        <CardContent className="p-0 mt-4">
+          <div className="flex items-center justify-between rounded-xl border border-destructive/30 bg-destructive/5 p-4">
             <div>
               <p className="text-sm font-medium text-foreground">Delete this course</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Permanently removes the course and all related content.
               </p>
             </div>
             <Button
               variant="destructive"
               size="sm"
-              className="gap-2"
+              className="h-9 gap-2"
               onClick={() => setDeleteOpen(true)}
             >
               <Trash2 className="h-4 w-4" /> Delete Course

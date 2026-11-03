@@ -67,27 +67,30 @@ export function AdminTopbar({ onToggleSidebar }: { onToggleSidebar: () => void }
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="hidden items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-medium text-accent shadow-sm transition-colors duration-200 sm:flex">
+        <div className="hidden items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-accent shadow-sm transition-colors duration-200 sm:flex">
           <Shield className="h-3 w-3" />
           <span>Administrator</span>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 rounded-lg p-1 pr-2 transition-all duration-200 hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
-              <Avatar className="h-8 w-8 ring-1 ring-border transition-shadow duration-200">
+            <button className="group flex items-center gap-2.5 rounded-lg p-1 pr-2 transition-all duration-200 hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
+              <Avatar className="h-9 w-9 ring-2 ring-accent/15 transition-all duration-200 group-hover:ring-accent/40">
                 <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">{initials}</AvatarFallback>
               </Avatar>
               <div className="hidden text-left md:block">
                 <p className="text-sm font-semibold leading-none text-foreground">{user?.name}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{user?.email}</p>
+                <p className="mt-1 text-xs text-muted-foreground truncate max-w-[180px]">{user?.email}</p>
               </div>
-              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200" />
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-hover:text-foreground" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Account</DropdownMenuLabel>
+            <DropdownMenuLabel className="font-normal text-xs text-muted-foreground">
+              Signed in as
+              <p className="mt-0.5 text-sm font-semibold text-foreground">{user?.email}</p>
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout} className="text-destructive gap-2">
+            <DropdownMenuItem onClick={logout} className="text-destructive gap-2 focus:bg-destructive/5">
               <LogOut className="h-4 w-4" />
               Logout
             </DropdownMenuItem>

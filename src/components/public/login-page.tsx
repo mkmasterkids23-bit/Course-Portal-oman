@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { BrandLogo } from "@/components/shared/brand-logo";
-import { Mail, Lock, ArrowLeft, LogIn, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, ArrowLeft, LogIn, AlertCircle, Eye, EyeOff, ShieldCheck, Sparkles } from "lucide-react";
 import { apiPost } from "@/hooks/use-api";
 import { toast } from "@/hooks/use-toast";
 
@@ -46,30 +46,46 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-muted/40">
-      <div className="flex items-center justify-between p-4 md:p-6">
+    <div className="relative min-h-screen flex flex-col overflow-hidden bg-gradient-to-br from-background via-background to-light-teal/60">
+      {/* Subtle decorative shapes */}
+      <div
+        className="pointer-events-none absolute inset-0 -z-10 opacity-80"
+        style={{
+          background:
+            "radial-gradient(circle at 15% 20%, rgba(15,118,110,0.10), transparent 45%), radial-gradient(circle at 85% 80%, rgba(23,37,84,0.06), transparent 45%)",
+        }}
+      />
+
+      {/* Top bar */}
+      <div className="flex items-center justify-between p-4 md:px-6 lg:px-8">
         <BrandLogo onClick={() => navigate([""])} />
-        <Button variant="ghost" size="sm" onClick={() => navigate([""])} className="gap-2">
+        <Button variant="ghost" size="sm" onClick={() => navigate([""])} className="gap-2 h-9">
           <ArrowLeft className="h-4 w-4" /> Back to home
         </Button>
       </div>
-      <div className="flex-1 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md p-6 md:p-8 shadow-lg">
-          <div className="text-center mb-6">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+
+      <div className="flex flex-1 items-center justify-center px-4 py-10">
+        <Card className="w-full max-w-md p-6 shadow-md md:p-8">
+          {/* Header */}
+          <div className="mb-6 space-y-3 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
               <LogIn className="h-6 w-6" />
             </div>
-            <h1 className="font-heading text-2xl font-bold text-foreground">Welcome back</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Sign in to access your dashboard
-            </p>
+            <div className="space-y-1">
+              <h1 className="font-heading text-xl font-semibold tracking-tight text-foreground md:text-2xl">
+                Welcome back
+              </h1>
+              <p className="text-sm text-muted-foreground">Sign in to access your dashboard</p>
+            </div>
           </div>
 
           <form onSubmit={onSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-sm font-medium">
+                Email
+              </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
@@ -77,25 +93,27 @@ export function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="pl-9"
+                  className="h-9 pl-9"
                   autoComplete="email"
                 />
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Password
+                </Label>
                 <button
                   type="button"
                   onClick={() => setShow((v) => !v)}
-                  className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+                  className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  {show ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                  {show ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                   {show ? "Hide" : "Show"}
                 </button>
               </div>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="password"
                   type={show ? "text" : "password"}
@@ -103,30 +121,53 @@ export function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="pl-9"
+                  className="h-9 pl-9"
                   autoComplete="current-password"
                 />
               </div>
             </div>
 
             {error && (
-              <div className="flex items-start gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+              <div className="flex items-start gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
-            <Button type="submit" disabled={loading} className="w-full">
-              {loading ? "Signing in..." : "Sign In"}
+            <Button type="submit" disabled={loading} className="h-10 w-full gap-2">
+              {loading ? (
+                <>
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  <LogIn className="h-4 w-4" />
+                  Sign In
+                </>
+              )}
             </Button>
           </form>
 
-          <div className="mt-6 rounded-md bg-muted/60 p-4 text-xs text-muted-foreground">
-            <p className="font-medium text-foreground mb-1">Demo admin credentials</p>
-            <p>Email: admin@lumina.dev</p>
-            <p>Password: admin123</p>
-            <p className="mt-2 text-muted-foreground/80">
-              (Created automatically on first visit. Please change after login.)
+          {/* Demo credentials box */}
+          <div className="mt-6 rounded-lg border border-border bg-muted/40 p-4">
+            <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <ShieldCheck className="h-3.5 w-3.5 text-accent" />
+              Demo admin credentials
+            </div>
+            <dl className="space-y-1 text-xs">
+              <div className="flex items-center justify-between">
+                <dt className="text-muted-foreground">Email</dt>
+                <dd className="font-mono font-medium text-foreground">admin@lumina.dev</dd>
+              </div>
+              <div className="flex items-center justify-between">
+                <dt className="text-muted-foreground">Password</dt>
+                <dd className="font-mono font-medium text-foreground">admin123</dd>
+              </div>
+            </dl>
+            <p className="mt-3 flex items-center gap-1.5 text-[11px] text-muted-foreground/80">
+              <Sparkles className="h-3 w-3 text-accent" />
+              Created automatically on first visit. Please change after login.
             </p>
           </div>
 
@@ -134,7 +175,7 @@ export function LoginPage() {
             Don&apos;t have an account?{" "}
             <button
               onClick={() => navigate(["register"])}
-              className="font-medium text-accent hover:underline"
+              className="font-medium text-accent transition-colors hover:text-accent/80 hover:underline"
             >
               Register here
             </button>

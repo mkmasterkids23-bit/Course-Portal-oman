@@ -13,6 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import { formatDate, formatPrice, durationUnitLabel, type SubscriptionPlanPublic } from "@/types";
 import {
   AlertTriangle, CheckCircle2, ArrowRight, Lock, ShieldCheck, LogOut, Sparkles,
+  CalendarDays,
 } from "lucide-react";
 
 export function ExpiredScreen() {
@@ -64,24 +65,27 @@ export function ExpiredScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b border-border bg-card">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/40 flex flex-col">
+      <header className="border-b border-border bg-card/80 backdrop-blur-xl sticky top-0 z-10">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <BrandLogo onClick={() => navigate([""])} />
-          <Button variant="ghost" size="sm" onClick={logout} className="gap-2 text-destructive hover:text-destructive">
+          <Button variant="ghost" size="sm" onClick={logout} className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/5">
             <LogOut className="h-4 w-4" /> Logout
           </Button>
         </div>
       </header>
 
       <main className="flex-1 mx-auto w-full max-w-6xl px-4 py-10 md:py-16">
-        {/* Header */}
+        {/* Premium header */}
         <div className="text-center mb-10 animate-fade-in-up">
-          <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-warning/15 text-warning mb-4">
-            <AlertTriangle className="h-7 w-7" />
+          <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-warning/15 text-warning mb-5 ring-4 ring-warning/10">
+            <AlertTriangle className="h-8 w-8" />
           </div>
-          <h1 className="font-heading text-3xl md:text-4xl font-bold text-foreground">
+          <Badge className="bg-destructive/10 text-destructive border-transparent mb-3">
             Subscription Expired
+          </Badge>
+          <h1 className="font-heading text-3xl md:text-4xl font-bold text-foreground">
+            Let&apos;s get you back to learning
           </h1>
           <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
             Your learning plan has expired. Choose a new plan below to restore
@@ -91,27 +95,33 @@ export function ExpiredScreen() {
 
         {/* Previous subscription card */}
         {subLoading ? (
-          <Card className="mb-10"><CardContent className="p-6"><Skeleton className="h-20 w-full" /></CardContent></Card>
+          <Card className="mb-10 shadow-sm"><CardContent className="p-6"><Skeleton className="h-20 w-full" /></CardContent></Card>
         ) : sub ? (
-          <Card className="mb-10 border-warning/30">
+          <Card className="mb-10 border-warning/30 shadow-sm overflow-hidden">
+            <div className="h-1 w-full bg-gradient-to-r from-warning to-warning/30" />
             <CardContent className="p-6">
               <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Previous plan
-                  </p>
-                  <p className="font-heading text-xl font-semibold text-foreground mt-1">
-                    {sub.planName}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Expired on {formatDate(sub.expiryDate)} · {formatPrice(sub.planPrice, sub.planCurrency)}
-                  </p>
+                <div className="flex items-start gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted text-muted-foreground shrink-0 ring-1 ring-border">
+                    <CalendarDays className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Previous plan
+                    </p>
+                    <p className="font-heading text-xl font-semibold text-foreground mt-1">
+                      {sub.planName}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Expired on {formatDate(sub.expiryDate)} · {formatPrice(sub.planPrice, sub.planCurrency)}
+                    </p>
+                  </div>
                 </div>
                 <Badge className="bg-destructive/10 text-destructive border-transparent">
                   Expired
                 </Badge>
               </div>
-              <div className="mt-4 flex items-start gap-2 rounded-md bg-muted/60 p-3 text-xs text-muted-foreground">
+              <div className="mt-4 flex items-start gap-2.5 rounded-lg border border-accent/20 bg-light-teal/40 p-3.5 text-xs text-muted-foreground">
                 <ShieldCheck className="h-4 w-4 text-accent shrink-0 mt-0.5" />
                 <span>
                   Your account, learning history, assignment submissions and certificates remain preserved.
@@ -159,13 +169,13 @@ export function ExpiredScreen() {
             {plans.map((p) => (
               <Card
                 key={p.id}
-                className={`relative p-6 flex flex-col ${
-                  p.isPopular ? "border-accent ring-1 ring-accent/30 shadow-md" : ""
+                className={`relative p-6 flex flex-col shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-1 ${
+                  p.isPopular ? "border-accent ring-2 ring-accent/30 shadow-md" : ""
                 }`}
               >
                 {p.isPopular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-accent text-accent-foreground">★ Most Popular</Badge>
+                    <Badge className="bg-accent text-accent-foreground shadow-sm">★ Most Popular</Badge>
                   </div>
                 )}
                 <div className="mb-4">
@@ -198,7 +208,7 @@ export function ExpiredScreen() {
                   onClick={() => choosePlan(p.id)}
                   disabled={subscribingPlanId !== null}
                   variant={p.isPopular ? "default" : "outline"}
-                  className="w-full gap-2"
+                  className="w-full gap-2 shadow-sm"
                 >
                   {subscribingPlanId === p.id ? "Activating..." : "Subscribe"}
                   {subscribingPlanId !== p.id && <ArrowRight className="h-4 w-4" />}
@@ -209,7 +219,7 @@ export function ExpiredScreen() {
         )}
 
         <div className="mt-10 flex flex-col items-center gap-3 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground shadow-sm">
             <Lock className="h-3.5 w-3.5 text-accent" />
             <span>Secure subscription · Cancel anytime by letting your plan expire</span>
           </div>
@@ -219,7 +229,7 @@ export function ExpiredScreen() {
         </div>
       </main>
 
-      <footer className="border-t border-border bg-card">
+      <footer className="border-t border-border bg-card/60">
         <div className="mx-auto max-w-6xl px-4 py-6 text-center text-xs text-muted-foreground">
           Lumina Learning — Professional online training platform.
         </div>

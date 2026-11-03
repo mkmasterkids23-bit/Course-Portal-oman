@@ -67,19 +67,19 @@ export function AdminPlans() {
 
   return (
     <div className="space-y-4">
-      <Card className="p-4">
+      <Card className="border-border bg-gradient-to-br from-card to-muted/20 p-5 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="font-heading text-base font-semibold text-foreground">Subscription Plans</h2>
-            <p className="text-xs text-muted-foreground">Define pricing tiers that students can subscribe to.</p>
+            <h2 className="font-heading text-lg font-semibold text-foreground">Subscription Plans</h2>
+            <p className="text-sm text-muted-foreground mt-0.5">Define pricing tiers that students can subscribe to.</p>
           </div>
-          <Button className="gap-2" onClick={() => setAddOpen(true)}>
+          <Button className="h-9 gap-2" onClick={() => setAddOpen(true)}>
             <Plus className="h-4 w-4" /> Create Plan
           </Button>
         </div>
       </Card>
 
-      <Card className="p-0 overflow-hidden">
+      <Card className="border-border bg-card p-0 shadow-sm overflow-hidden">
         {loading ? (
           <div className="space-y-2 p-4">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -99,19 +99,19 @@ export function AdminPlans() {
         ) : (
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Plan</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead className="hidden md:table-cell text-center">Features</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="hidden md:table-cell">Created</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Plan</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Price</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Duration</TableHead>
+                <TableHead className="hidden text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Features</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Created</TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {plans.map((p) => (
-                <TableRow key={p.id}>
+                <TableRow key={p.id} className="hover:bg-muted/40">
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-foreground">{p.name}</p>
@@ -122,7 +122,7 @@ export function AdminPlans() {
                       )}
                     </div>
                     {p.description && (
-                      <p className="text-xs text-muted-foreground line-clamp-1 max-w-[260px]">{p.description}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-1 max-w-[260px] mt-0.5">{p.description}</p>
                     )}
                   </TableCell>
                   <TableCell>
@@ -133,8 +133,8 @@ export function AdminPlans() {
                   <TableCell className="text-sm text-muted-foreground">
                     {p.duration} {durationUnitLabel(p.durationUnit).toLowerCase()}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-center text-sm text-foreground">
-                    {p.features.length}
+                  <TableCell className="hidden text-center text-sm text-foreground md:table-cell">
+                    <Badge variant="outline" className="bg-muted/40 text-muted-foreground">{p.features.length}</Badge>
                   </TableCell>
                   <TableCell>
                     {p.isActive ? (
@@ -143,25 +143,25 @@ export function AdminPlans() {
                       <Badge variant="outline" className="text-muted-foreground">Inactive</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                  <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
                     {formatDate(p.createdAt)}
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" aria-label={`Actions for ${p.name}`}>
+                        <Button variant="ghost" size="icon" aria-label={`Actions for ${p.name}`} className="text-muted-foreground hover:text-foreground hover:bg-muted">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => { setEditTarget(p); setAddOpen(true); }}>
-                          <Pencil className="h-4 w-4" /> Edit
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onClick={() => { setEditTarget(p); setAddOpen(true); }} className="gap-2">
+                          <Pencil className="h-4 w-4 text-muted-foreground" /> Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => toggleActive(p)}>
+                        <DropdownMenuItem onClick={() => toggleActive(p)} className="gap-2">
                           {p.isActive ? "Deactivate" : "Activate"}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(p)}>
+                        <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(p)} className="gap-2">
                           <Trash2 className="h-4 w-4" /> Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -350,71 +350,79 @@ function PlanFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{target ? "Edit Plan" : "Create Subscription Plan"}</DialogTitle>
+          <DialogTitle className="font-heading text-lg font-semibold">{target ? "Edit Plan" : "Create Subscription Plan"}</DialogTitle>
           <DialogDescription>Define pricing, duration and feature highlights.</DialogDescription>
         </DialogHeader>
-        <div className="space-y-3 max-h-[65vh] overflow-y-auto pr-1">
-          <div className="space-y-1.5">
-            <Label htmlFor="p-name">Plan Name</Label>
-            <Input id="p-name" value={values.name} onChange={(e) => setValues({ ...values, name: e.target.value })} placeholder="e.g. Pro Annual" />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="p-desc">Description (optional)</Label>
-            <Textarea id="p-desc" value={values.description} onChange={(e) => setValues({ ...values, description: e.target.value })} rows={2} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-1 scrollbar-thin">
+          {/* Info section */}
+          <div className="space-y-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Plan Information</p>
             <div className="space-y-1.5">
-              <Label htmlFor="p-price">Price</Label>
-              <Input id="p-price" type="number" min="0" step="0.01" value={values.price} onChange={(e) => setValues({ ...values, price: e.target.value })} />
+              <Label htmlFor="p-name" className="text-xs font-medium text-muted-foreground">Plan Name</Label>
+              <Input id="p-name" value={values.name} onChange={(e) => setValues({ ...values, name: e.target.value })} placeholder="e.g. Pro Annual" className="h-9 rounded-lg" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="p-cur">Currency</Label>
-              <Input id="p-cur" value={values.currency} onChange={(e) => setValues({ ...values, currency: e.target.value })} maxLength={5} />
+              <Label htmlFor="p-desc" className="text-xs font-medium text-muted-foreground">Description (optional)</Label>
+              <Textarea id="p-desc" value={values.description} onChange={(e) => setValues({ ...values, description: e.target.value })} rows={2} className="rounded-lg" />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="p-dur">Duration</Label>
-              <Input id="p-dur" type="number" min="1" value={values.duration} onChange={(e) => setValues({ ...values, duration: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Duration Unit</Label>
-              <Select value={values.durationUnit} onValueChange={(v) => setValues({ ...values, durationUnit: v as "DAYS" | "WEEKS" | "MONTHS" | "YEARS" })}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="DAYS">Days</SelectItem>
-                  <SelectItem value="WEEKS">Weeks</SelectItem>
-                  <SelectItem value="MONTHS">Months</SelectItem>
-                  <SelectItem value="YEARS">Years</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
           <Separator />
-
+          {/* Pricing & Duration section */}
+          <div className="space-y-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Pricing & Duration</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="p-price" className="text-xs font-medium text-muted-foreground">Price</Label>
+                <Input id="p-price" type="number" min="0" step="0.01" value={values.price} onChange={(e) => setValues({ ...values, price: e.target.value })} className="h-9 rounded-lg" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="p-cur" className="text-xs font-medium text-muted-foreground">Currency</Label>
+                <Input id="p-cur" value={values.currency} onChange={(e) => setValues({ ...values, currency: e.target.value })} maxLength={5} className="h-9 rounded-lg" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="p-dur" className="text-xs font-medium text-muted-foreground">Duration</Label>
+                <Input id="p-dur" type="number" min="1" value={values.duration} onChange={(e) => setValues({ ...values, duration: e.target.value })} className="h-9 rounded-lg" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Duration Unit</Label>
+                <Select value={values.durationUnit} onValueChange={(v) => setValues({ ...values, durationUnit: v as "DAYS" | "WEEKS" | "MONTHS" | "YEARS" })}>
+                  <SelectTrigger className="w-full h-9 rounded-lg">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="DAYS">Days</SelectItem>
+                    <SelectItem value="WEEKS">Weeks</SelectItem>
+                    <SelectItem value="MONTHS">Months</SelectItem>
+                    <SelectItem value="YEARS">Years</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <Separator />
           {/* Features list */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Features</Label>
-              <Button variant="ghost" size="sm" className="h-7 gap-1" onClick={addFeature}>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Features</p>
+              <Button variant="ghost" size="sm" className="h-7 gap-1 text-accent" onClick={addFeature}>
                 <PlusIcon className="h-3 w-3" /> Add
               </Button>
             </div>
             <p className="text-xs text-muted-foreground -mt-1">Bullet points shown to students on the pricing card.</p>
             <div className="space-y-2">
               {values.features.map((f, i) => (
-                <div key={i} className="flex items-center gap-2">
+                <div key={i} className="flex items-center gap-2 rounded-md border border-border bg-background p-1.5 pl-2.5 transition-colors focus-within:border-accent/30">
                   <Check className="h-3.5 w-3.5 text-accent shrink-0" />
                   <Input
                     value={f}
                     onChange={(e) => setFeature(i, e.target.value)}
                     placeholder="e.g. Access to all premium courses"
+                    className="h-8 rounded-md border-0 focus-visible:ring-0"
                   />
-                  <Button variant="ghost" size="icon" aria-label="Remove feature" onClick={() => removeFeature(i)}>
-                    <X className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Button variant="ghost" size="icon" aria-label="Remove feature" onClick={() => removeFeature(i)} className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                    <X className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               ))}
@@ -423,27 +431,27 @@ function PlanFormDialog({
               )}
             </div>
           </div>
-
           {/* Benefits list */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Benefits</Label>
-              <Button variant="ghost" size="sm" className="h-7 gap-1" onClick={addBenefit}>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Benefits</p>
+              <Button variant="ghost" size="sm" className="h-7 gap-1 text-accent" onClick={addBenefit}>
                 <PlusIcon className="h-3 w-3" /> Add
               </Button>
             </div>
             <p className="text-xs text-muted-foreground -mt-1">Internal notes about this plan&apos;s advantages.</p>
             <div className="space-y-2">
               {values.benefits.map((b, i) => (
-                <div key={i} className="flex items-center gap-2">
+                <div key={i} className="flex items-center gap-2 rounded-md border border-border bg-background p-1.5 pl-2.5 transition-colors focus-within:border-accent/30">
                   <Star className="h-3.5 w-3.5 text-accent shrink-0" />
                   <Input
                     value={b}
                     onChange={(e) => setBenefit(i, e.target.value)}
                     placeholder="e.g. Priority support"
+                    className="h-8 rounded-md border-0 focus-visible:ring-0"
                   />
-                  <Button variant="ghost" size="icon" aria-label="Remove benefit" onClick={() => removeBenefit(i)}>
-                    <X className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Button variant="ghost" size="icon" aria-label="Remove benefit" onClick={() => removeBenefit(i)} className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                    <X className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               ))}
@@ -452,23 +460,22 @@ function PlanFormDialog({
               )}
             </div>
           </div>
-
           <Separator />
-
+          {/* Status toggles */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="flex items-center justify-between rounded-md border border-border px-3">
-              <Label htmlFor="p-active" className="text-sm">Active</Label>
+            <div className="flex items-center justify-between rounded-lg border border-border p-3">
+              <Label htmlFor="p-active" className="text-sm font-medium">Active</Label>
               <Switch id="p-active" checked={values.isActive} onCheckedChange={(v) => setValues({ ...values, isActive: v })} />
             </div>
-            <div className="flex items-center justify-between rounded-md border border-border px-3">
-              <Label htmlFor="p-popular" className="text-sm">Mark as Popular</Label>
+            <div className="flex items-center justify-between rounded-lg border border-border p-3">
+              <Label htmlFor="p-popular" className="text-sm font-medium">Mark as Popular</Label>
               <Switch id="p-popular" checked={values.isPopular} onCheckedChange={(v) => setValues({ ...values, isPopular: v })} />
             </div>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button disabled={saving} onClick={submit}>
+          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button disabled={saving} className="h-9" onClick={submit}>
             {saving ? "Saving…" : target ? "Save Changes" : "Create Plan"}
           </Button>
         </DialogFooter>

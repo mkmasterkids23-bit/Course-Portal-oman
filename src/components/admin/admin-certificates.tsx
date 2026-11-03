@@ -87,7 +87,7 @@ export function AdminCertificates() {
 
   return (
     <div className="space-y-4">
-      <Card className="p-4">
+      <Card className="border-border bg-card p-4 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative flex-1">
@@ -96,12 +96,12 @@ export function AdminCertificates() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by course or certificate title…"
-                className="pl-9"
+                className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Search certificates"
               />
             </div>
             <Select value={courseFilter} onValueChange={setCourseFilter}>
-              <SelectTrigger className="w-full sm:w-[200px]" aria-label="Filter by course">
+              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[200px]" aria-label="Filter by course">
                 <SelectValue placeholder="All courses" />
               </SelectTrigger>
               <SelectContent>
@@ -115,7 +115,7 @@ export function AdminCertificates() {
         </div>
       </Card>
 
-      <Card className="p-0 overflow-hidden">
+      <Card className="border-border bg-card p-0 shadow-sm overflow-hidden">
         {loading ? (
           <div className="space-y-2 p-4">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -134,26 +134,26 @@ export function AdminCertificates() {
         ) : (
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Course</TableHead>
-                <TableHead>Certificate Title</TableHead>
-                <TableHead className="text-center">Issued</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="hidden md:table-cell">Created</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Course</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Certificate Title</TableHead>
+                <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Issued</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Created</TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map((row) => (
-                <TableRow key={row.courseId}>
+                <TableRow key={row.courseId} className="hover:bg-muted/40">
                   <TableCell className="font-medium text-foreground">{row.courseTitle}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {row.template?.title || <span className="italic">Not configured</span>}
+                    {row.template?.title || <span className="italic text-muted-foreground/70">Not configured</span>}
                   </TableCell>
                   <TableCell className="text-center">
                     {row.issuedCount > 0 ? (
                       <button
-                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-accent hover:bg-accent/10"
+                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-accent transition-colors hover:bg-accent/10"
                         onClick={() => setIssuedFor(row)}
                       >
                         {row.issuedCount}
@@ -171,27 +171,29 @@ export function AdminCertificates() {
                       <Badge className="bg-warning/15 text-warning">Disabled</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                  <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
                     {row.template ? formatDate(row.template.createdAt) : "—"}
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" aria-label={`Actions for ${row.courseTitle}`}>
+                        <Button variant="ghost" size="icon" aria-label={`Actions for ${row.courseTitle}`} className="text-muted-foreground hover:text-foreground hover:bg-muted">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuItem
                           onClick={() => navigate(["admin", "courses", row.courseId], { tab: "certificate" })}
+                          className="gap-2"
                         >
-                          <Settings2 className="h-4 w-4" /> Configure template
+                          <Settings2 className="h-4 w-4 text-muted-foreground" /> Configure template
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => setIssuedFor(row)}
                           disabled={row.issuedCount === 0}
+                          className="gap-2"
                         >
-                          <Eye className="h-4 w-4" /> View issued list
+                          <Eye className="h-4 w-4 text-muted-foreground" /> View issued list
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -233,7 +235,7 @@ function IssuedCertificatesDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Issued Certificates — {row?.courseTitle}</DialogTitle>
+          <DialogTitle className="font-heading text-lg font-semibold">Issued Certificates — {row?.courseTitle}</DialogTitle>
           <DialogDescription>
             {certs.length} certificate{certs.length === 1 ? "" : "s"} issued for this course.
           </DialogDescription>
@@ -249,19 +251,19 @@ function IssuedCertificatesDialog({
         ) : certs.length === 0 ? (
           <EmptyState icon={<Award className="h-5 w-5" />} title="No certificates issued yet" description="Once students complete this course, their certificates will appear here." />
         ) : (
-          <div className="max-h-[60vh] overflow-y-auto -mx-1 px-1">
+          <div className="max-h-[60vh] overflow-y-auto -mx-1 px-1 scrollbar-thin">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead className="hidden md:table-cell">Certificate No.</TableHead>
-                  <TableHead>Issued</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Student</TableHead>
+                  <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Certificate No.</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Issued</TableHead>
+                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {certs.map((c) => (
-                  <TableRow key={c.id}>
+                  <TableRow key={c.id} className="hover:bg-muted/40">
                     <TableCell>
                       <p className="font-medium text-foreground">{c.studentName}</p>
                       <p className="text-xs text-muted-foreground truncate">{c.studentEmail}</p>
@@ -279,7 +281,7 @@ function IssuedCertificatesDialog({
                         href={`/api/public/certificates/${c.certificateNumber}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-accent"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-accent"
                         aria-label="View certificate"
                         onClick={(e) => {
                           // If public verification endpoint doesn't exist, just inform via toast

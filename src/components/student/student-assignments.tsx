@@ -66,7 +66,7 @@ export function StudentAssignments() {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-32 rounded-xl" />
+          <Skeleton key={i} className="h-40 rounded-xl" />
         ))}
       </div>
     );
@@ -92,7 +92,7 @@ export function StudentAssignments() {
         icon={<ClipboardList className="h-5 w-5" />}
         title="No assignments yet"
         description="Assignments will appear here once you have access to a course with a published assignment."
-        action={<Button onClick={() => navigate(["student", "courses"])} className="gap-2">
+        action={<Button onClick={() => navigate(["student", "courses"])} className="gap-2 shadow-sm">
           Browse Courses <BookOpen className="h-4 w-4" />
         </Button>}
       />
@@ -102,18 +102,20 @@ export function StudentAssignments() {
   return (
     <div className="space-y-4">
       {isExpired && (
-        <Card className="border-destructive/30 bg-destructive/5">
+        <Card className="border-destructive/30 bg-destructive/5 shadow-sm">
           <CardContent className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-destructive/10 text-destructive shrink-0">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
               <div>
-                <p className="font-medium text-foreground">Subscription expired</p>
+                <p className="font-semibold text-foreground">Subscription expired</p>
                 <p className="text-sm text-muted-foreground mt-0.5">
                   All assignments are locked until you renew your subscription.
                 </p>
               </div>
             </div>
-            <Button onClick={() => navigate(["student", "subscription"])} className="shrink-0">
+            <Button onClick={() => navigate(["student", "subscription"])} className="shrink-0 shadow-sm">
               Renew Subscription
             </Button>
           </CardContent>
@@ -157,7 +159,7 @@ function AssignmentCard({
     if (assignment.unlocked) {
       return <Badge className="bg-primary text-primary-foreground">Available</Badge>;
     }
-    return <Badge variant="outline" className="text-muted-foreground"><Lock className="h-3 w-3" /> Locked</Badge>;
+    return <Badge variant="outline" className="text-muted-foreground bg-muted"><Lock className="h-3 w-3" /> Locked</Badge>;
   })();
 
   async function handleSubmit() {
@@ -191,22 +193,25 @@ function AssignmentCard({
   }
 
   return (
-    <Card>
+    <Card className="shadow-sm transition-all duration-200 hover:shadow-md">
       <CardHeader className="space-y-2">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-              <BookOpen className="h-3 w-3" />
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1.5">
+              <BookOpen className="h-3 w-3 text-accent" />
               <button
                 onClick={() => navigate(["student", "learn", assignment.courseId])}
-                className="hover:text-accent hover:underline"
+                className="hover:text-accent hover:underline font-medium"
               >
                 {assignment.courseTitle}
               </button>
             </div>
-            <CardTitle className="text-base">{assignment.title}</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 text-accent" />
+              {assignment.title}
+            </CardTitle>
             {assignment.description && (
-              <CardDescription className="mt-1 line-clamp-2">
+              <CardDescription className="mt-1.5 line-clamp-2">
                 {assignment.description}
               </CardDescription>
             )}
@@ -214,8 +219,8 @@ function AssignmentCard({
           <div className="flex flex-col items-end gap-2 shrink-0">
             {statusBadge}
             {assignment.dueDate && (
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <Clock className="h-3 w-3" /> Due {formatDate(assignment.dueDate)}
+              <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <Clock className="h-3 w-3 text-accent" /> Due {formatDate(assignment.dueDate)}
               </span>
             )}
           </div>
@@ -225,7 +230,7 @@ function AssignmentCard({
       <CardContent className="space-y-3">
         {/* Locked progress bar */}
         {!assignment.unlocked && (
-          <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-2">
+          <div className="rounded-lg border border-border bg-muted/40 p-3.5 space-y-3">
             <div className="flex items-center gap-2">
               <Lock className="h-4 w-4 text-muted-foreground" />
               <p className="text-sm font-medium text-foreground">
@@ -233,17 +238,17 @@ function AssignmentCard({
               </p>
             </div>
             <div>
-              <div className="flex justify-between text-xs text-muted-foreground mb-1">
+              <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
                 <span>{assignment.courseCompletion.completedVideos}/{assignment.courseCompletion.totalVideos} lessons completed</span>
-                <span>{assignment.courseCompletion.percent}%</span>
+                <span className="font-semibold text-foreground">{assignment.courseCompletion.percent}%</span>
               </div>
-              <Progress value={assignment.courseCompletion.percent} className="h-1.5" />
+              <Progress value={assignment.courseCompletion.percent} className="h-1.5 bg-muted [&_[data-slot=progress-indicator]]:bg-accent" />
             </div>
             <Button
               size="sm"
               variant="outline"
               onClick={() => navigate(["student", "learn", assignment.courseId])}
-              className="gap-2"
+              className="gap-2 shadow-sm"
             >
               <BookOpen className="h-4 w-4" /> Continue Course
             </Button>
@@ -252,20 +257,23 @@ function AssignmentCard({
 
         {/* Submission view */}
         {assignment.submission && (
-          <div className="rounded-lg border border-success/30 bg-success/5 p-3 space-y-2">
-            <p className="text-sm text-foreground">
-              Submitted on {formatDateTime(assignment.submission.submittedAt)}
-            </p>
+          <div className="rounded-lg border border-success/30 bg-success/5 p-3.5 space-y-2.5">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-success" />
+              <p className="text-sm font-medium text-foreground">
+                Submitted on {formatDateTime(assignment.submission.submittedAt)}
+              </p>
+            </div>
             <a
               href={assignment.submission.fileUrl}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 text-sm text-accent hover:underline"
             >
-              <Download className="h-3 w-3" /> View your submission
+              <Download className="h-3.5 w-3.5" /> View your submission
             </a>
             {assignment.submission.reviewNotes && (
-              <div className="rounded-md border border-border bg-card p-3 mt-2">
+              <div className="rounded-lg border border-border bg-card p-3 mt-2">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Reviewer notes</p>
                 <p className="text-sm text-foreground whitespace-pre-wrap">
                   {assignment.submission.reviewNotes}
@@ -273,7 +281,8 @@ function AssignmentCard({
               </div>
             )}
             {assignment.allowResubmission && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+                <FileText className="h-3.5 w-3.5 text-accent shrink-0 mt-0.5" />
                 Resubmission is enabled — expand below to upload a new file.
               </p>
             )}
@@ -291,13 +300,13 @@ function AssignmentCard({
                   rel="noreferrer"
                   className="inline-flex"
                 >
-                  <Button variant="outline" size="sm" className="gap-2">
+                  <Button variant="outline" size="sm" className="gap-2 shadow-sm">
                     <Download className="h-4 w-4" /> Download Brief
                   </Button>
                 </a>
               )}
               <CollapsibleTrigger asChild>
-                <Button size="sm" className="gap-2">
+                <Button size="sm" className="gap-2 shadow-sm">
                   <Upload className="h-4 w-4" />
                   {assignment.submission ? "Resubmit" : "Submit Assignment"}
                   <ChevronDown className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`} />
@@ -306,7 +315,7 @@ function AssignmentCard({
             </div>
             <CollapsibleContent className="mt-3 space-y-3">
               {assignment.instructions && (
-                <div className="rounded-md border border-border bg-muted/40 p-3">
+                <div className="rounded-lg border border-border bg-muted/40 p-3.5">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Instructions</p>
                   <p className="text-sm text-foreground whitespace-pre-wrap">{assignment.instructions}</p>
                 </div>
@@ -321,14 +330,14 @@ function AssignmentCard({
                   type="file"
                   accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
                   onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                  className="block w-full text-sm text-foreground file:mr-3 file:py-1.5 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer"
+                  className="block w-full text-sm text-foreground file:mr-3 file:py-1.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer"
                 />
                 {selectedFile && (
                   <p className="text-xs text-muted-foreground">
                     Selected: {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
                   </p>
                 )}
-                <Button onClick={handleSubmit} disabled={!selectedFile || uploading} size="sm" className="gap-2">
+                <Button onClick={handleSubmit} disabled={!selectedFile || uploading} size="sm" className="gap-2 shadow-sm">
                   <Upload className="h-4 w-4" />
                   {uploading ? "Uploading..." : "Confirm Submission"}
                 </Button>

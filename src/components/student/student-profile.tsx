@@ -15,9 +15,8 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { apiPost, apiUpload } from "@/hooks/use-api";
 import { toast } from "@/hooks/use-toast";
 import {
-  User, Mail, Phone, Calendar, ShieldCheck, Camera, Save, Lock, KeyRound,
+  User, Mail, Phone, ShieldCheck, Camera, Save, Lock, KeyRound,
 } from "lucide-react";
-import { formatDate } from "@/types";
 
 export function StudentProfile() {
   const user = useAppStore((s) => s.user);
@@ -112,50 +111,63 @@ export function StudentProfile() {
     <div className="grid gap-6 lg:grid-cols-[1fr_1.5fr]">
       {/* Profile summary card */}
       <div className="space-y-4">
-        <Card>
-          <CardContent className="p-6 flex flex-col items-center text-center">
-            <div className="relative">
-              <Avatar className="h-24 w-24 border-2 border-accent/30">
-                {user.profilePhoto ? (
-                  <AvatarImage src={user.profilePhoto} alt={user.name} />
-                ) : null}
-                <AvatarFallback className="bg-accent text-accent-foreground text-2xl font-semibold">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <label
-                htmlFor="photo-upload"
-                className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md cursor-pointer hover:bg-primary/90 transition-colors"
-                aria-label="Change profile photo"
-              >
-                <Camera className="h-4 w-4" />
-              </label>
-              <input
-                id="photo-upload"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
-              />
-            </div>
-            <h2 className="font-heading text-xl font-semibold text-foreground mt-4">{user.name}</h2>
-            <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-              <Mail className="h-3.5 w-3.5" /> {user.email}
-            </p>
-            <Badge className="mt-3 bg-accent/10 text-accent border-transparent">
-              <ShieldCheck className="h-3 w-3" /> {user.role === "STUDENT" ? "Student" : user.role}
-            </Badge>
-            {photoFile && (
-              <p className="mt-3 text-xs text-accent">
-                New photo selected: {photoFile.name}
+        {/* Profile header card with avatar */}
+        <Card className="shadow-sm overflow-hidden">
+          {/* Accent header banner */}
+          <div className="h-20 bg-gradient-to-br from-primary via-primary to-accent relative">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_60%)] pointer-events-none" />
+          </div>
+          <CardContent className="px-6 pb-6">
+            <div className="-mt-12 flex flex-col items-center text-center">
+              <div className="relative">
+                <Avatar className="h-24 w-24 ring-4 ring-card shadow-md">
+                  {user.profilePhoto ? (
+                    <AvatarImage src={user.profilePhoto} alt={user.name} />
+                  ) : null}
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-2xl font-semibold text-primary-foreground">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <label
+                  htmlFor="photo-upload"
+                  className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg cursor-pointer hover:bg-primary/90 transition-colors ring-2 ring-card"
+                  aria-label="Change profile photo"
+                >
+                  <Camera className="h-4 w-4" />
+                </label>
+                <input
+                  id="photo-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+                />
+              </div>
+              <h2 className="font-heading text-xl font-semibold text-foreground mt-4">{user.name}</h2>
+              <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+                <Mail className="h-3.5 w-3.5 text-accent" /> {user.email}
               </p>
-            )}
+              <Badge className="mt-3 bg-accent/10 text-accent border-transparent">
+                <ShieldCheck className="h-3 w-3" /> {user.role === "STUDENT" ? "Student" : user.role}
+              </Badge>
+              {photoFile && (
+                <p className="mt-3 text-xs text-accent flex items-center gap-1.5">
+                  <Camera className="h-3 w-3" /> New photo selected: {photoFile.name}
+                </p>
+              )}
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
+        {/* Account information */}
+        <Card className="shadow-sm">
           <CardHeader>
-            <CardTitle className="text-base">Account information</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10 text-accent">
+                <User className="h-4 w-4" />
+              </span>
+              Account information
+            </CardTitle>
             <CardDescription>Quick reference</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -168,58 +180,67 @@ export function StudentProfile() {
 
       {/* Editable forms */}
       <div className="space-y-6">
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <User className="h-4 w-4 text-accent" /> Edit Profile
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10 text-accent">
+                <User className="h-4 w-4" />
+              </span>
+              Edit Profile
             </CardTitle>
             <CardDescription>Update your personal information</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name" className="text-sm font-medium">Full Name</Label>
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Your full name"
+                className="h-10"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
+              <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
               <Input
                 id="phone"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+968 1234 5678"
+                className="h-10"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
+              <Label htmlFor="bio" className="text-sm font-medium">Bio</Label>
               <Textarea
                 id="bio"
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 placeholder="Tell us a little about yourself..."
                 rows={4}
+                className="resize-none"
               />
             </div>
-            <Button onClick={saveProfile} disabled={savingProfile} className="gap-2">
+            <Button onClick={saveProfile} disabled={savingProfile} className="gap-2 shadow-sm">
               <Save className="h-4 w-4" /> {savingProfile ? "Saving..." : "Save Changes"}
             </Button>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <KeyRound className="h-4 w-4 text-accent" /> Change Password
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10 text-accent">
+                <KeyRound className="h-4 w-4" />
+              </span>
+              Change Password
             </CardTitle>
             <CardDescription>Keep your account secure</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="currentPassword">Current Password</Label>
+              <Label htmlFor="currentPassword" className="text-sm font-medium">Current Password</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -227,7 +248,7 @@ export function StudentProfile() {
                   type="password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 h-10"
                   placeholder="••••••••"
                   autoComplete="current-password"
                 />
@@ -235,7 +256,7 @@ export function StudentProfile() {
             </div>
             <Separator />
             <div className="space-y-2">
-              <Label htmlFor="newPassword">New Password</Label>
+              <Label htmlFor="newPassword" className="text-sm font-medium">New Password</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -243,14 +264,14 @@ export function StudentProfile() {
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 h-10"
                   placeholder="At least 6 characters"
                   autoComplete="new-password"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm New Password</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -258,13 +279,13 @@ export function StudentProfile() {
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 h-10"
                   placeholder="Re-enter new password"
                   autoComplete="new-password"
                 />
               </div>
             </div>
-            <Button onClick={changePassword} disabled={savingPassword} variant="outline" className="gap-2">
+            <Button onClick={changePassword} disabled={savingPassword} variant="outline" className="gap-2 shadow-sm">
               <KeyRound className="h-4 w-4" /> {savingPassword ? "Updating..." : "Update Password"}
             </Button>
           </CardContent>
@@ -278,7 +299,7 @@ function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string;
   return (
     <div className="flex items-center justify-between gap-3 text-sm">
       <span className="flex items-center gap-2 text-muted-foreground">
-        <span className="text-accent">{icon}</span>
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10 text-accent">{icon}</span>
         {label}
       </span>
       <span className="font-medium text-foreground truncate">{value}</span>

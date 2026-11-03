@@ -7,8 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch } from "@/hooks/use-api";
-import { CheckCircle2, ArrowRight, TrendingUp, Clock } from "lucide-react";
+import { CheckCircle2, ArrowRight, TrendingUp, Clock, Star, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { formatPrice, durationUnitLabel, type SubscriptionPlanPublic } from "@/types";
+
+const TRUST_POINTS = [
+  { icon: ShieldCheck, label: "No hidden fees" },
+  { icon: Clock, label: "Flexible duration" },
+  { icon: Users, label: "Trusted by 2,000+" },
+];
 
 export function PlansPage() {
   const navigate = useAppStore((s) => s.navigate);
@@ -16,31 +22,39 @@ export function PlansPage() {
   const plans = data?.plans || [];
 
   return (
-    <div className="mx-auto max-w-7xl px-4 md:px-6 py-12">
-      <div className="text-center mb-10">
-        <p className="text-sm font-semibold text-accent uppercase tracking-wide">Learning Plans</p>
-        <h1 className="font-heading text-3xl md:text-4xl font-bold tracking-tight text-foreground mt-1">
+    <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-12">
+      {/* Header */}
+      <div className="mb-10 space-y-3 text-center">
+        <p className="text-xs font-semibold uppercase tracking-wider text-accent">Learning Plans</p>
+        <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[32px]">
           Choose the plan that fits your goals
         </h1>
-        <p className="text-muted-foreground mt-3 max-w-2xl mx-auto">
-          Transparent pricing. No hidden fees. All plans include video lessons, learning
-          materials, assignments and verifiable certificates.
+        <p className="mx-auto max-w-2xl text-sm text-muted-foreground md:text-base">
+          Transparent pricing. No hidden fees. All plans include video lessons, learning materials,
+          assignments and verifiable certificates.
         </p>
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-2 text-xs text-muted-foreground">
+          {TRUST_POINTS.map((t) => (
+            <span key={t.label} className="flex items-center gap-1.5">
+              <t.icon className="h-3.5 w-3.5 text-accent" /> {t.label}
+            </span>
+          ))}
+        </div>
       </div>
 
       {loading ? (
-        <div className="grid gap-5 md:grid-cols-3 max-w-5xl mx-auto">
+        <div className="mx-auto grid max-w-5xl gap-5 md:grid-cols-3">
           {[1, 2, 3].map((i) => (
             <Card key={i} className="p-6">
-              <Skeleton className="h-6 w-1/3 mb-4" />
-              <Skeleton className="h-10 w-2/3 mb-2" />
-              <Skeleton className="h-4 w-1/2 mb-6" />
+              <Skeleton className="mb-4 h-6 w-1/3" />
+              <Skeleton className="mb-2 h-10 w-2/3" />
+              <Skeleton className="mb-6 h-4 w-1/2" />
               <div className="space-y-3">
                 {[1, 2, 3, 4].map((j) => (
                   <Skeleton key={j} className="h-4 w-full" />
                 ))}
               </div>
-              <Skeleton className="h-10 w-full mt-6" />
+              <Skeleton className="mt-6 h-10 w-full" />
             </Card>
           ))}
         </div>
@@ -51,60 +65,88 @@ export function PlansPage() {
           description="Our team is preparing learning plans. Please check back soon."
         />
       ) : (
-        <div className="grid gap-5 md:grid-cols-3 max-w-5xl mx-auto">
+        <div className="mx-auto grid max-w-5xl gap-5 md:grid-cols-3 md:items-start">
           {plans.map((p) => (
             <Card
               key={p.id}
-              className={`relative p-6 flex flex-col ${p.isPopular ? "border-accent ring-1 ring-accent/30 shadow-md" : ""}`}
+              className={`relative flex h-full flex-col p-6 transition-all duration-200 hover:shadow-md ${
+                p.isPopular
+                  ? "border-accent/60 ring-1 ring-accent/25 shadow-md"
+                  : "hover:border-accent/40"
+              }`}
             >
               {p.isPopular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-accent text-accent-foreground">★ Most Popular</Badge>
+                  <Badge className="bg-accent text-accent-foreground shadow-sm">
+                    <Star className="h-3 w-3 fill-current" /> Most Popular
+                  </Badge>
                 </div>
               )}
               <div className="mb-4">
-                <h3 className="font-heading text-xl font-bold text-foreground">{p.name}</h3>
+                <h3 className="font-heading text-lg font-semibold tracking-tight text-foreground">
+                  {p.name}
+                </h3>
                 {p.description && (
-                  <p className="text-sm text-muted-foreground mt-1">{p.description}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{p.description}</p>
                 )}
               </div>
               <div className="mb-2">
-                <span className="font-heading text-3xl font-bold text-foreground">
+                <span className="font-heading text-3xl font-bold tracking-tight text-foreground">
                   {formatPrice(p.price, p.currency)}
                 </span>
               </div>
-              <p className="flex items-center gap-1 text-xs text-muted-foreground mb-6">
-                <Clock className="h-3 w-3" />
+              <p className="mb-6 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Clock className="h-3.5 w-3.5" />
                 Duration: {p.duration} {durationUnitLabel(p.durationUnit).toLowerCase()}
               </p>
-              <ul className="mb-6 space-y-2.5 flex-1">
+              <ul className="mb-6 flex-1 space-y-2.5">
                 {p.features.map((f, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-foreground">
-                    <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 shrink-0" />
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
                     <span>{f}</span>
                   </li>
                 ))}
               </ul>
               {p.benefits.length > 0 && (
-                <div className="mb-6 rounded-md bg-muted/50 p-3">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Benefits</p>
+                <div className="mb-6 rounded-lg bg-light-teal/60 p-3.5">
+                  <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-accent">
+                    <Sparkles className="h-3 w-3" /> Benefits
+                  </p>
                   <ul className="space-y-1.5">
                     {p.benefits.map((b, i) => (
-                      <li key={i} className="text-xs text-foreground flex items-start gap-1.5">
-                        <ArrowRight className="h-3 w-3 text-accent mt-0.5 shrink-0" />
+                      <li key={i} className="flex items-start gap-1.5 text-xs text-foreground">
+                        <ArrowRight className="mt-0.5 h-3 w-3 shrink-0 text-accent" />
                         <span>{b}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
-              <Button onClick={() => navigate(["register"], { planId: p.id })} variant={p.isPopular ? "default" : "outline"} className="w-full gap-2">
-                Select Plan <ArrowRight className="h-4 w-4" />
+              <Button
+                onClick={() => navigate(["register"], { planId: p.id })}
+                variant={p.isPopular ? "default" : "outline"}
+                className="h-10 w-full gap-2"
+              >
+                Select Plan
+                <ArrowRight className="h-4 w-4" />
               </Button>
             </Card>
           ))}
         </div>
       )}
+
+      {/* Info strip */}
+      <div className="mx-auto mt-12 max-w-3xl rounded-xl border border-border bg-card p-5 text-center shadow-sm">
+        <p className="text-sm text-muted-foreground">
+          Need help choosing the right plan?{" "}
+          <button
+            onClick={() => navigate(["about"])}
+            className="font-medium text-accent transition-colors hover:text-accent/80"
+          >
+            Learn more about how Lumina works
+          </button>
+        </p>
+      </div>
     </div>
   );
 }

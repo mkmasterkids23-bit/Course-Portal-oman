@@ -84,10 +84,10 @@ export function StudentMyCourses() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-16 w-full rounded-xl" />
+        <Skeleton className="h-20 w-full rounded-xl" />
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-72 rounded-xl" />
+            <Skeleton key={i} className="h-80 rounded-xl" />
           ))}
         </div>
       </div>
@@ -112,18 +112,20 @@ export function StudentMyCourses() {
     <div className="space-y-6">
       {/* Expired warning banner */}
       {expired && (
-        <Card className="border-destructive/30 bg-destructive/5">
+        <Card className="border-destructive/30 bg-destructive/5 shadow-sm">
           <CardContent className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-destructive/10 text-destructive shrink-0">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
               <div>
-                <p className="font-medium text-foreground">Your subscription has expired</p>
+                <p className="font-semibold text-foreground">Your subscription has expired</p>
                 <p className="text-sm text-muted-foreground mt-0.5">
                   Paid courses are locked. Renew your subscription to restore full access.
                 </p>
               </div>
             </div>
-            <Button onClick={() => navigate(["student", "subscription"])} className="gap-2 shrink-0">
+            <Button onClick={() => navigate(["student", "subscription"])} className="gap-2 shrink-0 shadow-sm">
               <ShieldCheck className="h-4 w-4" /> Renew Subscription
             </Button>
           </CardContent>
@@ -131,7 +133,7 @@ export function StudentMyCourses() {
       )}
 
       {/* Filters */}
-      <Card className="p-4">
+      <Card className="p-4 shadow-sm">
         <div className="grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-center">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -139,12 +141,12 @@ export function StudentMyCourses() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search courses..."
-              className="pl-9"
+              className="pl-9 h-10"
               aria-label="Search courses"
             />
           </div>
           <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="md:w-48 w-full" aria-label="Filter by category">
+            <SelectTrigger className="md:w-48 w-full h-10" aria-label="Filter by category">
               <SelectValue placeholder="All categories" />
             </SelectTrigger>
             <SelectContent>
@@ -155,7 +157,7 @@ export function StudentMyCourses() {
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="md:w-40 w-full" aria-label="Filter by status">
+            <SelectTrigger className="md:w-40 w-full h-10" aria-label="Filter by status">
               <SelectValue placeholder="All status" />
             </SelectTrigger>
             <SelectContent>
@@ -169,7 +171,7 @@ export function StudentMyCourses() {
       </Card>
 
       <p className="text-sm text-muted-foreground">
-        Showing <span className="font-medium text-foreground">{filtered.length}</span> of {totalCourses} accessible courses
+        Showing <span className="font-semibold text-foreground">{filtered.length}</span> of {totalCourses} accessible courses
       </p>
 
       {filtered.length === 0 ? (
@@ -183,7 +185,7 @@ export function StudentMyCourses() {
           }
           action={
             totalCourses === 0 ? (
-              <Button onClick={() => navigate(["courses"])} className="gap-2">
+              <Button onClick={() => navigate(["courses"])} className="gap-2 shadow-sm">
                 Browse Public Catalog <ArrowRight className="h-4 w-4" />
               </Button>
             ) : (
@@ -214,44 +216,54 @@ function CourseCard({ course, onOpen }: { course: CourseItem; onOpen: () => void
 
   return (
     <Card
-      className="group overflow-hidden p-0 cursor-pointer transition-all hover:shadow-md hover:border-accent/40"
+      className="group overflow-hidden p-0 cursor-pointer shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-1 hover:border-accent/40"
       onClick={onOpen}
     >
-      <div className="relative h-40 overflow-hidden bg-muted">
+      {/* Thumbnail */}
+      <div className="relative h-44 overflow-hidden bg-muted">
         {course.thumbnail ? (
-          <img src={course.thumbnail} alt={course.title} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+          <img src={course.thumbnail} alt={course.title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
         ) : (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
-            <PlayCircle className="h-10 w-10 text-muted-foreground" />
+          <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/10 via-accent/5 to-accent/10">
+            <PlayCircle className="h-12 w-12 text-muted-foreground/70" />
           </div>
         )}
+        {/* Subtle gradient overlay for badge legibility */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
         <div className="absolute top-3 left-3 flex gap-1.5">
           <Badge
             className={
               course.accessType === "FREE"
-                ? "bg-success/15 text-success border-transparent"
-                : "bg-primary text-primary-foreground"
+                ? "bg-success/15 text-success border-transparent backdrop-blur-sm"
+                : "bg-primary text-primary-foreground border-transparent shadow-sm"
             }
           >
             {course.accessType === "FREE" ? "Free" : "Paid"}
           </Badge>
           {course.category && (
-            <Badge variant="outline" className="bg-background/80 backdrop-blur">
+            <Badge variant="outline" className="bg-background/85 backdrop-blur-sm border-border/60 text-foreground">
               {course.category}
             </Badge>
           )}
         </div>
         {completed && (
           <div className="absolute top-3 right-3">
-            <Badge className="bg-success text-success-foreground border-transparent">
+            <Badge className="bg-success text-success-foreground border-transparent shadow-sm">
               <CheckCircle2 className="h-3 w-3" /> Completed
             </Badge>
           </div>
         )}
+        {/* Play hover overlay */}
+        <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/15 transition-colors duration-200">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/95 shadow-lg scale-90 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-200">
+            <PlayCircle className="h-6 w-6 text-primary" />
+          </div>
+        </div>
       </div>
-      <CardContent className="p-5 space-y-3">
+
+      <CardContent className="p-5 space-y-3.5">
         <div>
-          <h3 className="font-heading font-semibold text-foreground line-clamp-1 group-hover:text-accent transition-colors">
+          <h3 className="font-heading text-base font-semibold text-foreground line-clamp-1 group-hover:text-accent transition-colors">
             {course.title}
           </h3>
           <p className="text-sm text-muted-foreground line-clamp-2 mt-1 min-h-[2.5rem]">
@@ -260,19 +272,30 @@ function CourseCard({ course, onOpen }: { course: CourseItem; onOpen: () => void
         </div>
 
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1"><BookOpen className="h-3 w-3" /> {course.topicsCount} topics</span>
-          <span className="flex items-center gap-1"><Video className="h-3 w-3" /> {course.videosCount} lessons</span>
+          <span className="flex items-center gap-1.5">
+            <BookOpen className="h-3 w-3 text-accent" /> {course.topicsCount} topics
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Video className="h-3 w-3 text-accent" /> {course.videosCount} lessons
+          </span>
         </div>
 
         <div>
           <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-            <span>{started ? "Progress" : "Not started"}</span>
-            <span>{course.percent}%</span>
+            <span className={started ? "" : "font-medium"}>{started ? "Progress" : "Not started"}</span>
+            <span className="font-medium text-foreground">{course.percent}%</span>
           </div>
-          <Progress value={course.percent} className="h-1.5" />
+          <Progress
+            value={course.percent}
+            className={`h-1.5 bg-muted ${completed ? "[&_[data-slot=progress-indicator]]:bg-success" : "[&_[data-slot=progress-indicator]]:bg-accent"}`}
+          />
         </div>
 
-        <Button size="sm" variant={started ? "default" : "outline"} className="w-full gap-2 mt-2">
+        <Button
+          size="sm"
+          variant={started ? "default" : "outline"}
+          className="w-full gap-2 mt-1 h-9 shadow-sm"
+        >
           {started ? (
             <>
               <PlayCircle className="h-4 w-4" /> Continue Learning

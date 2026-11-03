@@ -93,7 +93,7 @@ export function AdminAssignments() {
 
   return (
     <div className="space-y-4">
-      <Card className="p-4">
+      <Card className="border-border bg-card p-4 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative flex-1">
@@ -102,12 +102,12 @@ export function AdminAssignments() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search assignments…"
-                className="pl-9"
+                className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Search assignments"
               />
             </div>
             <Select value={courseFilter} onValueChange={setCourseFilter}>
-              <SelectTrigger className="w-full sm:w-[200px]" aria-label="Filter by course">
+              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[200px]" aria-label="Filter by course">
                 <SelectValue placeholder="All courses" />
               </SelectTrigger>
               <SelectContent>
@@ -118,13 +118,13 @@ export function AdminAssignments() {
               </SelectContent>
             </Select>
           </div>
-          <Button className="gap-2" onClick={openAdd}>
+          <Button className="h-9 gap-2" onClick={openAdd}>
             <Plus className="h-4 w-4" /> Add Assignment
           </Button>
         </div>
       </Card>
 
-      <Card className="p-0 overflow-hidden">
+      <Card className="border-border bg-card p-0 shadow-sm overflow-hidden">
         {loading ? (
           <div className="space-y-2 p-4">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -144,18 +144,18 @@ export function AdminAssignments() {
         ) : (
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Assignment</TableHead>
-                <TableHead className="hidden md:table-cell">Course</TableHead>
-                <TableHead>Due</TableHead>
-                <TableHead className="text-center">Submissions</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Assignment</TableHead>
+                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Course</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Due</TableHead>
+                <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Submissions</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {assignments.map((a) => (
-                <TableRow key={a.id}>
+                <TableRow key={a.id} className="hover:bg-muted/40">
                   <TableCell>
                     <div className="min-w-0 max-w-[260px]">
                       <p className="font-medium text-foreground truncate">{a.title}</p>
@@ -164,13 +164,13 @@ export function AdminAssignments() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm text-foreground">{a.course.title}</TableCell>
+                  <TableCell className="hidden text-sm text-foreground md:table-cell">{a.course.title}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {a.dueDate ? formatDate(a.dueDate) : "—"}
                   </TableCell>
                   <TableCell className="text-center">
                     <button
-                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-accent hover:bg-accent/10"
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-accent transition-colors hover:bg-accent/10"
                       onClick={() => navigate(["admin", "submissions"], { assignmentId: a.id })}
                     >
                       {a.submissionsCount}
@@ -190,7 +190,7 @@ export function AdminAssignments() {
                           href={a.fileUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-accent"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-accent"
                           aria-label="View assignment brief"
                         >
                           <ExternalLink className="h-3.5 w-3.5" />
@@ -199,22 +199,22 @@ export function AdminAssignments() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="gap-1 h-8"
+                        className="h-8 gap-1"
                         onClick={() => navigate(["admin", "submissions"], { assignmentId: a.id })}
                       >
                         View Submissions
                       </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" aria-label={`Actions for ${a.title}`}>
+                          <Button variant="ghost" size="icon" aria-label={`Actions for ${a.title}`} className="text-muted-foreground hover:text-foreground hover:bg-muted">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => { setEditTarget(a); setAddOpen(true); }}>
-                            <Pencil className="h-4 w-4" /> Edit
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem onClick={() => { setEditTarget(a); setAddOpen(true); }} className="gap-2">
+                            <Pencil className="h-4 w-4 text-muted-foreground" /> Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(a)}>
+                          <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(a)} className="gap-2">
                             <Trash2 className="h-4 w-4" /> Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -362,18 +362,18 @@ function AssignmentFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{target ? "Edit Assignment" : "Add Assignment"}</DialogTitle>
+          <DialogTitle className="font-heading text-lg font-semibold">{target ? "Edit Assignment" : "Add Assignment"}</DialogTitle>
           <DialogDescription>Create a task for students to complete and submit.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
           <div className="space-y-1.5">
-            <Label htmlFor="ga-title">Title</Label>
-            <Input id="ga-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Final Project" />
+            <Label htmlFor="ga-title" className="text-xs font-medium text-muted-foreground">Title</Label>
+            <Input id="ga-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Final Project" className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label>Course</Label>
+            <Label className="text-xs font-medium text-muted-foreground">Course</Label>
             <Select value={courseId} onValueChange={setCourseId}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full h-9 rounded-lg">
                 <SelectValue placeholder="Select course" />
               </SelectTrigger>
               <SelectContent>
@@ -384,25 +384,25 @@ function AssignmentFormDialog({
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="ga-desc">Short Description</Label>
-            <Textarea id="ga-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
+            <Label htmlFor="ga-desc" className="text-xs font-medium text-muted-foreground">Short Description</Label>
+            <Textarea id="ga-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="ga-ins">Instructions</Label>
-            <Textarea id="ga-ins" value={instructions} onChange={(e) => setInstructions(e.target.value)} rows={4} />
+            <Label htmlFor="ga-ins" className="text-xs font-medium text-muted-foreground">Instructions</Label>
+            <Textarea id="ga-ins" value={instructions} onChange={(e) => setInstructions(e.target.value)} rows={4} className="rounded-lg" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="ga-due">Due Date (optional)</Label>
-              <Input id="ga-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+              <Label htmlFor="ga-due" className="text-xs font-medium text-muted-foreground">Due Date (optional)</Label>
+              <Input id="ga-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="h-9 rounded-lg" />
             </div>
-            <div className="flex items-center justify-between rounded-md border border-border px-3">
-              <Label htmlFor="ga-pub" className="text-sm">Published</Label>
+            <div className="flex items-center justify-between rounded-lg border border-border px-3">
+              <Label htmlFor="ga-pub" className="text-sm font-medium">Published</Label>
               <Switch id="ga-pub" checked={isPublished} onCheckedChange={setIsPublished} />
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="ga-file">Attachment File (optional)</Label>
+            <Label htmlFor="ga-file" className="text-xs font-medium text-muted-foreground">Attachment File (optional)</Label>
             <Input id="ga-file" type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" />
             {target?.fileUrl && (
               <div className="flex items-center gap-2 text-xs">
@@ -416,17 +416,17 @@ function AssignmentFormDialog({
               </div>
             )}
           </div>
-          <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <div>
-              <Label htmlFor="ga-resub" className="text-sm">Allow resubmission</Label>
-              <p className="text-xs text-muted-foreground">Let students submit again after review.</p>
+              <Label htmlFor="ga-resub" className="text-sm font-medium">Allow resubmission</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">Let students submit again after review.</p>
             </div>
             <Switch id="ga-resub" checked={allowResubmission} onCheckedChange={setAllowResubmission} />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button disabled={saving} onClick={submit}>{saving ? "Saving…" : target ? "Save Changes" : "Add Assignment"}</Button>
+          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button disabled={saving} className="h-9" onClick={submit}>{saving ? "Saving…" : target ? "Save Changes" : "Add Assignment"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
