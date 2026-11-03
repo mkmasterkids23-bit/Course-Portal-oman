@@ -16,9 +16,9 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Lumina Learning — Professional Online Training Platform",
+  title: "LearnCourse — Professional Online Training Platform",
   description:
-    "Lumina Learning is a professional online training platform offering structured courses, recorded video lessons, assignments and verifiable completion certificates.",
+    "LearnCourse is a professional online training platform offering structured courses, recorded video lessons, assignments and verifiable completion certificates.",
   keywords: [
     "online training",
     "course platform",
@@ -27,15 +27,15 @@ export const metadata: Metadata = {
     "certificates",
     "professional training",
   ],
-  authors: [{ name: "Lumina Learning" }],
+  authors: [{ name: "LearnCourse" }],
   icons: {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
   },
   openGraph: {
-    title: "Lumina Learning",
+    title: "LearnCourse",
     description:
       "Professional online training platform with structured courses, video lessons and verifiable certificates.",
-    siteName: "Lumina Learning",
+    siteName: "LearnCourse",
     type: "website",
   },
 };

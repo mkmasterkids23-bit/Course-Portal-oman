@@ -16,14 +16,14 @@ export function BrandLogo({
     <button
       onClick={onClick}
       className={cn("flex items-center gap-2 group", className)}
-      aria-label="Lumina Learning home"
+      aria-label="LearnCourse home"
     >
       <span className="relative inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-transform group-hover:scale-105">
         <GraduationCap className="h-5 w-5" />
       </span>
       {showText && (
         <span className="font-heading text-lg font-semibold tracking-tight text-foreground">
-          Lumina<span className="text-accent">.</span>
+          Learn<span className="text-accent">Course</span>
         </span>
       )}
     </button>

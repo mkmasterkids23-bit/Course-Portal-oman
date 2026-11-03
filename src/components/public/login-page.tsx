@@ -158,7 +158,7 @@ export function LoginPage() {
             <dl className="space-y-1 text-xs">
               <div className="flex items-center justify-between">
                 <dt className="text-muted-foreground">Email</dt>
-                <dd className="font-mono font-medium text-foreground">admin@lumina.dev</dd>
+                <dd className="font-mono font-medium text-foreground">admin@learncourse.dev</dd>
               </div>
               <div className="flex items-center justify-between">
                 <dt className="text-muted-foreground">Password</dt>

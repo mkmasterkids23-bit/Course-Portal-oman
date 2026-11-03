@@ -84,8 +84,8 @@ export async function PUT(
           : existing?.bodyText,
       organizationName:
         organizationName !== undefined
-          ? organizationName.trim() || "Lumina Learning"
-          : existing?.organizationName || "Lumina Learning",
+          ? organizationName.trim() || "LearnCourse"
+          : existing?.organizationName || "LearnCourse",
       layout: finalLayout,
     };
 

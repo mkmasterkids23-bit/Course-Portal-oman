@@ -143,7 +143,7 @@ export function PlansPage() {
             onClick={() => navigate(["about"])}
             className="font-medium text-accent transition-colors hover:text-accent/80"
           >
-            Learn more about how Lumina works
+            Learn more about how LearnCourse works
           </button>
         </p>
       </div>

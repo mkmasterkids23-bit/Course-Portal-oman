@@ -238,7 +238,7 @@ export function buildCertificateHtml(
     <span class="corner br"></span>
     <div class="inner">
       <div class="org">
-        <span class="seal">L</span>
+        <span class="seal">LC</span>
         <span>${esc(cert.organizationName)}</span>
         <span class="dot"></span>
       </div>

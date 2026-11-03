@@ -15,7 +15,7 @@ export async function GET() {
       const password = "admin123";
       await db.user.create({
         data: {
-          email: "admin@lumina.dev",
+          email: "admin@learncourse.dev",
           name: "Platform Administrator",
           role: "ADMIN",
           passwordHash: hashPassword(password),
@@ -103,7 +103,7 @@ export async function GET() {
 
       return NextResponse.json({
         seeded: true,
-        admin: { email: "admin@lumina.dev", password },
+        admin: { email: "admin@learncourse.dev", password },
         message:
           "Default admin and starter subscription plans created. Please change the admin password after first login.",
       });

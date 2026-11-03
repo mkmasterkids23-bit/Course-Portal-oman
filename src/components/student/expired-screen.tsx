@@ -231,7 +231,7 @@ export function ExpiredScreen() {
 
       <footer className="border-t border-border bg-card/60">
         <div className="mx-auto max-w-6xl px-4 py-6 text-center text-xs text-muted-foreground">
-          Lumina Learning — Professional online training platform.
+          LearnCourse — Professional online training platform.
         </div>
       </footer>
     </div>

@@ -13,7 +13,7 @@ export function FullPageLoader() {
       </div>
       <div className="flex items-center gap-2 text-muted-foreground text-sm">
         <span className="h-2 w-2 rounded-full bg-accent animate-bounce" />
-        <span>Loading Lumina Learning…</span>
+        <span>Loading LearnCourse…</span>
       </div>
     </div>
   );
