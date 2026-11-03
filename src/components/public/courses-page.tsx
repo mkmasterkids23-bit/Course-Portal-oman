@@ -104,7 +104,7 @@ export function CoursesPage() {
             >
               <div className="relative h-44 overflow-hidden bg-muted">
                 {c.thumbnail ? (
-                  // eslint-disable-next-line @next/next/no-img-element
+                   
                   <img src={c.thumbnail} alt={c.title} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
                 ) : (
                   <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">

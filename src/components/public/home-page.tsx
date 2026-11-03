@@ -326,7 +326,7 @@ function CourseCardMini({ course, onOpen }: { course: CoursePublic; onOpen: () =
     <Card className="group overflow-hidden p-0 transition-all hover:shadow-md hover:border-accent/40 cursor-pointer" onClick={onOpen}>
       <div className="relative h-44 overflow-hidden bg-muted">
         {course.thumbnail ? (
-          // eslint-disable-next-line @next/next/no-img-element
+           
           <img src={course.thumbnail} alt={course.title} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
         ) : (
           <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">

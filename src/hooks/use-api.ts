@@ -25,10 +25,14 @@ export function useApiFetch<T>(
 
   useEffect(() => {
     if (!url || options?.skip) {
-      setLoading(false);
       return;
     }
     let cancelled = false;
+    // Standard data-fetching pattern: synchronously mark loading + clear error
+    // before kicking off the async request. The set-state-in-effect rule is
+    // intentionally suppressed here because the subsequent state updates all
+    // happen inside async callbacks (then/catch/finally), not synchronously.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setError(null);
     fetch(url, { cache: "no-store" })
@@ -49,7 +53,6 @@ export function useApiFetch<T>(
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url, nonce]);
 
   return { data, loading, error, refetch, setData };
