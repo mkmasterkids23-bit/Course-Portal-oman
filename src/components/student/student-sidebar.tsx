@@ -32,13 +32,16 @@ export function StudentSidebar({ onNavigate }: { onNavigate?: () => void }) {
   }
 
   return (
-    <aside className="flex h-full w-full flex-col border-r border-sidebar-border bg-sidebar">
-      <div className="flex h-16 items-center border-b border-sidebar-border px-4">
+    <aside className="relative flex h-full w-full flex-col border-r border-sidebar-border bg-gradient-to-b from-card via-muted/20 to-muted/50">
+      {/* Subtle accent right edge */}
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-accent/0 via-accent/40 to-accent/0" />
+      {/* Logo header */}
+      <div className="flex h-16 items-center border-b border-sidebar-border/80 px-5">
         <BrandLogo onClick={() => { navigate(["student", "overview"]); onNavigate?.(); }} />
       </div>
-      <ScrollArea className="flex-1 px-3 py-4">
+      <ScrollArea className="flex-1 px-3 py-5">
         <nav className="space-y-1">
-          <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="px-3 pb-2.5 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground/60">
             Learning Hub
           </p>
           {NAV.map((item) => {
@@ -48,25 +51,34 @@ export function StudentSidebar({ onNavigate }: { onNavigate?: () => void }) {
                 key={item.label}
                 onClick={() => { navigate(item.segments); onNavigate?.(); }}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  "group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200",
                   active
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    ? "bg-accent/10 text-accent font-semibold"
+                    : "font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                 )}
               >
-                <item.icon className="h-4 w-4" />
+                {active && (
+                  <span className="absolute left-0 top-1/2 h-6 -translate-y-1/2 w-1 rounded-r-full bg-accent" />
+                )}
+                <item.icon className={cn(
+                  "h-4 w-4 shrink-0 transition-colors duration-200",
+                  active
+                    ? "text-accent"
+                    : "text-muted-foreground/70 group-hover:text-foreground"
+                )} />
                 <span>{item.label}</span>
               </button>
             );
           })}
         </nav>
       </ScrollArea>
-      <div className="border-t border-sidebar-border p-3">
+      {/* Logout footer with separator */}
+      <div className="relative border-t border-sidebar-border/80 p-3">
         <button
           onClick={logout}
-          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+          className="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-destructive/5 hover:text-destructive"
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-4 w-4 shrink-0 transition-colors duration-200 group-hover:text-destructive" />
           Logout
         </button>
       </div>

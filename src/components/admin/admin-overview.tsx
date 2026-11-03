@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -11,9 +11,13 @@ import { useAppStore } from "@/stores/app-store";
 import { formatDateTime } from "@/types";
 import {
   Users, BookOpen, Award, CreditCard, FileText, ClipboardList,
-  TrendingUp, ArrowRight, UserPlus, PlusCircle, Layers, GraduationCap,
-  Sparkles,
+  TrendingUp, ArrowRight, UserPlus, PlusCircle,
+  Sparkles, Video,
 } from "lucide-react";
+import {
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  PieChart, Pie, Cell,
+} from "recharts";
 
 interface OverviewData {
   totalStudents: number;
@@ -25,6 +29,8 @@ interface OverviewData {
   totalAssignments: number;
   totalSubmittedAssignments: number;
   totalCertificatesIssued: number;
+  totalVideoLessons: number;
+  pendingReviews: number;
   recentStudents: { id: string; name: string; email: string; createdAt: string }[];
   recentCourses: { id: string; title: string; createdAt: string; isPublished: boolean }[];
   recentSubmissions: {
@@ -39,42 +45,77 @@ interface OverviewData {
     courseTitle: string;
     issuedAt: string;
   }[];
+  coursePerformance: {
+    id: string;
+    title: string;
+    lessons: number;
+    topics: number;
+    certificates: number;
+  }[];
+  studentCompletionBuckets: {
+    notStarted: number;
+    beginner: number;
+    intermediate: number;
+    advanced: number;
+    completed: number;
+  };
 }
+
+const PIE_COLORS = ["#E2E8F0", "#94A3B8", "#0F766E", "#172554", "#15803D"];
 
 export function AdminOverview() {
   const navigate = useAppStore((s) => s.navigate);
   const query = useAppStore((s) => s.query);
   const { data, loading, error } = useApiFetch<OverviewData>("/api/admin/overview");
 
-  // Quick-action deep links: when query.action=new is present, route to the relevant section
   useEffect(() => {
     if (query.action === "new") {
-      // The section router already directs the user to the right page based on segments[1].
-      // The pages read query.action themselves to open their create dialogs.
+      // Section pages read query.action to auto-open create dialogs
     }
   }, [query.action]);
 
+  const completionData = data
+    ? [
+        { name: "Not Started", value: data.studentCompletionBuckets.notStarted },
+        { name: "Beginner", value: data.studentCompletionBuckets.beginner },
+        { name: "Intermediate", value: data.studentCompletionBuckets.intermediate },
+        { name: "Advanced", value: data.studentCompletionBuckets.advanced },
+        { name: "Completed", value: data.studentCompletionBuckets.completed },
+      ]
+    : [];
+
+  const totalCompletionStudents = completionData.reduce((s, d) => s + d.value, 0);
+
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="font-heading text-2xl font-bold text-foreground">
-            Welcome back
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Here&apos;s a snapshot of your platform today.
-          </p>
+      {/* Premium welcome header */}
+      <div className="relative overflow-hidden rounded-xl border border-border bg-gradient-to-br from-primary to-primary/80 p-6 text-primary-foreground">
+        <div
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 20% 50%, rgba(15,118,110,0.4), transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1), transparent 40%)",
+          }}
+        />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-heading text-2xl font-bold tracking-tight">
+              Welcome back, Administrator
+            </h2>
+            <p className="mt-1 text-sm text-primary-foreground/80">
+              Here&apos;s a snapshot of your platform today.
+            </p>
+          </div>
+          <Badge className="self-start bg-primary-foreground/15 text-primary-foreground border-primary-foreground/20 backdrop-blur gap-1.5">
+            <Sparkles className="h-3.5 w-3.5" />
+            {new Date().toLocaleDateString("en-GB", {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </Badge>
         </div>
-        <Badge variant="outline" className="bg-card text-muted-foreground gap-1.5 self-start">
-          <Sparkles className="h-3.5 w-3.5 text-accent" />
-          {new Date().toLocaleDateString("en-GB", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          })}
-        </Badge>
       </div>
 
       {loading ? (
@@ -87,164 +128,268 @@ export function AdminOverview() {
         />
       ) : data ? (
         <>
-          {/* Primary stats */}
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <StatCard
-              icon={<Users className="h-5 w-5" />}
-              label="Total Students"
-              value={data.totalStudents}
-              hint="enrolled learners"
-              tone="primary"
-            />
-            <StatCard
+          {/* Primary stat cards — 5 elegant cards */}
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+            <PremiumStatCard
               icon={<BookOpen className="h-5 w-5" />}
               label="Total Courses"
               value={data.totalCourses}
-              hint={`${data.totalFreeCourses} free / ${data.totalPaidCourses} paid`}
-              tone="accent"
+              hint={`${data.totalFreeCourses} free · ${data.totalPaidCourses} paid`}
+              tone="navy"
             />
-            <StatCard
-              icon={<CreditCard className="h-5 w-5" />}
-              label="Active Subscriptions"
-              value={data.totalActiveSubscriptions}
-              hint={`${data.totalExpiredSubscriptions} expired`}
-              tone="success"
+            <PremiumStatCard
+              icon={<Users className="h-5 w-5" />}
+              label="Enrolled Students"
+              value={data.totalStudents}
+              hint={`${data.totalActiveSubscriptions} active subs`}
+              tone="teal"
             />
-            <StatCard
+            <PremiumStatCard
+              icon={<Video className="h-5 w-5" />}
+              label="Video Lessons"
+              value={data.totalVideoLessons}
+              hint="published lessons"
+              tone="navy"
+            />
+            <PremiumStatCard
+              icon={<ClipboardList className="h-5 w-5" />}
+              label="Pending Reviews"
+              value={data.pendingReviews}
+              hint={`${data.totalSubmittedAssignments} total submissions`}
+              tone="amber"
+              urgent={data.pendingReviews > 0}
+            />
+            <PremiumStatCard
               icon={<Award className="h-5 w-5" />}
-              label="Certificates Issued"
+              label="Certificates"
               value={data.totalCertificatesIssued}
-              hint="lifetime"
-              tone="primary"
+              hint="lifetime issued"
+              tone="green"
             />
           </div>
 
-          {/* Secondary stats */}
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <SmallStat
-              icon={<GraduationCap className="h-4 w-4" />}
-              label="Free Courses"
-              value={data.totalFreeCourses}
-            />
-            <SmallStat
-              icon={<Layers className="h-4 w-4" />}
-              label="Paid Courses"
-              value={data.totalPaidCourses}
-            />
-            <SmallStat
-              icon={<CreditCard className="h-4 w-4" />}
-              label="Expired Subscriptions"
-              value={data.totalExpiredSubscriptions}
-            />
-            <SmallStat
-              icon={<ClipboardList className="h-4 w-4" />}
-              label="Submitted Assignments"
-              value={data.totalSubmittedAssignments}
-            />
+          {/* Charts row */}
+          <div className="grid gap-4 lg:grid-cols-5">
+            {/* Course Performance — bar chart */}
+            <Card className="lg:col-span-3 overflow-hidden">
+              <div className="flex items-center justify-between border-b border-border p-5">
+                <div>
+                  <h3 className="font-heading text-base font-semibold text-foreground">
+                    Course Performance
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Lessons & certificates per course
+                  </p>
+                </div>
+                <Button variant="ghost" size="sm" className="gap-1 text-xs" onClick={() => navigate(["admin", "courses"])}>
+                  View courses <ArrowRight className="h-3 w-3" />
+                </Button>
+              </div>
+              <div className="p-4">
+                {data.coursePerformance.length === 0 ? (
+                  <div className="flex h-[260px] items-center justify-center text-sm text-muted-foreground">
+                    No courses to display yet
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={260}>
+                    <BarChart data={data.coursePerformance} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
+                      <XAxis
+                        dataKey="title"
+                        tick={{ fontSize: 11, fill: "#64748B" }}
+                        tickLine={false}
+                        axisLine={{ stroke: "#E2E8F0" }}
+                        interval={0}
+                        angle={-15}
+                        textAnchor="end"
+                        height={60}
+                      />
+                      <YAxis
+                        tick={{ fontSize: 11, fill: "#64748B" }}
+                        tickLine={false}
+                        axisLine={false}
+                        allowDecimals={false}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          borderRadius: 8,
+                          border: "1px solid #E2E8F0",
+                          fontSize: 12,
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                        }}
+                        cursor={{ fill: "#F1F5F9" }}
+                      />
+                      <Bar dataKey="lessons" fill="#172554" radius={[4, 4, 0, 0]} name="Lessons" />
+                      <Bar dataKey="certificates" fill="#0F766E" radius={[4, 4, 0, 0]} name="Certificates" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </Card>
+
+            {/* Student Completion — donut chart */}
+            <Card className="lg:col-span-2 overflow-hidden">
+              <div className="flex items-center justify-between border-b border-border p-5">
+                <div>
+                  <h3 className="font-heading text-base font-semibold text-foreground">
+                    Student Completion
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Learning progress distribution
+                  </p>
+                </div>
+              </div>
+              <div className="p-4">
+                {totalCompletionStudents === 0 ? (
+                  <div className="flex h-[260px] items-center justify-center text-sm text-muted-foreground">
+                    No student data yet
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <ResponsiveContainer width="100%" height={220}>
+                      <PieChart>
+                        <Pie
+                          data={completionData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={90}
+                          paddingAngle={2}
+                          dataKey="value"
+                        >
+                          {completionData.map((_, index) => (
+                            <Cell key={index} fill={PIE_COLORS[index]} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            borderRadius: 8,
+                            border: "1px solid #E2E8F0",
+                            fontSize: 12,
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span className="font-heading text-2xl font-bold text-foreground">
+                        {totalCompletionStudents}
+                      </span>
+                      <span className="text-xs text-muted-foreground">students</span>
+                    </div>
+                  </div>
+                )}
+                {/* Legend */}
+                <div className="mt-3 grid grid-cols-2 gap-1.5 text-xs">
+                  {completionData.map((d, i) => (
+                    <div key={d.name} className="flex items-center gap-1.5">
+                      <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: PIE_COLORS[i] }} />
+                      <span className="text-muted-foreground">{d.name}</span>
+                      <span className="font-medium text-foreground ml-auto">{d.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Card>
           </div>
 
-          {/* Recent Activity */}
-          <div>
-            <div className="mb-3 flex items-center gap-2">
-              <h3 className="font-heading text-lg font-semibold text-foreground">
-                Recent Activity
-              </h3>
-              <div className="h-px flex-1 bg-border" />
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <RecentCard
-                title="New Students"
-                icon={<Users className="h-4 w-4" />}
-                items={data.recentStudents.map((s) => ({
-                  id: s.id,
-                  primary: s.name,
-                  secondary: s.email,
-                  date: s.createdAt,
-                }))}
-                onMore={() => navigate(["admin", "students"])}
-                emptyText="No students yet"
-              />
-              <RecentCard
-                title="Recent Courses"
-                icon={<BookOpen className="h-4 w-4" />}
-                items={data.recentCourses.map((c) => ({
-                  id: c.id,
-                  primary: c.title,
-                  secondary: c.isPublished ? "Published" : "Draft",
-                  date: c.createdAt,
-                }))}
-                onMore={() => navigate(["admin", "courses"])}
-                emptyText="No courses yet"
-              />
-              <RecentCard
-                title="Recent Submissions"
-                icon={<ClipboardList className="h-4 w-4" />}
-                items={data.recentSubmissions.map((s) => ({
-                  id: s.id,
-                  primary: s.studentName,
-                  secondary: s.assignmentTitle,
-                  date: s.submittedAt,
-                }))}
-                onMore={() => navigate(["admin", "submissions"])}
-                emptyText="No submissions yet"
-              />
-              <RecentCard
-                title="Recent Certificates"
-                icon={<Award className="h-4 w-4" />}
-                items={data.recentCertificates.map((c) => ({
-                  id: c.id,
-                  primary: c.studentName,
-                  secondary: c.courseTitle,
-                  date: c.issuedAt,
-                }))}
-                onMore={() => navigate(["admin", "certificates"])}
-                emptyText="No certificates issued yet"
-              />
-            </div>
+          {/* Recent activity — two columns */}
+          <div className="grid gap-4 lg:grid-cols-2">
+            {/* Recent Students */}
+            <Card className="overflow-hidden">
+              <div className="flex items-center justify-between border-b border-border p-5">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10 text-accent">
+                    <Users className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-heading text-sm font-semibold text-foreground">Recently Registered Students</h3>
+                    <p className="text-xs text-muted-foreground">Latest enrollments</p>
+                  </div>
+                </div>
+                <Button variant="ghost" size="sm" className="gap-1 text-xs" onClick={() => navigate(["admin", "students"])}>
+                  View all <ArrowRight className="h-3 w-3" />
+                </Button>
+              </div>
+              <div className="p-2">
+                {data.recentStudents.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-8 text-center">No students yet</p>
+                ) : (
+                  <ul className="divide-y divide-border">
+                    {data.recentStudents.slice(0, 5).map((s) => (
+                      <li key={s.id} className="flex items-center gap-3 px-3 py-3 hover:bg-muted/40 transition-colors rounded-md">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0">
+                          {s.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-foreground truncate">{s.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{s.email}</p>
+                        </div>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          {formatDateTime(s.createdAt)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </Card>
+
+            {/* Recent Submissions */}
+            <Card className="overflow-hidden">
+              <div className="flex items-center justify-between border-b border-border p-5">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-warning/15 text-warning">
+                    <ClipboardList className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-heading text-sm font-semibold text-foreground">Recent Assignment Submissions</h3>
+                    <p className="text-xs text-muted-foreground">Latest student submissions</p>
+                  </div>
+                </div>
+                <Button variant="ghost" size="sm" className="gap-1 text-xs" onClick={() => navigate(["admin", "submissions"])}>
+                  View all <ArrowRight className="h-3 w-3" />
+                </Button>
+              </div>
+              <div className="p-2">
+                {data.recentSubmissions.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-8 text-center">No submissions yet</p>
+                ) : (
+                  <ul className="divide-y divide-border">
+                    {data.recentSubmissions.slice(0, 5).map((s) => (
+                      <li key={s.id} className="flex items-center gap-3 px-3 py-3 hover:bg-muted/40 transition-colors rounded-md">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground shrink-0">
+                          <FileText className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-foreground truncate">{s.studentName}</p>
+                          <p className="text-xs text-muted-foreground truncate">{s.assignmentTitle}</p>
+                        </div>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          {formatDateTime(s.submittedAt)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </Card>
           </div>
 
-          {/* Quick Actions */}
-          <Card className="border-dashed">
-            <CardHeader>
-              <CardTitle className="text-base">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() => navigate(["admin", "students"], { action: "new" })}
-                >
-                  <UserPlus className="h-4 w-4 text-accent" /> Add Student
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() => navigate(["admin", "courses"], { action: "new" })}
-                >
-                  <PlusCircle className="h-4 w-4 text-accent" /> Create Course
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() => navigate(["admin", "materials"], { action: "new" })}
-                >
-                  <FileText className="h-4 w-4 text-accent" /> Add Material
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() => navigate(["admin", "assignments"], { action: "new" })}
-                >
-                  <ClipboardList className="h-4 w-4 text-accent" /> Create Assignment
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() => navigate(["admin", "plans"], { action: "new" })}
-                >
-                  <CreditCard className="h-4 w-4 text-accent" /> Create Plan
-                </Button>
+          {/* Quick actions */}
+          <Card className="border-dashed bg-card">
+            <CardContent className="p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="font-heading text-sm font-semibold text-foreground">Quick Actions</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Jump straight into common tasks</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <QuickActionButton icon={<UserPlus className="h-4 w-4" />} label="Add Student" onClick={() => navigate(["admin", "students"], { action: "new" })} />
+                  <QuickActionButton icon={<PlusCircle className="h-4 w-4" />} label="Create Course" onClick={() => navigate(["admin", "courses"], { action: "new" })} />
+                  <QuickActionButton icon={<FileText className="h-4 w-4" />} label="Add Material" onClick={() => navigate(["admin", "materials"], { action: "new" })} />
+                  <QuickActionButton icon={<ClipboardList className="h-4 w-4" />} label="Create Assignment" onClick={() => navigate(["admin", "assignments"], { action: "new" })} />
+                  <QuickActionButton icon={<CreditCard className="h-4 w-4" />} label="Create Plan" onClick={() => navigate(["admin", "plans"], { action: "new" })} />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -254,27 +399,82 @@ export function AdminOverview() {
   );
 }
 
+function PremiumStatCard({
+  icon,
+  label,
+  value,
+  hint,
+  tone,
+  urgent,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  hint?: string;
+  tone: "navy" | "teal" | "amber" | "green";
+  urgent?: boolean;
+}) {
+  const toneClasses = {
+    navy: "bg-primary/10 text-primary",
+    teal: "bg-accent/10 text-accent",
+    amber: "bg-warning/15 text-warning",
+    green: "bg-success/15 text-success",
+  };
+  const borderClass = urgent ? "ring-1 ring-warning/30" : "";
+
+  return (
+    <Card className={`overflow-hidden p-5 transition-shadow hover:shadow-md ${borderClass}`}>
+      <div className="flex flex-col gap-3">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${toneClasses[tone]}`}>
+          {icon}
+        </div>
+        <div>
+          <p className="font-heading text-3xl font-bold text-foreground leading-none">
+            {value.toLocaleString()}
+          </p>
+          <p className="text-xs font-medium text-muted-foreground mt-1.5">{label}</p>
+          {hint && <p className="text-[11px] text-muted-foreground/80 mt-0.5">{hint}</p>}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function QuickActionButton({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
+  return (
+    <Button variant="outline" size="sm" className="gap-2 h-9" onClick={onClick}>
+      <span className="text-accent">{icon}</span>
+      {label}
+    </Button>
+  );
+}
+
 function OverviewSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i} className="p-4">
-            <div className="flex items-start justify-between">
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-8 w-16" />
-                <Skeleton className="h-3 w-24" />
-              </div>
-              <Skeleton className="h-10 w-10 rounded-lg" />
-            </div>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Card key={i} className="p-5">
+            <Skeleton className="h-10 w-10 rounded-lg mb-3" />
+            <Skeleton className="h-8 w-16 mb-2" />
+            <Skeleton className="h-3 w-24" />
           </Card>
         ))}
       </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i} className="p-4">
-            <Skeleton className="h-5 w-32 mb-3" />
+      <div className="grid gap-4 lg:grid-cols-5">
+        <Card className="lg:col-span-3 p-5">
+          <Skeleton className="h-5 w-40 mb-4" />
+          <Skeleton className="h-[260px] w-full" />
+        </Card>
+        <Card className="lg:col-span-2 p-5">
+          <Skeleton className="h-5 w-40 mb-4" />
+          <Skeleton className="h-[220px] w-full" />
+        </Card>
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <Card key={i} className="p-5">
+            <Skeleton className="h-5 w-48 mb-4" />
             <div className="space-y-3">
               {Array.from({ length: 3 }).map((_, j) => (
                 <Skeleton key={j} className="h-12 w-full" />
@@ -284,116 +484,5 @@ function OverviewSkeleton() {
         ))}
       </div>
     </div>
-  );
-}
-
-function StatCard({
-  icon,
-  label,
-  value,
-  hint,
-  tone,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-  hint?: string;
-  tone: "primary" | "accent" | "success";
-}) {
-  const toneClasses =
-    tone === "primary"
-      ? "bg-primary/10 text-primary"
-      : tone === "accent"
-      ? "bg-accent/10 text-accent"
-      : "bg-success/15 text-success";
-  return (
-    <Card className="overflow-hidden p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1">
-          <p className="text-xs font-medium text-muted-foreground">{label}</p>
-          <p className="font-heading text-3xl font-bold text-foreground leading-none">
-            {value.toLocaleString()}
-          </p>
-          {hint && <p className="text-xs text-muted-foreground pt-1">{hint}</p>}
-        </div>
-        <div className={`flex h-10 w-10 items-center justify-center rounded-lg shrink-0 ${toneClasses}`}>
-          {icon}
-        </div>
-      </div>
-    </Card>
-  );
-}
-
-function SmallStat({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-}) {
-  return (
-    <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
-      <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-muted-foreground shrink-0">
-        {icon}
-      </div>
-      <div>
-        <p className="font-heading text-xl font-bold text-foreground leading-none">
-          {value.toLocaleString()}
-        </p>
-        <p className="text-xs text-muted-foreground mt-1">{label}</p>
-      </div>
-    </div>
-  );
-}
-
-function RecentCard({
-  title,
-  icon,
-  items,
-  onMore,
-  emptyText,
-}: {
-  title: string;
-  icon: React.ReactNode;
-  items: { id: string; primary: string; secondary: string; date: string }[];
-  onMore: () => void;
-  emptyText: string;
-}) {
-  return (
-    <Card className="p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-accent/10 text-accent">
-            {icon}
-          </div>
-          <h4 className="font-heading text-sm font-semibold text-foreground">{title}</h4>
-        </div>
-        <Button variant="ghost" size="sm" className="gap-1 text-xs h-7" onClick={onMore}>
-          View all <ArrowRight className="h-3 w-3" />
-        </Button>
-      </div>
-      {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-6 text-center">{emptyText}</p>
-      ) : (
-        <ul className="space-y-1">
-          {items.slice(0, 5).map((it) => (
-            <li
-              key={it.id}
-              className="flex items-center justify-between gap-3 rounded-md px-2 py-2 hover:bg-muted/60 transition-colors"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-foreground truncate">{it.primary}</p>
-                <p className="text-xs text-muted-foreground truncate">{it.secondary}</p>
-              </div>
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
-                {formatDateTime(it.date)}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </Card>
   );
 }

@@ -46,7 +46,7 @@ export function StudentTopbar({ onToggleSidebar }: { onToggleSidebar: () => void
     .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border bg-background/80 px-4 backdrop-blur-md md:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border/80 bg-background/70 px-4 shadow-sm backdrop-blur-xl transition-shadow duration-300 md:px-6">
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"
@@ -57,28 +57,28 @@ export function StudentTopbar({ onToggleSidebar }: { onToggleSidebar: () => void
         >
           <Menu className="h-5 w-5" />
         </Button>
-        <div>
-          <h1 className="font-heading text-lg font-semibold text-foreground leading-none">{title}</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Student Dashboard</p>
+        <div className="flex flex-col gap-0.5">
+          <h1 className="font-heading text-xl font-semibold leading-tight tracking-tight text-foreground">{title}</h1>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground/80">Student Dashboard</p>
         </div>
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground">
-          <GraduationCap className="h-3 w-3 text-accent" />
+        <div className="hidden items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-medium text-accent shadow-sm transition-colors duration-200 sm:flex">
+          <GraduationCap className="h-3 w-3" />
           <span>Student</span>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 rounded-md p-1 hover:bg-muted transition-colors">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-accent text-accent-foreground text-xs">{initials}</AvatarFallback>
+            <button className="flex items-center gap-2 rounded-lg p-1 pr-2 transition-all duration-200 hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
+              <Avatar className="h-8 w-8 ring-1 ring-border transition-shadow duration-200">
+                <AvatarFallback className="bg-accent text-xs font-semibold text-accent-foreground">{initials}</AvatarFallback>
               </Avatar>
-              <div className="hidden md:block text-left">
-                <p className="text-sm font-medium text-foreground leading-none">{user?.name}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{user?.email}</p>
+              <div className="hidden text-left md:block">
+                <p className="text-sm font-semibold leading-none text-foreground">{user?.name}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{user?.email}</p>
               </div>
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">

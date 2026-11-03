@@ -16,10 +16,14 @@ export async function GET() {
       totalAssignments,
       totalSubmittedAssignments,
       totalCertificatesIssued,
+      totalVideoLessons,
+      pendingReviews,
       recentStudentsRaw,
       recentCoursesRaw,
       recentSubmissionsRaw,
       recentCertificatesRaw,
+      coursesRaw,
+      studentIdsRaw,
     ] = await Promise.all([
       db.user.count({ where: { role: "STUDENT" } }),
       db.course.count(),
@@ -30,6 +34,8 @@ export async function GET() {
       db.assignment.count(),
       db.assignmentSubmission.count(),
       db.certificate.count(),
+      db.videoLesson.count({ where: { isPublished: true } }),
+      db.assignmentSubmission.count({ where: { status: "SUBMITTED" } }),
       db.user.findMany({
         where: { role: "STUDENT" },
         orderBy: { createdAt: "desc" },
@@ -57,9 +63,80 @@ export async function GET() {
           course: { select: { title: true } },
         },
       }),
+      // For course performance chart: top courses with their video + topic counts
+      db.course.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 8,
+        select: {
+          id: true,
+          title: true,
+          _count: {
+            select: {
+              videos: { where: { isPublished: true } },
+              topics: true,
+              certificates: true,
+            },
+          },
+        },
+      }),
+      // Get all student IDs for completion bucket calculation
+      db.user.findMany({
+        where: { role: "STUDENT" },
+        select: { id: true },
+      }),
     ]);
 
+    // Calculate course performance data for the bar chart
+    const coursePerformance = coursesRaw.map((c) => ({
+      id: c.id,
+      title: c.title.length > 20 ? c.title.slice(0, 18) + "…" : c.title,
+      lessons: c._count.videos,
+      topics: c._count.topics,
+      certificates: c._count.certificates,
+    }));
+
+    // Calculate student completion buckets
+    // For each student, compute their average completion across accessible courses
+    const studentCompletionBuckets = {
+      notStarted: 0, // 0%
+      beginner: 0, // 1-25%
+      intermediate: 0, // 26-50%
+      advanced: 0, // 51-75%
+      completed: 0, // 76-100%
+    };
+
+    // Get all completed video progress records grouped by student
+    if (studentIdsRaw.length > 0 && totalVideoLessons > 0) {
+      const allProgress = await db.videoProgress.findMany({
+        where: { studentId: { in: studentIdsRaw.map((s) => s.id) } },
+        select: { studentId: true, isCompleted: true },
+      });
+
+      // Count completed videos per student
+      const completedByStudent = new Map<string, number>();
+      for (const p of allProgress) {
+        if (p.isCompleted) {
+          completedByStudent.set(
+            p.studentId,
+            (completedByStudent.get(p.studentId) || 0) + 1
+          );
+        }
+      }
+
+      // Calculate per-student completion ratio and bucket
+      for (const student of studentIdsRaw) {
+        const completed = completedByStudent.get(student.id) || 0;
+        const ratio = totalVideoLessons > 0 ? completed / totalVideoLessons : 0;
+        if (ratio === 0) studentCompletionBuckets.notStarted++;
+        else if (ratio <= 0.25) studentCompletionBuckets.beginner++;
+        else if (ratio <= 0.5) studentCompletionBuckets.intermediate++;
+        else if (ratio <= 0.75) studentCompletionBuckets.advanced++;
+        else studentCompletionBuckets.completed++;
+      }
+    }
+
     return NextResponse.json({
+      // Original fields (unchanged)
       totalStudents,
       totalCourses,
       totalFreeCourses,
@@ -93,6 +170,11 @@ export async function GET() {
         courseTitle: c.course.title,
         issuedAt: c.issuedAt,
       })),
+      // New fields for the redesigned dashboard
+      totalVideoLessons,
+      pendingReviews,
+      coursePerformance,
+      studentCompletionBuckets,
     });
   } catch (e) {
     const authErr = await handleAuthError(e);

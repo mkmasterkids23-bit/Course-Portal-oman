@@ -18,14 +18,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -58,7 +50,7 @@ import { toast } from "@/hooks/use-toast";
 import { formatDate, type SubscriptionPlanPublic } from "@/types";
 import {
   BookOpen, Search, Plus, MoreHorizontal, Pencil, Trash2, Settings2,
-  Eye, EyeOff, Upload, PlayCircle,
+  Eye, EyeOff, Upload, PlayCircle, Video, Layers, CreditCard,
 } from "lucide-react";
 
 interface CourseRow {
@@ -180,134 +172,61 @@ export function AdminCourses() {
         </div>
       </Card>
 
-      <Card className="p-0 overflow-hidden">
-        {loading ? (
-          <div className="space-y-2 p-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-14 w-full" />
-            ))}
-          </div>
-        ) : error ? (
-          <EmptyState
-            className="m-4"
-            icon={<BookOpen className="h-5 w-5" />}
-            title="Couldn't load courses"
-            description={error}
-          />
-        ) : courses.length === 0 ? (
-          <EmptyState
-            className="m-4"
-            icon={<BookOpen className="h-5 w-5" />}
-            title="No courses yet"
-            description="Create your first course to start adding videos, materials and assignments."
-            action={<Button onClick={() => setAddOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> Create Course</Button>}
-          />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[64px]">Cover</TableHead>
-                <TableHead>Course</TableHead>
-                <TableHead className="hidden md:table-cell">Category</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead className="hidden lg:table-cell">Plans</TableHead>
-                <TableHead className="hidden md:table-cell text-center">Topics</TableHead>
-                <TableHead className="hidden md:table-cell text-center">Videos</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {courses.map((c) => (
-                <TableRow key={c.id}>
-                  <TableCell>
-                    <div className="h-10 w-14 overflow-hidden rounded-md bg-muted flex items-center justify-center">
-                      {c.thumbnail ? (
-                        <img src={c.thumbnail} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <PlayCircle className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <button
-                      className="text-left"
-                      onClick={() => navigate(["admin", "courses", c.id])}
-                    >
-                      <p className="font-medium text-foreground hover:text-accent transition-colors">{c.title}</p>
-                      <p className="text-xs text-muted-foreground line-clamp-1 max-w-[260px]">
-                        {c.description || "No description"}
-                      </p>
-                    </button>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                    {c.category || "—"}
-                  </TableCell>
-                  <TableCell>
-                    {c.accessType === "FREE" ? (
-                      <Badge className="bg-success/15 text-success hover:bg-success/20">Free</Badge>
-                    ) : (
-                      <Badge className="bg-primary text-primary-foreground">Paid</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    {c.planNames.length === 0 ? (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    ) : (
-                      <div className="flex flex-wrap gap-1 max-w-[200px]">
-                        {c.planNames.slice(0, 2).map((n, i) => (
-                          <Badge key={i} variant="outline" className="text-xs">{n}</Badge>
-                        ))}
-                        {c.planNames.length > 2 && (
-                          <Badge variant="outline" className="text-xs">+{c.planNames.length - 2}</Badge>
-                        )}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell text-center text-sm text-foreground">{c.topicsCount}</TableCell>
-                  <TableCell className="hidden md:table-cell text-center text-sm text-foreground">{c.videosCount}</TableCell>
-                  <TableCell>
-                    {c.isPublished ? (
-                      <Badge className="bg-success/15 text-success hover:bg-success/20">Published</Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-muted-foreground">Draft</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" aria-label={`Actions for ${c.title}`}>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => navigate(["admin", "courses", c.id])}>
-                          <Settings2 className="h-4 w-4" /> Manage content
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setEditTarget(c)}>
-                          <Pencil className="h-4 w-4" /> Edit details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => togglePublish(c)}>
-                          {c.isPublished ? (
-                            <><EyeOff className="h-4 w-4" /> Unpublish</>
-                          ) : (
-                            <><Eye className="h-4 w-4" /> Publish</>
-                          )}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(c)}>
-                          <Trash2 className="h-4 w-4" /> Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </Card>
+      {/* Course count summary */}
+      {!loading && !error && courses.length > 0 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Showing <span className="font-medium text-foreground">{courses.length}</span> course{courses.length !== 1 ? "s" : ""}
+          </p>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i} className="overflow-hidden p-0">
+              <Skeleton className="h-36 w-full rounded-none" />
+              <div className="p-5 space-y-3">
+                <Skeleton className="h-4 w-1/3" />
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-4 w-full" />
+                <div className="flex gap-2 pt-2">
+                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-8 w-20" />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : error ? (
+        <EmptyState
+          className="m-4"
+          icon={<BookOpen className="h-5 w-5" />}
+          title="Couldn't load courses"
+          description={error}
+        />
+      ) : courses.length === 0 ? (
+        <EmptyState
+          className="m-4"
+          icon={<BookOpen className="h-5 w-5" />}
+          title="No courses yet"
+          description="Create your first course to start adding videos, materials and assignments."
+          action={<Button onClick={() => setAddOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> Create Course</Button>}
+        />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {courses.map((c) => (
+            <CourseCard
+              key={c.id}
+              course={c}
+              onManage={() => navigate(["admin", "courses", c.id])}
+              onEdit={() => setEditTarget(c)}
+              onTogglePublish={() => togglePublish(c)}
+              onDelete={() => setDeleteTarget(c)}
+            />
+          ))}
+        </div>
+      )}
 
       <CourseFormDialog
         open={addOpen}
@@ -630,5 +549,127 @@ function CourseFormDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// ─── Premium Course Card ────────────────────────────────────────────────
+function CourseCard({
+  course,
+  onManage,
+  onEdit,
+  onTogglePublish,
+  onDelete,
+}: {
+  course: CourseRow;
+  onManage: () => void;
+  onEdit: () => void;
+  onTogglePublish: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <Card className="group flex flex-col overflow-hidden p-0 transition-all duration-200 hover:shadow-lg hover:border-accent/30">
+      {/* Cover image */}
+      <button onClick={onManage} className="relative h-36 overflow-hidden bg-muted text-left">
+        {course.thumbnail ? (
+          <img
+            src={course.thumbnail}
+            alt={course.title}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5">
+            <PlayCircle className="h-10 w-10 text-muted-foreground/40" />
+          </div>
+        )}
+        {/* Badge overlays */}
+        <div className="absolute top-3 left-3 flex gap-1.5">
+          {course.accessType === "FREE" ? (
+            <Badge className="bg-success/90 text-success-foreground backdrop-blur shadow-sm">Free</Badge>
+          ) : (
+            <Badge className="bg-primary/90 text-primary-foreground backdrop-blur shadow-sm">Paid</Badge>
+          )}
+          {course.category && (
+            <Badge variant="outline" className="bg-background/80 backdrop-blur shadow-sm">
+              {course.category}
+            </Badge>
+          )}
+        </div>
+        <div className="absolute top-3 right-3">
+          {course.isPublished ? (
+            <Badge className="bg-success/90 text-success-foreground backdrop-blur shadow-sm gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-success-foreground" /> Published
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="bg-background/80 backdrop-blur shadow-sm text-muted-foreground">
+              Draft
+            </Badge>
+          )}
+        </div>
+      </button>
+
+      {/* Content */}
+      <div className="flex flex-1 flex-col p-4">
+        <button onClick={onManage} className="text-left">
+          <h3 className="font-heading font-semibold text-foreground line-clamp-1 group-hover:text-accent transition-colors">
+            {course.title}
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
+            {course.description || "No description provided."}
+          </p>
+        </button>
+
+        {/* Stats row */}
+        <div className="mt-3 flex items-center gap-4 border-t border-border pt-3 text-xs">
+          <span className="flex items-center gap-1 text-muted-foreground">
+            <Layers className="h-3.5 w-3.5 text-accent" />
+            <span className="font-medium text-foreground">{course.topicsCount}</span> {course.topicsCount === 1 ? "topic" : "topics"}
+          </span>
+          <span className="flex items-center gap-1 text-muted-foreground">
+            <Video className="h-3.5 w-3.5 text-accent" />
+            <span className="font-medium text-foreground">{course.videosCount}</span> {course.videosCount === 1 ? "lesson" : "lessons"}
+          </span>
+          {course.accessType === "PAID" && course.planNames.length > 0 && (
+            <span className="flex items-center gap-1 text-muted-foreground truncate">
+              <CreditCard className="h-3.5 w-3.5 text-accent" />
+              <span className="font-medium text-foreground">{course.planNames.length}</span> {course.planNames.length === 1 ? "plan" : "plans"}
+            </span>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="mt-4 flex items-center gap-2">
+          <Button size="sm" className="flex-1 gap-1.5" onClick={onManage}>
+            <Settings2 className="h-3.5 w-3.5" /> Manage
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={onEdit}>
+            <Pencil className="h-3.5 w-3.5" />
+            <span className="sr-only">Edit</span>
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="px-2" aria-label={`More actions for ${course.title}`}>
+                <MoreHorizontal className="h-3.5 w-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onTogglePublish}>
+                {course.isPublished ? (
+                  <><EyeOff className="h-4 w-4" /> Unpublish</>
+                ) : (
+                  <><Eye className="h-4 w-4" /> Publish</>
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onEdit}>
+                <Pencil className="h-4 w-4" /> Edit details
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onClick={onDelete}>
+                <Trash2 className="h-4 w-4" /> Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+    </Card>
   );
 }
