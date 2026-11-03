@@ -1,0 +1,1554 @@
+     1→# MASTER DEVELOPMENT PROMPT: COMPLETE ONLINE TRAINING & COURSE MANAGEMENT PLATFORM
+     2→
+     3→## 1. PROJECT OBJECTIVE
+     4→
+     5→Develop and refine a complete, professional Online Training and Course Management Platform.
+     6→
+     7→The platform will allow an administrator to create and sell training courses, organize lessons into topics, upload recorded videos and learning materials, manage student subscriptions, assign course-specific assignments, receive student submissions and provide certificates of completion.
+     8→
+     9→Students will have their own accounts and personalized dashboards where they can access eligible courses, watch lessons, download materials, complete assignments and access their certificates.
+    10→
+    11→The platform must have three main experiences:
+    12→
+    13→1. Public Website – For visitors to explore the platform, courses and subscription plans and register.
+    14→2. Student Portal – For students to access courses, watch lessons, manage subscriptions, submit assignments and view certificates.
+    15→3. Admin Dashboard – For administrators to manage the entire platform, students, courses, videos, topics, subscriptions, assignments and certificates.
+    16→
+    17→### Critical development instructions
+    18→
+    19→- Work on the existing project.
+    20→- First inspect the complete existing codebase and understand its architecture.
+    21→- Preserve all existing working functionality.
+    22→- Do not rebuild the application from scratch.
+    23→- Do not introduce duplicate authentication systems.
+    24→- Reuse the existing database, backend and authentication wherever possible.
+    25→- Implement real functionality rather than static UI demonstrations.
+    26→- Connect every form, button, table and action to the actual backend.
+    27→- Do not use fake statistics or hardcoded demonstration records.
+    28→- Make the entire platform responsive.
+    29→- Test all workflows and permissions before considering the implementation complete.
+    30→
+    31→---
+    32→
+    33→# PART 2: COMPLETE DESIGN SYSTEM AND UI/UX
+    34→
+    35→## 2. Overall Visual Direction
+    36→
+    37→The platform should look like a premium, modern educational SaaS product.
+    38→
+    39→The design should be:
+    40→
+    41→- Elegant.
+    42→- Minimal.
+    43→- Professional.
+    44→- Clean and structured.
+    45→- Easy to navigate.
+    46→- Visually consistent.
+    47→- Suitable for a commercial online training business.
+    48→
+    49→Avoid:
+    50→- Childish educational designs.
+    51→- Excessive gradients.
+    52→- Too many colours.
+    53→- Unnecessary decorative illustrations.
+    54→- Excessive rounded cards.
+    55→- Overcrowded dashboards.
+    56→- Too many buttons.
+    57→- Unnecessary information on individual screens.
+    58→
+    59→The design should prioritize clarity, usability and a professional learning experience.
+    60→
+    61→## 3. Colour Palette
+    62→
+    63→Use a consistent colour system:
+    64→
+    65→- Primary: Deep Navy (#172554).
+    66→- Secondary: Slate Blue (#475569).
+    67→- Accent: Muted Teal (#0F766E).
+    68→- Main Background: Off White (#F8FAFC).
+    69→- Card Background: White (#FFFFFF).
+    70→- Primary Text: Dark Slate (#1E293B).
+    71→- Secondary Text: Muted Grey (#64748B).
+    72→- Borders: Light Grey (#E2E8F0).
+    73→- Success: Soft Green.
+    74→- Warning: Soft Amber.
+    75→- Error: Muted Red.
+    76→
+    77→Use the accent colour for important actions, active states and selected elements.
+    78→
+    79→## 4. Typography
+    80→
+    81→Use:
+    82→- Inter for general interface typography.
+    83→- Manrope for headings.
+    84→
+    85→Maintain a consistent hierarchy:
+    86→
+    87→- Large headings for page titles.
+    88→- Medium headings for sections.
+    89→- Clear card titles.
+    90→- Readable body text.
+    91→- Small muted text for dates, metadata and secondary information.
+    92→
+    93→## 5. Layout and Reusable Components
+    94→
+    95→Create a reusable design system containing:
+    96→
+    97→- Primary and secondary buttons.
+    98→- Input fields.
+    99→- Dropdown menus.
+   100→- Search bars.
+   101→- Course cards.
+   102→- Pricing cards.
+   103→- Video players.
+   104→- Topic lists.
+   105→- Progress indicators.
+   106→- Status badges.
+   107→- Data tables.
+   108→- Modals.
+   109→- Confirmation dialogs.
+   110→- Toast notifications.
+   111→- Empty states.
+   112→- Loading skeletons.
+   113→- Pagination.
+   114→- Sidebar navigation.
+   115→- Tabs and filters.
+   116→
+   117→Maintain consistent spacing, typography, borders, shadows and interaction states throughout the application.
+   118→
+   119→## 6. Animations
+   120→
+   121→Use subtle, professional animations:
+   122→
+   123→- Smooth page transitions.
+   124→- Sidebar expand/collapse animations.
+   125→- Button hover effects.
+   126→- Card hover effects.
+   127→- Smooth modal transitions.
+   128→- Dropdown animations.
+   129→- Progress bar animations.
+   130→- Skeleton loading effects.
+   131→- Subtle content entrance animations.
+   132→
+   133→Animations should be lightweight and should never interfere with functionality.
+   134→
+   135→---
+   136→
+   137→# PART 3: PUBLIC WEBSITE
+   138→
+   139→## 7. Navigation Bar
+   140→
+   141→Create a responsive navigation bar containing:
+   142→
+   143→- Platform logo.
+   144→- Home.
+   145→- Courses.
+   146→- Learning Plans.
+   147→- About.
+   148→- Login.
+   149→- Register.
+   150→
+   151→On mobile, use a clean collapsible navigation menu.
+   152→
+   153→## 8. Homepage
+   154→
+   155→The homepage should contain the following sections.
+   156→
+   157→### A. Hero Section
+   158→
+   159→Include:
+   160→
+   161→- A professional educational headline.
+   162→- A short description of the platform.
+   163→- Explore Courses button.
+   164→- View Learning Plans button.
+   165→- A relevant educational visual.
+   166→
+   167→### B. Featured Courses
+   168→
+   169→Display selected courses in a responsive grid.
+   170→
+   171→Each course card should include:
+   172→
+   173→- Course thumbnail.
+   174→- Course title.
+   175→- Short description.
+   176→- Category.
+   177→- Free/Paid label.
+   178→- View Course button.
+   179→
+   180→Only display published courses.
+   181→
+   182→### C. Subscription Plans
+   183→
+   184→Display all active subscription plans created by the administrator.
+   185→
+   186→Each pricing card must show:
+   187→
+   188→- Plan name.
+   189→- Price.
+   190→- Currency.
+   191→- Duration.
+   192→- Description.
+   193→- Included features.
+   194→- Benefits.
+   195→- Select Plan button.
+   196→- Optional Most Popular label.
+   197→
+   198→Only active plans should appear.
+   199→
+   200→Whenever an administrator changes a plan, the public pricing section should automatically reflect the updated information.
+   201→
+   202→### D. About Section
+   203→
+   204→Introduce the training platform, its learning approach and the available educational resources.
+   205→
+   206→### E. Footer
+   207→
+   208→Include:
+   209→
+   210→- Logo.
+   211→- Short description.
+   212→- Navigation links.
+   213→- Course links.
+   214→- Contact information.
+   215→- Copyright information.
+   216→
+   217→---
+   218→
+   219→# PART 4: SUBSCRIPTION MANAGEMENT SYSTEM
+   220→
+   221→## 9. Admin Subscription Plan Settings
+   222→
+   223→Add a dedicated section called **Subscription Plans** under Admin Settings.
+   224→
+   225→The administrator must be able to create, edit, delete, activate and deactivate subscription plans.
+   226→
+   227→### Create Subscription Plan
+   228→
+   229→Provide the following fields:
+   230→
+   231→1. Plan Name.
+   232→2. Plan Description.
+   233→3. Price.
+   234→4. Currency.
+   235→5. Duration.
+   236→6. Duration Unit:
+   237→   - Days.
+   238→   - Weeks.
+   239→   - Months.
+   240→   - Years.
+   241→7. Plan Features.
+   242→8. Benefits.
+   243→9. Plan Status (Active/Inactive).
+   244→10. Optional Most Popular label.
+   245→
+   246→Allow the administrator to add multiple features dynamically.
+   247→
+   248→For example:
+   249→
+   250→Plan Name: Standard
+   251→
+   252→Price: 10 OMR
+   253→
+   254→Duration: 1 Month
+   255→
+   256→Features:
+   257→- Access to selected training courses.
+   258→- Recorded video lessons.
+   259→- Course learning materials.
+   260→- Assignment access.
+   261→
+   262→### Subscription Plan Management
+   263→
+   264→The admin should be able to:
+   265→
+   266→- View all plans.
+   267→- Create unlimited plans.
+   268→- Edit existing plans.
+   269→- Delete plans safely.
+   270→- Activate/deactivate plans.
+   271→- Update pricing.
+   272→- Update duration.
+   273→- Add or remove features.
+   274→
+   275→Display plans in a management table with:
+   276→
+   277→- Plan name.
+   278→- Price.
+   279→- Duration.
+   280→- Number of features.
+   281→- Status.
+   282→- Creation date.
+   283→- Actions.
+   284→
+   285→If a plan is already assigned to students, do not delete historical subscription records when the plan is edited or deactivated.
+   286→
+   287→Preserve historical subscription details.
+   288→
+   289→## 10. Public Subscription Plan Selection
+   290→
+   291→Display active subscription plans on the homepage.
+   292→
+   293→During student registration, students must select one available plan.
+   294→
+   295→The registration flow should be:
+   296→
+   297→1. Student opens the registration page.
+   298→2. Enters personal details.
+   299→3. Views available subscription plans.
+   300→4. Selects a plan.
+   301→5. Selected plan is visually highlighted.
+   302→6. Student confirms registration.
+   303→7. Account is created.
+   304→8. Subscription is assigned automatically.
+   305→
+   306→Display the selected plan's price and duration clearly.
+   307→
+   308→IMPORTANT: No actual online payment gateway or payment processing is required in this implementation phase.
+   309→
+   310→The student is only selecting a plan. Do not collect card information or claim that payment has been made.
+   311→
+   312→## 11. Subscription Assignment Logic
+   313→
+   314→Every student should have a subscription record containing:
+   315→
+   316→- Student ID.
+   317→- Plan ID.
+   318→- Plan name snapshot.
+   319→- Plan price snapshot.
+   320→- Subscription duration.
+   321→- Start date.
+   322→- Expiry date.
+   323→- Subscription status.
+   324→
+   325→When a student selects a plan:
+   326→
+   327→- Assign the selected plan.
+   328→- Record the subscription start date.
+   329→- Calculate the expiry date automatically.
+   330→- Set status to Active.
+   331→- Grant access according to the plan.
+   332→
+   333→Example:
+   334→
+   335→A student selects a one-month plan on 1 November.
+   336→
+   337→Start Date: 1 November.
+   338→
+   339→Expiry Date: 1 December.
+   340→
+   341→The subscription should remain active until its expiry timestamp.
+   342→
+   343→Use a consistent timezone and date calculation method. Handle month-end dates correctly.
+   344→
+   345→## 12. Subscription Expiry and Access Restriction
+   346→
+   347→This is a critical feature.
+   348→
+   349→The platform must automatically identify expired subscriptions.
+   350→
+   351→When the current time reaches the subscription expiry timestamp:
+   352→
+   353→- Subscription status becomes Expired.
+   354→- Protected student dashboard access is restricted.
+   355→- Paid course access is blocked.
+   356→- Protected learning materials are inaccessible.
+   357→- The student cannot bypass these restrictions by changing browser data.
+   358→
+   359→The system must check subscription validity through the backend.
+   360→
+   361→### Expired Subscription Screen
+   362→
+   363→Show a professional screen containing:
+   364→
+   365→- Subscription Expired heading.
+   366→- Previous plan name.
+   367→- Expiry date.
+   368→- Explanation that access has expired.
+   369→- Choose New Plan button.
+   370→- Renew Subscription option.
+   371→
+   372→Do not delete:
+   373→- Student account.
+   374→- Student profile.
+   375→- Learning history.
+   376→- Previous subscription records.
+   377→- Assignment submissions.
+   378→- Issued certificates.
+   379→
+   380→The student should be able to register/select a new plan and regain access after the new subscription is activated.
+   381→
+   382→## 13. Student Subscription Page
+   383→
+   384→Add a **My Subscription** page in the student dashboard.
+   385→
+   386→Display:
+   387→
+   388→- Current plan.
+   389→- Price.
+   390→- Duration.
+   391→- Start date.
+   392→- Expiry date.
+   393→- Remaining days.
+   394→- Subscription status.
+   395→- Plan features.
+   396→
+   397→Use a clear progress indicator showing the subscription period.
+   398→
+   399→Provide a Choose New Plan / Renew option.
+   400→
+   401→## 14. Admin Student Subscription Management
+   402→
+   403→Inside Student Management, allow the admin to view:
+   404→
+   405→- Student name.
+   406→- Email.
+   407→- Current plan.
+   408→- Subscription start date.
+   409→- Expiry date.
+   410→- Status.
+   411→
+   412→Provide filters for:
+   413→
+   414→- Active.
+   415→- Expired.
+   416→- Plan type.
+   417→
+   418→Allow the admin to manually assign or change a student's plan.
+   419→
+   420→Any manual change must update the subscription record and access permissions correctly.
+   421→
+   422→---
+   423→
+   424→# PART 5: COURSE MANAGEMENT SYSTEM
+   425→
+   426→## 15. Admin Course Management
+   427→
+   428→Create a dedicated Course Management section.
+   429→
+   430→The admin should be able to:
+   431→
+   432→- Create courses.
+   433→- Edit courses.
+   434→- Delete courses.
+   435→- Publish/unpublish courses.
+   436→- Add course thumbnails.
+   437→- Set course titles.
+   438→- Add course descriptions.
+   439→- Assign categories.
+   440→- Configure course access.
+   441→- Organize courses into topics.
+   442→
+   443→### Add Course Form
+   444→
+   445→Include:
+   446→
+   447→1. Course Title.
+   448→2. Course Description.
+   449→3. Course Thumbnail.
+   450→4. Course Category.
+   451→5. Course Status (Published/Unpublished).
+   452→6. Course Access Type.
+   453→
+   454→## 16. Free and Paid Course Configuration
+   455→
+   456→Add a Course Access Type selector.
+   457→
+   458→### Option A: Free Course
+   459→
+   460→When the admin selects Free:
+   461→
+   462→- Course is available to every registered student.
+   463→- No subscription plan is required.
+   464→- Student can access it after registration.
+   465→- No payment is required.
+   466→
+   467→### Option B: Paid Course
+   468→
+   469→When the admin selects Paid:
+   470→
+   471→- Display a Required Subscription Plans field.
+   472→- Allow the admin to select one or multiple eligible plans.
+   473→- Only students with an active eligible subscription can access the course.
+   474→
+   475→Example:
+   476→
+   477→Course: Advanced Graphic Designing.
+   478→
+   479→Access Type: Paid.
+   480→
+   481→Required Plan: Premium.
+   482→
+   483→Results:
+   484→
+   485→- Premium subscribers: Access allowed.
+   486→- Standard subscribers: Access denied unless Standard is also selected.
+   487→- Basic subscribers: Access denied unless Basic is also selected.
+   488→- Expired subscribers: Access denied.
+   489→- Students without subscriptions: Access denied.
+   490→
+   491→The admin should be able to change these settings when editing a course.
+   492→
+   493→## 17. Course Organization into Topics
+   494→
+   495→Every course should have its own topic structure.
+   496→
+   497→When creating or editing a course, the admin should be able to add multiple topics.
+   498→
+   499→Example:
+   500→
+   501→Course: Graphic Designing.
+   502→
+   503→Topics:
+   504→1. Introduction to Graphic Design.
+   505→2. Design Principles.
+   506→3. Canva Fundamentals.
+   507→4. Social Media Design.
+   508→5. Advanced Design Techniques.
+   509→
+   510→The admin should be able to:
+   511→
+   512→- Add topics.
+   513→- Edit topic titles.
+   514→- Add topic descriptions.
+   515→- Reorder topics.
+   516→- Delete topics.
+   517→- Assign video lessons to topics.
+   518→- Assign learning materials to topics.
+   519→
+   520→Each topic can contain one or multiple video lessons and supporting learning resources.
+   521→
+   522→Display topics in their defined order in the student learning interface.
+   523→
+   524→---
+   525→
+   526→# PART 6: VIDEO AND LEARNING MATERIAL MANAGEMENT
+   527→
+   528→## 18. Admin Video Management
+   529→
+   530→The administrator must be able to add video lessons to specific courses and topics.
+   531→
+   532→### Add Video Lesson Form
+   533→
+   534→Include:
+   535→
+   536→- Video title.
+   537→- Video description.
+   538→- Select course.
+   539→- Select topic.
+   540→- Video source.
+   541→- Video file upload OR video link.
+   542→- Display order.
+   543→- Optional lesson thumbnail.
+   544→- Published/unpublished status.
+   545→
+   546→Support:
+   547→
+   548→1. Uploading a local video file to the configured storage service.
+   549→2. Adding an external video URL, such as a supported YouTube link.
+   550→
+   551→Do not assume a local video file is stored permanently on the application server. Use the existing storage infrastructure or a suitable file storage service.
+   552→
+   553→### Video Management Actions
+   554→
+   555→- Add video.
+   556→- Edit video.
+   557→- Delete video.
+   558→- Replace video.
+   559→- Change video order.
+   560→- Move video to another topic.
+   561→- Publish/unpublish video.
+   562→
+   563→Videos must belong to a specific topic and course.
+   564→
+   565→## 19. Learning Material Management
+   566→
+   567→The administrator should also be able to add supporting materials.
+   568→
+   569→Supported materials:
+   570→
+   571→- PDF files.
+   572→- Documents.
+   573→- Presentation files.
+   574→- External learning resource links.
+   575→
+   576→For every material, allow the admin to:
+   577→
+   578→- Enter material title.
+   579→- Add description.
+   580→- Upload file or provide a link.
+   581→- Select course.
+   582→- Select topic.
+   583→- Publish/unpublish.
+   584→- Edit or delete.
+   585→
+   586→Students should only see materials belonging to courses they are authorized to access.
+   587→
+   588→---
+   589→
+   590→# PART 7: STUDENT VIDEO LEARNING EXPERIENCE
+   591→
+   592→## 20. Student Course Learning Page
+   593→
+   594→Create a dedicated learning interface for each course.
+   595→
+   596→The layout should contain:
+   597→
+   598→### Main Video Area
+   599→
+   600→- Large video player.
+   601→- Current video title.
+   602→- Video description.
+   603→- Lesson completion status.
+   604→
+   605→### Course Sidebar
+   606→
+   607→Display:
+   608→- Course title.
+   609→- Topic list.
+   610→- Videos under each topic.
+   611→- Completed lesson indicators.
+   612→- Locked/unlocked states.
+   613→
+   614→### Learning Materials Area
+   615→
+   616→Display relevant:
+   617→- PDFs.
+   618→- Documents.
+   619→- Presentations.
+   620→- Resource links.
+   621→
+   622→Use a clean layout similar to a professional online learning management system.
+   623→
+   624→## 21. Full Video Watching Requirement
+   625→
+   626→THIS IS ONE OF THE MOST IMPORTANT FUNCTIONAL REQUIREMENTS.
+   627→
+   628→A student must watch the entire video before the lesson can be marked as completed.
+   629→
+   630→Simply opening the video must NOT mark it as completed.
+   631→
+   632→Implement actual video completion tracking.
+   633→
+   634→### Required Working Logic
+   635→
+   636→1. Student opens a lesson.
+   637→2. The video starts playing.
+   638→3. The system tracks playback progress.
+   639→4. Progress is periodically saved to the backend.
+   640→5. The system tracks the actual watched duration.
+   641→6. When the video reaches its end and the required viewing conditions are satisfied, mark the lesson as completed.
+   642→7. Display a completion tick beside the lesson.
+   643→8. Save the completion record in the database.
+   644→
+   645→### Important Restrictions
+   646→
+   647→- Do not mark a lesson complete just because the student opens it.
+   648→- Do not mark a lesson complete when the video is paused halfway.
+   649→- Do not mark it complete merely because the student seeks directly to the end.
+   650→- Do not mark it complete if the student closes the page before finishing.
+   651→- Do not allow frontend-only manipulation to grant completion.
+   652→
+   653→Use the video player's playback events and backend validation.
+   654→
+   655→For supported video players, track:
+   656→- Current playback time.
+   657→- Total video duration.
+   658→- Actual playback progress.
+   659→- Video ended event.
+   660→- Watched time.
+   661→- Completion status.
+   662→
+   663→Use periodic progress saving.
+   664→
+   665→When a student returns to a partially watched video, restore the last saved position.
+   666→
+   667→For externally hosted videos, implement the strongest tracking supported by the selected player/API. Clearly account for limitations where the external provider does not expose reliable playback events.
+   668→
+   669→### Completed Lesson Display
+   670→
+   671→When a video is completed:
+   672→- Display a green checkmark.
+   673→- Change lesson status to Completed.
+   674→- Save the completion timestamp.
+   675→- Preserve completion if the student logs out or returns later.
+   676→
+   677→Incomplete lessons should retain their saved progress.
+   678→
+   679→---
+   680→
+   681→# PART 8: TOPIC AND COURSE COMPLETION
+   682→
+   683→## 22. Topic Completion
+   684→
+   685→A topic can contain multiple video lessons.
+   686→
+   687→A topic should only be marked as completed when all its required video lessons have been completed.
+   688→
+   689→Example:
+   690→
+   691→Topic: Canva Fundamentals.
+   692→
+   693→Videos:
+   694→- Introduction to Canva.
+   695→- Understanding Templates.
+   696→- Working with Elements.
+   697→- Exporting Designs.
+   698→
+   699→The topic completion tick appears only when all four videos have been completed.
+   700→
+   701→Do not allow students to manually mark topics as completed.
+   702→
+   703→Calculate topic completion from the saved lesson completion records.
+   704→
+   705→## 23. Overall Course Completion
+   706→
+   707→A course is considered completed when:
+   708→
+   709→- All required topics are completed.
+   710→- All required video lessons are completed.
+   711→
+   712→Display an overall course progress indicator in the student dashboard and course page.
+   713→
+   714→Example:
+   715→
+   716→4 out of 5 topics completed = 80% course progress.
+   717→
+   718→Calculate progress using the actual required lessons/topics, not manually entered values.
+   719→
+   720→---
+   721→
+   722→# PART 9: ASSIGNMENT MANAGEMENT SYSTEM
+   723→
+   724→## 24. Admin Assignment Configuration
+   725→
+   726→The administrator should be able to create and attach an assignment to a course.
+   727→
+   728→Add an Assignment section inside Course Management.
+   729→
+   730→### Assignment Creation Fields
+   731→
+   732→- Assignment title.
+   733→- Assignment description.
+   734→- Select associated course.
+   735→- Assignment instructions.
+   736→- Assignment file upload.
+   737→- Optional due date.
+   738→- Assignment status (Published/Unpublished).
+   739→
+   740→Allow the administrator to upload assignment documents such as PDFs, Word files or other supported formats.
+   741→
+   742→The assignment should belong to the selected course.
+   743→
+   744→## 25. Assignment Unlocking Logic
+   745→
+   746→THIS REQUIREMENT MUST BE IMPLEMENTED EXACTLY.
+   747→
+   748→Students must complete ALL required video lessons in ALL course topics before the assignment becomes available.
+   749→
+   750→Example:
+   751→
+   752→Course: Graphic Designing.
+   753→
+   754→- Topic 1: 3 videos.
+   755→- Topic 2: 4 videos.
+   756→- Topic 3: 2 videos.
+   757→- Topic 4: 3 videos.
+   758→
+   759→Total: 12 videos.
+   760→
+   761→The assignment must remain locked until all 12 required videos have been completed.
+   762→
+   763→### Before Completion
+   764→
+   765→Display:
+   766→
+   767→- Assignment Locked.
+   768→- A message explaining that all course lessons must be completed first.
+   769→- Course completion progress.
+   770→
+   771→Example message:
+   772→
+   773→"Complete all video lessons in this course to unlock your assignment."
+   774→
+   775→The assignment download button must remain unavailable.
+   776→
+   777→### After Completion
+   778→
+   779→When every required video is completed:
+   780→
+   781→- Automatically unlock the assignment.
+   782→- Display the assignment title.
+   783→- Display assignment instructions.
+   784→- Display downloadable assignment file.
+   785→- Show due date, if configured.
+   786→- Display Upload Completed Assignment button.
+   787→
+   788→The backend must independently verify course completion before allowing assignment downloads.
+   789→
+   790→Do not rely only on hiding or showing a button in the frontend.
+   791→
+   792→---
+   793→
+   794→# PART 10: STUDENT ASSIGNMENT SUBMISSION
+   795→
+   796→## 26. Student Assignment Page
+   797→
+   798→Once unlocked, the student should be able to:
+   799→
+   800→1. View assignment instructions.
+   801→2. Download the assignment file.
+   802→3. Complete the assignment.
+   803→4. Upload the completed assignment.
+   804→5. Submit it.
+   805→
+   806→### Submission Form
+   807→
+   808→Include:
+   809→
+   810→- Assignment title.
+   811→- Course name.
+   812→- Student name.
+   813→- Student email.
+   814→- File upload.
+   815→- Submit button.
+   816→
+   817→Support appropriate file formats such as PDF and DOCX, with configurable file size limits.
+   818→
+   819→After submission:
+   820→
+   821→- Save the uploaded file securely.
+   822→- Record submission date and time.
+   823→- Associate submission with the correct student and assignment.
+   824→- Display a submission confirmation.
+   825→- Change submission status to Submitted.
+   826→
+   827→Prevent unauthorized students from submitting assignments for another student.
+   828→
+   829→## 27. Assignment Submission Status
+   830→
+   831→Display submission statuses:
+   832→
+   833→- Locked.
+   834→- Available.
+   835→- Not Submitted.
+   836→- Submitted.
+   837→- Reviewed (if the admin reviews it).
+   838→
+   839→Students should be able to view their submission status and submission date.
+   840→
+   841→Define how resubmission works. Allow the administrator to configure whether resubmissions are accepted.
+   842→
+   843→---
+   844→
+   845→# PART 11: ADMIN ASSIGNMENT REVIEW
+   846→
+   847→## 28. Admin Assignment Submissions
+   848→
+   849→Create a dedicated Assignment Submissions page in the admin dashboard.
+   850→
+   851→Display submissions in a table.
+   852→
+   853→Columns:
+   854→
+   855→- Student name.
+   856→- Student email.
+   857→- Course name.
+   858→- Assignment title.
+   859→- Submission date.
+   860→- Submission status.
+   861→- Submitted file.
+   862→- Actions.
+   863→
+   864→Admin actions:
+   865→
+   866→- View submission details.
+   867→- Download submitted file.
+   868→- View student information.
+   869→- View associated course.
+   870→- Mark submission as reviewed.
+   871→- Add review notes.
+   872→- Change review status.
+   873→
+   874→The admin must be able to identify exactly which student submitted each assignment.
+   875→
+   876→Store every submission securely and maintain its relationship with the student and course.
+   877→
+   878→---
+   879→
+   880→# PART 12: CERTIFICATE MANAGEMENT
+   881→
+   882→## 29. Admin Certificate Configuration
+   883→
+   884→The administrator must be able to configure certificates for individual courses.
+   885→
+   886→Add a Certificate Configuration section inside course management.
+   887→
+   888→The admin should be able to:
+   889→
+   890→- Enable or disable certificates for a course.
+   891→- Upload a certificate design/template.
+   892→- Set certificate title.
+   893→- Configure certificate text.
+   894→- Select certificate layout.
+   895→- Configure issuing details.
+   896→- Preview the certificate.
+   897→- Save certificate settings.
+   898→
+   899→Certificate details should support dynamic values:
+   900→
+   901→- Student name.
+   902→- Course name.
+   903→- Issue date.
+   904→- Certificate ID.
+   905→- Organization/platform name.
+   906→
+   907→Generate a unique certificate ID for each issued certificate.
+   908→
+   909→## 30. Certificate Unlocking and Issuing Logic
+   910→
+   911→THIS IS AN IMPORTANT WORKFLOW.
+   912→
+   913→The certificate must be associated with a particular course.
+   914→
+   915→The required workflow is:
+   916→
+   917→1. Student completes every required video lesson.
+   918→2. All topics become completed.
+   919→3. Course assignment becomes available.
+   920→4. Student downloads the assignment.
+   921→5. Student completes and uploads the assignment.
+   922→6. The system records the assignment submission.
+   923→7. The certificate becomes available to the student according to the configured certificate settings.
+   924→
+   925→IMPORTANT BUSINESS RULE:
+   926→
+   927→For this version, the certificate should become available immediately after successful assignment upload.
+   928→
+   929→The admin does NOT need to approve or review the assignment before the certificate becomes available.
+   930→
+   931→Assignment review is a separate administrative feature and must not block certificate issuance.
+   932→
+   933→If certificates are disabled for a course, do not issue one.
+   934→
+   935→## 31. Student Certificate Page
+   936→
+   937→Create a My Certificates section in the student dashboard.
+   938→
+   939→Display all certificates issued to the student.
+   940→
+   941→Each certificate card should include:
+   942→
+   943→- Certificate title.
+   944→- Course name.
+   945→- Issue date.
+   946→- Certificate ID.
+   947→- View Certificate.
+   948→- Download Certificate.
+   949→
+   950→Generate a professional certificate design.
+   951→
+   952→The certificate should be available as a downloadable PDF.
+   953→
+   954→Ensure the certificate is linked to the correct student and course.
+   955→
+   956→Do not allow students to access another student's certificate.
+   957→
+   958→Do not issue duplicate certificates for repeated submissions of the same assignment.
+   959→
+   960→---
+   961→
+   962→# PART 13: COMPLETE ADMIN DASHBOARD
+   963→
+   964→## 32. Admin Navigation
+   965→
+   966→Create a collapsible sidebar containing:
+   967→
+   968→1. Overview.
+   969→2. Students.
+   970→3. Courses.
+   971→4. Learning Materials.
+   972→5. Assignments.
+   973→6. Assignment Submissions.
+   974→7. Subscription Plans.
+   975→8. Certificates.
+   976→9. Settings.
+   977→10. Logout.
+   978→
+   979→Use clear icons and active navigation indicators.
+   980→
+   981→## 33. Admin Overview
+   982→
+   983→Display actual database statistics:
+   984→
+   985→- Total students.
+   986→- Total courses.
+   987→- Total free courses.
+   988→- Total paid courses.
+   989→- Total active subscriptions.
+   990→- Total expired subscriptions.
+   991→- Total assignments.
+   992→- Total submitted assignments.
+   993→- Total certificates issued.
+   994→
+   995→Also display:
+   996→
+   997→### Recent Activity
+   998→- New student registrations.
+   999→- Newly created courses.
+  1000→- Recent assignment submissions.
+  1001→- Recently issued certificates.
+  1002→
+  1003→### Quick Actions
+  1004→- Add Student.
+  1005→- Create Course.
+  1006→- Add Learning Material.
+  1007→- Create Subscription Plan.
+  1008→- Create Assignment.
+  1009→
+  1010→Keep the dashboard clean and avoid unnecessary charts.
+  1011→
+  1012→## 34. Student Management
+  1013→
+  1014→The admin should be able to:
+  1015→
+  1016→- View all registered students.
+  1017→- Search by name or email.
+  1018→- View student profile.
+  1019→- Edit student details.
+  1020→- Delete student with confirmation.
+  1021→- View selected subscription.
+  1022→- View subscription status.
+  1023→- View subscription dates.
+  1024→- Manually assign a plan.
+  1025→- View enrolled/available courses.
+  1026→- View assignment submissions.
+  1027→- View issued certificates.
+  1028→
+  1029→## 35. Course Management
+  1030→
+  1031→Provide a professional course listing table with:
+  1032→
+  1033→- Thumbnail.
+  1034→- Course title.
+  1035→- Category.
+  1036→- Free/Paid status.
+  1037→- Required plans.
+  1038→- Number of topics.
+  1039→- Number of video lessons.
+  1040→- Publication status.
+  1041→- Actions.
+  1042→
+  1043→Actions:
+  1044→- Add.
+  1045→- Edit.
+  1046→- Delete.
+  1047→- Publish/unpublish.
+  1048→- Manage topics.
+  1049→- Manage videos.
+  1050→- Manage learning materials.
+  1051→- Manage assignments.
+  1052→- Configure certificates.
+  1053→
+  1054→## 36. Assignment Management
+  1055→
+  1056→Allow the admin to:
+  1057→
+  1058→- Create assignments.
+  1059→- Attach assignments to courses.
+  1060→- Upload assignment documents.
+  1061→- Edit assignment instructions.
+  1062→- Set optional due dates.
+  1063→- Publish/unpublish assignments.
+  1064→- View student submissions.
+  1065→- Download submissions.
+  1066→- Review submissions.
+  1067→- Add feedback.
+  1068→
+  1069→## 37. Certificate Management
+  1070→
+  1071→Display:
+  1072→
+  1073→- Certificate title.
+  1074→- Associated course.
+  1075→- Number issued.
+  1076→- Certificate status.
+  1077→- Creation date.
+  1078→- Actions.
+  1079→
+  1080→Allow the admin to edit templates and course certificate settings.
+  1081→
+  1082→---
+  1083→
+  1084→# PART 14: COMPLETE STUDENT DASHBOARD
+  1085→
+  1086→## 38. Student Navigation
+  1087→
+  1088→Use a sidebar containing:
+  1089→
+  1090→1. Overview.
+  1091→2. My Courses.
+  1092→3. My Learning.
+  1093→4. My Assignments.
+  1094→5. My Subscription.
+  1095→6. My Certificates.
+  1096→7. My Profile.
+  1097→8. Logout.
+  1098→
+  1099→## 39. Student Overview
+  1100→
+  1101→Display:
+  1102→
+  1103→### Welcome Area
+  1104→- Student name.
+  1105→- Personalized welcome message.
+  1106→
+  1107→### Subscription Card
+  1108→- Plan name.
+  1109→- Active/Expired status.
+  1110→- Expiry date.
+  1111→- Remaining days.
+  1112→
+  1113→### Learning Overview
+  1114→- Available courses.
+  1115→- Courses in progress.
+  1116→- Completed courses.
+  1117→- Overall learning progress.
+  1118→
+  1119→### Continue Learning
+  1120→Display recently accessed courses with a Continue Learning button.
+  1121→
+  1122→### Upcoming Assignment Information
+  1123→Show assignment availability and due dates where applicable.
+  1124→
+  1125→### Recent Certificates
+  1126→Show recently issued certificates.
+  1127→
+  1128→## 40. My Courses
+  1129→
+  1130→Display courses the student is permitted to access.
+  1131→
+  1132→Each course card should include:
+  1133→
+  1134→- Course thumbnail.
+  1135→- Course title.
+  1136→- Short description.
+  1137→- Free/Paid label.
+  1138→- Number of topics.
+  1139→- Number of video lessons.
+  1140→- Completion percentage.
+  1141→- Course status.
+  1142→- Continue Learning button.
+  1143→
+  1144→Provide search and category filtering.
+  1145→
+  1146→## 41. My Assignments
+  1147→
+  1148→Display:
+  1149→
+  1150→- Course name.
+  1151→- Assignment title.
+  1152→- Assignment availability.
+  1153→- Submission status.
+  1154→- Submission date.
+  1155→- Download assignment.
+  1156→- Upload completed assignment.
+  1157→
+  1158→Locked assignments should clearly explain the completion requirements.
+  1159→
+  1160→## 42. My Certificates
+  1161→
+  1162→Display all issued certificates with preview and PDF download functionality.
+  1163→
+  1164→## 43. My Profile
+  1165→
+  1166→Include:
+  1167→
+  1168→- Profile photo.
+  1169→- Full name.
+  1170→- Email.
+  1171→- Account information.
+  1172→- Edit profile.
+  1173→- Change password.
+  1174→
+  1175→---
+  1176→
+  1177→# PART 15: DATABASE AND BACKEND ARCHITECTURE
+  1178→
+  1179→## 44. Required Data Structures
+  1180→
+  1181→Inspect the existing database before creating new tables.
+  1182→
+  1183→Reuse existing structures wherever possible.
+  1184→
+  1185→Ensure the application supports the following entities and relationships:
+  1186→
+  1187→### Students
+  1188→- Student ID.
+  1189→- Name.
+  1190→- Email.
+  1191→- Authentication reference.
+  1192→- Registration date.
+  1193→- Profile details.
+  1194→
+  1195→### Subscription Plans
+  1196→- Plan ID.
+  1197→- Name.
+  1198→- Description.
+  1199→- Price.
+  1200→- Currency.
+  1201→- Duration.
+  1202→- Duration unit.
+  1203→- Features.
+  1204→- Status.
+  1205→
+  1206→### Student Subscriptions
+  1207→- Subscription ID.
+  1208→- Student ID.
+  1209→- Plan ID.
+  1210→- Plan snapshots.
+  1211→- Start date.
+  1212→- Expiry date.
+  1213→- Status.
+  1214→
+  1215→### Courses
+  1216→- Course ID.
+  1217→- Title.
+  1218→- Description.
+  1219→- Thumbnail.
+  1220→- Category.
+  1221→- Access type.
+  1222→- Publication status.
+  1223→
+  1224→### Course Plan Access
+  1225→- Course ID.
+  1226→- Eligible subscription plan IDs.
+  1227→
+  1228→### Topics
+  1229→- Topic ID.
+  1230→- Course ID.
+  1231→- Title.
+  1232→- Description.
+  1233→- Display order.
+  1234→
+  1235→### Video Lessons
+  1236→- Video ID.
+  1237→- Course ID.
+  1238→- Topic ID.
+  1239→- Title.
+  1240→- Description.
+  1241→- Video source.
+  1242→- Video URL or storage reference.
+  1243→- Duration.
+  1244→- Display order.
+  1245→- Publication status.
+  1246→
+  1247→### Learning Materials
+  1248→- Material ID.
+  1249→- Course ID.
+  1250→- Topic ID.
+  1251→- Title.
+  1252→- Description.
+  1253→- File/link reference.
+  1254→- Material type.
+  1255→
+  1256→### Video Progress
+  1257→- Student ID.
+  1258→- Video ID.
+  1259→- Last watched position.
+  1260→- Actual tracked watch time.
+  1261→- Completion status.
+  1262→- Completion date.
+  1263→
+  1264→### Assignments
+  1265→- Assignment ID.
+  1266→- Course ID.
+  1267→- Title.
+  1268→- Description.
+  1269→- Instructions.
+  1270→- Assignment file.
+  1271→- Due date.
+  1272→- Publication status.
+  1273→
+  1274→### Assignment Submissions
+  1275→- Submission ID.
+  1276→- Assignment ID.
+  1277→- Student ID.
+  1278→- Uploaded file.
+  1279→- Submission date.
+  1280→- Status.
+  1281→- Review notes.
+  1282→
+  1283→### Certificates
+  1284→- Certificate ID.
+  1285→- Student ID.
+  1286→- Course ID.
+  1287→- Template reference.
+  1288→- Issue date.
+  1289→- Unique certificate number.
+  1290→- PDF reference.
+  1291→
+  1292→Use appropriate foreign keys, indexes, constraints and access policies.
+  1293→
+  1294→---
+  1295→
+  1296→# PART 16: SECURITY AND ACCESS CONTROL
+  1297→
+  1298→## 45. Role-Based Access
+  1299→
+  1300→The platform must distinguish between administrators and students.
+  1301→
+  1302→### Admin
+  1303→Can manage:
+  1304→- Students.
+  1305→- Courses.
+  1306→- Topics.
+  1307→- Videos.
+  1308→- Learning materials.
+  1309→- Subscription plans.
+  1310→- Assignments.
+  1311→- Submissions.
+  1312→- Certificates.
+  1313→
+  1314→### Student
+  1315→Can:
+  1316→- Access eligible courses.
+  1317→- Watch lessons.
+  1318→- View learning materials.
+  1319→- Track their own progress.
+  1320→- Download unlocked assignments.
+  1321→- Upload their own submissions.
+  1322→- View their own certificates.
+  1323→- View their own subscription.
+  1324→
+  1325→Students must not be able to:
+  1326→
+  1327→- Access admin routes.
+  1328→- Modify their subscription status.
+  1329→- Modify their expiry date.
+  1330→- Mark lessons as completed manually.
+  1331→- Access another student's files.
+  1332→- Download locked assignments.
+  1333→- Generate unauthorized certificates.
+  1334→
+  1335→## 46. Backend Enforcement
+  1336→
+  1337→All important access restrictions must be enforced on the backend.
+  1338→
+  1339→This includes:
+  1340→
+  1341→- Subscription validity.
+  1342→- Free/paid course permissions.
+  1343→- Eligible subscription plans.
+  1344→- Lesson completion.
+  1345→- Assignment unlocking.
+  1346→- Assignment submissions.
+  1347→- Certificate issuing.
+  1348→- Student-specific data access.
+  1349→
+  1350→Do not rely solely on frontend button visibility or conditional rendering.
+  1351→
+  1352→Use secure file storage and signed/authorized download links for private resources.
+  1353→
+  1354→---
+  1355→
+  1356→# PART 17: EXACT END-TO-END WORKFLOWS
+  1357→
+  1358→## 47. Complete Admin Workflow
+  1359→
+  1360→1. Admin logs into the admin dashboard.
+  1361→2. Creates subscription plans.
+  1362→3. Sets prices, durations and features.
+  1363→4. Activates plans.
+  1364→5. Creates a course.
+  1365→6. Selects Free or Paid.
+  1366→7. If Paid, assigns eligible plans.
+  1367→8. Adds topics to the course.
+  1368→9. Uploads or links video lessons.
+  1369→10. Assigns each video to its topic.
+  1370→11. Adds PDFs and other learning materials.
+  1371→12. Creates an assignment for the course.
+  1372→13. Uploads the assignment document.
+  1373→14. Configures a certificate for the course.
+  1374→15. Publishes the course.
+  1375→
+  1376→## 48. Complete Student Workflow
+  1377→
+  1378→1. Student visits the public website.
+  1379→2. Explores courses and learning plans.
+  1380→3. Registers an account.
+  1381→4. Selects a subscription plan.
+  1382→5. Receives an active subscription assignment without online payment processing.
+  1383→6. Enters the student dashboard.
+  1384→7. Views available free and eligible paid courses.
+  1385→8. Opens a course.
+  1386→9. Views its topics and video lessons.
+  1387→10. Watches each video completely.
+  1388→11. The system saves lesson completion.
+  1389→12. Completed videos display checkmarks.
+  1390→13. Once all videos in a topic are completed, that topic is marked completed.
+  1391→14. Once all required course lessons are completed, the course assignment unlocks.
+  1392→15. Student downloads the assignment.
+  1393→16. Completes the assignment.
+  1394→17. Uploads the completed file.
+  1395→18. The submission is recorded and visible in the admin dashboard.
+  1396→19. The certificate becomes available immediately after successful assignment submission, if certificates are enabled for the course.
+  1397→20. Student views and downloads the certificate.
+  1398→
+  1399→## 49. Complete Subscription Expiry Workflow
+  1400→
+  1401→1. Student's subscription reaches its expiry timestamp.
+  1402→2. Backend identifies the expired subscription.
+  1403→3. Status changes to Expired.
+  1404→4. Protected dashboard access is restricted.
+  1405→5. Paid course access is blocked.
+  1406→6. Protected learning materials become inaccessible.
+  1407→7. Student sees the expiry screen.
+  1408→8. Student can select a new available plan.
+  1409→9. Once a new plan is assigned, access is restored according to the new plan.
+  1410→
+  1411→Previous learning history, assignment submissions and issued certificates must remain preserved.
+  1412→
+  1413→---
+  1414→
+  1415→# PART 18: UI SCREEN-BY-SCREEN PRESENTATION
+  1416→
+  1417→## 50. Public Website Visual Layout
+  1418→
+  1419→The public website should have:
+  1420→
+  1421→- A clean top navigation bar.
+  1422→- A spacious hero section.
+  1423→- Featured course cards.
+  1424→- Pricing cards in a clear comparison layout.
+  1425→- An informative about section.
+  1426→- A professional footer.
+  1427→
+  1428→Use a consistent maximum content width and generous whitespace.
+  1429→
+  1430→## 51. Admin Interface Visual Layout
+  1431→
+  1432→Use a professional SaaS dashboard structure.
+  1433→
+  1434→Desktop:
+  1435→- Fixed/collapsible sidebar on the left.
+  1436→- Top header with page title and administrator profile.
+  1437→- Main content area.
+  1438→- Page-specific action buttons.
+  1439→- Tables and forms with consistent spacing.
+  1440→
+  1441→Mobile:
+  1442→- Collapsible navigation.
+  1443→- Responsive content.
+  1444→- Mobile-friendly forms.
+  1445→- Tables that adapt to narrow screens.
+  1446→
+  1447→The admin should be able to complete common tasks without navigating through unnecessary screens.
+  1448→
+  1449→## 52. Student Interface Visual Layout
+  1450→
+  1451→The student dashboard should feel like a dedicated learning environment.
+  1452→
+  1453→Use:
+  1454→- A simple sidebar.
+  1455→- A clear welcome section.
+  1456→- Subscription information card.
+  1457→- Course cards.
+  1458→- Progress indicators.
+  1459→- Continue Learning section.
+  1460→- Assignment and certificate sections.
+  1461→
+  1462→The learning page should prioritize the video player and topic navigation.
+  1463→
+  1464→Use clear visual states for:
+  1465→- Locked.
+  1466→- Available.
+  1467→- In Progress.
+  1468→- Completed.
+  1469→- Expired.
+  1470→
+  1471→---
+  1472→
+  1473→# PART 19: FINAL TESTING REQUIREMENTS
+  1474→
+  1475→## 53. Functional Testing
+  1476→
+  1477→Test all the following scenarios:
+  1478→
+  1479→### Subscription Tests
+  1480→- Student selects a one-month plan.
+  1481→- Student selects a longer-duration plan.
+  1482→- Subscription expiry is calculated correctly.
+  1483→- Expired student loses protected access.
+  1484→- New subscription restores eligible access.
+  1485→- Admin changes a plan.
+  1486→- Deactivated plan is no longer available to new registrations.
+  1487→- Existing student records remain preserved.
+  1488→
+  1489→### Course Tests
+  1490→- Free course is accessible to registered students.
+  1491→- Paid course is accessible to eligible active subscribers.
+  1492→- Paid course is inaccessible to ineligible plans.
+  1493→- Expired subscribers cannot access paid courses.
+  1494→- Unpublished courses are not publicly available.
+  1495→
+  1496→### Video Tests
+  1497→- Opening a video does not mark it complete.
+  1498→- Watching only part of a video does not mark it complete.
+  1499→- Seeking to the end does not automatically mark it complete.
+  1500→- Completing the required video playback marks it complete.
+  1501→- Progress is saved.
+  1502→- Returning to a lesson restores progress.
+  1503→- Completed videos retain their checkmarks.
+  1504→
+  1505→### Assignment Tests
+  1506→- Assignment remains locked while required lessons are incomplete.
+  1507→- Assignment unlocks after all required lessons are completed.
+  1508→- Unauthorized students cannot download it.
+  1509→- Student can upload a supported file.
+  1510→- Submission is associated with the correct student.
+  1511→- Admin can view and download the submission.
+  1512→
+  1513→### Certificate Tests
+  1514→- Certificate cannot be issued before assignment submission.
+  1515→- Certificate becomes available immediately after successful submission.
+  1516→- Admin review does not block certificate availability.
+  1517→- Disabled certificate settings prevent issuance.
+  1518→- Certificates are linked to the correct student and course.
+  1519→- Duplicate certificates are not generated.
+  1520→
+  1521→### Security Tests
+  1522→- Student cannot access admin pages.
+  1523→- Student cannot change subscription expiry.
+  1524→- Student cannot modify another student's progress.
+  1525→- Student cannot download another student's assignment submission.
+  1526→- Student cannot access unauthorized courses or certificates.
+  1527→
+  1528→---
+  1529→
+  1530→# FINAL EXPECTATION
+  1531→
+  1532→The final application must be a complete, connected and professionally designed Online Training Platform.
+  1533→
+  1534→Every feature must work with the actual database and backend.
+  1535→
+  1536→The entire student journey must be connected:
+  1537→
+  1538→REGISTRATION → PLAN SELECTION → DASHBOARD → COURSE ACCESS → VIDEO LEARNING → TOPIC COMPLETION → ASSIGNMENT UNLOCK → ASSIGNMENT SUBMISSION → CERTIFICATE ISSUANCE.
+  1539→
+  1540→The administrator must have complete control over:
+  1541→
+  1542→STUDENTS → SUBSCRIPTION PLANS → COURSES → TOPICS → VIDEOS → LEARNING MATERIALS → ASSIGNMENTS → SUBMISSIONS → CERTIFICATES.
+  1543→
+  1544→Do not stop after designing the UI. Implement the underlying functionality, database relationships, validation, permissions and business logic.
+  1545→
+  1546→Before finishing, provide a summary of:
+  1547→- Features implemented.
+  1548→- Existing features preserved.
+  1549→- Database changes.
+  1550→- Backend changes.
+  1551→- Any external service configuration required.
+  1552→- Any remaining limitations or incomplete functionality.
+  1553→
+  1554→The result should be production-quality, reliable, responsive and ready for real students and administrators.

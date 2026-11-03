@@ -1,0 +1,56 @@
+"use client";
+
+import { useEffect } from "react";
+import { useAppStore } from "@/stores/app-store";
+import { PublicSite } from "@/components/public/public-site";
+import { AdminDashboard } from "@/components/admin/admin-dashboard";
+import { StudentDashboard } from "@/components/student/student-dashboard";
+import { FullPageLoader } from "@/components/shared/full-page-loader";
+
+export default function Home() {
+  const user = useAppStore((s) => s.user);
+  const authLoading = useAppStore((s) => s.authLoading);
+  const refreshUser = useAppStore((s) => s.refreshUser);
+  const setHashFromWindow = useAppStore((s) => s.setHashFromWindow);
+
+  // Initial auth + hash setup
+  useEffect(() => {
+    refreshUser();
+    setHashFromWindow();
+    const onHash = () => setHashFromWindow();
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, [refreshUser, setHashFromWindow]);
+
+  // Auto-initialize the platform (creates default admin/plans if empty)
+  useEffect(() => {
+    fetch("/api/public/init", { cache: "no-store" }).catch(() => {});
+  }, []);
+
+  // Whenever user logs in/out, force the route to a sensible default
+  useEffect(() => {
+    if (authLoading) return;
+    const hash = window.location.hash.replace(/^#/, "");
+    if (user?.role === "ADMIN" && !hash.startsWith("/admin")) {
+      window.location.hash = "/admin";
+    } else if (user?.role === "STUDENT" && hash.startsWith("/admin")) {
+      window.location.hash = "/student";
+    } else if (!user && (hash.startsWith("/admin") || hash.startsWith("/student"))) {
+      window.location.hash = "/";
+    }
+  }, [user, authLoading]);
+
+  if (authLoading) {
+    return <FullPageLoader />;
+  }
+
+  if (user?.role === "ADMIN") {
+    return <AdminDashboard />;
+  }
+
+  if (user?.role === "STUDENT") {
+    return <StudentDashboard />;
+  }
+
+  return <PublicSite />;
+}

@@ -1,0 +1,506 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { EmptyState } from "@/components/shared/empty-state";
+import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
+import { useAppStore } from "@/stores/app-store";
+import { toast } from "@/hooks/use-toast";
+import { fileExtIcon, formatDate } from "@/types";
+import {
+  FileText, Search, Plus, MoreHorizontal, Pencil, Trash2, ExternalLink,
+} from "lucide-react";
+
+interface CourseListItem {
+  id: string;
+  title: string;
+  isPublished: boolean;
+}
+
+interface MaterialListRow {
+  id: string;
+  title: string;
+  description: string | null;
+  type: "PDF" | "DOC" | "PRESENTATION" | "LINK";
+  fileUrl: string;
+  isPublished: boolean;
+  createdAt: string;
+  course: { id: string; title: string };
+  topic: { id: string; title: string } | null;
+}
+
+interface CourseDetailForForm {
+  id: string;
+  title: string;
+  topics: { id: string; title: string }[];
+}
+
+export function AdminMaterials() {
+  const query = useAppStore((s) => s.query);
+  const [search, setSearch] = useState("");
+  const [courseFilter, setCourseFilter] = useState<string>("ALL");
+  const [typeFilter, setTypeFilter] = useState<string>("ALL");
+  const [addOpen, setAddOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<MaterialListRow | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<MaterialListRow | null>(null);
+  const [formCourseId, setFormCourseId] = useState<string | null>(null);
+
+  // Use the admin courses list (lighter than fetching full course detail).
+  const { data: coursesData } = useApiFetch<{ courses: CourseListItem[] }>("/api/admin/courses");
+
+  const qs = useMemo(() => {
+    const p = new URLSearchParams();
+    if (search.trim()) p.set("q", search.trim());
+    if (courseFilter !== "ALL") p.set("courseId", courseFilter);
+    if (typeFilter !== "ALL") p.set("type", typeFilter);
+    const s = p.toString();
+    return s ? `?${s}` : "";
+  }, [search, courseFilter, typeFilter]);
+
+  const { data, loading, error, refetch } = useApiFetch<{ materials: MaterialListRow[] }>(
+    qs ? `/api/admin/materials${qs}` : "/api/admin/materials"
+  );
+
+  // Auto-open Add dialog when query.action=new — React 19 "store previous value" pattern
+  const [lastAction, setLastAction] = useState<string | undefined>(undefined);
+  if (query.action !== lastAction) {
+    setLastAction(query.action);
+    if (query.action === "new") {
+      setFormCourseId(null);
+      setAddOpen(true);
+    }
+  }
+
+  const materials = data?.materials || [];
+
+  // Fetch course detail for the form (topics list)
+  const [detailCourseId, setDetailCourseId] = useState<string | null>(null);
+  const { data: courseDetail } = useApiFetch<{ course: CourseDetailForForm }>(
+    detailCourseId ? `/api/admin/courses/${detailCourseId}` : null,
+    { skip: !detailCourseId }
+  );
+
+  function openAdd() {
+    setFormCourseId(null);
+    setAddOpen(true);
+  }
+
+  function openEdit(m: MaterialListRow) {
+    setEditTarget(m);
+    setDetailCourseId(m.course.id);
+  }
+
+  return (
+    <div className="space-y-4">
+      <Card className="p-4">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search materials…"
+                className="pl-9"
+                aria-label="Search materials"
+              />
+            </div>
+            <Select value={courseFilter} onValueChange={setCourseFilter}>
+              <SelectTrigger className="w-full sm:w-[180px]" aria-label="Filter by course">
+                <SelectValue placeholder="All courses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All courses</SelectItem>
+                {(coursesData?.courses || []).map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-full sm:w-[140px]" aria-label="Filter by type">
+                <SelectValue placeholder="All types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All types</SelectItem>
+                <SelectItem value="PDF">PDF</SelectItem>
+                <SelectItem value="DOC">Document</SelectItem>
+                <SelectItem value="PRESENTATION">Presentation</SelectItem>
+                <SelectItem value="LINK">External Link</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button className="gap-2" onClick={openAdd}>
+            <Plus className="h-4 w-4" /> Add Material
+          </Button>
+        </div>
+      </Card>
+
+      <Card className="p-0 overflow-hidden">
+        {loading ? (
+          <div className="space-y-2 p-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        ) : error ? (
+          <EmptyState className="m-4" icon={<FileText className="h-5 w-5" />} title="Couldn't load materials" description={error} />
+        ) : materials.length === 0 ? (
+          <EmptyState
+            className="m-4"
+            icon={<FileText className="h-5 w-5" />}
+            title="No materials yet"
+            description="Add PDFs, documents, slide decks or external links to support your courses."
+            action={<Button onClick={openAdd} className="gap-2"><Plus className="h-4 w-4" /> Add Material</Button>}
+          />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Material</TableHead>
+                <TableHead className="hidden md:table-cell">Course</TableHead>
+                <TableHead className="hidden lg:table-cell">Topic</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead className="hidden md:table-cell">Added</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {materials.map((m) => (
+                <TableRow key={m.id}>
+                  <TableCell>
+                    <div className="min-w-0 max-w-[240px]">
+                      <p className="font-medium text-foreground truncate">{m.title}</p>
+                      {m.description && (
+                        <p className="text-xs text-muted-foreground truncate">{m.description}</p>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-sm text-foreground">{m.course.title}</TableCell>
+                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                    {m.topic?.title || "—"}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={
+                        m.type === "LINK"
+                          ? "bg-accent/10 text-accent"
+                          : "text-xs"
+                      }
+                    >
+                      {m.type === "LINK" ? "LINK" : fileExtIcon(m.type === "PDF" ? ".pdf" : m.type === "DOC" ? ".docx" : ".pptx")}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                    {formatDate(m.createdAt)}
+                  </TableCell>
+                  <TableCell>
+                    {m.isPublished ? (
+                      <Badge className="bg-success/15 text-success">Published</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-muted-foreground">Draft</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <a
+                        href={m.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-accent"
+                        aria-label="Open material"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" aria-label={`Actions for ${m.title}`}>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openEdit(m)}>
+                            <Pencil className="h-4 w-4" /> Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(m)}>
+                            <Trash2 className="h-4 w-4" /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </Card>
+
+      {/* Add / Edit Material Dialog */}
+      <GlobalMaterialFormDialog
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        courses={coursesData?.courses || []}
+        courseDetail={courseDetail?.course || null}
+        onCourseChange={(id) => setDetailCourseId(id)}
+        onSaved={() => {
+          refetch();
+          setAddOpen(false);
+        }}
+      />
+
+      <GlobalMaterialFormDialog
+        open={!!editTarget}
+        onOpenChange={(v) => !v && setEditTarget(null)}
+        courses={coursesData?.courses || []}
+        courseDetail={courseDetail?.course || null}
+        target={editTarget}
+        onCourseChange={(id) => setDetailCourseId(id)}
+        onSaved={() => {
+          refetch();
+          setEditTarget(null);
+        }}
+      />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete material?</AlertDialogTitle>
+            <AlertDialogDescription>
+              <strong>{deleteTarget?.title}</strong> will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90"
+              onClick={async () => {
+                if (!deleteTarget) return;
+                try {
+                  await apiPost(`/api/admin/materials/${deleteTarget.id}`, null, { method: "DELETE" });
+                  toast({ title: "Material deleted" });
+                  setDeleteTarget(null);
+                  refetch();
+                } catch { /* toast */ }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+function GlobalMaterialFormDialog({
+  open, onOpenChange, courses, courseDetail, target, onCourseChange, onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  courses: CourseListItem[];
+  courseDetail: CourseDetailForForm | null;
+  target?: MaterialListRow | null;
+  onCourseChange: (id: string) => void;
+  onSaved: () => void;
+}) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [courseId, setCourseId] = useState<string>("");
+  const [topicId, setTopicId] = useState<string>("none");
+  const [type, setType] = useState<"PDF" | "DOC" | "PRESENTATION" | "LINK">("PDF");
+  const [fileUrl, setFileUrl] = useState("");
+  const [isPublished, setIsPublished] = useState(true);
+  const [file, setFile] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (target) {
+      setTitle(target.title);
+      setDescription(target.description || "");
+      setCourseId(target.course.id);
+      onCourseChange(target.course.id);
+      setTopicId(target.topic?.id || "none");
+      setType(target.type);
+      setFileUrl(target.type === "LINK" ? target.fileUrl : "");
+      setIsPublished(target.isPublished);
+    } else if (open) {
+      setTitle("");
+      setDescription("");
+      setCourseId("");
+      setTopicId("none");
+      setType("PDF");
+      setFileUrl("");
+      setIsPublished(true);
+    }
+    setFile(null);
+  }, [target, open]);
+
+  function onCourseChange2(id: string) {
+    setCourseId(id);
+    setTopicId("none");
+    onCourseChange(id);
+  }
+
+  async function submit() {
+    if (!title.trim()) {
+      toast({ title: "Title required", variant: "destructive" });
+      return;
+    }
+    if (!courseId) {
+      toast({ title: "Select a course", variant: "destructive" });
+      return;
+    }
+    if (type === "LINK" && !fileUrl.trim() && !target) {
+      toast({ title: "Link URL required", variant: "destructive" });
+      return;
+    }
+    if (type !== "LINK" && !file && !target) {
+      toast({ title: "File required", variant: "destructive" });
+      return;
+    }
+
+    const fd = new FormData();
+    fd.append("title", title.trim());
+    fd.append("description", description.trim());
+    fd.append("topicId", topicId === "none" ? "" : topicId);
+    fd.append("type", type);
+    if (type === "LINK") fd.append("fileUrl", fileUrl.trim());
+    if (file) fd.append("file", file);
+    fd.append("isPublished", String(isPublished));
+
+    setSaving(true);
+    try {
+      if (target) {
+        const res = await fetch(`/api/admin/materials/${target.id}`, {
+          method: "PUT",
+          body: fd,
+          credentials: "same-origin",
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || "Failed");
+        toast({ title: "Material updated" });
+      } else {
+        await apiUpload(`/api/admin/courses/${courseId}/materials`, fd);
+        toast({ title: "Material added" });
+      }
+      onSaved();
+    } catch (e) {
+      if (e instanceof Error) {
+        toast({ title: "Error", description: e.message, variant: "destructive" });
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{target ? "Edit Material" : "Add Learning Material"}</DialogTitle>
+          <DialogDescription>Attach a downloadable file or external link to a course.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+          <div className="space-y-1.5">
+            <Label htmlFor="gm-title">Title</Label>
+            <Input id="gm-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="gm-desc">Description (optional)</Label>
+            <Input id="gm-desc" value={description} onChange={(e) => setDescription(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Course</Label>
+            <Select value={courseId} onValueChange={onCourseChange2}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select course" />
+              </SelectTrigger>
+              <SelectContent>
+                {courses.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {courseDetail && (
+            <div className="space-y-1.5">
+              <Label>Topic (optional)</Label>
+              <Select value={topicId} onValueChange={setTopicId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="No topic" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No topic</SelectItem>
+                  {courseDetail.topics.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Type</Label>
+              <Select value={type} onValueChange={(v) => setType(v as "PDF" | "DOC" | "PRESENTATION" | "LINK")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PDF">PDF</SelectItem>
+                  <SelectItem value="DOC">Document</SelectItem>
+                  <SelectItem value="PRESENTATION">Presentation</SelectItem>
+                  <SelectItem value="LINK">External Link</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center justify-between rounded-md border border-border px-3">
+              <Label htmlFor="gm-pub" className="text-sm">Published</Label>
+              <Switch id="gm-pub" checked={isPublished} onCheckedChange={setIsPublished} />
+            </div>
+          </div>
+          {type === "LINK" ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="gm-url">Link URL</Label>
+              <Input id="gm-url" value={fileUrl} onChange={(e) => setFileUrl(e.target.value)} placeholder="https://…" />
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label htmlFor="gm-file">File</Label>
+              <Input id="gm-file" type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" />
+              {target && !file && (
+                <p className="text-xs text-muted-foreground">Leave empty to keep existing file.</p>
+              )}
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button disabled={saving} onClick={submit}>{saving ? "Saving…" : target ? "Save Changes" : "Add Material"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

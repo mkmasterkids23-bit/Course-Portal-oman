@@ -1,0 +1,1691 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
+import {
+  Tabs, TabsList, TabsTrigger, TabsContent,
+} from "@/components/ui/tabs";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { EmptyState } from "@/components/shared/empty-state";
+import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
+import { useAppStore } from "@/stores/app-store";
+import { toast } from "@/hooks/use-toast";
+import { formatDate, formatDateTime, type SubscriptionPlanPublic } from "@/types";
+import {
+  ArrowLeft, Plus, Pencil, Trash2, ChevronUp, ChevronDown, Video as VideoIcon,
+  FileText, ClipboardList, Award, Settings, BookOpen, Upload, Eye, EyeOff,
+  GripVertical, ExternalLink, Save,
+} from "lucide-react";
+
+interface CourseDetail {
+  id: string;
+  title: string;
+  description: string | null;
+  thumbnail: string | null;
+  category: string | null;
+  accessType: "FREE" | "PAID";
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+  topics: TopicRow[];
+  materials: MaterialRow[];
+  assignments: AssignmentRow[];
+  certificateTemplate: CertTemplate | null;
+  planAccess: { id: string; planId: string; planName: string }[];
+}
+
+interface TopicRow {
+  id: string;
+  title: string;
+  description: string | null;
+  displayOrder: number;
+  videos: VideoRow[];
+  materials: MaterialRow[];
+}
+
+interface VideoRow {
+  id: string;
+  title: string;
+  description: string | null;
+  source: "UPLOAD" | "YOUTUBE" | "URL";
+  videoUrl: string;
+  thumbnail: string | null;
+  displayOrder: number;
+  isPublished: boolean;
+  duration: number;
+}
+
+interface MaterialRow {
+  id: string;
+  title: string;
+  description: string | null;
+  type: "PDF" | "DOC" | "PRESENTATION" | "LINK";
+  fileUrl: string;
+  isPublished: boolean;
+  topic: { id: string; title: string } | null;
+}
+
+interface AssignmentRow {
+  id: string;
+  title: string;
+  description: string | null;
+  instructions: string | null;
+  fileUrl: string | null;
+  dueDate: string | null;
+  isPublished: boolean;
+  allowResubmission: boolean;
+  submissionsCount: number;
+  createdAt: string;
+}
+
+interface CertTemplate {
+  id: string;
+  isEnabled: boolean;
+  title: string;
+  bodyText: string;
+  organizationName: string;
+  layout: "CLASSIC" | "MODERN" | "MINIMAL";
+}
+
+interface PlansResponse { plans: SubscriptionPlanPublic[] }
+
+export function AdminCourseEditor({ courseId, onBack }: { courseId: string; onBack: () => void }) {
+  const query = useAppStore((s) => s.query);
+  const navigate = useAppStore((s) => s.navigate);
+  const [activeTab, setActiveTab] = useState<string>("topics");
+
+  // Deep link via ?tab=certificate — React 19 "store previous value" pattern
+  const [lastTab, setLastTab] = useState<string | undefined>(undefined);
+  if (query.tab !== lastTab) {
+    setLastTab(query.tab);
+    if (query.tab) setActiveTab(query.tab);
+  }
+
+  const { data, loading, error, refetch } = useApiFetch<{ course: CourseDetail }>(
+    `/api/admin/courses/${courseId}`
+  );
+  const { data: plansData } = useApiFetch<PlansResponse>("/api/public/plans");
+
+  const course = data?.course;
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="icon" onClick={onBack} aria-label="Back to courses list">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="min-w-0">
+            {loading ? (
+              <>
+                <Skeleton className="h-6 w-48 mb-1" />
+                <Skeleton className="h-3 w-32" />
+              </>
+            ) : (
+              <>
+                <h2 className="font-heading text-xl font-bold text-foreground truncate">
+                  {course?.title || "Course"}
+                </h2>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-1">
+                  {course?.category && <Badge variant="outline">{course.category}</Badge>}
+                  {course?.accessType === "FREE" ? (
+                    <Badge className="bg-success/15 text-success">Free</Badge>
+                  ) : (
+                    <Badge className="bg-primary text-primary-foreground">Paid</Badge>
+                  )}
+                  {course?.isPublished ? (
+                    <Badge className="bg-success/15 text-success">Published</Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-muted-foreground">Draft</Badge>
+                  )}
+                  <span className="text-muted-foreground">Updated {course ? formatDate(course.updatedAt) : ""}</span>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled
+          className="text-muted-foreground"
+          title="Student preview is not available in admin view"
+        >
+          <Eye className="h-4 w-4" /> Open in student view
+        </Button>
+      </div>
+
+      {error ? (
+        <EmptyState
+          icon={<BookOpen className="h-5 w-5" />}
+          title="Couldn't load course"
+          description={error}
+          action={<Button variant="outline" onClick={onBack}>Back to courses</Button>}
+        />
+      ) : loading || !course ? (
+        <Skeleton className="h-96 w-full" />
+      ) : (
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="w-full justify-start overflow-x-auto h-auto flex-wrap">
+            <TabsTrigger value="topics" className="gap-1.5"><VideoIcon className="h-3.5 w-3.5" /> Topics &amp; Videos</TabsTrigger>
+            <TabsTrigger value="materials" className="gap-1.5"><FileText className="h-3.5 w-3.5" /> Materials</TabsTrigger>
+            <TabsTrigger value="assignments" className="gap-1.5"><ClipboardList className="h-3.5 w-3.5" /> Assignments</TabsTrigger>
+            <TabsTrigger value="certificate" className="gap-1.5"><Award className="h-3.5 w-3.5" /> Certificate</TabsTrigger>
+            <TabsTrigger value="settings" className="gap-1.5"><Settings className="h-3.5 w-3.5" /> Settings</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="topics" className="mt-4">
+            <TopicsTab course={course} onRefresh={refetch} />
+          </TabsContent>
+          <TabsContent value="materials" className="mt-4">
+            <MaterialsTab course={course} onRefresh={refetch} />
+          </TabsContent>
+          <TabsContent value="assignments" className="mt-4">
+            <AssignmentsTab course={course} onRefresh={refetch} />
+          </TabsContent>
+          <TabsContent value="certificate" className="mt-4">
+            <CertificateTab course={course} onRefresh={refetch} />
+          </TabsContent>
+          <TabsContent value="settings" className="mt-4">
+            <SettingsTab
+              course={course}
+              plans={plansData?.plans || []}
+              onRefresh={refetch}
+              onDeleted={() => navigate(["admin", "courses"])}
+            />
+          </TabsContent>
+        </Tabs>
+      )}
+    </div>
+  );
+}
+
+// ============= TOPICS & VIDEOS TAB =============
+function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () => void }) {
+  const [expandedId, setExpandedId] = useState<string | null>(course.topics[0]?.id || null);
+  const [addTopicOpen, setAddTopicOpen] = useState(false);
+  const [editTopic, setEditTopic] = useState<TopicRow | null>(null);
+  const [deleteTopic, setDeleteTopic] = useState<TopicRow | null>(null);
+  const [addVideoFor, setAddVideoFor] = useState<TopicRow | null>(null);
+  const [editVideo, setEditVideo] = useState<VideoRow | null>(null);
+  const [deleteVideo, setDeleteVideo] = useState<VideoRow | null>(null);
+
+  async function moveTopic(topic: TopicRow, dir: -1 | 1) {
+    const sorted = [...course.topics].sort((a, b) => a.displayOrder - b.displayOrder);
+    const idx = sorted.findIndex((t) => t.id === topic.id);
+    const target = idx + dir;
+    if (target < 0 || target >= sorted.length) return;
+    const reordered = [...sorted];
+    [reordered[idx], reordered[target]] = [reordered[target], reordered[idx]];
+    try {
+      await apiPost(`/api/admin/courses/${course.id}/topics/reorder`, {
+        orderedIds: reordered.map((t) => t.id),
+      });
+      onRefresh();
+    } catch { /* toast */ }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="font-heading text-base font-semibold text-foreground">Course Topics</h3>
+          <p className="text-xs text-muted-foreground">
+            {course.topics.length} topic{course.topics.length === 1 ? "" : "s"} · {course.topics.reduce((a, t) => a + t.videos.length, 0)} videos
+          </p>
+        </div>
+        <Button className="gap-2" onClick={() => setAddTopicOpen(true)}>
+          <Plus className="h-4 w-4" /> Add Topic
+        </Button>
+      </div>
+
+      {course.topics.length === 0 ? (
+        <EmptyState
+          icon={<VideoIcon className="h-5 w-5" />}
+          title="No topics yet"
+          description="Topics are containers for video lessons. Add your first topic to get started."
+          action={<Button onClick={() => setAddTopicOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> Add Topic</Button>}
+        />
+      ) : (
+        <div className="space-y-2">
+          {course.topics.map((topic, idx) => (
+            <Card key={topic.id} className="overflow-hidden p-0">
+              <div className="flex items-center gap-2 p-3 bg-muted/30">
+                <div className="flex flex-col">
+                  <Button
+                    variant="ghost" size="icon" className="h-5 w-5"
+                    disabled={idx === 0}
+                    onClick={() => moveTopic(topic, -1)}
+                    aria-label="Move topic up"
+                  >
+                    <ChevronUp className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost" size="icon" className="h-5 w-5"
+                    disabled={idx === course.topics.length - 1}
+                    onClick={() => moveTopic(topic, 1)}
+                    aria-label="Move topic down"
+                  >
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </div>
+                <GripVertical className="h-4 w-4 text-muted-foreground/40 hidden sm:block" />
+                <button
+                  className="flex flex-1 items-center gap-2 text-left min-w-0"
+                  onClick={() => setExpandedId(expandedId === topic.id ? null : topic.id)}
+                >
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0">
+                    {idx + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground truncate">{topic.title}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {topic.videos.length} video{topic.videos.length === 1 ? "" : "s"}
+                      {topic.materials.length > 0 && ` · ${topic.materials.length} material${topic.materials.length === 1 ? "" : "s"}`}
+                    </p>
+                  </div>
+                </button>
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="sm" className="gap-1" onClick={() => setAddVideoFor(topic)}>
+                    <Plus className="h-3.5 w-3.5" /> Add Video
+                  </Button>
+                  <Button variant="ghost" size="icon" aria-label="Edit topic" onClick={() => setEditTopic(topic)}>
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" aria-label="Delete topic" onClick={() => setDeleteTopic(topic)}>
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
+                </div>
+              </div>
+
+              {expandedId === topic.id && (
+                <div className="border-t border-border p-3 bg-card">
+                  {topic.description && (
+                    <p className="text-sm text-muted-foreground mb-3">{topic.description}</p>
+                  )}
+                  {topic.videos.length === 0 ? (
+                    <div className="text-center py-6">
+                      <p className="text-sm text-muted-foreground mb-2">No videos in this topic yet.</p>
+                      <Button variant="outline" size="sm" className="gap-1" onClick={() => setAddVideoFor(topic)}>
+                        <Plus className="h-3.5 w-3.5" /> Add first video
+                      </Button>
+                    </div>
+                  ) : (
+                    <ul className="space-y-1">
+                      {topic.videos.map((v, vi) => (
+                        <li key={v.id} className="flex items-center gap-2 rounded-md border border-border p-2 hover:bg-muted/30 transition-colors">
+                          <div className="flex h-8 w-12 items-center justify-center rounded bg-muted overflow-hidden shrink-0">
+                            {v.thumbnail ? (
+                              <img src={v.thumbnail} alt="" className="h-full w-full object-cover" />
+                            ) : (
+                              <VideoIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-foreground truncate">
+                              <span className="text-muted-foreground mr-1.5">{vi + 1}.</span>
+                              {v.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {v.source} · {v.isPublished ? "Published" : "Draft"}
+                            </p>
+                          </div>
+                          <Button variant="ghost" size="icon" aria-label="Edit video" onClick={() => setEditVideo(v)}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" aria-label="Delete video" onClick={() => setDeleteVideo(v)}>
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <TopicFormDialog
+        open={addTopicOpen}
+        onOpenChange={setAddTopicOpen}
+        courseId={course.id}
+        onSaved={() => { onRefresh(); setAddTopicOpen(false); }}
+      />
+      <TopicFormDialog
+        open={!!editTopic}
+        onOpenChange={(v) => !v && setEditTopic(null)}
+        courseId={course.id}
+        target={editTopic}
+        onSaved={() => { onRefresh(); setEditTopic(null); }}
+      />
+      <AlertDialog open={!!deleteTopic} onOpenChange={(v) => !v && setDeleteTopic(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete topic?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will delete <strong>{deleteTopic?.title}</strong> and all its videos. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90"
+              onClick={async () => {
+                if (!deleteTopic) return;
+                try {
+                  await apiPost(`/api/admin/topics/${deleteTopic.id}`, null, { method: "DELETE" });
+                  toast({ title: "Topic deleted" });
+                  setDeleteTopic(null);
+                  onRefresh();
+                } catch { /* toast */ }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Video dialogs */}
+      {addVideoFor && (
+        <VideoFormDialog
+          open={!!addVideoFor}
+          onOpenChange={(v) => !v && setAddVideoFor(null)}
+          course={course}
+          fixedTopicId={addVideoFor.id}
+          onSaved={() => { onRefresh(); setAddVideoFor(null); }}
+        />
+      )}
+      <VideoFormDialog
+        open={!!editVideo}
+        onOpenChange={(v) => !v && setEditVideo(null)}
+        course={course}
+        target={editVideo}
+        onSaved={() => { onRefresh(); setEditVideo(null); }}
+      />
+      <AlertDialog open={!!deleteVideo} onOpenChange={(v) => !v && setDeleteVideo(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete video?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete <strong>{deleteVideo?.title}</strong>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90"
+              onClick={async () => {
+                if (!deleteVideo) return;
+                try {
+                  await apiPost(`/api/admin/videos/${deleteVideo.id}`, null, { method: "DELETE" });
+                  toast({ title: "Video deleted" });
+                  setDeleteVideo(null);
+                  onRefresh();
+                } catch { /* toast */ }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+function TopicFormDialog({
+  open, onOpenChange, courseId, target, onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  courseId: string;
+  target?: TopicRow | null;
+  onSaved: () => void;
+}) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (target) {
+      setTitle(target.title);
+      setDescription(target.description || "");
+    } else if (open) {
+      setTitle("");
+      setDescription("");
+    }
+  }, [target, open]);
+
+  async function submit() {
+    if (!title.trim()) {
+      toast({ title: "Title required", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+    try {
+      if (target) {
+        await apiPost(`/api/admin/topics/${target.id}`, {
+          title: title.trim(),
+          description: description.trim() || null,
+        }, { method: "PUT" });
+        toast({ title: "Topic updated" });
+      } else {
+        await apiPost(`/api/admin/courses/${courseId}/topics`, {
+          title: title.trim(),
+          description: description.trim() || null,
+        });
+        toast({ title: "Topic created" });
+      }
+      onSaved();
+    } catch { /* toast */ } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{target ? "Edit Topic" : "Add Topic"}</DialogTitle>
+          <DialogDescription>Group related video lessons under a topic.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="t-title">Title</Label>
+            <Input id="t-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Introduction to Design Principles" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="t-desc">Description (optional)</Label>
+            <Textarea id="t-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button disabled={saving} onClick={submit}>{saving ? "Saving…" : target ? "Save" : "Add Topic"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function VideoFormDialog({
+  open, onOpenChange, course, fixedTopicId, target, onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  course: CourseDetail;
+  fixedTopicId?: string;
+  target?: VideoRow | null;
+  onSaved: () => void;
+}) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [topicId, setTopicId] = useState<string>(fixedTopicId || "");
+  const [source, setSource] = useState<"UPLOAD" | "YOUTUBE" | "URL">("UPLOAD");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [displayOrder, setDisplayOrder] = useState("");
+  const [isPublished, setIsPublished] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [thumbFile, setThumbFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    if (target) {
+      setTitle(target.title);
+      setDescription(target.description || "");
+      setTopicId(fixedTopicId || "");
+      setSource(target.source);
+      setVideoUrl(target.source !== "UPLOAD" ? target.videoUrl : "");
+      setDisplayOrder(String(target.displayOrder));
+      setIsPublished(target.isPublished);
+    } else if (open) {
+      setTitle("");
+      setDescription("");
+      setTopicId(fixedTopicId || course.topics[0]?.id || "");
+      setSource("UPLOAD");
+      setVideoUrl("");
+      setDisplayOrder("");
+      setIsPublished(true);
+    }
+    setFile(null);
+    setThumbFile(null);
+  }, [target, open, fixedTopicId, course.topics]);
+
+  async function submit() {
+    if (!title.trim()) {
+      toast({ title: "Title required", variant: "destructive" });
+      return;
+    }
+    if (!topicId) {
+      toast({ title: "Select a topic", variant: "destructive" });
+      return;
+    }
+    if (source !== "UPLOAD" && !videoUrl.trim() && !target) {
+      toast({ title: "Video URL required", variant: "destructive" });
+      return;
+    }
+    if (source === "UPLOAD" && !file && !target) {
+      toast({ title: "Video file required", variant: "destructive" });
+      return;
+    }
+
+    const fd = new FormData();
+    fd.append("title", title.trim());
+    fd.append("description", description.trim());
+    fd.append("topicId", topicId);
+    fd.append("source", source);
+    if (source !== "UPLOAD") fd.append("videoUrl", videoUrl.trim());
+    if (file) fd.append("file", file);
+    if (thumbFile) fd.append("thumbnail", thumbFile);
+    if (displayOrder) fd.append("displayOrder", displayOrder);
+    fd.append("isPublished", String(isPublished));
+
+    setSaving(true);
+    try {
+      if (target) {
+        // PUT with FormData — use a custom fetch since apiUpload is POST-only
+        const res = await fetch(`/api/admin/videos/${target.id}`, {
+          method: "PUT",
+          body: fd,
+          credentials: "same-origin",
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || "Failed to update video");
+        toast({ title: "Video updated" });
+      } else {
+        await apiUpload(`/api/admin/courses/${course.id}/videos`, fd);
+        toast({ title: "Video added" });
+      }
+      onSaved();
+    } catch (e) {
+      if (target && e instanceof Error) {
+        toast({ title: "Error", description: e.message, variant: "destructive" });
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{target ? "Edit Video" : "Add Video Lesson"}</DialogTitle>
+          <DialogDescription>Upload a video file, embed a YouTube link, or stream from a direct URL.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+          <div className="space-y-1.5">
+            <Label htmlFor="v-title">Title</Label>
+            <Input id="v-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Lesson 1: Design fundamentals" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="v-desc">Description (optional)</Label>
+            <Textarea id="v-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Topic</Label>
+              <Select value={topicId} onValueChange={setTopicId} disabled={!!fixedTopicId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select topic" />
+                </SelectTrigger>
+                <SelectContent>
+                  {course.topics.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Source</Label>
+              <Select value={source} onValueChange={(v) => setSource(v as "UPLOAD" | "YOUTUBE" | "URL")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="UPLOAD">Upload File</SelectItem>
+                  <SelectItem value="YOUTUBE">YouTube</SelectItem>
+                  <SelectItem value="URL">Direct URL</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {source === "UPLOAD" ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="v-file">Video File (.mp4, .webm, .mov, .mkv)</Label>
+              <Input
+                id="v-file"
+                type="file"
+                accept="video/*"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+              />
+              {target && !file && (
+                <p className="text-xs text-muted-foreground">Leave empty to keep current video file.</p>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label htmlFor="v-url">
+                {source === "YOUTUBE" ? "YouTube URL" : "Video URL (.mp4 etc.)"}
+              </Label>
+              <Input
+                id="v-url"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder={source === "YOUTUBE" ? "https://www.youtube.com/watch?v=…" : "https://example.com/video.mp4"}
+              />
+              {source === "YOUTUBE" && (
+                <p className="text-xs text-muted-foreground">Accepts watch URLs, youtu.be links and embed URLs.</p>
+              )}
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <Label htmlFor="v-thumb">Thumbnail (optional)</Label>
+            <Input
+              id="v-thumb"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setThumbFile(e.target.files?.[0] || null)}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="v-order">Display Order (optional)</Label>
+              <Input id="v-order" type="number" value={displayOrder} onChange={(e) => setDisplayOrder(e.target.value)} placeholder="auto" />
+            </div>
+            <div className="flex items-center justify-between rounded-md border border-border px-3">
+              <Label htmlFor="v-pub" className="text-sm">Published</Label>
+              <Switch id="v-pub" checked={isPublished} onCheckedChange={setIsPublished} />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button disabled={saving} onClick={submit}>{saving ? "Saving…" : target ? "Save Changes" : "Add Video"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ============= MATERIALS TAB =============
+function MaterialsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () => void }) {
+  const [addOpen, setAddOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<MaterialRow | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<MaterialRow | null>(null);
+
+  const grouped = useMemo(() => {
+    const map = new Map<string, { topicId: string; topicTitle: string | null; items: MaterialRow[] }>();
+    for (const m of course.materials) {
+      const key = m.topic?.id || "none";
+      if (!map.has(key)) {
+        map.set(key, { topicId: key, topicTitle: m.topic?.title || null, items: [] });
+      }
+      map.get(key)!.items.push(m);
+    }
+    return Array.from(map.values());
+  }, [course.materials]);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="font-heading text-base font-semibold text-foreground">Learning Materials</h3>
+          <p className="text-xs text-muted-foreground">{course.materials.length} materials across this course</p>
+        </div>
+        <Button className="gap-2" onClick={() => setAddOpen(true)}>
+          <Plus className="h-4 w-4" /> Add Material
+        </Button>
+      </div>
+
+      {course.materials.length === 0 ? (
+        <EmptyState
+          icon={<FileText className="h-5 w-5" />}
+          title="No materials yet"
+          description="Add downloadable PDFs, docs, slide decks or external links to support the video lessons."
+          action={<Button onClick={() => setAddOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> Add Material</Button>}
+        />
+      ) : (
+        <div className="space-y-3">
+          {grouped.map((g) => (
+            <Card key={g.topicId} className="overflow-hidden p-0">
+              <div className="border-b border-border bg-muted/30 px-3 py-2">
+                <p className="text-xs font-semibold text-foreground">
+                  {g.topicTitle || "Unassigned materials"}
+                </p>
+              </div>
+              <ul className="divide-y divide-border">
+                {g.items.map((m) => (
+                  <li key={m.id} className="flex items-center gap-3 p-3 hover:bg-muted/30">
+                    <Badge variant="outline" className="text-xs shrink-0">{m.type}</Badge>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground truncate">{m.title}</p>
+                      {m.description && (
+                        <p className="text-xs text-muted-foreground truncate">{m.description}</p>
+                      )}
+                    </div>
+                    <a
+                      href={m.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-accent"
+                      aria-label="Open material"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                    <Button variant="ghost" size="icon" aria-label="Edit material" onClick={() => setEditTarget(m)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" aria-label="Delete material" onClick={() => setDeleteTarget(m)}>
+                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <MaterialFormDialog
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        course={course}
+        onSaved={() => { onRefresh(); setAddOpen(false); }}
+      />
+      <MaterialFormDialog
+        open={!!editTarget}
+        onOpenChange={(v) => !v && setEditTarget(null)}
+        course={course}
+        target={editTarget}
+        onSaved={() => { onRefresh(); setEditTarget(null); }}
+      />
+      <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete material?</AlertDialogTitle>
+            <AlertDialogDescription>
+              <strong>{deleteTarget?.title}</strong> will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90"
+              onClick={async () => {
+                if (!deleteTarget) return;
+                try {
+                  await apiPost(`/api/admin/materials/${deleteTarget.id}`, null, { method: "DELETE" });
+                  toast({ title: "Material deleted" });
+                  setDeleteTarget(null);
+                  onRefresh();
+                } catch { /* toast */ }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+function MaterialFormDialog({
+  open, onOpenChange, course, target, onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  course: CourseDetail;
+  target?: MaterialRow | null;
+  onSaved: () => void;
+}) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [topicId, setTopicId] = useState<string>("none");
+  const [type, setType] = useState<"PDF" | "DOC" | "PRESENTATION" | "LINK">("PDF");
+  const [fileUrl, setFileUrl] = useState("");
+  const [isPublished, setIsPublished] = useState(true);
+  const [file, setFile] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (target) {
+      setTitle(target.title);
+      setDescription(target.description || "");
+      setTopicId(target.topic?.id || "none");
+      setType(target.type);
+      setFileUrl(target.type === "LINK" ? target.fileUrl : "");
+      setIsPublished(target.isPublished);
+    } else if (open) {
+      setTitle("");
+      setDescription("");
+      setTopicId("none");
+      setType("PDF");
+      setFileUrl("");
+      setIsPublished(true);
+    }
+    setFile(null);
+  }, [target, open]);
+
+  async function submit() {
+    if (!title.trim()) {
+      toast({ title: "Title required", variant: "destructive" });
+      return;
+    }
+    if (type === "LINK" && !fileUrl.trim() && !target) {
+      toast({ title: "Link URL required", variant: "destructive" });
+      return;
+    }
+    if (type !== "LINK" && !file && !target) {
+      toast({ title: "File required", variant: "destructive" });
+      return;
+    }
+
+    const fd = new FormData();
+    fd.append("title", title.trim());
+    fd.append("description", description.trim());
+    fd.append("topicId", topicId === "none" ? "" : topicId);
+    fd.append("type", type);
+    if (type === "LINK") fd.append("fileUrl", fileUrl.trim());
+    if (file) fd.append("file", file);
+    fd.append("isPublished", String(isPublished));
+
+    setSaving(true);
+    try {
+      if (target) {
+        // PUT
+        const res = await fetch(`/api/admin/materials/${target.id}`, {
+          method: "PUT",
+          body: fd,
+          credentials: "same-origin",
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || "Failed");
+        toast({ title: "Material updated" });
+      } else {
+        await apiUpload(`/api/admin/courses/${course.id}/materials`, fd);
+        toast({ title: "Material added" });
+      }
+      onSaved();
+    } catch (e) {
+      if (e instanceof Error) {
+        toast({ title: "Error", description: e.message, variant: "destructive" });
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{target ? "Edit Material" : "Add Learning Material"}</DialogTitle>
+          <DialogDescription>Upload a downloadable file or attach an external link.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+          <div className="space-y-1.5">
+            <Label htmlFor="m-title">Title</Label>
+            <Input id="m-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Lesson 1 — Reference Slides" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="m-desc">Description (optional)</Label>
+            <Textarea id="m-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Topic (optional)</Label>
+              <Select value={topicId} onValueChange={setTopicId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="No topic" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No topic</SelectItem>
+                  {course.topics.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Type</Label>
+              <Select value={type} onValueChange={(v) => setType(v as "PDF" | "DOC" | "PRESENTATION" | "LINK")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PDF">PDF</SelectItem>
+                  <SelectItem value="DOC">Document</SelectItem>
+                  <SelectItem value="PRESENTATION">Presentation</SelectItem>
+                  <SelectItem value="LINK">External Link</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {type === "LINK" ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="m-url">Link URL</Label>
+              <Input id="m-url" value={fileUrl} onChange={(e) => setFileUrl(e.target.value)} placeholder="https://…" />
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label htmlFor="m-file">File (.pdf, .doc, .docx, .ppt, .pptx, .txt)</Label>
+              <Input
+                id="m-file"
+                type="file"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
+              />
+              {target && !file && (
+                <p className="text-xs text-muted-foreground">Leave empty to keep existing file.</p>
+              )}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+            <Label htmlFor="m-pub" className="text-sm">Published</Label>
+            <Switch id="m-pub" checked={isPublished} onCheckedChange={setIsPublished} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button disabled={saving} onClick={submit}>{saving ? "Saving…" : target ? "Save Changes" : "Add Material"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ============= ASSIGNMENTS TAB =============
+function AssignmentsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () => void }) {
+  const navigate = useAppStore((s) => s.navigate);
+  const [addOpen, setAddOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<AssignmentRow | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AssignmentRow | null>(null);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="font-heading text-base font-semibold text-foreground">Course Assignments</h3>
+          <p className="text-xs text-muted-foreground">
+            {course.assignments.length} assignment{course.assignments.length === 1 ? "" : "s"} ·{" "}
+            {course.assignments.reduce((a, x) => a + x.submissionsCount, 0)} total submissions
+          </p>
+        </div>
+        <Button className="gap-2" onClick={() => setAddOpen(true)}>
+          <Plus className="h-4 w-4" /> Add Assignment
+        </Button>
+      </div>
+
+      {course.assignments.length === 0 ? (
+        <EmptyState
+          icon={<ClipboardList className="h-5 w-5" />}
+          title="No assignments yet"
+          description="Add assignments to test student understanding and award completion certificates."
+          action={<Button onClick={() => setAddOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> Add Assignment</Button>}
+        />
+      ) : (
+        <div className="grid gap-3 md:grid-cols-2">
+          {course.assignments.map((a) => (
+            <Card key={a.id} className="p-4 space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-heading font-semibold text-foreground truncate">{a.title}</p>
+                  {a.dueDate && (
+                    <p className="text-xs text-muted-foreground mt-0.5">Due {formatDate(a.dueDate)}</p>
+                  )}
+                </div>
+                {a.isPublished ? (
+                  <Badge className="bg-success/15 text-success shrink-0">Published</Badge>
+                ) : (
+                  <Badge variant="outline" className="text-muted-foreground shrink-0">Draft</Badge>
+                )}
+              </div>
+              {a.description && (
+                <p className="text-sm text-muted-foreground line-clamp-2">{a.description}</p>
+              )}
+              <div className="flex flex-wrap gap-2 text-xs">
+                <Badge variant="outline" className="bg-accent/10 text-accent">
+                  {a.submissionsCount} submission{a.submissionsCount === 1 ? "" : "s"}
+                </Badge>
+                {a.allowResubmission && (
+                  <Badge variant="outline" className="text-muted-foreground">Resubmission allowed</Badge>
+                )}
+                {a.fileUrl && (
+                  <a
+                    href={a.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-accent hover:underline"
+                  >
+                    <ExternalLink className="h-3 w-3" /> Brief
+                  </a>
+                )}
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1"
+                  onClick={() => navigate(["admin", "submissions"], { assignmentId: a.id })}
+                >
+                  <ClipboardList className="h-3.5 w-3.5" /> View Submissions
+                </Button>
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="icon" aria-label="Edit assignment" onClick={() => setEditTarget(a)}>
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" aria-label="Delete assignment" onClick={() => setDeleteTarget(a)}>
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <AssignmentFormDialog
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        courseId={course.id}
+        onSaved={() => { onRefresh(); setAddOpen(false); }}
+      />
+      <AssignmentFormDialog
+        open={!!editTarget}
+        onOpenChange={(v) => !v && setEditTarget(null)}
+        courseId={course.id}
+        target={editTarget}
+        onSaved={() => { onRefresh(); setEditTarget(null); }}
+      />
+      <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete assignment?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete <strong>{deleteTarget?.title}</strong> and all its submissions.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90"
+              onClick={async () => {
+                if (!deleteTarget) return;
+                try {
+                  await apiPost(`/api/admin/assignments/${deleteTarget.id}`, null, { method: "DELETE" });
+                  toast({ title: "Assignment deleted" });
+                  setDeleteTarget(null);
+                  onRefresh();
+                } catch { /* toast */ }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+function AssignmentFormDialog({
+  open, onOpenChange, courseId, target, onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  courseId: string;
+  target?: AssignmentRow | null;
+  onSaved: () => void;
+}) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [instructions, setInstructions] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [isPublished, setIsPublished] = useState(true);
+  const [allowResubmission, setAllowResubmission] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [clearFile, setClearFile] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (target) {
+      setTitle(target.title);
+      setDescription(target.description || "");
+      setInstructions(target.instructions || "");
+      setDueDate(target.dueDate ? target.dueDate.slice(0, 10) : "");
+      setIsPublished(target.isPublished);
+      setAllowResubmission(target.allowResubmission);
+    } else if (open) {
+      setTitle("");
+      setDescription("");
+      setInstructions("");
+      setDueDate("");
+      setIsPublished(true);
+      setAllowResubmission(false);
+    }
+    setFile(null);
+    setClearFile(false);
+  }, [target, open]);
+
+  async function submit() {
+    if (!title.trim()) {
+      toast({ title: "Title required", variant: "destructive" });
+      return;
+    }
+    const fd = new FormData();
+    fd.append("title", title.trim());
+    fd.append("description", description.trim());
+    fd.append("instructions", instructions.trim());
+    if (dueDate) fd.append("dueDate", dueDate);
+    fd.append("isPublished", String(isPublished));
+    fd.append("allowResubmission", String(allowResubmission));
+    if (file) fd.append("file", file);
+    if (clearFile) fd.append("clearFile", "true");
+
+    setSaving(true);
+    try {
+      if (target) {
+        const res = await fetch(`/api/admin/assignments/${target.id}`, {
+          method: "PUT",
+          body: fd,
+          credentials: "same-origin",
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || "Failed");
+        toast({ title: "Assignment updated" });
+      } else {
+        await apiUpload(`/api/admin/courses/${courseId}/assignments`, fd);
+        toast({ title: "Assignment added" });
+      }
+      onSaved();
+    } catch (e) {
+      if (e instanceof Error) {
+        toast({ title: "Error", description: e.message, variant: "destructive" });
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{target ? "Edit Assignment" : "Add Assignment"}</DialogTitle>
+          <DialogDescription>Create a task for students to complete and submit.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+          <div className="space-y-1.5">
+            <Label htmlFor="a-title">Title</Label>
+            <Input id="a-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Final Project — Brand Identity" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="a-desc">Short Description</Label>
+            <Textarea id="a-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="a-ins">Detailed Instructions</Label>
+            <Textarea id="a-ins" value={instructions} onChange={(e) => setInstructions(e.target.value)} rows={4} placeholder="Step-by-step instructions students will see…" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="a-due">Due Date (optional)</Label>
+            <Input id="a-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="a-file">Attachment File (optional)</Label>
+            <Input id="a-file" type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" />
+            {target?.fileUrl && (
+              <div className="flex items-center gap-2 text-xs">
+                <a href={target.fileUrl} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline inline-flex items-center gap-1">
+                  <ExternalLink className="h-3 w-3" /> Current file
+                </a>
+                <label className="flex items-center gap-1 text-muted-foreground">
+                  <Checkbox checked={clearFile} onCheckedChange={(v) => setClearFile(!!v)} />
+                  Remove existing file
+                </label>
+              </div>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center justify-between rounded-md border border-border px-3">
+              <Label htmlFor="a-pub" className="text-sm">Published</Label>
+              <Switch id="a-pub" checked={isPublished} onCheckedChange={setIsPublished} />
+            </div>
+            <div className="flex items-center justify-between rounded-md border border-border px-3">
+              <Label htmlFor="a-resub" className="text-sm">Allow resubmission</Label>
+              <Switch id="a-resub" checked={allowResubmission} onCheckedChange={setAllowResubmission} />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button disabled={saving} onClick={submit}>{saving ? "Saving…" : target ? "Save Changes" : "Add Assignment"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ============= CERTIFICATE TAB =============
+function CertificateTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () => void }) {
+  const template = course.certificateTemplate;
+  const [isEnabled, setIsEnabled] = useState(template?.isEnabled ?? true);
+  const [title, setTitle] = useState(template?.title || "Certificate of Completion");
+  const [bodyText, setBodyText] = useState(
+    template?.bodyText ||
+      "This certificate is proudly presented to {{studentName}} for successfully completing the course {{courseName}}."
+  );
+  const [organizationName, setOrganizationName] = useState(template?.organizationName || "Lumina Learning");
+  const [layout, setLayout] = useState<"CLASSIC" | "MODERN" | "MINIMAL">(template?.layout || "CLASSIC");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (template) {
+      setIsEnabled(template.isEnabled);
+      setTitle(template.title);
+      setBodyText(template.bodyText);
+      setOrganizationName(template.organizationName);
+      setLayout(template.layout);
+    }
+  }, [template]);
+
+  async function save() {
+    setSaving(true);
+    try {
+      await apiPost(`/api/admin/courses/${course.id}/certificate`, {
+        isEnabled,
+        title,
+        bodyText,
+        organizationName,
+        layout,
+      }, { method: "PUT" });
+      toast({ title: "Certificate template saved" });
+      onRefresh();
+    } catch { /* toast */ } finally {
+      setSaving(false);
+    }
+  }
+
+  // Live preview with sample data
+  const previewText = bodyText
+    .replace(/\{\{studentName\}\}/g, "Aisha Khalid")
+    .replace(/\{\{courseName\}\}/g, course.title)
+    .replace(/\{\{issueDate\}\}/g, formatDate(new Date()))
+    .replace(/\{\{certificateNumber\}\}/g, "LL-SAMPLE-001")
+    .replace(/\{\{organizationName\}\}/g, organizationName);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="font-heading text-base font-semibold text-foreground">Completion Certificate</h3>
+          <p className="text-xs text-muted-foreground">
+            Configure the template issued to students who complete this course.
+          </p>
+        </div>
+        <Button className="gap-2" disabled={saving} onClick={save}>
+          <Save className="h-4 w-4" /> {saving ? "Saving…" : "Save Template"}
+        </Button>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card className="p-4 space-y-3">
+          <CardHeader className="p-0">
+            <CardTitle className="text-sm">Template Settings</CardTitle>
+            <CardDescription>Use placeholders for dynamic content.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0 space-y-3">
+            <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+              <Label htmlFor="c-enabled" className="text-sm">Enable certificates</Label>
+              <Switch id="c-enabled" checked={isEnabled} onCheckedChange={setIsEnabled} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="c-title">Certificate Title</Label>
+              <Input id="c-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="c-body">Body Text</Label>
+              <Textarea id="c-body" value={bodyText} onChange={(e) => setBodyText(e.target.value)} rows={4} />
+              <p className="text-xs text-muted-foreground">
+                Placeholders: <code className="bg-muted px-1 py-0.5 rounded">{"{{studentName}}"}</code>{" "}
+                <code className="bg-muted px-1 py-0.5 rounded">{"{{courseName}}"}</code>{" "}
+                <code className="bg-muted px-1 py-0.5 rounded">{"{{issueDate}}"}</code>{" "}
+                <code className="bg-muted px-1 py-0.5 rounded">{"{{certificateNumber}}"}</code>{" "}
+                <code className="bg-muted px-1 py-0.5 rounded">{"{{organizationName}}"}</code>
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="c-org">Organization Name</Label>
+                <Input id="c-org" value={organizationName} onChange={(e) => setOrganizationName(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Layout</Label>
+                <Select value={layout} onValueChange={(v) => setLayout(v as "CLASSIC" | "MODERN" | "MINIMAL")}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CLASSIC">Classic</SelectItem>
+                    <SelectItem value="MODERN">Modern</SelectItem>
+                    <SelectItem value="MINIMAL">Minimal</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="p-4 space-y-3">
+          <CardHeader className="p-0">
+            <CardTitle className="text-sm">Live Preview</CardTitle>
+            <CardDescription>How the certificate will look.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <CertificatePreview
+              title={title}
+              bodyText={previewText}
+              organizationName={organizationName}
+              layout={layout}
+              studentName="Aisha Khalid"
+              courseTitle={course.title}
+              certNumber="LL-SAMPLE-001"
+              issueDate={formatDate(new Date())}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function CertificatePreview({
+  title, bodyText, organizationName, layout, studentName, courseTitle, certNumber, issueDate,
+}: {
+  title: string;
+  bodyText: string;
+  organizationName: string;
+  layout: "CLASSIC" | "MODERN" | "MINIMAL";
+  studentName: string;
+  courseTitle: string;
+  certNumber: string;
+  issueDate: string;
+}) {
+  if (layout === "MINIMAL") {
+    return (
+      <div className="rounded-lg border border-border bg-card p-6 text-center">
+        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{organizationName}</p>
+        <p className="font-heading text-xl font-bold text-foreground mt-2">{title}</p>
+        <p className="font-heading text-2xl font-bold text-accent mt-3">{studentName}</p>
+        <p className="text-xs text-muted-foreground mt-2">{bodyText}</p>
+        <Separator className="my-3" />
+        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+          <span>{issueDate}</span>
+          <span>{certNumber}</span>
+        </div>
+      </div>
+    );
+  }
+  if (layout === "MODERN") {
+    return (
+      <div className="rounded-xl border-2 border-accent/40 bg-gradient-to-br from-accent/[0.04] to-primary/[0.04] p-6">
+        <div className="flex items-center justify-between">
+          <Award className="h-8 w-8 text-accent" />
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{organizationName}</p>
+        </div>
+        <div className="text-center mt-4">
+          <p className="font-heading text-lg font-bold text-foreground">{title}</p>
+          <p className="font-heading text-2xl font-bold text-accent mt-2">{studentName}</p>
+          <p className="text-xs text-muted-foreground mt-2 max-w-xs mx-auto">{bodyText}</p>
+        </div>
+        <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-4 pt-3 border-t border-border">
+          <span>{issueDate}</span>
+          <span className="font-mono">{certNumber}</span>
+        </div>
+      </div>
+    );
+  }
+  // CLASSIC
+  return (
+    <div className="rounded-lg border-4 border-primary/30 bg-card p-6 text-center">
+      <div className="border-b-2 border-accent/30 pb-3">
+        <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">{organizationName}</p>
+        <p className="font-heading text-xl font-bold text-foreground mt-1">{title}</p>
+      </div>
+      <p className="font-heading text-2xl font-bold text-primary mt-4">{studentName}</p>
+      <p className="text-xs text-muted-foreground mt-3 max-w-xs mx-auto">{bodyText}</p>
+      <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-4 pt-3 border-t-2 border-accent/30">
+        <span>{issueDate}</span>
+        <span className="font-mono">{certNumber}</span>
+      </div>
+    </div>
+  );
+}
+
+// ============= SETTINGS TAB =============
+function SettingsTab({
+  course, plans, onRefresh, onDeleted,
+}: {
+  course: CourseDetail;
+  plans: SubscriptionPlanPublic[];
+  onRefresh: () => void;
+  onDeleted: () => void;
+}) {
+  const navigate = useAppStore((s) => s.navigate);
+  const [title, setTitle] = useState(course.title);
+  const [description, setDescription] = useState(course.description || "");
+  const [category, setCategory] = useState(course.category || "");
+  const [accessType, setAccessType] = useState<"FREE" | "PAID">(course.accessType);
+  const [isPublished, setIsPublished] = useState(course.isPublished);
+  const [planIds, setPlanIds] = useState<string[]>(course.planAccess.map((p) => p.planId));
+  const [saving, setSaving] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  useEffect(() => {
+    setTitle(course.title);
+    setDescription(course.description || "");
+    setCategory(course.category || "");
+    setAccessType(course.accessType);
+    setIsPublished(course.isPublished);
+    setPlanIds(course.planAccess.map((p) => p.planId));
+  }, [course]);
+
+  function togglePlan(id: string) {
+    setPlanIds((cur) =>
+      cur.includes(id) ? cur.filter((p) => p !== id) : [...cur, id]
+    );
+  }
+
+  async function save() {
+    if (!title.trim()) {
+      toast({ title: "Title required", variant: "destructive" });
+      return;
+    }
+    if (accessType === "PAID" && planIds.length === 0) {
+      toast({ title: "Select at least one plan", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+    try {
+      await apiPost(`/api/admin/courses/${course.id}`, {
+        title: title.trim(),
+        description: description.trim() || null,
+        category: category.trim() || null,
+        accessType,
+        isPublished,
+        planIds,
+      }, { method: "PUT" });
+      toast({ title: "Course updated" });
+      onRefresh();
+    } catch { /* toast */ } finally {
+      setSaving(false);
+    }
+  }
+
+  async function doDelete() {
+    try {
+      await apiPost(`/api/admin/courses/${course.id}`, null, { method: "DELETE" });
+      toast({ title: "Course deleted", description: course.title });
+      onDeleted();
+    } catch { /* toast */ }
+  }
+
+  return (
+    <div className="space-y-4">
+      <Card className="p-4 space-y-3">
+        <CardHeader className="p-0">
+          <CardTitle className="text-base">Course Details</CardTitle>
+          <CardDescription>Update the basic information about this course.</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0 space-y-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="s-title">Title</Label>
+            <Input id="s-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="s-desc">Description</Label>
+            <Textarea id="s-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="s-cat">Category</Label>
+              <Input id="s-cat" value={category} onChange={(e) => setCategory(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Access Type</Label>
+              <Select value={accessType} onValueChange={(v) => setAccessType(v as "FREE" | "PAID")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="FREE">Free</SelectItem>
+                  <SelectItem value="PAID">Paid</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {accessType === "PAID" && (
+            <div className="space-y-2 rounded-md border border-border p-3 bg-muted/30">
+              <Label className="text-xs text-muted-foreground">Required Plans</Label>
+              {plans.length === 0 ? (
+                <p className="text-xs text-destructive">No subscription plans exist. Create one in the Plans section first.</p>
+              ) : (
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {plans.map((p) => (
+                    <label key={p.id} className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox
+                        checked={planIds.includes(p.id)}
+                        onCheckedChange={() => togglePlan(p.id)}
+                      />
+                      <span className="text-sm text-foreground">{p.name}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+            <div>
+              <Label htmlFor="s-pub" className="text-sm">Published</Label>
+              <p className="text-xs text-muted-foreground">Make this course visible to students.</p>
+            </div>
+            <Switch id="s-pub" checked={isPublished} onCheckedChange={setIsPublished} />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button disabled={saving} onClick={save} className="gap-2">
+              <Save className="h-4 w-4" /> {saving ? "Saving…" : "Save Changes"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Danger zone */}
+      <Card className="border-destructive/30 p-4">
+        <CardHeader className="p-0">
+          <CardTitle className="text-base text-destructive">Danger Zone</CardTitle>
+          <CardDescription>Permanent actions that cannot be undone.</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0 mt-3">
+          <div className="flex items-center justify-between rounded-md border border-destructive/30 bg-destructive/5 p-3">
+            <div>
+              <p className="text-sm font-medium text-foreground">Delete this course</p>
+              <p className="text-xs text-muted-foreground">
+                Permanently removes the course and all related content.
+              </p>
+            </div>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="gap-2"
+              onClick={() => setDeleteOpen(true)}
+            >
+              <Trash2 className="h-4 w-4" /> Delete Course
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete course permanently?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will delete <strong>{course.title}</strong> and all topics, videos, materials, assignments and submissions. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90"
+              onClick={doDelete}
+            >
+              Delete Permanently
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <div className="flex items-center justify-between text-xs text-muted-foreground pt-2">
+        <span>Created {formatDateTime(course.createdAt)}</span>
+        <button
+          className="text-accent hover:underline"
+          onClick={() => navigate(["admin", "courses"])}
+        >
+          Back to courses list
+        </button>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,1554 @@
+# MASTER DEVELOPMENT PROMPT: COMPLETE ONLINE TRAINING & COURSE MANAGEMENT PLATFORM
+
+## 1. PROJECT OBJECTIVE
+
+Develop and refine a complete, professional Online Training and Course Management Platform.
+
+The platform will allow an administrator to create and sell training courses, organize lessons into topics, upload recorded videos and learning materials, manage student subscriptions, assign course-specific assignments, receive student submissions and provide certificates of completion.
+
+Students will have their own accounts and personalized dashboards where they can access eligible courses, watch lessons, download materials, complete assignments and access their certificates.
+
+The platform must have three main experiences:
+
+1. Public Website – For visitors to explore the platform, courses and subscription plans and register.
+2. Student Portal – For students to access courses, watch lessons, manage subscriptions, submit assignments and view certificates.
+3. Admin Dashboard – For administrators to manage the entire platform, students, courses, videos, topics, subscriptions, assignments and certificates.
+
+### Critical development instructions
+
+- Work on the existing project.
+- First inspect the complete existing codebase and understand its architecture.
+- Preserve all existing working functionality.
+- Do not rebuild the application from scratch.
+- Do not introduce duplicate authentication systems.
+- Reuse the existing database, backend and authentication wherever possible.
+- Implement real functionality rather than static UI demonstrations.
+- Connect every form, button, table and action to the actual backend.
+- Do not use fake statistics or hardcoded demonstration records.
+- Make the entire platform responsive.
+- Test all workflows and permissions before considering the implementation complete.
+
+---
+
+# PART 2: COMPLETE DESIGN SYSTEM AND UI/UX
+
+## 2. Overall Visual Direction
+
+The platform should look like a premium, modern educational SaaS product.
+
+The design should be:
+
+- Elegant.
+- Minimal.
+- Professional.
+- Clean and structured.
+- Easy to navigate.
+- Visually consistent.
+- Suitable for a commercial online training business.
+
+Avoid:
+- Childish educational designs.
+- Excessive gradients.
+- Too many colours.
+- Unnecessary decorative illustrations.
+- Excessive rounded cards.
+- Overcrowded dashboards.
+- Too many buttons.
+- Unnecessary information on individual screens.
+
+The design should prioritize clarity, usability and a professional learning experience.
+
+## 3. Colour Palette
+
+Use a consistent colour system:
+
+- Primary: Deep Navy (#172554).
+- Secondary: Slate Blue (#475569).
+- Accent: Muted Teal (#0F766E).
+- Main Background: Off White (#F8FAFC).
+- Card Background: White (#FFFFFF).
+- Primary Text: Dark Slate (#1E293B).
+- Secondary Text: Muted Grey (#64748B).
+- Borders: Light Grey (#E2E8F0).
+- Success: Soft Green.
+- Warning: Soft Amber.
+- Error: Muted Red.
+
+Use the accent colour for important actions, active states and selected elements.
+
+## 4. Typography
+
+Use:
+- Inter for general interface typography.
+- Manrope for headings.
+
+Maintain a consistent hierarchy:
+
+- Large headings for page titles.
+- Medium headings for sections.
+- Clear card titles.
+- Readable body text.
+- Small muted text for dates, metadata and secondary information.
+
+## 5. Layout and Reusable Components
+
+Create a reusable design system containing:
+
+- Primary and secondary buttons.
+- Input fields.
+- Dropdown menus.
+- Search bars.
+- Course cards.
+- Pricing cards.
+- Video players.
+- Topic lists.
+- Progress indicators.
+- Status badges.
+- Data tables.
+- Modals.
+- Confirmation dialogs.
+- Toast notifications.
+- Empty states.
+- Loading skeletons.
+- Pagination.
+- Sidebar navigation.
+- Tabs and filters.
+
+Maintain consistent spacing, typography, borders, shadows and interaction states throughout the application.
+
+## 6. Animations
+
+Use subtle, professional animations:
+
+- Smooth page transitions.
+- Sidebar expand/collapse animations.
+- Button hover effects.
+- Card hover effects.
+- Smooth modal transitions.
+- Dropdown animations.
+- Progress bar animations.
+- Skeleton loading effects.
+- Subtle content entrance animations.
+
+Animations should be lightweight and should never interfere with functionality.
+
+---
+
+# PART 3: PUBLIC WEBSITE
+
+## 7. Navigation Bar
+
+Create a responsive navigation bar containing:
+
+- Platform logo.
+- Home.
+- Courses.
+- Learning Plans.
+- About.
+- Login.
+- Register.
+
+On mobile, use a clean collapsible navigation menu.
+
+## 8. Homepage
+
+The homepage should contain the following sections.
+
+### A. Hero Section
+
+Include:
+
+- A professional educational headline.
+- A short description of the platform.
+- Explore Courses button.
+- View Learning Plans button.
+- A relevant educational visual.
+
+### B. Featured Courses
+
+Display selected courses in a responsive grid.
+
+Each course card should include:
+
+- Course thumbnail.
+- Course title.
+- Short description.
+- Category.
+- Free/Paid label.
+- View Course button.
+
+Only display published courses.
+
+### C. Subscription Plans
+
+Display all active subscription plans created by the administrator.
+
+Each pricing card must show:
+
+- Plan name.
+- Price.
+- Currency.
+- Duration.
+- Description.
+- Included features.
+- Benefits.
+- Select Plan button.
+- Optional Most Popular label.
+
+Only active plans should appear.
+
+Whenever an administrator changes a plan, the public pricing section should automatically reflect the updated information.
+
+### D. About Section
+
+Introduce the training platform, its learning approach and the available educational resources.
+
+### E. Footer
+
+Include:
+
+- Logo.
+- Short description.
+- Navigation links.
+- Course links.
+- Contact information.
+- Copyright information.
+
+---
+
+# PART 4: SUBSCRIPTION MANAGEMENT SYSTEM
+
+## 9. Admin Subscription Plan Settings
+
+Add a dedicated section called **Subscription Plans** under Admin Settings.
+
+The administrator must be able to create, edit, delete, activate and deactivate subscription plans.
+
+### Create Subscription Plan
+
+Provide the following fields:
+
+1. Plan Name.
+2. Plan Description.
+3. Price.
+4. Currency.
+5. Duration.
+6. Duration Unit:
+   - Days.
+   - Weeks.
+   - Months.
+   - Years.
+7. Plan Features.
+8. Benefits.
+9. Plan Status (Active/Inactive).
+10. Optional Most Popular label.
+
+Allow the administrator to add multiple features dynamically.
+
+For example:
+
+Plan Name: Standard
+
+Price: 10 OMR
+
+Duration: 1 Month
+
+Features:
+- Access to selected training courses.
+- Recorded video lessons.
+- Course learning materials.
+- Assignment access.
+
+### Subscription Plan Management
+
+The admin should be able to:
+
+- View all plans.
+- Create unlimited plans.
+- Edit existing plans.
+- Delete plans safely.
+- Activate/deactivate plans.
+- Update pricing.
+- Update duration.
+- Add or remove features.
+
+Display plans in a management table with:
+
+- Plan name.
+- Price.
+- Duration.
+- Number of features.
+- Status.
+- Creation date.
+- Actions.
+
+If a plan is already assigned to students, do not delete historical subscription records when the plan is edited or deactivated.
+
+Preserve historical subscription details.
+
+## 10. Public Subscription Plan Selection
+
+Display active subscription plans on the homepage.
+
+During student registration, students must select one available plan.
+
+The registration flow should be:
+
+1. Student opens the registration page.
+2. Enters personal details.
+3. Views available subscription plans.
+4. Selects a plan.
+5. Selected plan is visually highlighted.
+6. Student confirms registration.
+7. Account is created.
+8. Subscription is assigned automatically.
+
+Display the selected plan's price and duration clearly.
+
+IMPORTANT: No actual online payment gateway or payment processing is required in this implementation phase.
+
+The student is only selecting a plan. Do not collect card information or claim that payment has been made.
+
+## 11. Subscription Assignment Logic
+
+Every student should have a subscription record containing:
+
+- Student ID.
+- Plan ID.
+- Plan name snapshot.
+- Plan price snapshot.
+- Subscription duration.
+- Start date.
+- Expiry date.
+- Subscription status.
+
+When a student selects a plan:
+
+- Assign the selected plan.
+- Record the subscription start date.
+- Calculate the expiry date automatically.
+- Set status to Active.
+- Grant access according to the plan.
+
+Example:
+
+A student selects a one-month plan on 1 November.
+
+Start Date: 1 November.
+
+Expiry Date: 1 December.
+
+The subscription should remain active until its expiry timestamp.
+
+Use a consistent timezone and date calculation method. Handle month-end dates correctly.
+
+## 12. Subscription Expiry and Access Restriction
+
+This is a critical feature.
+
+The platform must automatically identify expired subscriptions.
+
+When the current time reaches the subscription expiry timestamp:
+
+- Subscription status becomes Expired.
+- Protected student dashboard access is restricted.
+- Paid course access is blocked.
+- Protected learning materials are inaccessible.
+- The student cannot bypass these restrictions by changing browser data.
+
+The system must check subscription validity through the backend.
+
+### Expired Subscription Screen
+
+Show a professional screen containing:
+
+- Subscription Expired heading.
+- Previous plan name.
+- Expiry date.
+- Explanation that access has expired.
+- Choose New Plan button.
+- Renew Subscription option.
+
+Do not delete:
+- Student account.
+- Student profile.
+- Learning history.
+- Previous subscription records.
+- Assignment submissions.
+- Issued certificates.
+
+The student should be able to register/select a new plan and regain access after the new subscription is activated.
+
+## 13. Student Subscription Page
+
+Add a **My Subscription** page in the student dashboard.
+
+Display:
+
+- Current plan.
+- Price.
+- Duration.
+- Start date.
+- Expiry date.
+- Remaining days.
+- Subscription status.
+- Plan features.
+
+Use a clear progress indicator showing the subscription period.
+
+Provide a Choose New Plan / Renew option.
+
+## 14. Admin Student Subscription Management
+
+Inside Student Management, allow the admin to view:
+
+- Student name.
+- Email.
+- Current plan.
+- Subscription start date.
+- Expiry date.
+- Status.
+
+Provide filters for:
+
+- Active.
+- Expired.
+- Plan type.
+
+Allow the admin to manually assign or change a student's plan.
+
+Any manual change must update the subscription record and access permissions correctly.
+
+---
+
+# PART 5: COURSE MANAGEMENT SYSTEM
+
+## 15. Admin Course Management
+
+Create a dedicated Course Management section.
+
+The admin should be able to:
+
+- Create courses.
+- Edit courses.
+- Delete courses.
+- Publish/unpublish courses.
+- Add course thumbnails.
+- Set course titles.
+- Add course descriptions.
+- Assign categories.
+- Configure course access.
+- Organize courses into topics.
+
+### Add Course Form
+
+Include:
+
+1. Course Title.
+2. Course Description.
+3. Course Thumbnail.
+4. Course Category.
+5. Course Status (Published/Unpublished).
+6. Course Access Type.
+
+## 16. Free and Paid Course Configuration
+
+Add a Course Access Type selector.
+
+### Option A: Free Course
+
+When the admin selects Free:
+
+- Course is available to every registered student.
+- No subscription plan is required.
+- Student can access it after registration.
+- No payment is required.
+
+### Option B: Paid Course
+
+When the admin selects Paid:
+
+- Display a Required Subscription Plans field.
+- Allow the admin to select one or multiple eligible plans.
+- Only students with an active eligible subscription can access the course.
+
+Example:
+
+Course: Advanced Graphic Designing.
+
+Access Type: Paid.
+
+Required Plan: Premium.
+
+Results:
+
+- Premium subscribers: Access allowed.
+- Standard subscribers: Access denied unless Standard is also selected.
+- Basic subscribers: Access denied unless Basic is also selected.
+- Expired subscribers: Access denied.
+- Students without subscriptions: Access denied.
+
+The admin should be able to change these settings when editing a course.
+
+## 17. Course Organization into Topics
+
+Every course should have its own topic structure.
+
+When creating or editing a course, the admin should be able to add multiple topics.
+
+Example:
+
+Course: Graphic Designing.
+
+Topics:
+1. Introduction to Graphic Design.
+2. Design Principles.
+3. Canva Fundamentals.
+4. Social Media Design.
+5. Advanced Design Techniques.
+
+The admin should be able to:
+
+- Add topics.
+- Edit topic titles.
+- Add topic descriptions.
+- Reorder topics.
+- Delete topics.
+- Assign video lessons to topics.
+- Assign learning materials to topics.
+
+Each topic can contain one or multiple video lessons and supporting learning resources.
+
+Display topics in their defined order in the student learning interface.
+
+---
+
+# PART 6: VIDEO AND LEARNING MATERIAL MANAGEMENT
+
+## 18. Admin Video Management
+
+The administrator must be able to add video lessons to specific courses and topics.
+
+### Add Video Lesson Form
+
+Include:
+
+- Video title.
+- Video description.
+- Select course.
+- Select topic.
+- Video source.
+- Video file upload OR video link.
+- Display order.
+- Optional lesson thumbnail.
+- Published/unpublished status.
+
+Support:
+
+1. Uploading a local video file to the configured storage service.
+2. Adding an external video URL, such as a supported YouTube link.
+
+Do not assume a local video file is stored permanently on the application server. Use the existing storage infrastructure or a suitable file storage service.
+
+### Video Management Actions
+
+- Add video.
+- Edit video.
+- Delete video.
+- Replace video.
+- Change video order.
+- Move video to another topic.
+- Publish/unpublish video.
+
+Videos must belong to a specific topic and course.
+
+## 19. Learning Material Management
+
+The administrator should also be able to add supporting materials.
+
+Supported materials:
+
+- PDF files.
+- Documents.
+- Presentation files.
+- External learning resource links.
+
+For every material, allow the admin to:
+
+- Enter material title.
+- Add description.
+- Upload file or provide a link.
+- Select course.
+- Select topic.
+- Publish/unpublish.
+- Edit or delete.
+
+Students should only see materials belonging to courses they are authorized to access.
+
+---
+
+# PART 7: STUDENT VIDEO LEARNING EXPERIENCE
+
+## 20. Student Course Learning Page
+
+Create a dedicated learning interface for each course.
+
+The layout should contain:
+
+### Main Video Area
+
+- Large video player.
+- Current video title.
+- Video description.
+- Lesson completion status.
+
+### Course Sidebar
+
+Display:
+- Course title.
+- Topic list.
+- Videos under each topic.
+- Completed lesson indicators.
+- Locked/unlocked states.
+
+### Learning Materials Area
+
+Display relevant:
+- PDFs.
+- Documents.
+- Presentations.
+- Resource links.
+
+Use a clean layout similar to a professional online learning management system.
+
+## 21. Full Video Watching Requirement
+
+THIS IS ONE OF THE MOST IMPORTANT FUNCTIONAL REQUIREMENTS.
+
+A student must watch the entire video before the lesson can be marked as completed.
+
+Simply opening the video must NOT mark it as completed.
+
+Implement actual video completion tracking.
+
+### Required Working Logic
+
+1. Student opens a lesson.
+2. The video starts playing.
+3. The system tracks playback progress.
+4. Progress is periodically saved to the backend.
+5. The system tracks the actual watched duration.
+6. When the video reaches its end and the required viewing conditions are satisfied, mark the lesson as completed.
+7. Display a completion tick beside the lesson.
+8. Save the completion record in the database.
+
+### Important Restrictions
+
+- Do not mark a lesson complete just because the student opens it.
+- Do not mark a lesson complete when the video is paused halfway.
+- Do not mark it complete merely because the student seeks directly to the end.
+- Do not mark it complete if the student closes the page before finishing.
+- Do not allow frontend-only manipulation to grant completion.
+
+Use the video player's playback events and backend validation.
+
+For supported video players, track:
+- Current playback time.
+- Total video duration.
+- Actual playback progress.
+- Video ended event.
+- Watched time.
+- Completion status.
+
+Use periodic progress saving.
+
+When a student returns to a partially watched video, restore the last saved position.
+
+For externally hosted videos, implement the strongest tracking supported by the selected player/API. Clearly account for limitations where the external provider does not expose reliable playback events.
+
+### Completed Lesson Display
+
+When a video is completed:
+- Display a green checkmark.
+- Change lesson status to Completed.
+- Save the completion timestamp.
+- Preserve completion if the student logs out or returns later.
+
+Incomplete lessons should retain their saved progress.
+
+---
+
+# PART 8: TOPIC AND COURSE COMPLETION
+
+## 22. Topic Completion
+
+A topic can contain multiple video lessons.
+
+A topic should only be marked as completed when all its required video lessons have been completed.
+
+Example:
+
+Topic: Canva Fundamentals.
+
+Videos:
+- Introduction to Canva.
+- Understanding Templates.
+- Working with Elements.
+- Exporting Designs.
+
+The topic completion tick appears only when all four videos have been completed.
+
+Do not allow students to manually mark topics as completed.
+
+Calculate topic completion from the saved lesson completion records.
+
+## 23. Overall Course Completion
+
+A course is considered completed when:
+
+- All required topics are completed.
+- All required video lessons are completed.
+
+Display an overall course progress indicator in the student dashboard and course page.
+
+Example:
+
+4 out of 5 topics completed = 80% course progress.
+
+Calculate progress using the actual required lessons/topics, not manually entered values.
+
+---
+
+# PART 9: ASSIGNMENT MANAGEMENT SYSTEM
+
+## 24. Admin Assignment Configuration
+
+The administrator should be able to create and attach an assignment to a course.
+
+Add an Assignment section inside Course Management.
+
+### Assignment Creation Fields
+
+- Assignment title.
+- Assignment description.
+- Select associated course.
+- Assignment instructions.
+- Assignment file upload.
+- Optional due date.
+- Assignment status (Published/Unpublished).
+
+Allow the administrator to upload assignment documents such as PDFs, Word files or other supported formats.
+
+The assignment should belong to the selected course.
+
+## 25. Assignment Unlocking Logic
+
+THIS REQUIREMENT MUST BE IMPLEMENTED EXACTLY.
+
+Students must complete ALL required video lessons in ALL course topics before the assignment becomes available.
+
+Example:
+
+Course: Graphic Designing.
+
+- Topic 1: 3 videos.
+- Topic 2: 4 videos.
+- Topic 3: 2 videos.
+- Topic 4: 3 videos.
+
+Total: 12 videos.
+
+The assignment must remain locked until all 12 required videos have been completed.
+
+### Before Completion
+
+Display:
+
+- Assignment Locked.
+- A message explaining that all course lessons must be completed first.
+- Course completion progress.
+
+Example message:
+
+"Complete all video lessons in this course to unlock your assignment."
+
+The assignment download button must remain unavailable.
+
+### After Completion
+
+When every required video is completed:
+
+- Automatically unlock the assignment.
+- Display the assignment title.
+- Display assignment instructions.
+- Display downloadable assignment file.
+- Show due date, if configured.
+- Display Upload Completed Assignment button.
+
+The backend must independently verify course completion before allowing assignment downloads.
+
+Do not rely only on hiding or showing a button in the frontend.
+
+---
+
+# PART 10: STUDENT ASSIGNMENT SUBMISSION
+
+## 26. Student Assignment Page
+
+Once unlocked, the student should be able to:
+
+1. View assignment instructions.
+2. Download the assignment file.
+3. Complete the assignment.
+4. Upload the completed assignment.
+5. Submit it.
+
+### Submission Form
+
+Include:
+
+- Assignment title.
+- Course name.
+- Student name.
+- Student email.
+- File upload.
+- Submit button.
+
+Support appropriate file formats such as PDF and DOCX, with configurable file size limits.
+
+After submission:
+
+- Save the uploaded file securely.
+- Record submission date and time.
+- Associate submission with the correct student and assignment.
+- Display a submission confirmation.
+- Change submission status to Submitted.
+
+Prevent unauthorized students from submitting assignments for another student.
+
+## 27. Assignment Submission Status
+
+Display submission statuses:
+
+- Locked.
+- Available.
+- Not Submitted.
+- Submitted.
+- Reviewed (if the admin reviews it).
+
+Students should be able to view their submission status and submission date.
+
+Define how resubmission works. Allow the administrator to configure whether resubmissions are accepted.
+
+---
+
+# PART 11: ADMIN ASSIGNMENT REVIEW
+
+## 28. Admin Assignment Submissions
+
+Create a dedicated Assignment Submissions page in the admin dashboard.
+
+Display submissions in a table.
+
+Columns:
+
+- Student name.
+- Student email.
+- Course name.
+- Assignment title.
+- Submission date.
+- Submission status.
+- Submitted file.
+- Actions.
+
+Admin actions:
+
+- View submission details.
+- Download submitted file.
+- View student information.
+- View associated course.
+- Mark submission as reviewed.
+- Add review notes.
+- Change review status.
+
+The admin must be able to identify exactly which student submitted each assignment.
+
+Store every submission securely and maintain its relationship with the student and course.
+
+---
+
+# PART 12: CERTIFICATE MANAGEMENT
+
+## 29. Admin Certificate Configuration
+
+The administrator must be able to configure certificates for individual courses.
+
+Add a Certificate Configuration section inside course management.
+
+The admin should be able to:
+
+- Enable or disable certificates for a course.
+- Upload a certificate design/template.
+- Set certificate title.
+- Configure certificate text.
+- Select certificate layout.
+- Configure issuing details.
+- Preview the certificate.
+- Save certificate settings.
+
+Certificate details should support dynamic values:
+
+- Student name.
+- Course name.
+- Issue date.
+- Certificate ID.
+- Organization/platform name.
+
+Generate a unique certificate ID for each issued certificate.
+
+## 30. Certificate Unlocking and Issuing Logic
+
+THIS IS AN IMPORTANT WORKFLOW.
+
+The certificate must be associated with a particular course.
+
+The required workflow is:
+
+1. Student completes every required video lesson.
+2. All topics become completed.
+3. Course assignment becomes available.
+4. Student downloads the assignment.
+5. Student completes and uploads the assignment.
+6. The system records the assignment submission.
+7. The certificate becomes available to the student according to the configured certificate settings.
+
+IMPORTANT BUSINESS RULE:
+
+For this version, the certificate should become available immediately after successful assignment upload.
+
+The admin does NOT need to approve or review the assignment before the certificate becomes available.
+
+Assignment review is a separate administrative feature and must not block certificate issuance.
+
+If certificates are disabled for a course, do not issue one.
+
+## 31. Student Certificate Page
+
+Create a My Certificates section in the student dashboard.
+
+Display all certificates issued to the student.
+
+Each certificate card should include:
+
+- Certificate title.
+- Course name.
+- Issue date.
+- Certificate ID.
+- View Certificate.
+- Download Certificate.
+
+Generate a professional certificate design.
+
+The certificate should be available as a downloadable PDF.
+
+Ensure the certificate is linked to the correct student and course.
+
+Do not allow students to access another student's certificate.
+
+Do not issue duplicate certificates for repeated submissions of the same assignment.
+
+---
+
+# PART 13: COMPLETE ADMIN DASHBOARD
+
+## 32. Admin Navigation
+
+Create a collapsible sidebar containing:
+
+1. Overview.
+2. Students.
+3. Courses.
+4. Learning Materials.
+5. Assignments.
+6. Assignment Submissions.
+7. Subscription Plans.
+8. Certificates.
+9. Settings.
+10. Logout.
+
+Use clear icons and active navigation indicators.
+
+## 33. Admin Overview
+
+Display actual database statistics:
+
+- Total students.
+- Total courses.
+- Total free courses.
+- Total paid courses.
+- Total active subscriptions.
+- Total expired subscriptions.
+- Total assignments.
+- Total submitted assignments.
+- Total certificates issued.
+
+Also display:
+
+### Recent Activity
+- New student registrations.
+- Newly created courses.
+- Recent assignment submissions.
+- Recently issued certificates.
+
+### Quick Actions
+- Add Student.
+- Create Course.
+- Add Learning Material.
+- Create Subscription Plan.
+- Create Assignment.
+
+Keep the dashboard clean and avoid unnecessary charts.
+
+## 34. Student Management
+
+The admin should be able to:
+
+- View all registered students.
+- Search by name or email.
+- View student profile.
+- Edit student details.
+- Delete student with confirmation.
+- View selected subscription.
+- View subscription status.
+- View subscription dates.
+- Manually assign a plan.
+- View enrolled/available courses.
+- View assignment submissions.
+- View issued certificates.
+
+## 35. Course Management
+
+Provide a professional course listing table with:
+
+- Thumbnail.
+- Course title.
+- Category.
+- Free/Paid status.
+- Required plans.
+- Number of topics.
+- Number of video lessons.
+- Publication status.
+- Actions.
+
+Actions:
+- Add.
+- Edit.
+- Delete.
+- Publish/unpublish.
+- Manage topics.
+- Manage videos.
+- Manage learning materials.
+- Manage assignments.
+- Configure certificates.
+
+## 36. Assignment Management
+
+Allow the admin to:
+
+- Create assignments.
+- Attach assignments to courses.
+- Upload assignment documents.
+- Edit assignment instructions.
+- Set optional due dates.
+- Publish/unpublish assignments.
+- View student submissions.
+- Download submissions.
+- Review submissions.
+- Add feedback.
+
+## 37. Certificate Management
+
+Display:
+
+- Certificate title.
+- Associated course.
+- Number issued.
+- Certificate status.
+- Creation date.
+- Actions.
+
+Allow the admin to edit templates and course certificate settings.
+
+---
+
+# PART 14: COMPLETE STUDENT DASHBOARD
+
+## 38. Student Navigation
+
+Use a sidebar containing:
+
+1. Overview.
+2. My Courses.
+3. My Learning.
+4. My Assignments.
+5. My Subscription.
+6. My Certificates.
+7. My Profile.
+8. Logout.
+
+## 39. Student Overview
+
+Display:
+
+### Welcome Area
+- Student name.
+- Personalized welcome message.
+
+### Subscription Card
+- Plan name.
+- Active/Expired status.
+- Expiry date.
+- Remaining days.
+
+### Learning Overview
+- Available courses.
+- Courses in progress.
+- Completed courses.
+- Overall learning progress.
+
+### Continue Learning
+Display recently accessed courses with a Continue Learning button.
+
+### Upcoming Assignment Information
+Show assignment availability and due dates where applicable.
+
+### Recent Certificates
+Show recently issued certificates.
+
+## 40. My Courses
+
+Display courses the student is permitted to access.
+
+Each course card should include:
+
+- Course thumbnail.
+- Course title.
+- Short description.
+- Free/Paid label.
+- Number of topics.
+- Number of video lessons.
+- Completion percentage.
+- Course status.
+- Continue Learning button.
+
+Provide search and category filtering.
+
+## 41. My Assignments
+
+Display:
+
+- Course name.
+- Assignment title.
+- Assignment availability.
+- Submission status.
+- Submission date.
+- Download assignment.
+- Upload completed assignment.
+
+Locked assignments should clearly explain the completion requirements.
+
+## 42. My Certificates
+
+Display all issued certificates with preview and PDF download functionality.
+
+## 43. My Profile
+
+Include:
+
+- Profile photo.
+- Full name.
+- Email.
+- Account information.
+- Edit profile.
+- Change password.
+
+---
+
+# PART 15: DATABASE AND BACKEND ARCHITECTURE
+
+## 44. Required Data Structures
+
+Inspect the existing database before creating new tables.
+
+Reuse existing structures wherever possible.
+
+Ensure the application supports the following entities and relationships:
+
+### Students
+- Student ID.
+- Name.
+- Email.
+- Authentication reference.
+- Registration date.
+- Profile details.
+
+### Subscription Plans
+- Plan ID.
+- Name.
+- Description.
+- Price.
+- Currency.
+- Duration.
+- Duration unit.
+- Features.
+- Status.
+
+### Student Subscriptions
+- Subscription ID.
+- Student ID.
+- Plan ID.
+- Plan snapshots.
+- Start date.
+- Expiry date.
+- Status.
+
+### Courses
+- Course ID.
+- Title.
+- Description.
+- Thumbnail.
+- Category.
+- Access type.
+- Publication status.
+
+### Course Plan Access
+- Course ID.
+- Eligible subscription plan IDs.
+
+### Topics
+- Topic ID.
+- Course ID.
+- Title.
+- Description.
+- Display order.
+
+### Video Lessons
+- Video ID.
+- Course ID.
+- Topic ID.
+- Title.
+- Description.
+- Video source.
+- Video URL or storage reference.
+- Duration.
+- Display order.
+- Publication status.
+
+### Learning Materials
+- Material ID.
+- Course ID.
+- Topic ID.
+- Title.
+- Description.
+- File/link reference.
+- Material type.
+
+### Video Progress
+- Student ID.
+- Video ID.
+- Last watched position.
+- Actual tracked watch time.
+- Completion status.
+- Completion date.
+
+### Assignments
+- Assignment ID.
+- Course ID.
+- Title.
+- Description.
+- Instructions.
+- Assignment file.
+- Due date.
+- Publication status.
+
+### Assignment Submissions
+- Submission ID.
+- Assignment ID.
+- Student ID.
+- Uploaded file.
+- Submission date.
+- Status.
+- Review notes.
+
+### Certificates
+- Certificate ID.
+- Student ID.
+- Course ID.
+- Template reference.
+- Issue date.
+- Unique certificate number.
+- PDF reference.
+
+Use appropriate foreign keys, indexes, constraints and access policies.
+
+---
+
+# PART 16: SECURITY AND ACCESS CONTROL
+
+## 45. Role-Based Access
+
+The platform must distinguish between administrators and students.
+
+### Admin
+Can manage:
+- Students.
+- Courses.
+- Topics.
+- Videos.
+- Learning materials.
+- Subscription plans.
+- Assignments.
+- Submissions.
+- Certificates.
+
+### Student
+Can:
+- Access eligible courses.
+- Watch lessons.
+- View learning materials.
+- Track their own progress.
+- Download unlocked assignments.
+- Upload their own submissions.
+- View their own certificates.
+- View their own subscription.
+
+Students must not be able to:
+
+- Access admin routes.
+- Modify their subscription status.
+- Modify their expiry date.
+- Mark lessons as completed manually.
+- Access another student's files.
+- Download locked assignments.
+- Generate unauthorized certificates.
+
+## 46. Backend Enforcement
+
+All important access restrictions must be enforced on the backend.
+
+This includes:
+
+- Subscription validity.
+- Free/paid course permissions.
+- Eligible subscription plans.
+- Lesson completion.
+- Assignment unlocking.
+- Assignment submissions.
+- Certificate issuing.
+- Student-specific data access.
+
+Do not rely solely on frontend button visibility or conditional rendering.
+
+Use secure file storage and signed/authorized download links for private resources.
+
+---
+
+# PART 17: EXACT END-TO-END WORKFLOWS
+
+## 47. Complete Admin Workflow
+
+1. Admin logs into the admin dashboard.
+2. Creates subscription plans.
+3. Sets prices, durations and features.
+4. Activates plans.
+5. Creates a course.
+6. Selects Free or Paid.
+7. If Paid, assigns eligible plans.
+8. Adds topics to the course.
+9. Uploads or links video lessons.
+10. Assigns each video to its topic.
+11. Adds PDFs and other learning materials.
+12. Creates an assignment for the course.
+13. Uploads the assignment document.
+14. Configures a certificate for the course.
+15. Publishes the course.
+
+## 48. Complete Student Workflow
+
+1. Student visits the public website.
+2. Explores courses and learning plans.
+3. Registers an account.
+4. Selects a subscription plan.
+5. Receives an active subscription assignment without online payment processing.
+6. Enters the student dashboard.
+7. Views available free and eligible paid courses.
+8. Opens a course.
+9. Views its topics and video lessons.
+10. Watches each video completely.
+11. The system saves lesson completion.
+12. Completed videos display checkmarks.
+13. Once all videos in a topic are completed, that topic is marked completed.
+14. Once all required course lessons are completed, the course assignment unlocks.
+15. Student downloads the assignment.
+16. Completes the assignment.
+17. Uploads the completed file.
+18. The submission is recorded and visible in the admin dashboard.
+19. The certificate becomes available immediately after successful assignment submission, if certificates are enabled for the course.
+20. Student views and downloads the certificate.
+
+## 49. Complete Subscription Expiry Workflow
+
+1. Student's subscription reaches its expiry timestamp.
+2. Backend identifies the expired subscription.
+3. Status changes to Expired.
+4. Protected dashboard access is restricted.
+5. Paid course access is blocked.
+6. Protected learning materials become inaccessible.
+7. Student sees the expiry screen.
+8. Student can select a new available plan.
+9. Once a new plan is assigned, access is restored according to the new plan.
+
+Previous learning history, assignment submissions and issued certificates must remain preserved.
+
+---
+
+# PART 18: UI SCREEN-BY-SCREEN PRESENTATION
+
+## 50. Public Website Visual Layout
+
+The public website should have:
+
+- A clean top navigation bar.
+- A spacious hero section.
+- Featured course cards.
+- Pricing cards in a clear comparison layout.
+- An informative about section.
+- A professional footer.
+
+Use a consistent maximum content width and generous whitespace.
+
+## 51. Admin Interface Visual Layout
+
+Use a professional SaaS dashboard structure.
+
+Desktop:
+- Fixed/collapsible sidebar on the left.
+- Top header with page title and administrator profile.
+- Main content area.
+- Page-specific action buttons.
+- Tables and forms with consistent spacing.
+
+Mobile:
+- Collapsible navigation.
+- Responsive content.
+- Mobile-friendly forms.
+- Tables that adapt to narrow screens.
+
+The admin should be able to complete common tasks without navigating through unnecessary screens.
+
+## 52. Student Interface Visual Layout
+
+The student dashboard should feel like a dedicated learning environment.
+
+Use:
+- A simple sidebar.
+- A clear welcome section.
+- Subscription information card.
+- Course cards.
+- Progress indicators.
+- Continue Learning section.
+- Assignment and certificate sections.
+
+The learning page should prioritize the video player and topic navigation.
+
+Use clear visual states for:
+- Locked.
+- Available.
+- In Progress.
+- Completed.
+- Expired.
+
+---
+
+# PART 19: FINAL TESTING REQUIREMENTS
+
+## 53. Functional Testing
+
+Test all the following scenarios:
+
+### Subscription Tests
+- Student selects a one-month plan.
+- Student selects a longer-duration plan.
+- Subscription expiry is calculated correctly.
+- Expired student loses protected access.
+- New subscription restores eligible access.
+- Admin changes a plan.
+- Deactivated plan is no longer available to new registrations.
+- Existing student records remain preserved.
+
+### Course Tests
+- Free course is accessible to registered students.
+- Paid course is accessible to eligible active subscribers.
+- Paid course is inaccessible to ineligible plans.
+- Expired subscribers cannot access paid courses.
+- Unpublished courses are not publicly available.
+
+### Video Tests
+- Opening a video does not mark it complete.
+- Watching only part of a video does not mark it complete.
+- Seeking to the end does not automatically mark it complete.
+- Completing the required video playback marks it complete.
+- Progress is saved.
+- Returning to a lesson restores progress.
+- Completed videos retain their checkmarks.
+
+### Assignment Tests
+- Assignment remains locked while required lessons are incomplete.
+- Assignment unlocks after all required lessons are completed.
+- Unauthorized students cannot download it.
+- Student can upload a supported file.
+- Submission is associated with the correct student.
+- Admin can view and download the submission.
+
+### Certificate Tests
+- Certificate cannot be issued before assignment submission.
+- Certificate becomes available immediately after successful submission.
+- Admin review does not block certificate availability.
+- Disabled certificate settings prevent issuance.
+- Certificates are linked to the correct student and course.
+- Duplicate certificates are not generated.
+
+### Security Tests
+- Student cannot access admin pages.
+- Student cannot change subscription expiry.
+- Student cannot modify another student's progress.
+- Student cannot download another student's assignment submission.
+- Student cannot access unauthorized courses or certificates.
+
+---
+
+# FINAL EXPECTATION
+
+The final application must be a complete, connected and professionally designed Online Training Platform.
+
+Every feature must work with the actual database and backend.
+
+The entire student journey must be connected:
+
+REGISTRATION → PLAN SELECTION → DASHBOARD → COURSE ACCESS → VIDEO LEARNING → TOPIC COMPLETION → ASSIGNMENT UNLOCK → ASSIGNMENT SUBMISSION → CERTIFICATE ISSUANCE.
+
+The administrator must have complete control over:
+
+STUDENTS → SUBSCRIPTION PLANS → COURSES → TOPICS → VIDEOS → LEARNING MATERIALS → ASSIGNMENTS → SUBMISSIONS → CERTIFICATES.
+
+Do not stop after designing the UI. Implement the underlying functionality, database relationships, validation, permissions and business logic.
+
+Before finishing, provide a summary of:
+- Features implemented.
+- Existing features preserved.
+- Database changes.
+- Backend changes.
+- Any external service configuration required.
+- Any remaining limitations or incomplete functionality.
+
+The result should be production-quality, reliable, responsive and ready for real students and administrators.
