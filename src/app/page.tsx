@@ -31,12 +31,21 @@ export default function Home() {
   useEffect(() => {
     if (authLoading) return;
     const hash = window.location.hash.replace(/^#/, "");
-    if (user?.role === "ADMIN" && !hash.startsWith("/admin")) {
-      window.location.hash = "/admin";
-    } else if (user?.role === "STUDENT" && hash.startsWith("/admin")) {
-      window.location.hash = "/student";
-    } else if (!user && (hash.startsWith("/admin") || hash.startsWith("/student"))) {
-      window.location.hash = "/";
+    if (user?.role === "ADMIN") {
+      // Admin should always be in the admin dashboard (unless already there)
+      if (!hash.startsWith("/admin")) {
+        window.location.hash = "/admin";
+      }
+    } else if (user?.role === "STUDENT") {
+      // Student should be in student dashboard (never admin)
+      if (hash.startsWith("/admin") || hash.startsWith("/login") || hash.startsWith("/register")) {
+        window.location.hash = "/student";
+      }
+    } else {
+      // Not logged in — redirect away from protected areas
+      if (hash.startsWith("/admin") || hash.startsWith("/student")) {
+        window.location.hash = "/";
+      }
     }
   }, [user, authLoading]);
 

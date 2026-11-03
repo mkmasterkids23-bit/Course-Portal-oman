@@ -25,10 +25,19 @@ export function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      await apiPost("/api/auth/login", { email, password });
+      const result = await apiPost<{ user: { role: string } }>("/api/auth/login", { email, password });
       toast({ title: "Welcome back!", description: "You have been logged in." });
+      // Refresh the user state in the store (fetches /api/auth/me with the new cookie)
       await refreshUser();
-      // The dashboard shell will handle routing based on role
+      // Explicitly navigate to the correct dashboard based on role.
+      // This works together with the page.tsx effect to guarantee the right
+      // dashboard renders even if there's a timing issue with state updates.
+      const role = result?.user?.role;
+      if (role === "ADMIN") {
+        navigate(["admin", "overview"]);
+      } else if (role === "STUDENT") {
+        navigate(["student", "overview"]);
+      }
     } catch (e: any) {
       setError(e.message || "Login failed");
     } finally {
