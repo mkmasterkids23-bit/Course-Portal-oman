@@ -19,6 +19,7 @@ import { toast } from "@/hooks/use-toast";
 import {
   ArrowLeft, PlayCircle, CheckCircle2, Lock, FileText, Download, Link as LinkIcon,
   Upload, Award, ClipboardList, AlertTriangle, Clock, Video as VideoIcon, Info,
+  Maximize2, Minimize2, X,
 } from "lucide-react";
 import { formatDateTime } from "@/types";
 
@@ -62,7 +63,7 @@ interface MaterialItem {
 
 interface AssignmentInfo {
   id: string;
-  title: string;
+  title: string | null;
   description: string | null;
   instructions: string | null;
   fileUrl: string | null;
@@ -307,13 +308,21 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
             </Card>
           )}
 
-          {/* Assignment panel */}
-          {course.assignment && (
+          {/* Assignment panel — completely hidden until ALL videos are completed.
+              Before completion, show a locked placeholder that does NOT reveal
+              the assignment title, description, or instructions. */}
+          {course.assignment && course.courseCompletion.allCompleted ? (
             <AssignmentPanel
               course={course}
               onSubmitted={handleSubmissionSuccess}
             />
-          )}
+          ) : course.assignment ? (
+            <LockedAssignmentCard
+              completedVideos={course.courseCompletion.completedVideos}
+              totalVideos={course.courseCompletion.totalVideos}
+              percent={course.courseCompletion.percent}
+            />
+          ) : null}
 
           {/* All materials (course-level) */}
           {course.materials.length > 0 && (
@@ -443,6 +452,7 @@ function VideoPlayer({
   const durationRef = useRef<number>(0);
   const lastPostRef = useRef<number>(0);
   const resumeAppliedRef = useRef<boolean>(false);
+  const [expanded, setExpanded] = useState(false);
 
   // YouTube completion timer
   const ytStartRef = useRef<number | null>(null);
@@ -633,101 +643,174 @@ function VideoPlayer({
 
   // Render the right player
   return (
-    <Card className="overflow-hidden p-0">
-      <div className="bg-black aspect-video w-full flex items-center justify-center">
-        {video.source === "YOUTUBE" && ytEmbedUrl ? (
-          <iframe
-            key={video.id}
-            src={ytEmbedUrl}
-            title={video.title}
-            className="w-full h-full"
-            frameBorder={0}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-          />
-        ) : (
-          <video
-            key={video.id}
-            ref={videoRef}
-            src={video.videoUrl}
-            poster={video.thumbnail || undefined}
-            controls
-            className="w-full h-full"
-            onLoadedMetadata={handleLoadedMetadata}
-            onTimeUpdate={handleTimeUpdate}
-            onSeeked={handleSeeked}
-            onEnded={handleEnded}
-          />
-        )}
-      </div>
-      <CardContent className="p-5 space-y-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <h2 className="font-heading text-lg font-semibold text-foreground">{video.title}</h2>
-            {video.description && (
-              <p className="text-sm text-muted-foreground mt-1.5">{video.description}</p>
-            )}
+    <>
+      {/* Expanded fullscreen overlay — rendered as a portal-like fixed layer */}
+      {expanded && (
+        <div className="fixed inset-0 z-50 bg-black flex flex-col">
+          {/* Top bar with title + close */}
+          <div className="flex items-center justify-between px-4 py-3 bg-black/80 backdrop-blur">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-white truncate">{video.title}</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {localCompleted && (
+                <Badge className="bg-success/20 text-success border-transparent">
+                  <CheckCircle2 className="h-3 w-3" /> Completed
+                </Badge>
+              )}
+              <button
+                onClick={() => setExpanded(false)}
+                className="flex items-center gap-1.5 rounded-md bg-white/10 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/20 transition-colors"
+                aria-label="Exit fullscreen"
+              >
+                <Minimize2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Exit fullscreen</span>
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {posting && (
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <Clock className="h-3 w-3 animate-spin" /> Saving...
-              </span>
-            )}
-            {localCompleted ? (
-              <Badge className="bg-success/15 text-success border-transparent">
-                <CheckCircle2 className="h-3 w-3" /> Completed
-              </Badge>
-            ) : (
-              <Badge variant="outline" className="text-muted-foreground">
-                <PlayCircle className="h-3 w-3" /> In progress
-              </Badge>
-            )}
+          {/* Video fills the remaining space */}
+          <div className="flex-1 flex items-center justify-center p-2 sm:p-4">
+            <div className="relative w-full h-full flex items-center justify-center">
+              {video.source === "YOUTUBE" && ytEmbedUrl ? (
+                <iframe
+                  key={video.id}
+                  src={ytEmbedUrl}
+                  title={video.title}
+                  className="w-full h-full max-w-[1600px]"
+                  style={{ aspectRatio: "16 / 9" }}
+                  frameBorder={0}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              ) : (
+                <video
+                  key={video.id}
+                  ref={videoRef}
+                  src={video.videoUrl}
+                  poster={video.thumbnail || undefined}
+                  controls
+                  autoPlay
+                  className="w-full h-full max-h-full object-contain"
+                  onLoadedMetadata={handleLoadedMetadata}
+                  onTimeUpdate={handleTimeUpdate}
+                  onSeeked={handleSeeked}
+                  onEnded={handleEnded}
+                />
+              )}
+            </div>
           </div>
         </div>
+      )}
 
-        {/* YouTube: explain limitation + show manual mark-complete */}
-        {isYouTube && (
-          <div className="rounded-lg border border-warning/30 bg-warning/5 p-3 space-y-2">
-            <div className="flex items-start gap-2">
-              <Info className="h-4 w-4 text-warning shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-foreground">
-                  YouTube video tracking
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  YouTube videos cannot report precise playback events to us. The
-                  &quot;Mark as complete&quot; button below unlocks after you have
-                  kept this page open for at least 85% of the video&apos;s duration.
-                </p>
-              </div>
+      {/* Default compact view */}
+      <Card className="overflow-hidden p-0">
+        {/* Compact video area — small, with expand button */}
+        <div className="relative bg-black rounded-t-lg overflow-hidden mx-auto" style={{ maxWidth: "640px" }}>
+          <div className="aspect-video w-full flex items-center justify-center relative">
+            {video.source === "YOUTUBE" && ytEmbedUrl ? (
+              <iframe
+                key={video.id}
+                src={ytEmbedUrl}
+                title={video.title}
+                className="w-full h-full"
+                frameBorder={0}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            ) : (
+              <video
+                key={video.id}
+                ref={videoRef}
+                src={video.videoUrl}
+                poster={video.thumbnail || undefined}
+                controls
+                className="w-full h-full"
+                onLoadedMetadata={handleLoadedMetadata}
+                onTimeUpdate={handleTimeUpdate}
+                onSeeked={handleSeeked}
+                onEnded={handleEnded}
+              />
+            )}
+            {/* Expand button overlay */}
+            <button
+              onClick={() => setExpanded(true)}
+              className="absolute bottom-2 right-2 flex items-center gap-1.5 rounded-md bg-black/70 px-2.5 py-1.5 text-xs font-medium text-white backdrop-blur hover:bg-black/90 transition-colors z-10"
+              aria-label="Expand video to fullscreen"
+            >
+              <Maximize2 className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Expand</span>
+            </button>
+          </div>
+        </div>
+        <CardContent className="p-5 space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h2 className="font-heading text-lg font-semibold text-foreground">{video.title}</h2>
+              {video.description && (
+                <p className="text-sm text-muted-foreground mt-1.5">{video.description}</p>
+              )}
             </div>
-            <div className="flex items-center gap-2 pl-6">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span tabIndex={0} className="inline-flex">
-                    <Button
-                      size="sm"
-                      onClick={markYtComplete}
-                      disabled={!ytCanMarkComplete || localCompleted || posting}
-                      className="gap-2"
-                    >
-                      <CheckCircle2 className="h-4 w-4" />
-                      {localCompleted ? "Completed" : ytCanMarkComplete ? "Mark as complete" : `Keep watching (${Math.round((ytWatchSecondsRef.current / Math.max(1, durationRef.current)) * 100)}%)`}
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {ytCanMarkComplete
-                    ? "You can now mark this video complete."
-                    : "Available after watching at least 85% of the video duration."}
-                </TooltipContent>
-              </Tooltip>
+            <div className="flex items-center gap-2 shrink-0">
+              {posting && (
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Clock className="h-3 w-3 animate-spin" /> Saving...
+                </span>
+              )}
+              {localCompleted ? (
+                <Badge className="bg-success/15 text-success border-transparent">
+                  <CheckCircle2 className="h-3 w-3" /> Completed
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-muted-foreground">
+                  <PlayCircle className="h-3 w-3" /> In progress
+                </Badge>
+              )}
             </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          {/* YouTube: explain limitation + show manual mark-complete */}
+          {isYouTube && (
+            <div className="rounded-lg border border-warning/30 bg-warning/5 p-3 space-y-2">
+              <div className="flex items-start gap-2">
+                <Info className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    YouTube video tracking
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    YouTube videos cannot report precise playback events to us. The
+                    &quot;Mark as complete&quot; button below unlocks after you have
+                    kept this page open for at least 85% of the video&apos;s duration.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 pl-6">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span tabIndex={0} className="inline-flex">
+                      <Button
+                        size="sm"
+                        onClick={markYtComplete}
+                        disabled={!ytCanMarkComplete || localCompleted || posting}
+                        className="gap-2"
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        {localCompleted ? "Completed" : ytCanMarkComplete ? "Mark as complete" : `Keep watching (${Math.round((ytWatchSecondsRef.current / Math.max(1, durationRef.current)) * 100)}%)`}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {ytCanMarkComplete
+                      ? "You can now mark this video complete."
+                      : "Available after watching at least 85% of the video duration."}
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </>
   );
 }
 
@@ -761,6 +844,46 @@ function MaterialRow({ material }: { material: MaterialItem }) {
         </span>
       </a>
     </li>
+  );
+}
+
+/* ===================== Locked Assignment Placeholder ===================== */
+
+function LockedAssignmentCard({
+  completedVideos,
+  totalVideos,
+  percent,
+}: {
+  completedVideos: number;
+  totalVideos: number;
+  percent: number;
+}) {
+  return (
+    <Card className="border-dashed">
+      <CardContent className="p-6">
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-muted-foreground shrink-0">
+            <Lock className="h-6 w-6" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-heading text-base font-semibold text-foreground">
+              Assignment Locked
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Complete all video lessons in this course to unlock your assignment.
+              The assignment details will appear here once you finish every lesson.
+            </p>
+            <div className="mt-4">
+              <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
+                <span>{completedVideos}/{totalVideos} lessons completed</span>
+                <span className="font-medium text-foreground">{percent}%</span>
+              </div>
+              <Progress value={percent} className="h-2" />
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

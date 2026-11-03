@@ -88,6 +88,8 @@ export async function GET(
     );
 
     const stats = await getCourseCompletionStats(user.id, course.id);
+    const allCompleted =
+      stats.totalVideos > 0 && stats.completedVideos === stats.totalVideos;
 
     const result = {
       id: course.id,
@@ -139,18 +141,37 @@ export async function GET(
         fileUrl: m.fileUrl,
         topic: m.topic,
       })),
+      // ─── Assignment gating ───
+      // The assignment details (title, description, instructions, fileUrl) are
+      // ONLY returned when the student has completed ALL required video lessons.
+      // Before that, we return a minimal placeholder so the frontend can show a
+      // "locked" card without exposing any assignment content. This is enforced
+      // on the backend so tech-savvy users can't bypass it by inspecting API
+      // responses.
       assignment:
         course.assignments[0] !== undefined
-          ? {
-              id: course.assignments[0].id,
-              title: course.assignments[0].title,
-              description: course.assignments[0].description,
-              instructions: course.assignments[0].instructions,
-              fileUrl: course.assignments[0].fileUrl,
-              dueDate: course.assignments[0].dueDate,
-              isPublished: course.assignments[0].isPublished,
-              allowResubmission: course.assignments[0].allowResubmission,
-            }
+          ? allCompleted
+            ? {
+                id: course.assignments[0].id,
+                title: course.assignments[0].title,
+                description: course.assignments[0].description,
+                instructions: course.assignments[0].instructions,
+                fileUrl: course.assignments[0].fileUrl,
+                dueDate: course.assignments[0].dueDate,
+                isPublished: course.assignments[0].isPublished,
+                allowResubmission: course.assignments[0].allowResubmission,
+              }
+            : {
+                // Locked placeholder — no content revealed
+                id: course.assignments[0].id,
+                title: null,
+                description: null,
+                instructions: null,
+                fileUrl: null,
+                dueDate: null,
+                isPublished: course.assignments[0].isPublished,
+                allowResubmission: course.assignments[0].allowResubmission,
+              }
           : null,
       submission: submissionByAssignment.get(course.assignments[0]?.id ?? "")
         ? {
@@ -170,8 +191,7 @@ export async function GET(
         totalVideos: stats.totalVideos,
         completedVideos: stats.completedVideos,
         percent: stats.percent,
-        allCompleted:
-          stats.totalVideos > 0 && stats.completedVideos === stats.totalVideos,
+        allCompleted,
       },
       certificateTemplate: course.certificateTemplate
         ? {
