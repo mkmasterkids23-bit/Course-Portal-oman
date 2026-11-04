@@ -57,12 +57,21 @@ export async function GET() {
           video: { select: { title: true } },
         },
       });
+      // Fetch the first published video's thumbnail for fallback
+      const firstVideo = await db.videoLesson.findFirst({
+        where: { courseId: c.id, isPublished: true },
+        orderBy: { displayOrder: "asc" },
+        select: { thumbnail: true, videoUrl: true, source: true },
+      });
 
       accessibleCourses.push({
         id: c.id,
         title: c.title,
         description: c.description,
-        thumbnail: c.thumbnail,
+        // Fall back to first video's thumbnail when course has no custom thumbnail
+        thumbnail: c.thumbnail || firstVideo?.thumbnail || null,
+        firstVideoUrl: firstVideo?.videoUrl || null,
+        firstVideoSource: firstVideo?.source || null,
         category: c.category,
         accessType: c.accessType as "FREE" | "PAID",
         topicsCount: stats.totalTopics,

@@ -48,6 +48,7 @@ import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
 import { toast } from "@/hooks/use-toast";
 import { formatDate, type SubscriptionPlanPublic } from "@/types";
+import { CourseThumbnail } from "@/components/shared/course-thumbnail";
 import {
   BookOpen, Search, Plus, MoreHorizontal, Pencil, Trash2, Settings2,
   Eye, EyeOff, Upload, PlayCircle, Video, Layers, CreditCard,
@@ -571,17 +572,13 @@ function CourseCard({
     <Card className="group flex flex-col overflow-hidden border-border p-0 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-accent/30">
       {/* Cover image */}
       <button onClick={onManage} className="relative h-36 overflow-hidden bg-muted text-left">
-        {course.thumbnail ? (
-          <img
-            src={course.thumbnail}
-            alt={course.title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5">
-            <PlayCircle className="h-10 w-10 text-muted-foreground/40" />
-          </div>
-        )}
+        <CourseThumbnail
+          thumbnail={course.thumbnail}
+          firstVideoUrl={(course as any).firstVideoUrl}
+          firstVideoSource={(course as any).firstVideoSource}
+          alt={course.title}
+          className="h-full w-full"
+        />
         {/* Badge overlays */}
         <div className="absolute top-3 left-3 flex gap-1.5">
           {course.accessType === "FREE" ? (

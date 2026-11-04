@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
+import { CourseThumbnail } from "@/components/shared/course-thumbnail";
 import { useApiFetch } from "@/hooks/use-api";
 import {
   BookOpen, PlayCircle, ClipboardList, Award, TrendingUp, ArrowRight,
@@ -282,17 +283,14 @@ export function StudentOverview() {
                 >
                   <div className="flex gap-3">
                     <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border">
-                      {c.thumbnail ? (
-                        <img src={c.thumbnail} alt="" className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105" />
-                      ) : (
-                        <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
-                          <PlayCircle className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                      )}
-                      {/* Play overlay on hover */}
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors duration-200">
-                        <PlayCircle className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                      </div>
+                      <CourseThumbnail
+                        thumbnail={c.thumbnail}
+                        firstVideoUrl={(c as any).firstVideoUrl}
+                        firstVideoSource={(c as any).firstVideoSource}
+                        alt={c.courseTitle}
+                        className="h-full w-full"
+                        showPlayOverlay
+                      />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-foreground line-clamp-1 group-hover:text-accent transition-colors">

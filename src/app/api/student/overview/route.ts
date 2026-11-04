@@ -77,10 +77,18 @@ export async function GET() {
       });
       const courseMeta = allCourses.find((c) => c.id === cid);
       if (lastProgress && courseMeta) {
+        // Fetch first video thumbnail for fallback
+        const firstVideo = await db.videoLesson.findFirst({
+          where: { courseId: cid, isPublished: true },
+          orderBy: { displayOrder: "asc" },
+          select: { thumbnail: true, videoUrl: true, source: true },
+        });
         continueLearning.push({
           courseId: cid,
           courseTitle: courseMeta.title,
-          thumbnail: courseMeta.thumbnail,
+          thumbnail: courseMeta.thumbnail || firstVideo?.thumbnail || null,
+          firstVideoUrl: firstVideo?.videoUrl || null,
+          firstVideoSource: firstVideo?.source || null,
           lastVideoId: lastProgress.videoId,
           lastVideoTitle: lastProgress.video.title,
           percent: stats.percent,

@@ -23,25 +23,36 @@ export async function GET(req: Request) {
       orderBy: { createdAt: "desc" },
       include: {
         topics: { select: { id: true } },
-        videos: { select: { id: true } },
+        videos: {
+          where: { isPublished: true },
+          orderBy: { displayOrder: "asc" },
+          take: 1,
+          select: { thumbnail: true, videoUrl: true, source: true },
+        },
         planAccess: { include: { plan: { select: { name: true } } } },
       },
     });
 
     return NextResponse.json({
-      courses: courses.map((c) => ({
-        id: c.id,
-        title: c.title,
-        description: c.description,
-        thumbnail: c.thumbnail,
-        category: c.category,
-        accessType: c.accessType,
-        isPublished: c.isPublished,
-        createdAt: c.createdAt,
-        topicsCount: c.topics.length,
-        videosCount: c.videos.length,
-        planNames: c.planAccess.map((p) => p.plan.name),
-      })),
+      courses: courses.map((c) => {
+        const firstVideo = c.videos[0];
+        return {
+          id: c.id,
+          title: c.title,
+          description: c.description,
+          // Fall back to first video's thumbnail when course has no custom thumbnail
+          thumbnail: c.thumbnail || firstVideo?.thumbnail || null,
+          firstVideoUrl: firstVideo?.videoUrl || null,
+          firstVideoSource: firstVideo?.source || null,
+          category: c.category,
+          accessType: c.accessType,
+          isPublished: c.isPublished,
+          createdAt: c.createdAt,
+          topicsCount: c.topics.length,
+          videosCount: c.videos.length,
+          planNames: c.planAccess.map((p) => p.plan.name),
+        };
+      }),
     });
   } catch (e) {
     const authErr = await handleAuthError(e);

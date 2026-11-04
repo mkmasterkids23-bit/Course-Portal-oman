@@ -13,6 +13,7 @@ import { useApiFetch } from "@/hooks/use-api";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { CourseThumbnail } from "@/components/shared/course-thumbnail";
 import {
   Search, BookOpen, Video, PlayCircle, CheckCircle2, AlertTriangle,
   ArrowRight, ShieldCheck,
@@ -221,13 +222,14 @@ function CourseCard({ course, onOpen }: { course: CourseItem; onOpen: () => void
     >
       {/* Thumbnail */}
       <div className="relative h-44 overflow-hidden bg-muted">
-        {course.thumbnail ? (
-          <img src={course.thumbnail} alt={course.title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
-        ) : (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/10 via-accent/5 to-accent/10">
-            <PlayCircle className="h-12 w-12 text-muted-foreground/70" />
-          </div>
-        )}
+        <CourseThumbnail
+          thumbnail={course.thumbnail}
+          firstVideoUrl={(course as any).firstVideoUrl}
+          firstVideoSource={(course as any).firstVideoSource}
+          alt={course.title}
+          className="h-full w-full"
+          showPlayOverlay
+        />
         {/* Subtle gradient overlay for badge legibility */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
         <div className="absolute top-3 left-3 flex gap-1.5">

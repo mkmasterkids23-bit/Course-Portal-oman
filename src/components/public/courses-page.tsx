@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
+import { CourseThumbnail } from "@/components/shared/course-thumbnail";
 import { useApiFetch } from "@/hooks/use-api";
-import { BookOpen, Video, ShieldCheck, Search, Lock, PlayCircle, SlidersHorizontal } from "lucide-react";
+import { BookOpen, Video, ShieldCheck, Search, Lock, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CoursePublic } from "@/types";
 
@@ -122,17 +123,14 @@ export function CoursesPage() {
               onClick={() => navigate(["register"])}
             >
               <div className="relative h-44 overflow-hidden bg-muted">
-                {c.thumbnail ? (
-                  <img
-                    src={c.thumbnail}
-                    alt={c.title}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
-                    <PlayCircle className="h-10 w-10 text-muted-foreground" />
-                  </div>
-                )}
+                <CourseThumbnail
+                  thumbnail={c.thumbnail}
+                  firstVideoUrl={(c as any).firstVideoUrl}
+                  firstVideoSource={(c as any).firstVideoSource}
+                  alt={c.title}
+                  className="h-full w-full"
+                  showPlayOverlay
+                />
                 <div className="absolute top-3 left-3 flex gap-1.5">
                   <Badge
                     variant={c.accessType === "FREE" ? "secondary" : "default"}

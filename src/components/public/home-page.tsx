@@ -6,9 +6,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
+import { CourseThumbnail } from "@/components/shared/course-thumbnail";
 import { useApiFetch } from "@/hooks/use-api";
 import {
-  ArrowRight, PlayCircle, BookOpen, Award, Users, Clock, CheckCircle2,
+  ArrowRight, BookOpen, Award, Users, Clock, CheckCircle2,
   Sparkles, GraduationCap, Video, FileText, ShieldCheck, Star, TrendingUp
 } from "lucide-react";
 import { formatPrice, durationUnitLabel, type CoursePublic, type SubscriptionPlanPublic } from "@/types";
@@ -384,17 +385,14 @@ function CourseCardMini({ course, onOpen }: { course: CoursePublic; onOpen: () =
       onClick={onOpen}
     >
       <div className="relative h-44 overflow-hidden bg-muted">
-        {course.thumbnail ? (
-          <img
-            src={course.thumbnail}
-            alt={course.title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
-            <PlayCircle className="h-10 w-10 text-muted-foreground" />
-          </div>
-        )}
+        <CourseThumbnail
+          thumbnail={course.thumbnail}
+          firstVideoUrl={(course as any).firstVideoUrl}
+          firstVideoSource={(course as any).firstVideoSource}
+          alt={course.title}
+          className="h-full w-full"
+          showPlayOverlay
+        />
         <div className="absolute top-3 left-3 flex gap-1.5">
           <Badge
             variant={course.accessType === "FREE" ? "secondary" : "default"}
