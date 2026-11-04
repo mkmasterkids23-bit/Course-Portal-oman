@@ -21,7 +21,7 @@ export function AboutPage() {
             <span>Professional online training since 2021</span>
           </div>
           <h1 className="font-heading text-3xl font-semibold tracking-tight text-foreground md:text-[40px] md:leading-[1.1]">
-            About LearnCourse
+            About CourseLearn
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground leading-relaxed md:text-lg">
             We build learning experiences designed for serious outcomes. Structured courses,
@@ -40,7 +40,7 @@ export function AboutPage() {
               Make professional learning accountable
             </h2>
             <p className="text-sm leading-relaxed text-muted-foreground md:text-base">
-              Too many online courses reward attendance instead of mastery. LearnCourse was
+              Too many online courses reward attendance instead of mastery. CourseLearn was
               founded on a different idea: every lesson should be genuinely completed before it
               counts. Every assignment should be a real application of knowledge. Every certificate
               should represent actual work.
@@ -145,7 +145,7 @@ export function AboutPage() {
             Start learning today
           </h2>
           <p className="mx-auto mt-2 max-w-xl text-sm text-primary-foreground/80 md:text-base">
-            Join thousands of learners building real skills with LearnCourse.
+            Join thousands of learners building real skills with CourseLearn.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Button

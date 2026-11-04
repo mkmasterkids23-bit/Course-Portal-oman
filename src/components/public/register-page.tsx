@@ -58,7 +58,7 @@ export function RegisterPage() {
       await apiPost("/api/auth/register", { name, email, password, planId: selectedPlanId });
       toast({
         title: "Account created!",
-        description: `Welcome to LearnCourse. Your subscription is now active.`,
+        description: `Welcome to CourseLearn. Your subscription is now active.`,
       });
       await refreshUser();
     } catch (e: any) {
@@ -98,7 +98,7 @@ export function RegisterPage() {
                 Create your account
               </h1>
               <p className="text-sm text-muted-foreground">
-                Join LearnCourse and start your professional learning journey
+                Join CourseLearn and start your professional learning journey
               </p>
             </div>
           </div>

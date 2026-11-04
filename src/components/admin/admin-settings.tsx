@@ -198,7 +198,7 @@ export function AdminSettings() {
           </ul>
           <Separator className="my-4" />
           <p className="text-xs text-muted-foreground">
-            LearnCourse — Online Training &amp; Course Management Platform.
+            CourseLearn — Online Training &amp; Course Management Platform.
           </p>
         </CardContent>
       </Card>

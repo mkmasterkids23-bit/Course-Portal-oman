@@ -45,7 +45,7 @@ export async function GET(
     const safeCourse = cert.course.title
       .replace(/[^a-zA-Z0-9-_]+/g, "_")
       .slice(0, 40);
-    const filename = `LearnCourse-Certificate-${safeStudent}-${safeCourse}.pdf`;
+    const filename = `CourseLearn-Certificate-${safeStudent}-${safeCourse}.pdf`;
 
     // Build the certificate HTML (no print toolbar — we're generating a PDF directly)
     const html = buildCertificateHtml(

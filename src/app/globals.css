@@ -217,6 +217,68 @@
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
+
+  /* Staggered list entrance — applies incremental delay to children */
+  .stagger-children > * {
+    animation: entrance 0.35s ease-out both;
+  }
+  .stagger-children > *:nth-child(1) { animation-delay: 0.02s; }
+  .stagger-children > *:nth-child(2) { animation-delay: 0.06s; }
+  .stagger-children > *:nth-child(3) { animation-delay: 0.10s; }
+  .stagger-children > *:nth-child(4) { animation-delay: 0.14s; }
+  .stagger-children > *:nth-child(5) { animation-delay: 0.18s; }
+  .stagger-children > *:nth-child(6) { animation-delay: 0.22s; }
+  .stagger-children > *:nth-child(n+7) { animation-delay: 0.26s; }
+
+  /* Page content transition */
+  .animate-page-in {
+    animation: page-in 0.25s ease-out both;
+  }
+  @keyframes page-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Smooth scale-in for cards on hover */
+  .hover-lift {
+    @apply transition-all duration-200;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+  }
+
+  /* Progress bar smooth fill — applies to all Progress components globally */
+  [data-slot="progress-indicator"] {
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  /* Button press feedback */
+  button:active:not(:disabled) {
+    transform: scale(0.97);
+    transition: transform 0.1s ease;
+  }
+
+  /* Link underline animation */
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.2s ease;
+  }
+  .link-underline:hover {
+    background-size: 100% 1px;
+  }
+}
+
+/* ─── Reduced motion: disable animations for accessibility ─── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Custom scrollbar */

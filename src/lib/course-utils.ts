@@ -171,7 +171,7 @@ export const DEFAULT_CERTIFICATE = {
   title: "Certificate of Completion",
   bodyText:
     "This certificate is proudly presented to {{studentName}} for successfully completing the course {{courseName}}.",
-  organizationName: "LearnCourse",
+  organizationName: "CourseLearn",
 };
 
 /**

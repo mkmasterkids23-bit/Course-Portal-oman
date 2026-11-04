@@ -50,7 +50,7 @@ export function HomePage() {
                 <span className="block text-accent">Get Certified.</span>
               </h1>
               <p className="text-base text-muted-foreground max-w-xl leading-relaxed md:text-lg">
-                LearnCourse delivers structured online training with recorded video lessons,
+                CourseLearn delivers structured online training with recorded video lessons,
                 hands-on assignments and verifiable completion certificates — designed for working
                 professionals and dedicated learners.
               </p>
@@ -274,12 +274,12 @@ export function HomePage() {
       <section id="about" className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-16">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
           <div className="space-y-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-accent">About LearnCourse</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-accent">About CourseLearn</p>
             <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
               A learning experience built for serious outcomes
             </h2>
             <p className="text-sm leading-relaxed text-muted-foreground md:text-base">
-              LearnCourse is built on a simple belief: real learning requires structure,
+              CourseLearn is built on a simple belief: real learning requires structure,
               accountability and measurable progress. We organize every course into clear topics,
               pair recorded video lessons with hands-on assignments, and issue verifiable
               certificates that recognize genuine completion — not just attendance.

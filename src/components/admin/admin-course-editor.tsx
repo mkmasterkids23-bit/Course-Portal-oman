@@ -1312,7 +1312,7 @@ function CertificateTab({ course, onRefresh }: { course: CourseDetail; onRefresh
     template?.bodyText ||
       "This certificate is proudly presented to {{studentName}} for successfully completing the course {{courseName}}."
   );
-  const [organizationName, setOrganizationName] = useState(template?.organizationName || "LearnCourse");
+  const [organizationName, setOrganizationName] = useState(template?.organizationName || "CourseLearn");
   const [layout, setLayout] = useState<"CLASSIC" | "MODERN" | "MINIMAL">(template?.layout || "CLASSIC");
   const [saving, setSaving] = useState(false);
 

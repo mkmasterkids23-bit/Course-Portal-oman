@@ -93,7 +93,7 @@ export function PublicFooter() {
                 <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-light-teal text-accent">
                   <Mail className="h-3.5 w-3.5" />
                 </span>
-                <span className="text-muted-foreground">hello@learncourse.dev</span>
+                <span className="text-muted-foreground">hello@courselearn.dev</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-light-teal text-accent">
@@ -113,7 +113,7 @@ export function PublicFooter() {
 
         {/* Copyright bar */}
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row">
-          <p>© {new Date().getFullYear()} LearnCourse. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} CourseLearn. All rights reserved.</p>
           <div className="flex items-center gap-1.5">
             <GraduationCap className="h-3.5 w-3.5 text-accent" />
             <span>Professional online training &amp; certification</span>

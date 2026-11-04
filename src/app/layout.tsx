@@ -16,9 +16,9 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "LearnCourse — Professional Online Training Platform",
+  title: "CourseLearn — Professional Online Training Platform",
   description:
-    "LearnCourse is a professional online training platform offering structured courses, recorded video lessons, assignments and verifiable completion certificates.",
+    "CourseLearn is a professional online training platform offering structured courses, recorded video lessons, assignments and verifiable completion certificates.",
   keywords: [
     "online training",
     "course platform",
@@ -27,15 +27,15 @@ export const metadata: Metadata = {
     "certificates",
     "professional training",
   ],
-  authors: [{ name: "LearnCourse" }],
+  authors: [{ name: "CourseLearn" }],
   icons: {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
   },
   openGraph: {
-    title: "LearnCourse",
+    title: "CourseLearn",
     description:
       "Professional online training platform with structured courses, video lessons and verifiable certificates.",
-    siteName: "LearnCourse",
+    siteName: "CourseLearn",
     type: "website",
   },
 };

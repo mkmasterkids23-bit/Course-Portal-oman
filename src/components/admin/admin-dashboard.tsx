@@ -86,7 +86,7 @@ export function AdminDashboard() {
 
       <div className="lg:pl-64">
         <AdminTopbar onToggleSidebar={() => setSidebarOpen((v) => !v)} />
-        <main className="p-4 md:p-6 lg:p-8">{content}</main>
+        <main className="p-4 md:p-6 lg:p-8 animate-page-in" key={section}>{content}</main>
       </div>
     </div>
   );

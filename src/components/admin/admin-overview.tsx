@@ -132,7 +132,7 @@ export function AdminOverview() {
       ) : data ? (
         <>
           {/* Primary stat cards — 5 elegant cards */}
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-5 stagger-children">
             <PremiumStatCard
               icon={<BookOpen className="h-5 w-5" />}
               label="Total Courses"
@@ -458,7 +458,7 @@ function QuickActionButton({ icon, label, onClick }: { icon: React.ReactNode; la
 function OverviewSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5 stagger-children">
         {Array.from({ length: 5 }).map((_, i) => (
           <Card key={i} className="p-5">
             <Skeleton className="h-10 w-10 rounded-lg mb-3" />
