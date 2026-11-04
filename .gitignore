@@ -52,3 +52,17 @@ prompt
 server.log
 # Skills directory
 /skills/
+# Sensitive local files
+.env
+.env.*
+!.env.example
+
+# Database
+db/*.db
+db/*.db-journal
+
+# Uploaded files (user-generated content)
+public/uploads/
+
+# Puppeteer (installed globally, not needed in repo)
+.cache/
