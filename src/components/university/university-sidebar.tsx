@@ -9,6 +9,7 @@ import {
   Award, Settings, LogOut, GraduationCap,
   Users, BarChart3, PieChart, TrendingUp,
   Megaphone, UserCog, CalendarDays, Palette,
+  MessageSquare,
 } from "lucide-react";
 import { apiPost } from "@/hooks/use-api";
 
@@ -27,6 +28,7 @@ const NAV_SECTIONS = [
     items: [
       { label: "Assignments", icon: ClipboardList, segments: ["university", "assignments"] },
       { label: "Submissions", icon: Inbox, segments: ["university", "submissions"] },
+      { label: "Discussions", icon: MessageSquare, segments: ["university", "discussions"] },
     ],
   },
   {

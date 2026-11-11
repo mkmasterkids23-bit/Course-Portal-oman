@@ -19,6 +19,7 @@ import { UniversityAnnouncements } from "./university-announcements";
 import { UniversityInstructors } from "./university-instructors";
 import { UniversityScheduling } from "./university-scheduling";
 import { UniversityBranding } from "./university-branding";
+import { UniversityDiscussions } from "./university-discussions";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -56,6 +57,9 @@ export function UniversityDashboard() {
         break;
       case "submissions":
         content = <UniversitySubmissions />;
+        break;
+      case "discussions":
+        content = <UniversityDiscussions />;
         break;
       case "students":
         content = <UniversityStudents />;
