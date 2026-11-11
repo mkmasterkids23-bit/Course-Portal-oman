@@ -9,16 +9,42 @@ import { PlansPage } from "./plans-page";
 import { AboutPage } from "./about-page";
 import { LoginPage } from "./login-page";
 import { RegisterPage } from "./register-page";
+import { UniversityProfilePage } from "./university-profile-page";
 import { NotFoundPage } from "./not-found-page";
 import { FullPageLoader } from "@/components/shared/full-page-loader";
 import { useEffect } from "react";
 
+/**
+ * Reserved sub-route names used by the authenticated University Dashboard
+ * (e.g. /#/university/overview, /#/university/courses). When an
+ * unauthenticated visitor lands on any of these we redirect them home —
+ * they are not allowed to view the protected dashboard surfaces.
+ *
+ * Anything else under /#/university/<something> is treated as a public
+ * university ID and rendered via <UniversityProfilePage />.
+ */
+const UNIVERSITY_DASHBOARD_SECTIONS = new Set([
+  "overview",
+  "courses",
+  "materials",
+  "assignments",
+  "submissions",
+  "certificates",
+  "settings",
+  "revenue",
+]);
+
 export function PublicSite() {
   const segments = useAppStore((s) => s.segments);
   const navigate = useAppStore((s) => s.navigate);
-  const user = useAppStore((s) => s.user);
 
   const first = segments[0] || "";
+  const second = segments[1] || "";
+
+  // Is this a /#/university/<dashboard-section> URL that should be guarded?
+  const isProtectedUniversityRoute =
+    first === "university" &&
+    (!second || UNIVERSITY_DASHBOARD_SECTIONS.has(second));
 
   // If someone lands on /admin or /student while not authenticated (or while
   // auth is still resolving), don't show "Page not found". Instead:
@@ -28,13 +54,17 @@ export function PublicSite() {
   // NotFoundPage flash that happens between authLoading flipping to false
   // and the redirect effect running.
   useEffect(() => {
-    if (first === "admin" || first === "student" || first === "university") {
+    if (
+      first === "admin" ||
+      first === "student" ||
+      isProtectedUniversityRoute
+    ) {
       // user is null here (otherwise the dashboard would render)
       navigate([""]);
     }
-  }, [first, navigate]);
+  }, [first, isProtectedUniversityRoute, navigate]);
 
-  if (first === "admin" || first === "student" || first === "university") {
+  if (first === "admin" || first === "student" || isProtectedUniversityRoute) {
     // Show loader while the redirect above takes effect
     return <FullPageLoader />;
   }
@@ -45,6 +75,21 @@ export function PublicSite() {
   }
   if (first === "register") {
     return <RegisterPage />;
+  }
+
+  // University public profile — /#/university/:id
+  // Renders only when <id> is NOT one of the reserved dashboard section names
+  // (those are guarded above).
+  if (first === "university" && second && !UNIVERSITY_DASHBOARD_SECTIONS.has(second)) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <PublicNavbar />
+        <main className="flex-1">
+          <UniversityProfilePage universityId={second} />
+        </main>
+        <PublicFooter />
+      </div>
+    );
   }
 
   let page: React.ReactNode;

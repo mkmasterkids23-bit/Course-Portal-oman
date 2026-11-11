@@ -6,7 +6,7 @@ export interface CurrentUser {
   id: string;
   email: string;
   name: string;
-  role: "ADMIN" | "STUDENT" | "UNIVERSITY";
+  role: "ADMIN" | "STUDENT" | "UNIVERSITY" | "INSTRUCTOR";
   phone: string | null;
   bio: string | null;
   profilePhoto: string | null;

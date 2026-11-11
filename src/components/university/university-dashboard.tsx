@@ -11,6 +11,14 @@ import { UniversityAssignments } from "./university-assignments";
 import { UniversitySubmissions } from "./university-submissions";
 import { UniversityCertificates } from "./university-certificates";
 import { UniversitySettings } from "./university-settings";
+import { UniversityRevenue } from "./university-revenue";
+import { UniversityStudents } from "./university-students";
+import { UniversityCourseAnalytics } from "./university-course-analytics";
+import { UniversityAssessmentAnalytics } from "./university-assessment-analytics";
+import { UniversityAnnouncements } from "./university-announcements";
+import { UniversityInstructors } from "./university-instructors";
+import { UniversityScheduling } from "./university-scheduling";
+import { UniversityBranding } from "./university-branding";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -40,14 +48,38 @@ export function UniversityDashboard() {
       case "materials":
         content = <UniversityMaterials />;
         break;
+      case "scheduling":
+        content = <UniversityScheduling />;
+        break;
       case "assignments":
         content = <UniversityAssignments />;
         break;
       case "submissions":
         content = <UniversitySubmissions />;
         break;
+      case "students":
+        content = <UniversityStudents />;
+        break;
+      case "course-analytics":
+        content = <UniversityCourseAnalytics />;
+        break;
+      case "assessment-analytics":
+        content = <UniversityAssessmentAnalytics />;
+        break;
+      case "announcements":
+        content = <UniversityAnnouncements />;
+        break;
+      case "instructors":
+        content = <UniversityInstructors />;
+        break;
       case "certificates":
         content = <UniversityCertificates />;
+        break;
+      case "branding":
+        content = <UniversityBranding />;
+        break;
+      case "revenue":
+        content = <UniversityRevenue />;
         break;
       case "settings":
         content = <UniversitySettings />;

@@ -7,14 +7,25 @@ import {
 } from "@/lib/auth";
 import { getCourseCompletionStats } from "@/lib/course-utils";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const user = await requireStudent();
+
+    const url = new URL(req.url);
+    const levelParam = url.searchParams.get("level")?.toUpperCase().trim();
+    const sortParam = url.searchParams.get("sort")?.toLowerCase().trim();
+    const validLevels = new Set(["BEGINNER", "INTERMEDIATE", "ADVANCED"]);
+    const levelFilter =
+      levelParam && validLevels.has(levelParam) ? levelParam : undefined;
+
+    const baseWhere = levelFilter
+      ? { isPublished: true, level: levelFilter }
+      : { isPublished: true };
 
     const [subscription, allCourses, universities] = await Promise.all([
       getStudentSubscription(user.id),
       db.course.findMany({
-        where: { isPublished: true },
+        where: baseWhere,
         orderBy: { createdAt: "desc" },
         select: {
           id: true,
@@ -23,6 +34,8 @@ export async function GET() {
           thumbnail: true,
           category: true,
           accessType: true,
+          level: true,
+          createdAt: true,
           university: { select: { id: true, name: true, logo: true } },
           planAccess: { include: { plan: { select: { id: true, name: true } } } },
         },
@@ -68,6 +81,11 @@ export async function GET() {
         orderBy: { displayOrder: "asc" },
         select: { thumbnail: true, videoUrl: true, source: true },
       });
+      // Popularity metric: distinct students with any progress in this course
+      const popularityRows = await db.videoProgress.groupBy({
+        by: ["studentId"],
+        where: { video: { courseId: c.id } },
+      });
 
       const uni = c.university;
       accessibleCourses.push({
@@ -80,6 +98,7 @@ export async function GET() {
         firstVideoSource: firstVideo?.source || null,
         category: c.category,
         accessType: c.accessType as "FREE" | "PAID",
+        level: c.level as "BEGINNER" | "INTERMEDIATE" | "ADVANCED",
         university: uni ? { id: uni.id, name: uni.name, logo: uni.logo } : null,
         topicsCount: stats.totalTopics,
         videosCount: stats.totalVideos,
@@ -89,11 +108,27 @@ export async function GET() {
         lastWatchedVideoId: lastProgress?.videoId ?? null,
         lastWatchedVideoTitle: lastProgress?.video.title ?? null,
         lastWatchedAt: lastProgress?.updatedAt ?? null,
+        createdAt: c.createdAt.toISOString(),
+        popularity: popularityRows.length,
       });
     }
 
+    // Apply server-side sort when requested. The client re-sorts locally as
+    // well so the user can switch ordering instantly without a refetch.
+    let sortedCourses = accessibleCourses;
+    if (sortParam === "popular") {
+      sortedCourses = [...accessibleCourses].sort(
+        (a, b) => (b.popularity ?? 0) - (a.popularity ?? 0)
+      );
+    } else if (sortParam === "alphabetical" || sortParam === "alpha") {
+      sortedCourses = [...accessibleCourses].sort((a, b) =>
+        a.title.localeCompare(b.title, undefined, { sensitivity: "base" })
+      );
+    }
+    // "newest" / default — already createdAt desc from the DB query
+
     return NextResponse.json({
-      courses: accessibleCourses,
+      courses: sortedCourses,
       subscription,
       expired: !isSubActive && subscription !== null,
       universities: universities.map((u) => ({

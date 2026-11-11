@@ -156,6 +156,105 @@ export async function GET() {
     // Sort continue-learning by recency (already sorted via DB), take 6
     continueLearning.splice(6);
 
+    // ─── Upcoming activities: pending assignments + pending video assessments ───
+    // We extend the existing upcomingAssignments list with assessment items
+    // (videos that have questions and the student hasn't passed the test yet)
+    // so the dashboard can show a single consolidated "Upcoming Activities"
+    // section. Each item is normalized to:
+    //   { id, type, courseId, courseTitle, title, dueDate?, status, priority }
+    const upcomingActivities: any[] = [];
+
+    // 1. Pending assignments (reuse upcomingAssignments but re-shape)
+    for (const a of upcomingAssignments) {
+      const dueMs = a.dueDate ? new Date(a.dueDate).getTime() - Date.now() : null;
+      upcomingActivities.push({
+        id: `asg-${a.id}`,
+        type: "assignment",
+        courseId: a.courseId,
+        courseTitle: a.courseTitle,
+        title: a.assignmentTitle,
+        dueDate: a.dueDate,
+        status: a.submitted
+          ? "submitted"
+          : a.unlocked
+            ? "available"
+            : "locked",
+        priority: dueMs !== null && dueMs < 0 ? "overdue" : "normal",
+      });
+    }
+
+    // 2. Pending video assessments — videos with questions where the student
+    //    has watched (or started) but hasn't yet passed the assessment.
+    //    Limit to the student's accessible courses to keep things relevant.
+    const accessibleCourseIdSet = new Set(accessibleCourseIds);
+    const videosWithQuestions = await db.videoQuestion.findMany({
+      where: {
+        video: {
+          courseId: { in: accessibleCourseIds },
+          isPublished: true,
+        },
+      },
+      select: { videoId: true },
+      distinct: ["videoId"],
+    });
+    const videoIdsWithQuestions = videosWithQuestions.map((q) => q.videoId);
+
+    if (videoIdsWithQuestions.length) {
+      // Already-passed assessments
+      const passedAssessments = await db.videoAssessment.findMany({
+        where: {
+          studentId: user.id,
+          videoId: { in: videoIdsWithQuestions },
+          passed: true,
+        },
+        select: { videoId: true },
+      });
+      const passedSet = new Set(passedAssessments.map((a) => a.videoId));
+
+      // Pull the videos themselves (with course context) — only those not yet passed
+      const pendingAssessmentVideos = await db.videoLesson.findMany({
+        where: {
+          id: { in: videoIdsWithQuestions },
+          isPublished: true,
+        },
+        select: {
+          id: true,
+          title: true,
+          courseId: true,
+          course: { select: { id: true, title: true } },
+        },
+        take: 50,
+      });
+
+      for (const v of pendingAssessmentVideos) {
+        if (passedSet.has(v.id)) continue;
+        // Only show if the course is accessible to the student
+        if (!accessibleCourseIdSet.has(v.courseId)) continue;
+        upcomingActivities.push({
+          id: `va-${v.id}`,
+          type: "assessment",
+          courseId: v.courseId,
+          courseTitle: v.course.title,
+          title: v.title,
+          dueDate: null,
+          status: "pending",
+          priority: "normal",
+        });
+      }
+    }
+
+    // Sort upcoming activities: overdue first, then by due date asc (nulls last)
+    upcomingActivities.sort((a, b) => {
+      const pa = a.priority === "overdue" ? 0 : 1;
+      const pb = b.priority === "overdue" ? 0 : 1;
+      if (pa !== pb) return pa - pb;
+      const da = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
+      const db = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+      return da - db;
+    });
+    // Cap at 8 entries so the dashboard stays tidy
+    upcomingActivities.splice(8);
+
     return NextResponse.json({
       welcomeName: firstName,
       subscription,
@@ -167,6 +266,7 @@ export async function GET() {
       },
       continueLearning,
       upcomingAssignments,
+      upcomingActivities,
       recentCertificates,
     });
   } catch (e) {

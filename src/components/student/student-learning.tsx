@@ -14,14 +14,17 @@ import {
 import {
   Tooltip, TooltipTrigger, TooltipContent,
 } from "@/components/ui/tooltip";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
+import { VideoNotesPanel } from "@/components/student/video-notes-panel";
+import { CourseDiscussionsPanel } from "@/components/student/course-discussions-panel";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeft, PlayCircle, CheckCircle2, Lock, FileText, Download, Link as LinkIcon,
   Upload, Award, ClipboardList, AlertTriangle, Clock, Video as VideoIcon, Info,
   Maximize2, Minimize2, ChevronLeft, ChevronRight, BookOpen, Sparkles,
-  HelpCircle, XCircle, RefreshCw, ListChecks,
+  HelpCircle, XCircle, RefreshCw, ListChecks, MessageSquare,
 } from "lucide-react";
 import { formatDateTime } from "@/types";
 
@@ -155,6 +158,14 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
   const { data, loading, error, refetch, setData } = useApiFetch<CourseResponse>(
     `/api/student/courses/${courseId}`
   );
+
+  // Read the hash query for deep-link support. The global Discussions
+  // view navigates here with `?tab=discussions&discussion=<id>`; we honour
+  // that by defaulting the Materials/Discussions tab to "discussions" and
+  // asking the panel to highlight (and scroll to) the matching thread.
+  const routeQuery = useAppStore((s) => s.query);
+  const highlightDiscussionId = routeQuery.discussion || null;
+  const discussionsTabDefault = routeQuery.tab === "discussions";
 
   // Pick the initial video: last watched, or first available.
   const initialVideoId = (() => {
@@ -356,6 +367,8 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
               key={activeVideo.id}
               video={activeVideo}
               topicTitle={activeTopic?.title || null}
+              courseId={course.id}
+              topicId={activeTopic?.id || null}
               onProgress={handleProgressUpdate}
               prevVideo={prevVideo}
               nextVideo={nextVideo}
@@ -408,29 +421,83 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
             />
           ) : null}
 
-          {/* All materials (course-level) */}
-          {course.materials.length > 0 && (
-            <Card className="shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10 text-accent">
-                    <FileText className="h-4 w-4" />
-                  </span>
-                  All Course Materials
-                </CardTitle>
-                <CardDescription>
-                  {course.materials.length} document{course.materials.length > 1 ? "s" : ""} attached to this course
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {course.materials.map((m) => (
-                    <MaterialRow key={m.id} material={m} />
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          )}
+          {/* ─── Materials & Discussions tabs ───
+              Two-pane area below the assignment / topic materials.
+              "Materials" lists the course-level reference docs (hidden
+              entirely if the course has none); "Discussions" hosts the
+              per-course discussion threads. The default tab honours a
+              `?tab=discussions` query param (used by the global
+              Discussions view to deep-link into a specific thread). */}
+          <Tabs
+            defaultValue={discussionsTabDefault ? "discussions" : "materials"}
+            className="gap-3"
+          >
+            <TabsList>
+              <TabsTrigger value="materials" className="gap-1.5">
+                <FileText className="h-3.5 w-3.5" />
+                Materials
+                {course.materials.length > 0 && (
+                  <Badge
+                    variant="outline"
+                    className="ml-1 text-[10px] px-1.5 py-0 h-4 border-border text-muted-foreground"
+                  >
+                    {course.materials.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="discussions" className="gap-1.5">
+                <MessageSquare className="h-3.5 w-3.5" />
+                Discussions
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="materials" className="mt-0">
+              {course.materials.length > 0 ? (
+                <Card className="shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10 text-accent">
+                        <FileText className="h-4 w-4" />
+                      </span>
+                      All Course Materials
+                    </CardTitle>
+                    <CardDescription>
+                      {course.materials.length} document{course.materials.length > 1 ? "s" : ""} attached to this course
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {course.materials.map((m) => (
+                        <MaterialRow key={m.id} material={m} />
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="shadow-sm border-dashed">
+                  <CardContent className="py-10 text-center">
+                    <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                      <FileText className="h-5 w-5" />
+                    </div>
+                    <p className="font-heading text-sm font-semibold text-foreground">
+                      No course-level materials
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Reference documents attached to topics appear under the
+                      video player while you watch.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            <TabsContent value="discussions" className="mt-0">
+              <CourseDiscussionsPanel
+                courseId={course.id}
+                highlightDiscussionId={highlightDiscussionId}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
 
         {/* Right: course sidebar */}
@@ -580,6 +647,8 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
 function VideoPlayer({
   video,
   topicTitle,
+  courseId,
+  topicId,
   onProgress,
   prevVideo,
   nextVideo,
@@ -588,6 +657,8 @@ function VideoPlayer({
 }: {
   video: VideoItem;
   topicTitle: string | null;
+  courseId: string;
+  topicId: string | null;
   onProgress: (update: {
     videoId: string;
     progress: VideoProgressInfo;
@@ -1392,6 +1463,35 @@ function VideoPlayer({
           )}
         </CardContent>
       </Card>
+
+      {/* ─── Inline notes panel ───
+          Lives directly below the compact video card so the student can
+          capture a thought the moment it occurs to them. The panel reads
+          the current playback position via the closures below (which close
+          over videoRef) and seeks the video when a note's timestamp is
+          clicked. For YouTube videos (where videoRef is null because we
+          render an iframe) we pass canCaptureTimestamp=false so the
+          capture button is disabled but the panel still works for
+          timestamp-less notes. */}
+      <VideoNotesPanel
+        courseId={courseId}
+        topicId={topicId}
+        videoId={video.id}
+        videoTitle={video.title}
+        canCaptureTimestamp={!isYouTube}
+        getCurrentTime={() => videoRef.current?.currentTime ?? 0}
+        seekTo={(t) => {
+          const el = videoRef.current;
+          if (!el) return;
+          try {
+            el.currentTime = t;
+            lastTimeRef.current = t;
+            // If the video is paused, nudge it to play so the user sees
+            // the moment they jumped to.
+            if (el.paused) void el.play().catch(() => {});
+          } catch {}
+        }}
+      />
     </>
   );
 }

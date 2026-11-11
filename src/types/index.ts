@@ -6,7 +6,7 @@ export interface PublicUser {
   id: string;
   email: string;
   name: string;
-  role: "ADMIN" | "STUDENT" | "UNIVERSITY";
+  role: "ADMIN" | "STUDENT" | "UNIVERSITY" | "INSTRUCTOR";
   phone: string | null;
   bio: string | null;
   profilePhoto: string | null;
@@ -36,6 +36,7 @@ export interface CoursePublic {
   thumbnail: string | null;
   category: string | null;
   accessType: "FREE" | "PAID";
+  level?: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
   isPublished: boolean;
   topicsCount: number;
   videosCount: number;

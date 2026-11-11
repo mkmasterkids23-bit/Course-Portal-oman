@@ -61,8 +61,13 @@ interface CourseRow {
   firstVideoUrl?: string | null;
   firstVideoSource?: "UPLOAD" | "YOUTUBE" | "URL" | null;
   category: string | null;
+  level: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
   accessType: "FREE" | "PAID";
   isPublished: boolean;
+  startDate: string | null;
+  endDate: string | null;
+  availabilityMode: "ALWAYS" | "SCHEDULED" | "LIMITED";
+  enrollmentOpen: boolean;
   createdAt: string;
   topicsCount: number;
   videosCount: number;
@@ -328,10 +333,14 @@ interface CourseFormValues {
   title: string;
   description: string;
   category: string;
+  level: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
   accessType: "FREE" | "PAID";
   isPublished: boolean;
   thumbnail: string;
   planIds: string[];
+  startDate: string;
+  endDate: string;
+  availabilityMode: "ALWAYS" | "SCHEDULED" | "LIMITED";
 }
 
 function CourseFormDialog({
@@ -352,34 +361,53 @@ function CourseFormDialog({
     title: "",
     description: "",
     category: "",
+    level: "BEGINNER",
     accessType: "FREE",
     isPublished: false,
     thumbnail: "",
     planIds: [],
+    startDate: "",
+    endDate: "",
+    availabilityMode: "ALWAYS",
   });
   const [saving, setSaving] = useState(false);
   const [uploadingThumb, setUploadingThumb] = useState(false);
 
   useEffect(() => {
     if (target) {
+      const toLocalDate = (iso: string | null) => {
+        if (!iso) return "";
+        const d = new Date(iso);
+        const off = d.getTimezoneOffset();
+        const local = new Date(d.getTime() - off * 60 * 1000);
+        return local.toISOString().slice(0, 10);
+      };
       setValues({
         title: target.title,
         description: target.description || "",
         category: target.category || "",
+        level: target.level,
         accessType: target.accessType,
         isPublished: target.isPublished,
         thumbnail: target.thumbnail || "",
         planIds: [],
+        startDate: toLocalDate(target.startDate),
+        endDate: toLocalDate(target.endDate),
+        availabilityMode: target.availabilityMode,
       });
     } else if (open) {
       setValues({
         title: "",
         description: "",
         category: "",
+        level: "BEGINNER",
         accessType: "FREE",
         isPublished: false,
         thumbnail: "",
         planIds: [],
+        startDate: "",
+        endDate: "",
+        availabilityMode: "ALWAYS",
       });
     }
   }, [target, open]);
@@ -432,6 +460,18 @@ function CourseFormDialog({
       });
       return;
     }
+    if (
+      values.availabilityMode !== "ALWAYS" &&
+      values.startDate &&
+      values.endDate &&
+      new Date(values.endDate) < new Date(values.startDate)
+    ) {
+      toast({
+        title: "End date must be after start date",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setSaving(true);
     try {
@@ -440,9 +480,13 @@ function CourseFormDialog({
           title: values.title.trim(),
           description: values.description.trim() || null,
           category: values.category.trim() || null,
+          level: values.level,
           accessType: values.accessType,
           isPublished: values.isPublished,
           thumbnail: values.thumbnail || null,
+          availabilityMode: values.availabilityMode,
+          startDate: values.startDate || null,
+          endDate: values.endDate || null,
           ...(values.accessType === "PAID" ? { planIds: values.planIds } : {}),
         }, { method: "PUT" });
         onSaved();
@@ -453,10 +497,14 @@ function CourseFormDialog({
             title: values.title.trim(),
             description: values.description.trim() || null,
             category: values.category.trim() || null,
+            level: values.level,
             accessType: values.accessType,
             isPublished: values.isPublished,
             thumbnail: values.thumbnail || null,
             planIds: values.planIds,
+            availabilityMode: values.availabilityMode,
+            startDate: values.startDate || null,
+            endDate: values.endDate || null,
           }
         );
         onSaved(res.course.id);
@@ -521,22 +569,110 @@ function CourseFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground">Access Type</Label>
+              <Label className="text-xs font-medium text-muted-foreground">Level</Label>
               <Select
-                value={values.accessType}
+                value={values.level}
                 onValueChange={(v) =>
-                  setValues({ ...values, accessType: v as "FREE" | "PAID" })
+                  setValues({
+                    ...values,
+                    level: v as "BEGINNER" | "INTERMEDIATE" | "ADVANCED",
+                  })
                 }
               >
                 <SelectTrigger className="w-full h-9 rounded-lg">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="FREE">Free — Open to all</SelectItem>
-                  <SelectItem value="PAID">Paid — Plan-gated</SelectItem>
+                  <SelectItem value="BEGINNER">Beginner</SelectItem>
+                  <SelectItem value="INTERMEDIATE">Intermediate</SelectItem>
+                  <SelectItem value="ADVANCED">Advanced</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium text-muted-foreground">Availability Mode</Label>
+            <Select
+              value={values.availabilityMode}
+              onValueChange={(v) =>
+                setValues({
+                  ...values,
+                  availabilityMode: v as "ALWAYS" | "SCHEDULED" | "LIMITED",
+                })
+              }
+            >
+              <SelectTrigger className="w-full h-9 rounded-lg">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALWAYS">Always Available</SelectItem>
+                <SelectItem value="SCHEDULED">Scheduled (between dates)</SelectItem>
+                <SelectItem value="LIMITED">Limited Enrollment</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-[11px] text-muted-foreground">
+              {values.availabilityMode === "ALWAYS"
+                ? "Course is available to students at any time."
+                : values.availabilityMode === "SCHEDULED"
+                  ? "Course is only available between the start and end dates below."
+                  : "Enrollment closes after the end date; existing students keep access."}
+            </p>
+          </div>
+          {values.availabilityMode !== "ALWAYS" && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="cf-start"
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  Start Date
+                </Label>
+                <Input
+                  id="cf-start"
+                  type="date"
+                  value={values.startDate}
+                  onChange={(e) =>
+                    setValues({ ...values, startDate: e.target.value })
+                  }
+                  className="h-9 rounded-lg"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="cf-end"
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  End Date
+                </Label>
+                <Input
+                  id="cf-end"
+                  type="date"
+                  value={values.endDate}
+                  onChange={(e) =>
+                    setValues({ ...values, endDate: e.target.value })
+                  }
+                  className="h-9 rounded-lg"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium text-muted-foreground">Access Type</Label>
+            <Select
+              value={values.accessType}
+              onValueChange={(v) =>
+                setValues({ ...values, accessType: v as "FREE" | "PAID" })
+              }
+            >
+              <SelectTrigger className="w-full h-9 rounded-lg">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="FREE">Free — Open to all</SelectItem>
+                <SelectItem value="PAID">Paid — Plan-gated</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {values.accessType === "PAID" && (

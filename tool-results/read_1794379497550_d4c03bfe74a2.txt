@@ -1,0 +1,1948 @@
+     1→"use client";
+     2→
+     3→import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+     4→import { useAppStore } from "@/stores/app-store";
+     5→import { Button } from "@/components/ui/button";
+     6→import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+     7→import { Badge } from "@/components/ui/badge";
+     8→import { Progress } from "@/components/ui/progress";
+     9→import { Skeleton } from "@/components/ui/skeleton";
+    10→import { EmptyState } from "@/components/shared/empty-state";
+    11→import {
+    12→  Accordion, AccordionItem, AccordionTrigger, AccordionContent,
+    13→} from "@/components/ui/accordion";
+    14→import {
+    15→  Tooltip, TooltipTrigger, TooltipContent,
+    16→} from "@/components/ui/tooltip";
+    17→import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
+    18→import { toast } from "@/hooks/use-toast";
+    19→import { cn } from "@/lib/utils";
+    20→import {
+    21→  ArrowLeft, PlayCircle, CheckCircle2, Lock, FileText, Download, Link as LinkIcon,
+    22→  Upload, Award, ClipboardList, AlertTriangle, Clock, Video as VideoIcon, Info,
+    23→  Maximize2, Minimize2, ChevronLeft, ChevronRight, BookOpen, Sparkles,
+    24→  HelpCircle, XCircle, RefreshCw, ListChecks,
+    25→} from "lucide-react";
+    26→import { formatDateTime } from "@/types";
+    27→
+    28→interface VideoProgressInfo {
+    29→  lastPosition: number;
+    30→  watchTimeSeconds: number;
+    31→  duration: number;
+    32→  isCompleted: boolean;
+    33→  completedAt: string | null;
+    34→}
+    35→
+    36→interface VideoItem {
+    37→  id: string;
+    38→  title: string;
+    39→  description: string | null;
+    40→  source: "UPLOAD" | "YOUTUBE" | "URL";
+    41→  videoUrl: string;
+    42→  thumbnail: string | null;
+    43→  displayOrder: number;
+    44→  duration: number;
+    45→  hasQuestions: boolean;
+    46→  questionCount: number;
+    47→  assessmentPassed: boolean | null; // null = no questions, true/false if has questions
+    48→  progress: VideoProgressInfo | null;
+    49→}
+    50→
+    51→// ─── Video Assessment types ───
+    52→// Mirrors the shape returned by GET /api/student/videos/[videoId]/questions
+    53→// (note: correctAnswer is intentionally NOT included by the API for security).
+    54→interface VideoQuestionData {
+    55→  id: string;
+    56→  question: string;
+    57→  options: string[];
+    58→  timestamp: number;
+    59→}
+    60→
+    61→interface VideoAssessmentSummary {
+    62→  score: number;
+    63→  passed: boolean;
+    64→  attempts: number;
+    65→}
+    66→
+    67→// Mirrors the POST assessment response — includes per-question correctness
+    68→// because the server validates answers server-side and reveals them here.
+    69→interface AssessmentAnswerResult {
+    70→  questionId: string;
+    71→  question: string;
+    72→  options: string[];
+    73→  selectedAnswer: number;
+    74→  correctAnswer: number;
+    75→  correct: boolean;
+    76→}
+    77→
+    78→interface AssessmentResult {
+    79→  id?: string;
+    80→  score: number;
+    81→  passed: boolean;
+    82→  attempts: number;
+    83→  correctCount: number;
+    84→  totalQuestions: number;
+    85→  answers: AssessmentAnswerResult[];
+    86→}
+    87→
+    88→interface TopicItem {
+    89→  id: string;
+    90→  title: string;
+    91→  description: string | null;
+    92→  displayOrder: number;
+    93→  videos: VideoItem[];
+    94→  materials: MaterialItem[];
+    95→}
+    96→
+    97→interface MaterialItem {
+    98→  id: string;
+    99→  title: string;
+   100→  description: string | null;
+   101→  type: string;
+   102→  fileUrl: string;
+   103→  topic?: { id: string; title: string } | null;
+   104→}
+   105→
+   106→interface AssignmentInfo {
+   107→  id: string;
+   108→  title: string | null;
+   109→  description: string | null;
+   110→  instructions: string | null;
+   111→  fileUrl: string | null;
+   112→  dueDate: string | null;
+   113→  isPublished: boolean;
+   114→  allowResubmission: boolean;
+   115→}
+   116→
+   117→interface SubmissionInfo {
+   118→  id: string;
+   119→  fileUrl: string;
+   120→  submittedAt: string;
+   121→  status: "SUBMITTED" | "REVIEWED";
+   122→  reviewNotes: string | null;
+   123→  reviewedAt: string | null;
+   124→}
+   125→
+   126→interface CourseDetail {
+   127→  id: string;
+   128→  title: string;
+   129→  description: string | null;
+   130→  thumbnail: string | null;
+   131→  category: string | null;
+   132→  accessType: "FREE" | "PAID";
+   133→  topics: TopicItem[];
+   134→  materials: MaterialItem[];
+   135→  assignment: AssignmentInfo | null;
+   136→  submission: SubmissionInfo | null;
+   137→  courseCompletion: {
+   138→    totalVideos: number;
+   139→    completedVideos: number;
+   140→    percent: number;
+   141→    allCompleted: boolean;
+   142→  };
+   143→  certificateTemplate: {
+   144→    id: string;
+   145→    isEnabled: boolean;
+   146→    title: string;
+   147→    bodyText: string;
+   148→    organizationName: string;
+   149→  } | null;
+   150→}
+   151→
+   152→interface CourseResponse { course: CourseDetail }
+   153→
+   154→export function StudentLearning({ courseId, onBack }: { courseId: string; onBack: () => void }) {
+   155→  const { data, loading, error, refetch, setData } = useApiFetch<CourseResponse>(
+   156→    `/api/student/courses/${courseId}`
+   157→  );
+   158→
+   159→  // Pick the initial video: last watched, or first available.
+   160→  const initialVideoId = (() => {
+   161→    if (!data?.course) return null;
+   162→    // 1) lastWatchedVideoId is implicitly captured via progress; find the
+   163→    //    most recently updated progress entry in the topics tree.
+   164→    let candidate: VideoItem | null = null;
+   165→    for (const t of data.course.topics) {
+   166→      for (const v of t.videos) {
+   167→        if (v.progress && !v.progress.isCompleted) {
+   168→          if (!candidate || (v.progress.watchTimeSeconds > (candidate.progress?.watchTimeSeconds || 0))) {
+   169→            candidate = v;
+   170→          }
+   171→        }
+   172→      }
+   173→    }
+   174→    if (candidate) return candidate.id;
+   175→    // 2) First video of the first topic
+   176→    return data.course.topics[0]?.videos[0]?.id ?? null;
+   177→  })();
+   178→
+   179→  const [userSelectedVideoId, setUserSelectedVideoId] = useState<string | null>(null);
+   180→  // Reset user selection when courseId changes — "adjust state during render"
+   181→  // pattern (avoids setState-in-effect warnings).
+   182→  const [prevCourseId, setPrevCourseId] = useState(courseId);
+   183→  if (courseId !== prevCourseId) {
+   184→    setPrevCourseId(courseId);
+   185→    setUserSelectedVideoId(null);
+   186→  }
+   187→  // Effective active video: explicit user selection overrides the auto-pick
+   188→  // (which is the last-watched or first video). When data loads and we have an
+   189→  // initial pick, this falls back to it without needing an effect.
+   190→  const activeVideoId = userSelectedVideoId ?? initialVideoId;
+   191→
+   192→  if (loading) {
+   193→    return (
+   194→      <div className="space-y-5">
+   195→        <Skeleton className="h-10 w-32 rounded-lg" />
+   196→        <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
+   197→          <div className="space-y-4">
+   198→            <Skeleton className="h-[420px] rounded-xl" />
+   199→            <Skeleton className="h-24 rounded-xl" />
+   200→          </div>
+   201→          <Skeleton className="h-[600px] rounded-xl" />
+   202→        </div>
+   203→      </div>
+   204→    );
+   205→  }
+   206→
+   207→  if (error) {
+   208→    return (
+   209→      <div className="space-y-4">
+   210→        <Button variant="outline" size="sm" onClick={onBack} className="gap-2">
+   211→          <ArrowLeft className="h-4 w-4" /> Back to courses
+   212→        </Button>
+   213→        <EmptyState
+   214→          icon={<AlertTriangle className="h-5 w-5" />}
+   215→          title="Couldn't open course"
+   216→          description={error}
+   217→          action={<Button onClick={onBack}>Back to courses</Button>}
+   218→        />
+   219→      </div>
+   220→    );
+   221→  }
+   222→
+   223→  if (!data?.course) {
+   224→    return (
+   225→      <EmptyState
+   226→        icon={<PlayCircle className="h-5 w-5" />}
+   227→        title="Course not found"
+   228→        description="This course may have been removed or is not accessible."
+   229→        action={<Button onClick={onBack}>Back to courses</Button>}
+   230→      />
+   231→    );
+   232→  }
+   233→
+   234→  const course = data.course;
+   235→  const allVideos = course.topics.flatMap((t) => t.videos);
+   236→  const activeVideo =
+   237→    allVideos.find((v) => v.id === activeVideoId) || allVideos[0] || null;
+   238→
+   239→  // Find the topic containing the active video
+   240→  const activeTopic = course.topics.find((t) =>
+   241→    t.videos.some((v) => v.id === activeVideo?.id)
+   242→  );
+   243→
+   244→  // Build a flat ordered list for prev/next navigation
+   245→  const flatVideoIds = allVideos.map((v) => v.id);
+   246→  const activeIndex = activeVideo ? flatVideoIds.indexOf(activeVideo.id) : -1;
+   247→  const prevVideo = activeIndex > 0 ? allVideos[activeIndex - 1] : null;
+   248→  const nextVideo = activeIndex >= 0 && activeIndex < allVideos.length - 1 ? allVideos[activeIndex + 1] : null;
+   249→
+   250→  function handleProgressUpdate(updated: {
+   251→    videoId: string;
+   252→    progress: VideoProgressInfo;
+   253→    justCompleted: boolean;
+   254→  }) {
+   255→    if (!data) return;
+   256→    const newCourse = {
+   257→      ...data.course,
+   258→      topics: data.course.topics.map((t) => ({
+   259→        ...t,
+   260→        videos: t.videos.map((v) =>
+   261→          v.id === updated.videoId ? { ...v, progress: updated.progress } : v
+   262→        ),
+   263→      })),
+   264→      courseCompletion: (() => {
+   265→        // Recompute local snapshot
+   266→        const videos = data.course.topics.flatMap((t) => t.videos);
+   267→        const completed = videos.filter(
+   268→          (v) =>
+   269→            v.id === updated.videoId
+   270→              ? updated.progress.isCompleted
+   271→              : v.progress?.isCompleted
+   272→        ).length;
+   273→        const total = videos.length;
+   274→        const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+   275→        return {
+   276→          totalVideos: total,
+   277→          completedVideos: completed,
+   278→          percent,
+   279→          allCompleted: total > 0 && completed === total,
+   280→        };
+   281→      })(),
+   282→    };
+   283→    setData({ course: newCourse });
+   284→
+   285→    if (updated.justCompleted) {
+   286→      toast({
+   287→        title: "Lesson completed",
+   288→        description: "Great work! Your progress has been saved.",
+   289→      });
+   290→    }
+   291→  }
+   292→
+   293→  async function handleSubmissionSuccess() {
+   294→    await refetch();
+   295→    toast({
+   296→      title: "Assignment submitted",
+   297→      description: "Your submission has been received.",
+   298→    });
+   299→  }
+   300→
+   301→  return (
+   302→    <div className="space-y-5">
+   303→      {/* ─── Premium header ─── */}
+   304→      <div className="rounded-xl border border-border bg-card p-4 md:p-5 shadow-sm">
+   305→        <div className="flex flex-wrap items-center justify-between gap-3">
+   306→          <div className="flex items-center gap-3 min-w-0 flex-1">
+   307→            <Button variant="outline" size="icon" onClick={onBack} className="shrink-0 h-9 w-9" aria-label="Back to courses">
+   308→              <ArrowLeft className="h-4 w-4" />
+   309→            </Button>
+   310→            <div className="min-w-0 flex-1">
+   311→              <div className="flex items-center gap-2 mb-0.5">
+   312→                {course.category && (
+   313→                  <Badge variant="outline" className="text-[11px] border-border text-muted-foreground">
+   314→                    {course.category}
+   315→                  </Badge>
+   316→                )}
+   317→                <Badge
+   318→                  className={
+   319→                    course.accessType === "FREE"
+   320→                      ? "bg-success/15 text-success border-transparent"
+   321→                      : "bg-primary text-primary-foreground border-transparent"
+   322→                  }
+   323→                >
+   324→                  {course.accessType === "FREE" ? "Free" : "Paid"}
+   325→                </Badge>
+   326→              </div>
+   327→              <h1 className="font-heading text-lg md:text-xl font-semibold text-foreground truncate">
+   328→                {course.title}
+   329→              </h1>
+   330→            </div>
+   331→          </div>
+   332→          <div className="flex items-center gap-4 shrink-0">
+   333→            <div className="hidden sm:flex flex-col items-end gap-0.5">
+   334→              <span className="text-xs font-medium text-foreground">
+   335→                {course.courseCompletion.completedVideos}/{course.courseCompletion.totalVideos} lessons
+   336→              </span>
+   337→              <span className="text-[11px] text-muted-foreground">completed</span>
+   338→            </div>
+   339→            <div className="flex items-center gap-2.5 min-w-[160px]">
+   340→              <Progress
+   341→                value={course.courseCompletion.percent}
+   342→                className={`h-2 w-32 bg-muted ${course.courseCompletion.allCompleted ? "[&_[data-slot=progress-indicator]]:bg-success" : "[&_[data-slot=progress-indicator]]:bg-accent"}`}
+   343→              />
+   344→              <span className="text-sm font-semibold text-foreground tabular-nums">{course.courseCompletion.percent}%</span>
+   345→            </div>
+   346→          </div>
+   347→        </div>
+   348→      </div>
+   349→
+   350→      {/* ─── Mobile: stacked. Desktop: split. ─── */}
+   351→      <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
+   352→        {/* Left: player + materials + assignment */}
+   353→        <div className="space-y-5 min-w-0">
+   354→          {activeVideo ? (
+   355→            <VideoPlayer
+   356→              key={activeVideo.id}
+   357→              video={activeVideo}
+   358→              topicTitle={activeTopic?.title || null}
+   359→              onProgress={handleProgressUpdate}
+   360→              prevVideo={prevVideo}
+   361→              nextVideo={nextVideo}
+   362→              onNavigateLesson={(id) => setUserSelectedVideoId(id)}
+   363→              refetchCourse={refetch}
+   364→            />
+   365→          ) : (
+   366→            <EmptyState
+   367→              icon={<VideoIcon className="h-5 w-5" />}
+   368→              title="No videos in this course"
+   369→              description="This course doesn't have any published video lessons yet."
+   370→            />
+   371→          )}
+   372→
+   373→          {/* Topic materials */}
+   374→          {activeTopic && activeTopic.materials.length > 0 && (
+   375→            <Card className="shadow-sm">
+   376→              <CardHeader>
+   377→                <CardTitle className="text-base flex items-center gap-2">
+   378→                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10 text-accent">
+   379→                    <FileText className="h-4 w-4" />
+   380→                  </span>
+   381→                  Materials · {activeTopic.title}
+   382→                </CardTitle>
+   383→                <CardDescription>Reference documents for this topic</CardDescription>
+   384→              </CardHeader>
+   385→              <CardContent>
+   386→                <ul className="space-y-2">
+   387→                  {activeTopic.materials.map((m) => (
+   388→                    <MaterialRow key={m.id} material={m} />
+   389→                  ))}
+   390→                </ul>
+   391→              </CardContent>
+   392→            </Card>
+   393→          )}
+   394→
+   395→          {/* Assignment panel — completely hidden until ALL videos are completed.
+   396→              Before completion, show a locked placeholder that does NOT reveal
+   397→              the assignment title, description, or instructions. */}
+   398→          {course.assignment && course.courseCompletion.allCompleted ? (
+   399→            <AssignmentPanel
+   400→              course={course}
+   401→              onSubmitted={handleSubmissionSuccess}
+   402→            />
+   403→          ) : course.assignment ? (
+   404→            <LockedAssignmentCard
+   405→              completedVideos={course.courseCompletion.completedVideos}
+   406→              totalVideos={course.courseCompletion.totalVideos}
+   407→              percent={course.courseCompletion.percent}
+   408→            />
+   409→          ) : null}
+   410→
+   411→          {/* All materials (course-level) */}
+   412→          {course.materials.length > 0 && (
+   413→            <Card className="shadow-sm">
+   414→              <CardHeader>
+   415→                <CardTitle className="text-base flex items-center gap-2">
+   416→                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10 text-accent">
+   417→                    <FileText className="h-4 w-4" />
+   418→                  </span>
+   419→                  All Course Materials
+   420→                </CardTitle>
+   421→                <CardDescription>
+   422→                  {course.materials.length} document{course.materials.length > 1 ? "s" : ""} attached to this course
+   423→                </CardDescription>
+   424→              </CardHeader>
+   425→              <CardContent>
+   426→                <ul className="space-y-2">
+   427→                  {course.materials.map((m) => (
+   428→                    <MaterialRow key={m.id} material={m} />
+   429→                  ))}
+   430→                </ul>
+   431→              </CardContent>
+   432→            </Card>
+   433→          )}
+   434→        </div>
+   435→
+   436→        {/* Right: course sidebar */}
+   437→        <Card className="lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-6rem)] flex flex-col shadow-sm overflow-hidden">
+   438→          <CardHeader className="border-b border-border bg-gradient-to-br from-soft-sage/60 to-card">
+   439→            <CardTitle className="text-base flex items-center gap-2">
+   440→              <BookOpen className="h-4 w-4 text-accent" />
+   441→              Course Lessons
+   442→            </CardTitle>
+   443→            <CardDescription className="mt-1">
+   444→              {course.topics.length} topic{course.topics.length > 1 ? "s" : ""} · {course.courseCompletion.totalVideos} lessons
+   445→            </CardDescription>
+   446→            <div className="mt-2">
+   447→              <div className="flex justify-between text-xs mb-1">
+   448→                <span className="text-muted-foreground">Progress</span>
+   449→                <span className="font-semibold text-foreground">{course.courseCompletion.percent}%</span>
+   450→              </div>
+   451→              <Progress
+   452→                value={course.courseCompletion.percent}
+   453→                className={`h-1.5 bg-muted ${course.courseCompletion.allCompleted ? "[&_[data-slot=progress-indicator]]:bg-success" : "[&_[data-slot=progress-indicator]]:bg-accent"}`}
+   454→              />
+   455→            </div>
+   456→          </CardHeader>
+   457→          <CardContent className="p-0 overflow-y-auto max-h-[70vh] lg:max-h-[calc(100vh-15rem)] scrollbar-thin">
+   458→            {course.topics.length === 0 ? (
+   459→              <p className="text-sm text-muted-foreground p-6 text-center">
+   460→                No topics published yet.
+   461→              </p>
+   462→            ) : (
+   463→              <Accordion
+   464→                type="multiple"
+   465→                defaultValue={[course.topics[0]?.id].filter(Boolean) as string[]}
+   466→                className="px-3 py-2"
+   467→              >
+   468→                {course.topics.map((topic, topicIdx) => {
+   469→                  const completedInTopic = topic.videos.filter(
+   470→                    (v) => v.progress?.isCompleted
+   471→                  ).length;
+   472→                  const isActiveTopic = topic.id === activeTopic?.id;
+   473→                  const topicComplete = completedInTopic === topic.videos.length && topic.videos.length > 0;
+   474→                  return (
+   475→                    <AccordionItem key={topic.id} value={topic.id} className="border-b border-border/60 last:border-b-0">
+   476→                      <AccordionTrigger className="hover:no-underline px-2 py-3 rounded-lg hover:bg-muted/40 transition-colors">
+   477→                        <div className="flex items-center gap-2.5 flex-1 min-w-0 text-left">
+   478→                          <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-semibold ${
+   479→                            topicComplete
+   480→                              ? "bg-success/15 text-success"
+   481→                              : isActiveTopic
+   482→                                ? "bg-accent/15 text-accent"
+   483→                                : "bg-muted text-muted-foreground"
+   484→                          }`}>
+   485→                            {topicComplete ? <CheckCircle2 className="h-3.5 w-3.5" /> : topicIdx + 1}
+   486→                          </span>
+   487→                          <div className="flex-1 min-w-0">
+   488→                            <p className={`text-sm font-semibold truncate ${isActiveTopic ? "text-accent" : "text-foreground"}`}>
+   489→                              {topic.title}
+   490→                            </p>
+   491→                            <p className="text-[11px] text-muted-foreground mt-0.5">
+   492→                              {completedInTopic}/{topic.videos.length} lessons
+   493→                            </p>
+   494→                          </div>
+   495→                        </div>
+   496→                      </AccordionTrigger>
+   497→                      <AccordionContent className="pb-2 pt-1">
+   498→                        <ul className="space-y-0.5 ml-9">
+   499→                          {topic.videos.map((video, videoIdx) => {
+   500→                            const isActive = video.id === activeVideo?.id;
+   501→                            const completed = video.progress?.isCompleted;
+   502→                            return (
+   503→                              <li key={video.id} className="relative">
+   504→                                {/* Vertical connecting line */}
+   505→                                {videoIdx < topic.videos.length - 1 && (
+   506→                                  <span className="absolute left-3 top-7 bottom-0 w-px bg-border" aria-hidden />
+   507→                                )}
+   508→                                <button
+   509→                                  onClick={() => setUserSelectedVideoId(video.id)}
+   510→                                  className={`group flex w-full items-start gap-2.5 rounded-lg px-2 py-2 text-left text-sm transition-all duration-200 ${
+   511→                                    isActive
+   512→                                      ? "bg-soft-sage text-primary"
+   513→                                      : "text-foreground hover:bg-muted/60"
+   514→                                  }`}
+   515→                                >
+   516→                                  {/* Icon: status indicator */}
+   517→                                  <span className="relative z-10 mt-0.5 shrink-0 flex h-5 w-5 items-center justify-center rounded-full bg-card ring-1 ring-border">
+   518→                                    {completed ? (
+   519→                                      <CheckCircle2 className="h-4 w-4 text-success" />
+   520→                                    ) : isActive ? (
+   521→                                      <PlayCircle className="h-4 w-4 text-primary" />
+   522→                                    ) : (
+   523→                                      <PlayCircle className="h-4 w-4 text-muted-foreground/70 group-hover:text-foreground" />
+   524→                                    )}
+   525→                                  </span>
+   526→                                  <span className="min-w-0 flex-1">
+   527→                                    <span className={`flex items-center gap-1.5 truncate ${isActive ? "font-semibold text-primary" : "font-medium text-foreground group-hover:text-accent"}`}>
+   528→                                      <span className="truncate">{video.title}</span>
+   529→                                      {video.hasQuestions && (
+   530→                                        <Tooltip>
+   531→                                          <TooltipTrigger asChild>
+   532→                                            <span className={cn(
+   533→                                              "inline-flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px] font-semibold shrink-0",
+   534→                                              video.assessmentPassed === true
+   535→                                                ? "bg-success/15 text-success"
+   536→                                                : video.assessmentPassed === false
+   537→                                                  ? "bg-destructive/10 text-destructive"
+   538→                                                  : "bg-accent/10 text-accent"
+   539→                                            )}>
+   540→                                              <HelpCircle className="h-3 w-3" />
+   541→                                              {video.questionCount}
+   542→                                            </span>
+   543→                                          </TooltipTrigger>
+   544→                                          <TooltipContent side="right">
+   545→                                            {video.assessmentPassed === true
+   546→                                              ? "Assessment passed"
+   547→                                              : video.assessmentPassed === false
+   548→                                                ? "Assessment not passed — retake needed"
+   549→                                                : `${video.questionCount} question${video.questionCount > 1 ? "s" : ""} in this video`}
+   550→                                          </TooltipContent>
+   551→                                        </Tooltip>
+   552→                                      )}
+   553→                                    </span>
+   554→                                    {video.duration > 0 && (
+   555→                                      <span className="block text-[11px] text-muted-foreground mt-0.5">
+   556→                                        {formatVideoDuration(video.duration)}
+   557→                                      </span>
+   558→                                    )}
+   559→                                  </span>
+   560→                                </button>
+   561→                              </li>
+   562→                            );
+   563→                          })}
+   564→                        </ul>
+   565→                      </AccordionContent>
+   566→                    </AccordionItem>
+   567→                  );
+   568→                })}
+   569→              </Accordion>
+   570→            )}
+   571→          </CardContent>
+   572→        </Card>
+   573→      </div>
+   574→    </div>
+   575→  );
+   576→}
+   577→
+   578→/* ===================== Video player ===================== */
+   579→
+   580→function VideoPlayer({
+   581→  video,
+   582→  topicTitle,
+   583→  onProgress,
+   584→  prevVideo,
+   585→  nextVideo,
+   586→  onNavigateLesson,
+   587→  refetchCourse,
+   588→}: {
+   589→  video: VideoItem;
+   590→  topicTitle: string | null;
+   591→  onProgress: (update: {
+   592→    videoId: string;
+   593→    progress: VideoProgressInfo;
+   594→    justCompleted: boolean;
+   595→  }) => void;
+   596→  prevVideo: VideoItem | null;
+   597→  nextVideo: VideoItem | null;
+   598→  onNavigateLesson: (id: string) => void;
+   599→  refetchCourse?: () => void;
+   600→}) {
+   601→  const videoRef = useRef<HTMLVideoElement>(null);
+   602→  const lastTimeRef = useRef<number>(0);
+   603→  const watchTimeRef = useRef<number>(0);
+   604→  const durationRef = useRef<number>(0);
+   605→  const lastPostRef = useRef<number>(0);
+   606→  const resumeAppliedRef = useRef<boolean>(false);
+   607→  const [expanded, setExpanded] = useState(false);
+   608→
+   609→  // ─── Video Assessment state ───
+   610→  // Fetches the questions for THIS video (without correctAnswer — security).
+   611→  // The hook is unconditional (rules of hooks); the URL just changes per video.
+   612→  const questionsUrl = `/api/student/videos/${video.id}/questions`;
+   613→  const {
+   614→    data: questionsData,
+   615→    loading: questionsLoading,
+   616→    refetch: refetchQuestions,
+   617→  } = useApiFetch<{
+   618→    questions: VideoQuestionData[];
+   619→    assessment: VideoAssessmentSummary | null;
+   620→  }>(questionsUrl);
+   621→
+   622→  // Currently-displayed question popup (null = no popup shown).
+   623→  const [activeQuestion, setActiveQuestion] = useState<VideoQuestionData | null>(null);
+   624→  // Map of questionId → selected option index (answers given this session).
+   625→  const [answeredMap, setAnsweredMap] = useState<Map<string, number>>(new Map());
+   626→  // Currently-selected option in the active popup (null = nothing selected yet).
+   627→  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+   628→  // Brief "Answer saved" confirmation shown after submitting a popup answer.
+   629→  const [showFeedback, setShowFeedback] = useState(false);
+   630→  // Result returned from POST /assessment — when set, the result overlay shows.
+   631→  const [assessmentResult, setAssessmentResult] = useState<AssessmentResult | null>(null);
+   632→  // True while the assessment POST is in flight.
+   633→  const [submittingAssessment, setSubmittingAssessment] = useState(false);
+   634→  // Timer ref for the post-submit feedback delay (cleared on unmount/video change).
+   635→  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+   636→
+   637→  // YouTube completion timer
+   638→  const ytStartRef = useRef<number | null>(null);
+   639→  const ytTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+   640→  const ytWatchSecondsRef = useRef<number>(0);
+   641→  const [ytCanMarkComplete, setYtCanMarkComplete] = useState(false);
+   642→
+   643→  // Local UI state
+   644→  const [localCompleted, setLocalCompleted] = useState<boolean>(
+   645→    video.progress?.isCompleted || false
+   646→  );
+   647→  const [posting, setPosting] = useState(false);
+   648→
+   649→  // Are question popups active for this viewing session?
+   650→  // They are NOT active if the student has already passed the assessment —
+   651→  // in that case the video plays freely and the "Passed" badge is shown.
+   652→  const questionsActive = Boolean(
+   653→    questionsData &&
+   654→      questionsData.questions.length > 0 &&
+   655→      questionsData.assessment?.passed !== true
+   656→  );
+   657→
+   658→  // Reset on video change
+   659→  useEffect(() => {
+   660→    lastTimeRef.current = 0;
+   661→    watchTimeRef.current = video.progress?.watchTimeSeconds || 0;
+   662→    durationRef.current = video.duration || video.progress?.duration || 0;
+   663→    lastPostRef.current = 0;
+   664→    resumeAppliedRef.current = false;
+   665→    setLocalCompleted(video.progress?.isCompleted || false);
+   666→    setYtCanMarkComplete(false);
+   667→    ytWatchSecondsRef.current = 0;
+   668→    if (ytTimerRef.current) {
+   669→      clearInterval(ytTimerRef.current);
+   670→      ytTimerRef.current = null;
+   671→    }
+   672→    // ─── Reset assessment state ───
+   673→    setActiveQuestion(null);
+   674→    setSelectedAnswer(null);
+   675→    setAnsweredMap(new Map());
+   676→    setShowFeedback(false);
+   677→    setAssessmentResult(null);
+   678→    setSubmittingAssessment(false);
+   679→    if (feedbackTimerRef.current) {
+   680→      clearTimeout(feedbackTimerRef.current);
+   681→      feedbackTimerRef.current = null;
+   682→    }
+   683→  }, [video.id]);
+   684→
+   685→  // ─── Missed-question catch-up ───
+   686→  // Fires when questions data arrives, when a popup/feedback dismisses, or when
+   687→  // the student answers a question. If the playhead has already moved past an
+   688→  // unanswered question's timestamp (e.g. they resumed a half-watched video, or
+   689→  // the questions fetch landed late), pause and surface that question now.
+   690→  useEffect(() => {
+   691→    if (!questionsActive || !questionsData) return;
+   692→    if (activeQuestion || assessmentResult || showFeedback || submittingAssessment) return;
+   693→    const el = videoRef.current;
+   694→    if (!el) return;
+   695→    const cur = el.currentTime;
+   696→    const missed = questionsData.questions.find(
+   697→      (q) => !answeredMap.has(q.id) && cur >= q.timestamp - 0.5
+   698→    );
+   699→    if (missed && !el.paused) {
+   700→      try {
+   701→        el.pause();
+   702→        lastTimeRef.current = el.currentTime;
+   703→      } catch {}
+   704→      setActiveQuestion(missed);
+   705→      setSelectedAnswer(null);
+   706→    }
+   707→  }, [
+   708→    questionsActive,
+   709→    questionsData,
+   710→    activeQuestion,
+   711→    assessmentResult,
+   712→    showFeedback,
+   713→    submittingAssessment,
+   714→    answeredMap,
+   715→  ]);
+   716→
+   717→  // For HTML5 video: apply resume position once metadata is loaded.
+   718→  const handleLoadedMetadata = () => {
+   719→    const el = videoRef.current;
+   720→    if (!el) return;
+   721→    durationRef.current = el.duration || durationRef.current;
+   722→    if (!resumeAppliedRef.current && video.progress?.lastPosition) {
+   723→      // resume within (duration - 2) so we don't immediately fire ended
+   724→      const target = Math.min(
+   725→        video.progress.lastPosition,
+   726→        Math.max(0, (el.duration || 0) - 3)
+   727→      );
+   728→      try {
+   729→        el.currentTime = target;
+   730→      } catch {}
+   731→      lastTimeRef.current = target;
+   732→      resumeAppliedRef.current = true;
+   733→    }
+   734→  };
+   735→
+   736→  // Core: timeupdate handler — accumulate real watch time.
+   737→  const handleTimeUpdate = () => {
+   738→    const el = videoRef.current;
+   739→    if (!el) return;
+   740→    const cur = el.currentTime;
+   741→    const last = lastTimeRef.current;
+   742→
+   743→    // ─── Question trigger check ───
+   744→    // Pause and surface a popup the moment the playhead crosses an unanswered
+   745→    // question's timestamp going forward. We require BOTH:
+   746→    //   - cur >= q.timestamp    (we're at or past it)
+   747→    //   - last < q.timestamp    (we were before it on the previous tick — i.e.
+   748→    //                            this is a forward crossing, not a re-tick while
+   749→    //                            paused, and not a backward seek landing past it)
+   750→    // The 0.5s tolerance from the spec is absorbed by `last < q.timestamp` —
+   751→    // timeupdate fires ~4×/s so `last` is at most ~0.25s behind `cur`.
+   752→    if (
+   753→      questionsActive &&
+   754→      !activeQuestion &&
+   755→      !assessmentResult &&
+   756→      !showFeedback &&
+   757→      !submittingAssessment &&
+   758→      questionsData
+   759→    ) {
+   760→      for (const q of questionsData.questions) {
+   761→        if (answeredMap.has(q.id)) continue;
+   762→        if (cur >= q.timestamp && last < q.timestamp) {
+   763→          try {
+   764→            el.pause();
+   765→            lastTimeRef.current = cur;
+   766→          } catch {}
+   767→          setActiveQuestion(q);
+   768→          setSelectedAnswer(null);
+   769→          return; // do NOT accumulate watch time for this tick
+   770→        }
+   771→      }
+   772→    }
+   773→
+   774→    // Watch time tracking — only counts normal forward playback deltas.
+   775→    const delta = cur - last;
+   776→    // Only count normal playback deltas (0 to 1.5s). This rejects both seeks
+   777→    // (large positive deltas) and rewinds (negative deltas).
+   778→    if (delta > 0 && delta <= 1.5) {
+   779→      watchTimeRef.current += delta;
+   780→    }
+   781→    // Update lastTime to current — even on seek, so next delta is small.
+   782→    lastTimeRef.current = cur;
+   783→
+   784→    // Throttled server POST every 5 seconds
+   785→    const now = Date.now();
+   786→    if (now - lastPostRef.current > 5000) {
+   787→      lastPostRef.current = now;
+   788→      void postProgress(false);
+   789→    }
+   790→  };
+   791→
+   792→  // Seeked event — log; backend rejects completion if watchTime < 85%.
+   793→  // Also catches forward-seek-past-question: if the student scrubs the
+   794→  // progress bar past an unanswered question, pause and surface that question
+   795→  // so they can't skip it.
+   796→  const handleSeeked = () => {
+   797→    const el = videoRef.current;
+   798→    if (!el) return;
+   799→    const newTime = el.currentTime;
+   800→    lastTimeRef.current = newTime;
+   801→
+   802→    if (
+   803→      questionsActive &&
+   804→      !activeQuestion &&
+   805→      !assessmentResult &&
+   806→      !showFeedback &&
+   807→      !submittingAssessment &&
+   808→      questionsData
+   809→    ) {
+   810→      // Find the earliest unanswered question we've now skipped past.
+   811→      const skipped = questionsData.questions.find(
+   812→        (q) => !answeredMap.has(q.id) && newTime > q.timestamp + 0.5
+   813→      );
+   814→      if (skipped) {
+   815→        try {
+   816→          el.pause();
+   817→        } catch {}
+   818→        setActiveQuestion(skipped);
+   819→        setSelectedAnswer(null);
+   820→      }
+   821→    }
+   822→  };
+   823→
+   824→  // Ended event — submit final progress with completion hint.
+   825→  const handleEnded = () => {
+   826→    void postProgress(true);
+   827→  };
+   828→
+   829→  const postProgress = useCallback(
+   830→    async (isCompletionHint: boolean) => {
+   831→      setPosting(true);
+   832→      try {
+   833→        const res = await apiPost<{
+   834→          progress: VideoProgressInfo;
+   835→          justCompleted: boolean;
+   836→          rejectedCompletion: boolean;
+   837→          certificateIssued: boolean;
+   838→          certificateId: string | null;
+   839→        }>("/api/student/progress", {
+   840→          videoId: video.id,
+   841→          lastPosition: videoRef.current?.currentTime || 0,
+   842→          watchTimeSeconds: watchTimeRef.current,
+   843→          duration: durationRef.current,
+   844→          isCompleted: isCompletionHint,
+   845→        });
+   846→        setLocalCompleted(res.progress.isCompleted);
+   847→        onProgress({
+   848→          videoId: video.id,
+   849→          progress: res.progress,
+   850→          justCompleted: res.justCompleted,
+   851→        });
+   852→        if (isCompletionHint && res.rejectedCompletion) {
+   853→          toast({
+   854→            title: "Completion not recorded",
+   855→            description:
+   856→              "You need to watch at least 85% of the video before it's marked complete.",
+   857→            variant: "destructive",
+   858→          });
+   859→        }
+   860→        // ─── Certificate auto-issued upon course completion ───
+   861→        if (res.certificateIssued && res.certificateId) {
+   862→          toast({
+   863→            title: "🎉 Certificate Issued!",
+   864→            description:
+   865→              "Congratulations! You've completed the course and your certificate has been automatically generated. View it in My Certificates.",
+   866→          });
+   867→        }
+   868→      } catch {
+   869→        // apiPost already surfaces errors
+   870→      } finally {
+   871→        setPosting(false);
+   872→      }
+   873→    },
+   874→    [video.id, onProgress]
+   875→  );
+   876→
+   877→  // Manual "Mark complete" for YouTube videos
+   878→  const markYtComplete = async () => {
+   879→    setPosting(true);
+   880→    try {
+   881→      const res = await apiPost<{
+   882→        progress: VideoProgressInfo;
+   883→        justCompleted: boolean;
+   884→        rejectedCompletion: boolean;
+   885→        certificateIssued: boolean;
+   886→        certificateId: string | null;
+   887→      }>("/api/student/progress", {
+   888→        videoId: video.id,
+   889→        lastPosition: durationRef.current,
+   890→        watchTimeSeconds: ytWatchSecondsRef.current,
+   891→        duration: durationRef.current,
+   892→        isCompleted: true,
+   893→      });
+   894→      setLocalCompleted(res.progress.isCompleted);
+   895→      onProgress({
+   896→        videoId: video.id,
+   897→        progress: res.progress,
+   898→        justCompleted: res.justCompleted,
+   899→      });
+   900→      if (res.justCompleted) {
+   901→        toast({
+   902→          title: "Lesson completed",
+   903→          description: "Great work! Your progress has been saved.",
+   904→        });
+   905→      }
+   906→      if (res.rejectedCompletion) {
+   907→        toast({
+   908→          title: "Completion not recorded",
+   909→          description:
+   910→            "You need to keep the video playing for at least 85% of its duration.",
+   911→          variant: "destructive",
+   912→        });
+   913→      }
+   914→      // Certificate auto-issued upon course completion
+   915→      if (res.certificateIssued && res.certificateId) {
+   916→        toast({
+   917→          title: "🎉 Certificate Issued!",
+   918→          description:
+   919→            "Congratulations! You've completed the course and your certificate has been automatically generated. View it in My Certificates.",
+   920→        });
+   921→      }
+   922→    } catch {
+   923→    } finally {
+   924→      setPosting(false);
+   925→    }
+   926→  };
+   927→
+   928→  /* ──────────────────────────────────────────────────────────────
+   929→     Video Assessment — submit, retake, dismiss handlers
+   930→     ────────────────────────────────────────────────────────────── */
+   931→
+   932→  // Submit the collected answers to the server. The server evaluates
+   933→  // correctness (correctAnswer never leaves the server) and returns the
+   934→  // score, pass/fail, and per-question correctness for review.
+   935→  const submitAssessment = useCallback(
+   936→    async (answersMap: Map<string, number>) => {
+   937→      if (!questionsData || submittingAssessment) return;
+   938→      setSubmittingAssessment(true);
+   939→      try {
+   940→        const answers = questionsData.questions.map((q) => ({
+   941→          questionId: q.id,
+   942→          selectedAnswer: answersMap.get(q.id) ?? -1,
+   943→        }));
+   944→        const res = await apiPost<{ assessment: AssessmentResult }>(
+   945→          `/api/student/videos/${video.id}/assessment`,
+   946→          { answers }
+   947→        );
+   948→        setAssessmentResult(res.assessment);
+   949→        // Refresh the questions endpoint so the assessment badge reflects
+   950→        // the latest passed/attempts state, and refresh the parent course
+   951→        // data so the sidebar + course completion update.
+   952→        refetchQuestions();
+   953→        refetchCourse?.();
+   954→        if (res.assessment.passed) {
+   955→          toast({
+   956→            title: "Assessment Passed!",
+   957→            description: `You scored ${res.assessment.score}% (${res.assessment.correctCount}/${res.assessment.totalQuestions} correct).`,
+   958→          });
+   959→        }
+   960→      } catch {
+   961→        // apiPost surfaces the error toast
+   962→      } finally {
+   963→        setSubmittingAssessment(false);
+   964→      }
+   965→    },
+   966→    [questionsData, submittingAssessment, video.id, refetchQuestions, refetchCourse]
+   967→  );
+   968→
+   969→  // After a popup answer is submitted + the brief confirmation shows, decide
+   970→  // what to do next: either surface the next missed question (e.g. if the
+   971→  // student had seeked forward past several), or auto-submit if all answered,
+   972→  // or simply resume playback.
+   973→  const afterAnswerSubmitted = useCallback(
+   974→    (newMap: Map<string, number>) => {
+   975→      setShowFeedback(false);
+   976→      setActiveQuestion(null);
+   977→      setSelectedAnswer(null);
+   978→
+   979→      if (questionsData && newMap.size >= questionsData.questions.length) {
+   980→        // All answered → auto-submit the assessment
+   981→        void submitAssessment(newMap);
+   982→        return;
+   983→      }
+   984→
+   985→      // If the playhead is already past another unanswered question (e.g.
+   986→      // after a forward seek that skipped several), surface the next one
+   987→      // instead of resuming playback.
+   988→      const cur = videoRef.current?.currentTime || 0;
+   989→      if (questionsData) {
+   990→        const nextQ = questionsData.questions.find(
+   991→          (q) => !newMap.has(q.id) && cur >= q.timestamp - 0.5
+   992→        );
+   993→        if (nextQ) {
+   994→          setActiveQuestion(nextQ);
+   995→          setSelectedAnswer(null);
+   996→          return;
+   997→        }
+   998→      }
+   999→
+  1000→      // Otherwise resume normal playback
+  1001→      try {
+  1002→        const el = videoRef.current;
+  1003→        if (el && el.paused) {
+  1004→          void el.play().catch(() => {});
+  1005→        }
+  1006→      } catch {}
+  1007→    },
+  1008→    [questionsData, submitAssessment]
+  1009→  );
+  1010→
+  1011→  // Submit the currently-selected answer for the active popup question.
+  1012→  // Shows a brief "Answer saved" confirmation, then advances via
+  1013→  // afterAnswerSubmitted.
+  1014→  const handleSubmitAnswer = useCallback(() => {
+  1015→    if (!activeQuestion || selectedAnswer === null) return;
+  1016→    const qid = activeQuestion.id;
+  1017→    const newMap = new Map(answeredMap);
+  1018→    newMap.set(qid, selectedAnswer);
+  1019→    setAnsweredMap(newMap);
+  1020→    setShowFeedback(true);
+  1021→
+  1022→    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+  1023→    feedbackTimerRef.current = setTimeout(() => {
+  1024→      feedbackTimerRef.current = null;
+  1025→      afterAnswerSubmitted(newMap);
+  1026→    }, 1200);
+  1027→  }, [activeQuestion, selectedAnswer, answeredMap, afterAnswerSubmitted]);
+  1028→
+  1029→  // Reset all in-session assessment state and let the student try again.
+  1030→  // Seeks back to ~1s before the first question so popups re-trigger as the
+  1031→  // video plays forward.
+  1032→  const handleRetake = useCallback(() => {
+  1033→    setAssessmentResult(null);
+  1034→    setActiveQuestion(null);
+  1035→    setSelectedAnswer(null);
+  1036→    setAnsweredMap(new Map());
+  1037→    setShowFeedback(false);
+  1038→    setSubmittingAssessment(false);
+  1039→    if (feedbackTimerRef.current) {
+  1040→      clearTimeout(feedbackTimerRef.current);
+  1041→      feedbackTimerRef.current = null;
+  1042→    }
+  1043→    const el = videoRef.current;
+  1044→    if (el && questionsData && questionsData.questions.length > 0) {
+  1045→      const firstTs = questionsData.questions[0].timestamp;
+  1046→      const target = Math.max(0, firstTs - 1);
+  1047→      try {
+  1048→        el.currentTime = target;
+  1049→        lastTimeRef.current = target;
+  1050→        void el.play().catch(() => {});
+  1051→      } catch {}
+  1052→    }
+  1053→  }, [questionsData]);
+  1054→
+  1055→  // Dismiss the result overlay after a passing attempt — just resume the video.
+  1056→  const handleDismissResult = useCallback(() => {
+  1057→    setAssessmentResult(null);
+  1058→    try {
+  1059→      const el = videoRef.current;
+  1060→      if (el && el.paused) {
+  1061→        void el.play().catch(() => {});
+  1062→      }
+  1063→    } catch {}
+  1064→  }, []);
+  1065→
+  1066→  // Cleanup the feedback timer on unmount so it can't fire on stale state.
+  1067→  useEffect(() => {
+  1068→    return () => {
+  1069→      if (feedbackTimerRef.current) {
+  1070→        clearTimeout(feedbackTimerRef.current);
+  1071→        feedbackTimerRef.current = null;
+  1072→      }
+  1073→    };
+  1074→  }, []);
+  1075→
+  1076→  /* YouTube handling */
+  1077→  const ytEmbedUrl = useMemo(() => toYouTubeEmbed(video.videoUrl), [video.videoUrl]);
+  1078→  const isYouTube = video.source === "YOUTUBE" && ytEmbedUrl !== null;
+  1079→
+  1080→  // YouTube timer: accumulate watch time + enable mark-complete after 85%.
+  1081→  useEffect(() => {
+  1082→    if (!isYouTube) return;
+  1083→    if (ytTimerRef.current) clearInterval(ytTimerRef.current);
+  1084→    ytStartRef.current = Date.now();
+  1085→
+  1086→    ytTimerRef.current = setInterval(() => {
+  1087→      ytWatchSecondsRef.current = (Date.now() - (ytStartRef.current || Date.now())) / 1000;
+  1088→      const dur = durationRef.current;
+  1089→      if (dur > 0 && ytWatchSecondsRef.current >= dur * 0.85) {
+  1090→        setYtCanMarkComplete(true);
+  1091→      }
+  1092→    }, 1000);
+  1093→
+  1094→    return () => {
+  1095→      if (ytTimerRef.current) {
+  1096→        clearInterval(ytTimerRef.current);
+  1097→        ytTimerRef.current = null;
+  1098→      }
+  1099→    };
+  1100→  }, [isYouTube, video.id]);
+  1101→
+  1102→  // Pre-compute the assessment status badge + overlay JSX so both the compact
+  1103→  // and expanded views can render the same overlays without duplication.
+  1104→  const currentAssessment: VideoAssessmentSummary | null =
+  1105→    assessmentResult
+  1106→      ? {
+  1107→          score: assessmentResult.score,
+  1108→          passed: assessmentResult.passed,
+  1109→          attempts: assessmentResult.attempts,
+  1110→        }
+  1111→      : questionsData?.assessment ?? null;
+  1112→
+  1113→  const hasQuestions = Boolean(questionsData && questionsData.questions.length > 0);
+  1114→
+  1115→  const assessmentStatusBadge = hasQuestions ? (
+  1116→    currentAssessment?.passed === true ? (
+  1117→      <Badge className="bg-success/15 text-success border-transparent">
+  1118→        <CheckCircle2 className="h-3 w-3" /> Assessment Passed ✓
+  1119→      </Badge>
+  1120→    ) : currentAssessment && currentAssessment.attempts > 0 ? (
+  1121→      <Badge className="bg-destructive/10 text-destructive border-transparent">
+  1122→        <AlertTriangle className="h-3 w-3" /> Assessment Failed — Retake Needed
+  1123→      </Badge>
+  1124→    ) : (
+  1125→      <Badge className="bg-warning/15 text-warning border-transparent">
+  1126→        <ClipboardList className="h-3 w-3" /> Assessment Required
+  1127→      </Badge>
+  1128→    )
+  1129→  ) : null;
+  1130→
+  1131→  // Overlay JSX rendered on top of the video element (question popup or
+  1132→  // assessment result card). Same JSX reused in compact + expanded views.
+  1133→  const videoOverlays = (
+  1134→    <>
+  1135→      {activeQuestion && (
+  1136→        <QuestionOverlay
+  1137→          question={activeQuestion}
+  1138→          selectedAnswer={selectedAnswer}
+  1139→          showFeedback={showFeedback}
+  1140→          onSelect={(idx) => setSelectedAnswer(idx)}
+  1141→          onSubmit={handleSubmitAnswer}
+  1142→          answeredCount={answeredMap.size}
+  1143→          totalCount={questionsData?.questions.length ?? 0}
+  1144→        />
+  1145→      )}
+  1146→      {assessmentResult && (
+  1147→        <AssessmentResultOverlay
+  1148→          result={assessmentResult}
+  1149→          onRetake={handleRetake}
+  1150→          onDismiss={handleDismissResult}
+  1151→          submitting={submittingAssessment}
+  1152→        />
+  1153→      )}
+  1154→      {/* Subtle "loading questions" hint while the questions fetch is in flight
+  1155→          and we don't yet know whether this video has them. */}
+  1156→      {questionsLoading && !questionsData && (
+  1157→        <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 rounded-lg bg-black/60 px-2.5 py-1.5 text-[11px] font-medium text-white/80 backdrop-blur-sm">
+  1158→          <Clock className="h-3 w-3 animate-spin" /> Loading quiz…
+  1159→        </div>
+  1160→      )}
+  1161→    </>
+  1162→  );
+  1163→
+  1164→  // Render the right player
+  1165→  return (
+  1166→    <>
+  1167→      {/* Expanded fullscreen overlay — rendered as a portal-like fixed layer */}
+  1168→      {expanded && (
+  1169→        <div className="fixed inset-0 z-50 bg-black flex flex-col">
+  1170→          {/* Top bar with title + close */}
+  1171→          <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-b from-black/80 to-transparent backdrop-blur">
+  1172→            <div className="min-w-0 flex-1">
+  1173→              {topicTitle && (
+  1174→                <p className="text-[11px] font-medium uppercase tracking-wider text-white/60 mb-0.5 truncate">
+  1175→                  {topicTitle}
+  1176→                </p>
+  1177→              )}
+  1178→              <p className="text-sm font-semibold text-white truncate">{video.title}</p>
+  1179→            </div>
+  1180→            <div className="flex items-center gap-2 shrink-0">
+  1181→              {localCompleted && (
+  1182→                <Badge className="bg-success/20 text-success border-transparent">
+  1183→                  <CheckCircle2 className="h-3 w-3" /> Completed
+  1184→                </Badge>
+  1185→              )}
+  1186→              <button
+  1187→                onClick={() => setExpanded(false)}
+  1188→                className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/20 transition-colors"
+  1189→                aria-label="Exit fullscreen"
+  1190→              >
+  1191→                <Minimize2 className="h-4 w-4" />
+  1192→                <span className="hidden sm:inline">Exit fullscreen</span>
+  1193→              </button>
+  1194→            </div>
+  1195→          </div>
+  1196→          {/* Video fills the remaining space */}
+  1197→          <div className="flex-1 flex items-center justify-center p-2 sm:p-4">
+  1198→            <div className="relative w-full h-full flex items-center justify-center">
+  1199→              {video.source === "YOUTUBE" && ytEmbedUrl ? (
+  1200→                <iframe
+  1201→                  key={video.id}
+  1202→                  src={ytEmbedUrl}
+  1203→                  title={video.title}
+  1204→                  className="w-full h-full max-w-[1600px]"
+  1205→                  style={{ aspectRatio: "16 / 9" }}
+  1206→                  frameBorder={0}
+  1207→                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  1208→                  allowFullScreen
+  1209→                />
+  1210→              ) : (
+  1211→                <video
+  1212→                  key={video.id}
+  1213→                  ref={videoRef}
+  1214→                  src={video.videoUrl}
+  1215→                  poster={video.thumbnail || undefined}
+  1216→                  controls
+  1217→                  autoPlay
+  1218→                  className="w-full h-full max-h-full object-contain"
+  1219→                  onLoadedMetadata={handleLoadedMetadata}
+  1220→                  onTimeUpdate={handleTimeUpdate}
+  1221→                  onSeeked={handleSeeked}
+  1222→                  onEnded={handleEnded}
+  1223→                />
+  1224→              )}
+  1225→              {videoOverlays}
+  1226→            </div>
+  1227→          </div>
+  1228→        </div>
+  1229→      )}
+  1230→
+  1231→      {/* ─── Default compact view ─── */}
+  1232→      <Card className="overflow-hidden p-0 shadow-sm">
+  1233→        {/* Compact video area — centered, max 640px, dark frame */}
+  1234→        <div className="bg-gradient-to-b from-foreground/[0.03] to-card p-4 md:p-6">
+  1235→          <div className="relative mx-auto overflow-hidden rounded-xl bg-black shadow-lg ring-1 ring-black/20" style={{ maxWidth: "640px" }}>
+  1236→            <div className="aspect-video w-full flex items-center justify-center relative">
+  1237→              {video.source === "YOUTUBE" && ytEmbedUrl ? (
+  1238→                <iframe
+  1239→                  key={video.id}
+  1240→                  src={ytEmbedUrl}
+  1241→                  title={video.title}
+  1242→                  className="w-full h-full"
+  1243→                  frameBorder={0}
+  1244→                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  1245→                  allowFullScreen
+  1246→                />
+  1247→              ) : (
+  1248→                <video
+  1249→                  key={video.id}
+  1250→                  ref={videoRef}
+  1251→                  src={video.videoUrl}
+  1252→                  poster={video.thumbnail || undefined}
+  1253→                  controls
+  1254→                  className="w-full h-full"
+  1255→                  onLoadedMetadata={handleLoadedMetadata}
+  1256→                  onTimeUpdate={handleTimeUpdate}
+  1257→                  onSeeked={handleSeeked}
+  1258→                  onEnded={handleEnded}
+  1259→                />
+  1260→              )}
+  1261→              {/* Expand button overlay */}
+  1262→              <button
+  1263→                onClick={() => setExpanded(true)}
+  1264→                className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-lg bg-black/70 px-2.5 py-1.5 text-xs font-medium text-white backdrop-blur-sm hover:bg-black/90 transition-colors z-10 shadow-lg ring-1 ring-white/10"
+  1265→                aria-label="Expand video to fullscreen"
+  1266→              >
+  1267→                <Maximize2 className="h-3.5 w-3.5" />
+  1268→                <span className="hidden sm:inline">Expand</span>
+  1269→              </button>
+  1270→              {videoOverlays}
+  1271→            </div>
+  1272→          </div>
+  1273→        </div>
+  1274→
+  1275→        <CardContent className="p-5 space-y-4">
+  1276→          {/* Video info */}
+  1277→          <div className="flex flex-wrap items-start justify-between gap-3">
+  1278→            <div className="min-w-0 flex-1">
+  1279→              {topicTitle && (
+  1280→                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-accent mb-1.5">
+  1281→                  {topicTitle}
+  1282→                </p>
+  1283→              )}
+  1284→              <h2 className="font-heading text-lg font-semibold text-foreground">{video.title}</h2>
+  1285→              {video.description && (
+  1286→                <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{video.description}</p>
+  1287→              )}
+  1288→              {hasQuestions && (
+  1289→                <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5">
+  1290→                  <ListChecks className="h-3.5 w-3.5 text-accent" />
+  1291→                  This lesson includes {questionsData!.questions.length} in-video question{questionsData!.questions.length > 1 ? "s" : ""}.
+  1292→                  {" "}
+  1293→                  {currentAssessment?.passed === true
+  1294→                    ? "You've passed the assessment — the video will play without interruption."
+  1295→                    : currentAssessment && currentAssessment.attempts > 0
+  1296→                      ? `Previous score: ${currentAssessment.score}%. Retake the assessment by watching again.`
+  1297→                      : "Answer each one as it appears to complete the assessment."}
+  1298→                </p>
+  1299→              )}
+  1300→            </div>
+  1301→            <div className="flex flex-wrap items-center gap-2 shrink-0">
+  1302→              {posting && (
+  1303→                <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+  1304→                  <Clock className="h-3 w-3 animate-spin" /> Saving...
+  1305→                </span>
+  1306→              )}
+  1307→              {hasQuestions && (
+  1308→                <Badge variant="outline" className="border-accent/30 text-accent gap-1">
+  1309→                  <ListChecks className="h-3 w-3" />
+  1310→                  {questionsData!.questions.length} Question{questionsData!.questions.length > 1 ? "s" : ""}
+  1311→                </Badge>
+  1312→              )}
+  1313→              {assessmentStatusBadge}
+  1314→              {localCompleted ? (
+  1315→                <Badge className="bg-success/15 text-success border-transparent">
+  1316→                  <CheckCircle2 className="h-3 w-3" /> Completed
+  1317→                </Badge>
+  1318→              ) : (
+  1319→                <Badge variant="outline" className="text-muted-foreground border-border">
+  1320→                  <PlayCircle className="h-3 w-3" /> In progress
+  1321→                </Badge>
+  1322→              )}
+  1323→            </div>
+  1324→          </div>
+  1325→
+  1326→          {/* Prev / Next navigation */}
+  1327→          {(prevVideo || nextVideo) && (
+  1328→            <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
+  1329→              <Button
+  1330→                variant="outline"
+  1331→                size="sm"
+  1332→                onClick={() => prevVideo && onNavigateLesson(prevVideo.id)}
+  1333→                disabled={!prevVideo}
+  1334→                className="gap-2"
+  1335→              >
+  1336→                <ChevronLeft className="h-4 w-4" />
+  1337→                <span className="hidden sm:inline">Previous</span>
+  1338→              </Button>
+  1339→              <span className="text-xs text-muted-foreground">Lesson</span>
+  1340→              <Button
+  1341→                variant="outline"
+  1342→                size="sm"
+  1343→                onClick={() => nextVideo && onNavigateLesson(nextVideo.id)}
+  1344→                disabled={!nextVideo}
+  1345→                className="gap-2"
+  1346→              >
+  1347→                <span className="hidden sm:inline">Next</span>
+  1348→                <ChevronRight className="h-4 w-4" />
+  1349→              </Button>
+  1350→            </div>
+  1351→          )}
+  1352→
+  1353→          {/* YouTube: explain limitation + show manual mark-complete */}
+  1354→          {isYouTube && (
+  1355→            <div className="rounded-lg border border-warning/30 bg-warning/5 p-3.5 space-y-2">
+  1356→              <div className="flex items-start gap-2.5">
+  1357→                <Info className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+  1358→                <div>
+  1359→                  <p className="text-sm font-medium text-foreground">
+  1360→                    YouTube video tracking
+  1361→                  </p>
+  1362→                  <p className="text-xs text-muted-foreground mt-0.5">
+  1363→                    YouTube videos cannot report precise playback events to us. The
+  1364→                    &quot;Mark as complete&quot; button below unlocks after you have
+  1365→                    kept this page open for at least 85% of the video&apos;s duration.
+  1366→                  </p>
+  1367→                </div>
+  1368→              </div>
+  1369→              <div className="flex items-center gap-2 pl-6">
+  1370→                <Tooltip>
+  1371→                  <TooltipTrigger asChild>
+  1372→                    <span tabIndex={0} className="inline-flex">
+  1373→                      <Button
+  1374→                        size="sm"
+  1375→                        onClick={markYtComplete}
+  1376→                        disabled={!ytCanMarkComplete || localCompleted || posting}
+  1377→                        className="gap-2 shadow-sm"
+  1378→                      >
+  1379→                        <CheckCircle2 className="h-4 w-4" />
+  1380→                        {localCompleted ? "Completed" : ytCanMarkComplete ? "Mark as complete" : `Keep watching (${Math.round((ytWatchSecondsRef.current / Math.max(1, durationRef.current)) * 100)}%)`}
+  1381→                      </Button>
+  1382→                    </span>
+  1383→                  </TooltipTrigger>
+  1384→                  <TooltipContent>
+  1385→                    {ytCanMarkComplete
+  1386→                      ? "You can now mark this video complete."
+  1387→                      : "Available after watching at least 85% of the video duration."}
+  1388→                  </TooltipContent>
+  1389→                </Tooltip>
+  1390→              </div>
+  1391→            </div>
+  1392→          )}
+  1393→        </CardContent>
+  1394→      </Card>
+  1395→    </>
+  1396→  );
+  1397→}
+  1398→
+  1399→/* ===================== Helpers ===================== */
+  1400→
+  1401→/* ──────────────────────────────────────────────────────────────
+  1402→   QuestionOverlay — inline popup rendered on top of the video
+  1403→   ──────────────────────────────────────────────────────────────
+  1404→   Shows one question at a time. The student must select an option and
+  1405→   submit before the video can resume. After submit, a brief "Answer
+  1406→   saved" confirmation is shown (the actual correct/incorrect feedback
+  1407→   is deferred to the final assessment result, since correctAnswer is
+  1408→   never sent to the client for security reasons). */
+  1409→function QuestionOverlay({
+  1410→  question,
+  1411→  selectedAnswer,
+  1412→  showFeedback,
+  1413→  onSelect,
+  1414→  onSubmit,
+  1415→  answeredCount,
+  1416→  totalCount,
+  1417→}: {
+  1418→  question: VideoQuestionData;
+  1419→  selectedAnswer: number | null;
+  1420→  showFeedback: boolean;
+  1421→  onSelect: (idx: number) => void;
+  1422→  onSubmit: () => void;
+  1423→  answeredCount: number;
+  1424→  totalCount: number;
+  1425→}) {
+  1426→  return (
+  1427→    <div
+  1428→      className="absolute inset-0 z-30 flex items-center justify-center bg-black/85 backdrop-blur-sm p-3 sm:p-4 animate-in fade-in duration-150"
+  1429→      role="dialog"
+  1430→      aria-modal="true"
+  1431→      aria-label={`Question ${answeredCount + 1} of ${totalCount}`}
+  1432→    >
+  1433→      <div className="w-full max-w-md rounded-xl border border-accent/20 bg-card shadow-2xl ring-1 ring-accent/10 overflow-hidden">
+  1434→        {/* Header strip — sage themed */}
+  1435→        <div className="flex items-center justify-between gap-2 border-b border-accent/15 bg-gradient-to-r from-soft-sage to-transparent px-4 py-2.5">
+  1436→          <div className="flex items-center gap-2 min-w-0">
+  1437→            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-accent/15 text-primary shrink-0">
+  1438→              <HelpCircle className="h-3.5 w-3.5" />
+  1439→            </span>
+  1440→            <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary truncate">
+  1441→              Quick Check
+  1442→            </span>
+  1443→          </div>
+  1444→          <span className="text-[11px] font-medium text-muted-foreground tabular-nums shrink-0">
+  1445→            {answeredCount + 1} / {totalCount}
+  1446→          </span>
+  1447→        </div>
+  1448→
+  1449→        {/* Body */}
+  1450→        <div className="p-4 sm:p-5 space-y-4">
+  1451→          <p className="text-base font-semibold text-foreground leading-relaxed">
+  1452→            {question.question}
+  1453→          </p>
+  1454→
+  1455→          <div className="space-y-2">
+  1456→            {question.options.map((opt, idx) => {
+  1457→              const isSelected = selectedAnswer === idx;
+  1458→              return (
+  1459→                <button
+  1460→                  key={idx}
+  1461→                  type="button"
+  1462→                  disabled={showFeedback}
+  1463→                  onClick={() => onSelect(idx)}
+  1464→                  className={cn(
+  1465→                    "group flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-all duration-150",
+  1466→                    isSelected
+  1467→                      ? "border-accent bg-soft-sage ring-1 ring-accent/30"
+  1468→                      : "border-border bg-card hover:border-accent/40 hover:bg-soft-sage/40",
+  1469→                    showFeedback && "cursor-default opacity-70"
+  1470→                  )}
+  1471→                  aria-pressed={isSelected}
+  1472→                >
+  1473→                  <span
+  1474→                    className={cn(
+  1475→                      "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold transition-colors",
+  1476→                      isSelected
+  1477→                        ? "border-accent bg-accent text-accent-foreground"
+  1478→                        : "border-border text-muted-foreground group-hover:border-accent/50"
+  1479→                    )}
+  1480→                  >
+  1481→                    {String.fromCharCode(65 + idx)}
+  1482→                  </span>
+  1483→                  <span className={cn(
+  1484→                    "text-sm",
+  1485→                    isSelected ? "font-medium text-foreground" : "text-foreground"
+  1486→                  )}>
+  1487→                    {opt}
+  1488→                  </span>
+  1489→                </button>
+  1490→              );
+  1491→            })}
+  1492→          </div>
+  1493→
+  1494→          {/* Footer — submit / feedback */}
+  1495→          <div className="flex items-center justify-between gap-3 pt-1">
+  1496→            <p className="text-[11px] text-muted-foreground">
+  1497→              {showFeedback
+  1498→                ? "Answer recorded — your video will resume shortly."
+  1499→                : "Pick an answer to continue."}
+  1500→            </p>
+  1501→            {showFeedback ? (
+  1502→              <span className="inline-flex items-center gap-1.5 rounded-md bg-success/15 px-2.5 py-1.5 text-xs font-medium text-success">
+  1503→                <CheckCircle2 className="h-3.5 w-3.5" /> Saved
+  1504→              </span>
+  1505→            ) : (
+  1506→              <Button
+  1507→                onClick={onSubmit}
+  1508→                disabled={selectedAnswer === null}
+  1509→                size="sm"
+  1510→                className="gap-2 shadow-sm"
+  1511→              >
+  1512→                Submit Answer
+  1513→              </Button>
+  1514→            )}
+  1515→          </div>
+  1516→        </div>
+  1517→      </div>
+  1518→    </div>
+  1519→  );
+  1520→}
+  1521→
+  1522→/* ──────────────────────────────────────────────────────────────
+  1523→   AssessmentResultOverlay — shown after all questions are answered
+  1524→   ──────────────────────────────────────────────────────────────
+  1525→   Reveals the final score, pass/fail status, and per-question
+  1526→   correctness (the only place where correctAnswer is revealed — the
+  1527→   server returns it in the POST response). */
+  1528→function AssessmentResultOverlay({
+  1529→  result,
+  1530→  onRetake,
+  1531→  onDismiss,
+  1532→  submitting,
+  1533→}: {
+  1534→  result: AssessmentResult;
+  1535→  onRetake: () => void;
+  1536→  onDismiss: () => void;
+  1537→  submitting: boolean;
+  1538→}) {
+  1539→  const passed = result.passed;
+  1540→  return (
+  1541→    <div
+  1542→      className="absolute inset-0 z-30 flex items-center justify-center bg-black/85 backdrop-blur-sm p-3 sm:p-4 animate-in fade-in duration-150"
+  1543→      role="dialog"
+  1544→      aria-modal="true"
+  1545→      aria-label="Assessment result"
+  1546→    >
+  1547→      <div className="w-full max-w-md max-h-full overflow-y-auto scrollbar-thin rounded-xl border border-border bg-card shadow-2xl ring-1 ring-black/5">
+  1548→        {/* Header — pass/fail banner */}
+  1549→        <div
+  1550→          className={cn(
+  1551→            "flex flex-col items-center text-center px-5 py-5 border-b",
+  1552→            passed ? "border-success/20 bg-success/5" : "border-destructive/20 bg-destructive/5"
+  1553→          )}
+  1554→        >
+  1555→          <div
+  1556→            className={cn(
+  1557→              "flex h-14 w-14 items-center justify-center rounded-full mb-2.5",
+  1558→              passed ? "bg-success/15" : "bg-destructive/10"
+  1559→            )}
+  1560→          >
+  1561→            {passed ? (
+  1562→              <CheckCircle2 className="h-7 w-7 text-success" />
+  1563→            ) : (
+  1564→              <AlertTriangle className="h-7 w-7 text-destructive" />
+  1565→            )}
+  1566→          </div>
+  1567→          <h3 className={cn(
+  1568→            "text-lg font-semibold",
+  1569→            passed ? "text-success" : "text-destructive"
+  1570→          )}>
+  1571→            {passed ? "Assessment Passed!" : "Assessment Failed"}
+  1572→          </h3>
+  1573→          <p className="text-sm text-muted-foreground mt-1">
+  1574→            {passed
+  1575→              ? `You scored ${result.score}% — ${result.correctCount}/${result.totalQuestions} correct.`
+  1576→              : `Score: ${result.score}%. You need 70% to pass. You can retake the assessment.`}
+  1577→          </p>
+  1578→          {/* Score ring */}
+  1579→          <div className="mt-3 w-full max-w-[220px]">
+  1580→            <Progress
+  1581→              value={result.score}
+  1582→              className={cn(
+  1583→                "h-2 bg-muted",
+  1584→                passed
+  1585→                  ? "[&_[data-slot=progress-indicator]]:bg-success"
+  1586→                  : "[&_[data-slot=progress-indicator]]:bg-destructive"
+  1587→              )}
+  1588→            />
+  1589→            <div className="flex justify-between text-[10px] text-muted-foreground mt-1 tabular-nums">
+  1590→              <span>0%</span>
+  1591→              <span className="font-semibold text-foreground">{result.score}%</span>
+  1592→              <span>100%</span>
+  1593→            </div>
+  1594→          </div>
+  1595→        </div>
+  1596→
+  1597→        {/* Per-question review */}
+  1598→        <div className="p-4 sm:p-5 space-y-2.5">
+  1599→          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+  1600→            Review
+  1601→          </p>
+  1602→          {result.answers.map((a, idx) => (
+  1603→            <div
+  1604→              key={a.questionId}
+  1605→              className={cn(
+  1606→                "rounded-lg border p-3",
+  1607→                a.correct
+  1608→                  ? "border-success/20 bg-success/5"
+  1609→                  : "border-destructive/20 bg-destructive/5"
+  1610→              )}
+  1611→            >
+  1612→              <div className="flex items-start gap-2">
+  1613→                {a.correct ? (
+  1614→                  <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+  1615→                ) : (
+  1616→                  <XCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+  1617→                )}
+  1618→                <div className="min-w-0 flex-1">
+  1619→                  <p className="text-xs font-medium text-foreground leading-relaxed">
+  1620→                    <span className="text-muted-foreground mr-1">Q{idx + 1}.</span>
+  1621→                    {a.question}
+  1622→                  </p>
+  1623→                  {!a.correct && a.selectedAnswer >= 0 && (
+  1624→                    <p className="text-[11px] text-muted-foreground mt-1">
+  1625→                      Your answer:{" "}
+  1626→                      <span className="text-destructive font-medium line-clamp-1">
+  1627→                        {a.options[a.selectedAnswer]}
+  1628→                      </span>
+  1629→                    </p>
+  1630→                  )}
+  1631→                  {!a.correct && (
+  1632→                    <p className="text-[11px] text-muted-foreground mt-0.5">
+  1633→                      Correct:{" "}
+  1634→                      <span className="text-success font-medium line-clamp-1">
+  1635→                        {a.options[a.correctAnswer]}
+  1636→                      </span>
+  1637→                    </p>
+  1638→                  )}
+  1639→                </div>
+  1640→              </div>
+  1641→            </div>
+  1642→          ))}
+  1643→        </div>
+  1644→
+  1645→        {/* Footer actions */}
+  1646→        <div className="flex items-center justify-end gap-2 border-t border-border bg-muted/30 px-4 py-3">
+  1647→          {passed ? (
+  1648→            <Button onClick={onDismiss} size="sm" className="gap-2 shadow-sm">
+  1649→              <CheckCircle2 className="h-4 w-4" /> Continue watching
+  1650→            </Button>
+  1651→          ) : (
+  1652→            <Button
+  1653→              onClick={onRetake}
+  1654→              disabled={submitting}
+  1655→              size="sm"
+  1656→              className="gap-2 shadow-sm"
+  1657→            >
+  1658→              <RefreshCw className={cn("h-4 w-4", submitting && "animate-spin")} />
+  1659→              {submitting ? "Retaking…" : "Retake Assessment"}
+  1660→            </Button>
+  1661→          )}
+  1662→        </div>
+  1663→      </div>
+  1664→    </div>
+  1665→  );
+  1666→}
+  1667→
+  1668→function MaterialRow({ material }: { material: MaterialItem }) {
+  1669→  const isLink = material.type === "LINK";
+  1670→  const Icon = isLink ? LinkIcon : FileText;
+  1671→  return (
+  1672→    <li>
+  1673→      <a
+  1674→        href={material.fileUrl}
+  1675→        target="_blank"
+  1676→        rel="noreferrer"
+  1677→        className="group flex items-start gap-3 rounded-lg border border-border bg-card p-3 hover:border-accent/40 hover:bg-soft-sage/40 transition-all duration-200"
+  1678→      >
+  1679→        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 text-accent shrink-0 ring-1 ring-accent/20">
+  1680→          <Icon className="h-4 w-4" />
+  1681→        </div>
+  1682→        <div className="min-w-0 flex-1">
+  1683→          <p className="text-sm font-medium text-foreground line-clamp-1 group-hover:text-accent transition-colors">{material.title}</p>
+  1684→          {material.description && (
+  1685→            <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{material.description}</p>
+  1686→          )}
+  1687→          {material.topic && (
+  1688→            <p className="text-xs text-muted-foreground mt-0.5">Topic: {material.topic.title}</p>
+  1689→          )}
+  1690→        </div>
+  1691→        <span className="text-xs font-medium text-accent flex items-center gap-1 shrink-0">
+  1692→          {isLink ? "Open" : "Download"} <Download className="h-3 w-3" />
+  1693→        </span>
+  1694→      </a>
+  1695→    </li>
+  1696→  );
+  1697→}
+  1698→
+  1699→/* ===================== Locked Assignment Placeholder ===================== */
+  1700→
+  1701→function LockedAssignmentCard({
+  1702→  completedVideos,
+  1703→  totalVideos,
+  1704→  percent,
+  1705→}: {
+  1706→  completedVideos: number;
+  1707→  totalVideos: number;
+  1708→  percent: number;
+  1709→}) {
+  1710→  return (
+  1711→    <Card className="border-dashed border-border bg-muted/20 shadow-sm">
+  1712→      <CardContent className="p-6">
+  1713→        <div className="flex items-start gap-4">
+  1714→          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-muted-foreground shrink-0 ring-1 ring-border">
+  1715→            <Lock className="h-6 w-6" />
+  1716→          </div>
+  1717→          <div className="flex-1 min-w-0">
+  1718→            <div className="flex items-center gap-2">
+  1719→              <h3 className="font-heading text-base font-semibold text-foreground">
+  1720→                Assignment Locked
+  1721→              </h3>
+  1722→              <Badge className="bg-muted text-muted-foreground border-transparent">Locked</Badge>
+  1723→            </div>
+  1724→            <p className="text-sm text-muted-foreground mt-1.5">
+  1725→              Complete all video lessons in this course to unlock your assignment.
+  1726→              The assignment details will appear here once you finish every lesson.
+  1727→            </p>
+  1728→            <div className="mt-4">
+  1729→              <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
+  1730→                <span>{completedVideos}/{totalVideos} lessons completed</span>
+  1731→                <span className="font-semibold text-foreground">{percent}%</span>
+  1732→              </div>
+  1733→              <Progress
+  1734→                value={percent}
+  1735→                className={`h-2 bg-muted ${percent === 100 ? "[&_[data-slot=progress-indicator]]:bg-success" : "[&_[data-slot=progress-indicator]]:bg-accent"}`}
+  1736→              />
+  1737→            </div>
+  1738→          </div>
+  1739→        </div>
+  1740→      </CardContent>
+  1741→    </Card>
+  1742→  );
+  1743→}
+  1744→
+  1745→function AssignmentPanel({
+  1746→  course,
+  1747→  onSubmitted,
+  1748→}: {
+  1749→  course: CourseDetail;
+  1750→  onSubmitted: () => void;
+  1751→}) {
+  1752→  const navigate = useAppStore((s) => s.navigate);
+  1753→  const [uploading, setUploading] = useState(false);
+  1754→  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  1755→
+  1756→  const assignment = course.assignment!;
+  1757→  const submission = course.submission;
+  1758→  const completed = course.courseCompletion.allCompleted;
+  1759→
+  1760→  async function handleSubmit() {
+  1761→    if (!selectedFile) {
+  1762→      toast({ title: "Select a file", description: "Please choose a file to upload.", variant: "destructive" });
+  1763→      return;
+  1764→    }
+  1765→    setUploading(true);
+  1766→    try {
+  1767→      const fd = new FormData();
+  1768→      fd.append("file", selectedFile);
+  1769→      const res = await apiUpload<{
+  1770→        certificateIssued: boolean;
+  1771→        certificateId?: string;
+  1772→      }>(`/api/student/assignments/${assignment.id}/submit`, fd);
+  1773→      setSelectedFile(null);
+  1774→      await onSubmitted();
+  1775→      if (res.certificateIssued) {
+  1776→        toast({
+  1777→          title: "Submitted & certificate issued!",
+  1778→          description: "Your submission was received and a certificate was automatically issued.",
+  1779→        });
+  1780→      } else {
+  1781→        toast({
+  1782→          title: "Submission received",
+  1783→          description: "Your assignment has been submitted for review.",
+  1784→        });
+  1785→      }
+  1786→    } catch {
+  1787→    } finally {
+  1788→      setUploading(false);
+  1789→    }
+  1790→  }
+  1791→
+  1792→  return (
+  1793→    <Card className="shadow-sm border-accent/20">
+  1794→      <CardHeader>
+  1795→        <CardTitle className="text-base flex items-center gap-2">
+  1796→          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10 text-accent">
+  1797→            <ClipboardList className="h-4 w-4" />
+  1798→          </span>
+  1799→          {assignment.title}
+  1800→        </CardTitle>
+  1801→        <CardDescription>
+  1802→          Course assignment · {completed ? "Unlocked" : "Locked"}
+  1803→        </CardDescription>
+  1804→      </CardHeader>
+  1805→      <CardContent className="space-y-4">
+  1806→        {!completed ? (
+  1807→          <div className="rounded-lg border border-border bg-muted/40 p-4">
+  1808→            <div className="flex items-start gap-3">
+  1809→              <Lock className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+  1810→              <div className="flex-1">
+  1811→                <p className="font-medium text-foreground">Assignment locked</p>
+  1812→                <p className="text-sm text-muted-foreground mt-1">
+  1813→                  Complete all video lessons in this course to unlock your assignment.
+  1814→                </p>
+  1815→                <div className="mt-3">
+  1816→                  <div className="flex justify-between text-xs text-muted-foreground mb-1">
+  1817→                    <span>{course.courseCompletion.completedVideos}/{course.courseCompletion.totalVideos} lessons</span>
+  1818→                    <span>{course.courseCompletion.percent}%</span>
+  1819→                  </div>
+  1820→                  <Progress value={course.courseCompletion.percent} className="h-1.5 bg-muted [&_[data-slot=progress-indicator]]:bg-accent" />
+  1821→                </div>
+  1822→              </div>
+  1823→            </div>
+  1824→          </div>
+  1825→        ) : submission ? (
+  1826→          <div className="space-y-3">
+  1827→            <div className="flex items-center gap-2">
+  1828→              <Badge className="bg-success/15 text-success border-transparent">
+  1829→                <CheckCircle2 className="h-3 w-3" /> Submitted
+  1830→              </Badge>
+  1831→              {submission.status === "REVIEWED" && (
+  1832→                <Badge className="bg-accent/10 text-accent border-transparent">Reviewed</Badge>
+  1833→              )}
+  1834→            </div>
+  1835→            <p className="text-sm text-muted-foreground">
+  1836→              Submitted on {formatDateTime(submission.submittedAt)}
+  1837→            </p>
+  1838→            <a
+  1839→              href={submission.fileUrl}
+  1840→              target="_blank"
+  1841→              rel="noreferrer"
+  1842→              className="inline-flex items-center gap-2 text-sm text-accent hover:underline"
+  1843→            >
+  1844→              <Download className="h-3.5 w-3.5" /> View your submission
+  1845→            </a>
+  1846→            {submission.reviewNotes && (
+  1847→              <div className="rounded-lg border border-border bg-card p-3">
+  1848→                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Reviewer notes</p>
+  1849→                <p className="text-sm text-foreground">{submission.reviewNotes}</p>
+  1850→              </div>
+  1851→            )}
+  1852→            {course.certificateTemplate?.isEnabled && (
+  1853→              <Button variant="outline" size="sm" onClick={() => navigate(["student", "certificates"])} className="gap-2 shadow-sm">
+  1854→                <Award className="h-4 w-4" /> View your certificate
+  1855→              </Button>
+  1856→            )}
+  1857→            {assignment.allowResubmission && (
+  1858→              <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+  1859→                <Sparkles className="h-3.5 w-3.5 text-accent shrink-0 mt-0.5" />
+  1860→                Resubmission is allowed — pick a new file below to replace your submission.
+  1861→              </p>
+  1862→            )}
+  1863→          </div>
+  1864→        ) : null}
+  1865→
+  1866→        {completed && (!submission || assignment.allowResubmission) && (
+  1867→          <div className="space-y-3">
+  1868→            {assignment.description && (
+  1869→              <p className="text-sm text-foreground">{assignment.description}</p>
+  1870→            )}
+  1871→            {assignment.instructions && (
+  1872→              <div className="rounded-lg border border-border bg-muted/40 p-3.5">
+  1873→                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Instructions</p>
+  1874→                <p className="text-sm text-foreground whitespace-pre-wrap">{assignment.instructions}</p>
+  1875→              </div>
+  1876→            )}
+  1877→            {assignment.fileUrl && (
+  1878→              <a
+  1879→                href={assignment.fileUrl}
+  1880→                target="_blank"
+  1881→                rel="noreferrer"
+  1882→                className="inline-flex items-center gap-2 text-sm text-accent hover:underline"
+  1883→              >
+  1884→                <Download className="h-3.5 w-3.5" /> Download assignment brief
+  1885→              </a>
+  1886→            )}
+  1887→            {assignment.dueDate && (
+  1888→              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+  1889→                <Clock className="h-3.5 w-3.5 text-accent" /> Due {formatDateTime(assignment.dueDate)}
+  1890→              </p>
+  1891→            )}
+  1892→            <div className="border-t border-border pt-4 space-y-3">
+  1893→              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+  1894→                <FileText className="h-4 w-4 text-accent" />
+  1895→                Upload your submission
+  1896→              </label>
+  1897→              <input
+  1898→                type="file"
+  1899→                accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
+  1900→                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+  1901→                className="block w-full text-sm text-foreground file:mr-3 file:py-1.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer"
+  1902→              />
+  1903→              {selectedFile && (
+  1904→                <p className="text-xs text-muted-foreground">
+  1905→                  Selected: {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
+  1906→                </p>
+  1907→              )}
+  1908→              <Button onClick={handleSubmit} disabled={!selectedFile || uploading} className="gap-2 shadow-sm">
+  1909→                <Upload className="h-4 w-4" />
+  1910→                {uploading ? "Uploading..." : "Submit Assignment"}
+  1911→              </Button>
+  1912→            </div>
+  1913→          </div>
+  1914→        )}
+  1915→      </CardContent>
+  1916→    </Card>
+  1917→  );
+  1918→}
+  1919→
+  1920→// Local helper for YouTube URL parsing
+  1921→function toYouTubeEmbed(url: string): string | null {
+  1922→  try {
+  1923→    const u = new URL(url);
+  1924→    if (u.hostname === "youtu.be") {
+  1925→      const id = u.pathname.slice(1);
+  1926→      return `https://www.youtube.com/embed/${id}?rel=0`;
+  1927→    }
+  1928→    if (u.hostname.includes("youtube.com")) {
+  1929→      const id = u.searchParams.get("v");
+  1930→      if (id) return `https://www.youtube.com/embed/${id}?rel=0`;
+  1931→      // /embed/ID or /shorts/ID
+  1932→      const m = u.pathname.match(/\/(embed|shorts)\/([\w-]+)/);
+  1933→      if (m) return `https://www.youtube.com/embed/${m[2]}?rel=0`;
+  1934→    }
+  1935→    return null;
+  1936→  } catch {
+  1937→    return null;
+  1938→  }
+  1939→}
+  1940→
+  1941→function formatVideoDuration(seconds: number): string {
+  1942→  if (seconds <= 0) return "";
+  1943→  const m = Math.floor(seconds / 60);
+  1944→  const s = Math.floor(seconds % 60);
+  1945→  if (m === 0) return `${s}s`;
+  1946→  return `${m}:${s.toString().padStart(2, "0")}`;
+  1947→}
+  1948→

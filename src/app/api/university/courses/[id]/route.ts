@@ -60,8 +60,13 @@ export async function GET(
         description: course.description,
         thumbnail: course.thumbnail,
         category: course.category,
+        level: course.level,
         accessType: course.accessType,
         isPublished: course.isPublished,
+        startDate: course.startDate,
+        endDate: course.endDate,
+        availabilityMode: course.availabilityMode,
+        enrollmentOpen: course.enrollmentOpen,
         createdAt: course.createdAt,
         updatedAt: course.updatedAt,
         topics: course.topics.map((t) => ({
@@ -154,17 +159,27 @@ export async function PUT(
       description,
       thumbnail,
       category,
+      level,
       accessType,
       isPublished,
       planIds,
+      startDate,
+      endDate,
+      availabilityMode,
+      enrollmentOpen,
     } = body as {
       title?: string;
       description?: string | null;
       thumbnail?: string | null;
       category?: string | null;
+      level?: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
       accessType?: "FREE" | "PAID";
       isPublished?: boolean;
       planIds?: string[];
+      startDate?: string | null;
+      endDate?: string | null;
+      availabilityMode?: "ALWAYS" | "SCHEDULED" | "LIMITED";
+      enrollmentOpen?: boolean;
     };
 
     const existing = await db.course.findUnique({ where: { id } });
@@ -179,6 +194,39 @@ export async function PUT(
         ? "FREE"
         : existing.accessType;
 
+    const validLevel =
+      level === "INTERMEDIATE" || level === "ADVANCED" || level === "BEGINNER"
+        ? level
+        : existing.level;
+    const validMode =
+      availabilityMode === "SCHEDULED" ||
+      availabilityMode === "LIMITED" ||
+      availabilityMode === "ALWAYS"
+        ? availabilityMode
+        : existing.availabilityMode;
+
+    // Parse dates — allow null/empty to clear
+    const startDateParsed =
+      startDate === undefined
+        ? undefined
+        : startDate === null || startDate === ""
+          ? null
+          : new Date(startDate);
+    const endDateParsed =
+      endDate === undefined
+        ? undefined
+        : endDate === null || endDate === ""
+          ? null
+          : new Date(endDate);
+
+    if (
+      startDateParsed &&
+      endDateParsed &&
+      endDateParsed < startDateParsed
+    ) {
+      return errorResponse("End date must be after start date", 400);
+    }
+
     if (aType === "PAID" && planIds && planIds.length === 0) {
       return errorResponse("Paid courses must specify at least one plan", 400);
     }
@@ -192,8 +240,13 @@ export async function PUT(
           : {}),
         ...(thumbnail !== undefined ? { thumbnail: thumbnail?.trim() || null } : {}),
         ...(category !== undefined ? { category: category?.trim() || null } : {}),
+        ...(level !== undefined ? { level: validLevel } : {}),
         ...(accessType !== undefined ? { accessType: aType } : {}),
         ...(isPublished !== undefined ? { isPublished: !!isPublished } : {}),
+        ...(availabilityMode !== undefined ? { availabilityMode: validMode } : {}),
+        ...(startDateParsed !== undefined ? { startDate: startDateParsed } : {}),
+        ...(endDateParsed !== undefined ? { endDate: endDateParsed } : {}),
+        ...(enrollmentOpen !== undefined ? { enrollmentOpen: !!enrollmentOpen } : {}),
       },
     });
 

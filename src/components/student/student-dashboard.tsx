@@ -11,6 +11,10 @@ import { StudentSubscription } from "./student-subscription";
 import { StudentCertificates } from "./student-certificates";
 import { StudentProfile } from "./student-profile";
 import { StudentUniversities } from "./student-universities";
+import { StudentNotes } from "./student-notes";
+import { StudentBookmarks } from "./student-bookmarks";
+import { StudentDiscussions } from "./student-discussions";
+import { StudentNotifications } from "./student-notifications";
 import { ExpiredScreen } from "./expired-screen";
 import { useApiFetch } from "@/hooks/use-api";
 import { cn } from "@/lib/utils";
@@ -73,6 +77,18 @@ export function StudentDashboard() {
       break;
     case "assignments":
       content = <StudentAssignments />;
+      break;
+    case "notes":
+      content = <StudentNotes />;
+      break;
+    case "bookmarks":
+      content = <StudentBookmarks />;
+      break;
+    case "discussions":
+      content = <StudentDiscussions />;
+      break;
+    case "notifications":
+      content = <StudentNotifications />;
       break;
     case "subscription":
       content = <StudentSubscription />;

@@ -34,7 +34,7 @@ const SESSION_SECRET =
 
 export interface SessionPayload {
   userId: string;
-  role: "ADMIN" | "STUDENT" | "UNIVERSITY";
+  role: "ADMIN" | "STUDENT" | "UNIVERSITY" | "INSTRUCTOR";
   email: string;
   name: string;
   universityId?: string | null; // set when role === "UNIVERSITY"

@@ -14,7 +14,7 @@ model User {
   email         String   @unique
   passwordHash  String
   name          String
-  role          String   @default("STUDENT") // STUDENT | ADMIN | UNIVERSITY
+  role          String   @default("STUDENT") // STUDENT | ADMIN | UNIVERSITY | INSTRUCTOR
   phone         String?
   bio           String?
   profilePhoto  String?
@@ -22,24 +22,38 @@ model User {
   updatedAt     DateTime @updatedAt
 
   university       University?
+  instructor       Instructor?
   subscriptions    Subscription[]
   videoProgress    VideoProgress[]
   submissions      AssignmentSubmission[]
   certificates     Certificate[]
   videoAssessments VideoAssessment[]
+  notes            Note[]
+  bookmarks        Bookmark[]
+  discussions      Discussion[]
+  replies          Reply[]
+  notifications    Notification[]
 }
 
 model University {
   id          String   @id @default(cuid())
   name        String
   logo        String?
+  coverImage  String?
   description String?
-  userId      String   @unique  // links to the User account (login credentials)
+  website     String?
+  contactEmail String?
+  contactPhone String?
+  location    String?
+  socialLinks String?  // JSON: { twitter, facebook, linkedin, instagram }
+  userId      String   @unique
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   courses     Course[]
+  instructors Instructor[]
+  announcements Announcement[]
 
   @@index([userId])
 }
@@ -91,9 +105,15 @@ model Course {
   description   String?
   thumbnail     String?
   category      String?
+  level         String   @default("BEGINNER") // BEGINNER | INTERMEDIATE | ADVANCED
   accessType    String   @default("FREE") // FREE | PAID
   isPublished   Boolean  @default(false)
-  universityId  String?  // null = platform course (main admin), or university-owned
+  universityId  String?
+  // Scheduling
+  startDate     DateTime?
+  endDate       DateTime?
+  availabilityMode String @default("ALWAYS") // ALWAYS | SCHEDULED | LIMITED
+  enrollmentOpen Boolean @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -105,6 +125,8 @@ model Course {
   planAccess     CoursePlanAccess[]
   certificates   Certificate[]
   certificateTemplate CertificateTemplate?
+  discussions    Discussion[]
+  announcements  Announcement[]
 
   @@index([universityId])
 }
@@ -126,6 +148,7 @@ model Topic {
   title       String
   description String?
   displayOrder Int     @default(0)
+  releaseDate DateTime?  // for scheduled topic release
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -303,4 +326,130 @@ model VideoAssessment {
 
   @@unique([studentId, videoId])
   @@index([studentId])
+}
+
+// ─── Personal Notes & Bookmarks ─────────────────────────────────────────
+
+model Note {
+  id              String   @id @default(cuid())
+  studentId       String
+  courseId        String
+  topicId         String?
+  videoId         String?
+  videoTimestamp  Float?
+  content         String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  student         User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([courseId])
+}
+
+model Bookmark {
+  id              String   @id @default(cuid())
+  studentId       String
+  courseId        String
+  topicId         String?
+  videoId         String?
+  videoTimestamp  Float?
+  label           String?
+  createdAt       DateTime @default(now())
+
+  student         User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([courseId])
+}
+
+// ─── Course Discussions & Q&A ───────────────────────────────────────────
+
+model Discussion {
+  id          String   @id @default(cuid())
+  courseId     String
+  authorId     String
+  title        String
+  content      String
+  isPinned     Boolean  @default(false)
+  isLocked     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  author       User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  replies      Reply[]
+
+  @@index([courseId])
+}
+
+model Reply {
+  id            String   @id @default(cuid())
+  discussionId  String
+  authorId      String
+  content       String
+  isInstructor  Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  discussion    Discussion @relation(fields: [discussionId], references: [id], onDelete: Cascade)
+  author        User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([discussionId])
+}
+
+// ─── Announcements ──────────────────────────────────────────────────────
+
+model Announcement {
+  id            String   @id @default(cuid())
+  universityId  String
+  courseId      String?
+  title         String
+  content       String
+  attachmentUrl String?
+  isPublished   Boolean  @default(false)
+  publishedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  university    University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  course        Course?     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([universityId])
+  @@index([courseId])
+}
+
+// ─── Instructor Management ──────────────────────────────────────────────
+
+model Instructor {
+  id            String   @id @default(cuid())
+  universityId  String
+  userId        String   @unique
+  isActive      Boolean  @default(true)
+  assignedCourseIds String @default("[]")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  university    University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([universityId])
+}
+
+// ─── Notifications ──────────────────────────────────────────────────────
+
+model Notification {
+  id          String   @id @default(cuid())
+  studentId   String
+  type        String
+  title       String
+  content     String
+  relatedId   String?
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  student     User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([isRead])
 }

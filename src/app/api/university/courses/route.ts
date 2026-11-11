@@ -50,8 +50,13 @@ export async function GET(req: Request) {
           firstVideoUrl: firstVideo?.videoUrl || null,
           firstVideoSource: firstVideo?.source || null,
           category: c.category,
+          level: c.level,
           accessType: c.accessType,
           isPublished: c.isPublished,
+          startDate: c.startDate,
+          endDate: c.endDate,
+          availabilityMode: c.availabilityMode,
+          enrollmentOpen: c.enrollmentOpen,
           createdAt: c.createdAt,
           topicsCount: c.topics.length,
           videosCount: c.videos.length,
@@ -81,23 +86,61 @@ export async function POST(req: Request) {
       description,
       thumbnail,
       category,
+      level,
       accessType,
       isPublished,
       planIds = [],
+      startDate,
+      endDate,
+      availabilityMode,
+      enrollmentOpen,
     } = body as {
       title?: string;
       description?: string;
       thumbnail?: string;
       category?: string;
+      level?: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
       accessType?: "FREE" | "PAID";
       isPublished?: boolean;
       planIds?: string[];
+      startDate?: string | null;
+      endDate?: string | null;
+      availabilityMode?: "ALWAYS" | "SCHEDULED" | "LIMITED";
+      enrollmentOpen?: boolean;
     };
 
     if (!title || !title.trim()) {
       return errorResponse("Title is required", 400);
     }
     const aType = accessType === "PAID" ? "PAID" : "FREE";
+    const validLevel =
+      level === "INTERMEDIATE" || level === "ADVANCED" ? level : "BEGINNER";
+    const validMode =
+      availabilityMode === "SCHEDULED" || availabilityMode === "LIMITED"
+        ? availabilityMode
+        : "ALWAYS";
+
+    // Parse dates (allow null/empty to clear)
+    const startDateParsed =
+      startDate === null || startDate === ""
+        ? null
+        : startDate
+          ? new Date(startDate)
+          : null;
+    const endDateParsed =
+      endDate === null || endDate === ""
+        ? null
+        : endDate
+          ? new Date(endDate)
+          : null;
+
+    if (
+      startDateParsed &&
+      endDateParsed &&
+      endDateParsed < startDateParsed
+    ) {
+      return errorResponse("End date must be after start date", 400);
+    }
 
     if (aType === "PAID" && planIds.length === 0) {
       return errorResponse(
@@ -123,10 +166,15 @@ export async function POST(req: Request) {
         description: description?.trim() || null,
         thumbnail: thumbnail?.trim() || null,
         category: category?.trim() || null,
+        level: validLevel,
         accessType: aType,
         isPublished: !!isPublished,
         // Auto-scope to the logged-in university
         universityId,
+        availabilityMode: validMode,
+        startDate: startDateParsed,
+        endDate: endDateParsed,
+        enrollmentOpen: enrollmentOpen === undefined ? true : !!enrollmentOpen,
       },
     });
 

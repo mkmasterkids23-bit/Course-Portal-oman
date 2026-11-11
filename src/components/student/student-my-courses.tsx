@@ -17,8 +17,9 @@ import {
 import { CourseThumbnail } from "@/components/shared/course-thumbnail";
 import {
   Search, BookOpen, Video, PlayCircle, CheckCircle2, AlertTriangle,
-  ArrowRight, ShieldCheck, X, Building2,
+  ArrowRight, ShieldCheck, X, Building2, SlidersHorizontal, Signal,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface CourseItem {
   id: string;
@@ -27,6 +28,7 @@ interface CourseItem {
   thumbnail: string | null;
   category: string | null;
   accessType: "FREE" | "PAID";
+  level?: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
   university?: UniversityRef | null;
   topicsCount: number;
   videosCount: number;
@@ -35,6 +37,8 @@ interface CourseItem {
   percent: number;
   lastWatchedVideoId: string | null;
   lastWatchedVideoTitle: string | null;
+  createdAt?: string;
+  popularity?: number;
 }
 
 interface SubscriptionInfo {
@@ -50,6 +54,33 @@ interface CoursesData {
   universities?: UniversityRef[];
 }
 
+const LEVEL_LABELS: Record<NonNullable<CourseItem["level"]>, string> = {
+  BEGINNER: "Beginner",
+  INTERMEDIATE: "Intermediate",
+  ADVANCED: "Advanced",
+};
+
+const LEVEL_BADGE_CLASS: Record<NonNullable<CourseItem["level"]>, string> = {
+  BEGINNER: "bg-success/15 text-success border-transparent",
+  INTERMEDIATE: "bg-warning/15 text-warning border-transparent",
+  ADVANCED: "bg-destructive/10 text-destructive border-transparent",
+};
+
+/**
+ * Map a course's topic count to a coarse "duration" bucket used by the
+ * duration filter. The thresholds are deliberately simple so the filter is
+ * meaningful even for universities with sparse topic data.
+ *   - short   : 1-3 topics
+ *   - medium  : 4-7 topics
+ *   - long    : 8+ topics
+ *   - (courses with 0 topics are bucketed as "short" so they still appear)
+ */
+function durationBucket(topicsCount: number): "short" | "medium" | "long" {
+  if (topicsCount >= 8) return "long";
+  if (topicsCount >= 4) return "medium";
+  return "short";
+}
+
 export function StudentMyCourses() {
   const navigate = useAppStore((s) => s.navigate);
   const routeQuery = useAppStore((s) => s.query);
@@ -63,6 +94,10 @@ export function StudentMyCourses() {
   const [querySearch, setQuerySearch] = useState("");
   const [category, setCategory] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [levelFilter, setLevelFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [durationFilter, setDurationFilter] = useState("all");
+  const [sort, setSort] = useState("newest");
   const [universityFilter, setUniversityFilter] = useState<string>(
     routeQuery?.university || "all"
   );
@@ -79,7 +114,7 @@ export function StudentMyCourses() {
 
   const filtered = useMemo(() => {
     const q = querySearch.trim().toLowerCase();
-    return (data?.courses || []).filter((c) => {
+    const list = (data?.courses || []).filter((c) => {
       if (q) {
         const hay = (c.title + " " + (c.description || "") + " " + (c.category || "")).toLowerCase();
         if (!hay.includes(q)) return false;
@@ -95,9 +130,21 @@ export function StudentMyCourses() {
       } else if (statusFilter === "not-started") {
         if (c.completedVideos > 0) return false;
       }
+      if (levelFilter !== "all" && c.level !== levelFilter) return false;
+      if (typeFilter !== "all" && c.accessType !== typeFilter) return false;
+      if (durationFilter !== "all" && durationBucket(c.topicsCount) !== durationFilter) return false;
       return true;
     });
-  }, [data, querySearch, category, statusFilter, universityFilter]);
+
+    // Sort the filtered list according to the selected order
+    if (sort === "alphabetical") {
+      list.sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: "base" }));
+    } else if (sort === "popular") {
+      list.sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0));
+    }
+    // "newest" — server already returns createdAt desc, so we keep list order
+    return list;
+  }, [data, querySearch, category, statusFilter, universityFilter, levelFilter, typeFilter, durationFilter, sort]);
 
   const activeUniversity = useMemo(() => {
     if (universityFilter === "all") return null;
@@ -117,6 +164,10 @@ export function StudentMyCourses() {
     setQuerySearch("");
     setCategory("all");
     setStatusFilter("all");
+    setLevelFilter("all");
+    setTypeFilter("all");
+    setDurationFilter("all");
+    setSort("newest");
     setUniversityFilter("all");
     if (routeQuery?.university) {
       navigate(["student", "courses"]);
@@ -150,7 +201,14 @@ export function StudentMyCourses() {
   const expired = data?.expired;
   const totalCourses = data?.courses.length || 0;
   const hasActiveFilters =
-    querySearch !== "" || category !== "all" || statusFilter !== "all" || universityFilter !== "all";
+    querySearch !== "" ||
+    category !== "all" ||
+    statusFilter !== "all" ||
+    universityFilter !== "all" ||
+    levelFilter !== "all" ||
+    typeFilter !== "all" ||
+    durationFilter !== "all" ||
+    sort !== "newest";
 
   return (
     <div className="space-y-6">
@@ -207,7 +265,8 @@ export function StudentMyCourses() {
 
       {/* Faceted filters toolbar */}
       <Card className="p-4 shadow-sm">
-        <div className="grid gap-3 md:grid-cols-[1fr_auto_auto_auto] md:items-center">
+        {/* Row 1 — search + sort */}
+        <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -218,9 +277,24 @@ export function StudentMyCourses() {
               aria-label="Search courses"
             />
           </div>
+          <Select value={sort} onValueChange={setSort}>
+            <SelectTrigger className="md:w-48 w-full h-10" aria-label="Sort courses">
+              <SlidersHorizontal className="h-4 w-4 text-muted-foreground mr-1.5" />
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest</SelectItem>
+              <SelectItem value="popular">Most popular</SelectItem>
+              <SelectItem value="alphabetical">A → Z</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Row 2 — faceted filter dropdowns */}
+        <div className="mt-3 grid gap-3 md:grid-cols-2 lg:grid-cols-[repeat(6,minmax(0,1fr))] md:items-center">
           <Select value={universityFilter} onValueChange={setUniversityFilter}>
-            <SelectTrigger className="md:w-52 w-full h-10" aria-label="Filter by university">
-              <Building2 className="h-4 w-4 text-muted-foreground mr-1.5" />
+            <SelectTrigger className="w-full h-10" aria-label="Filter by university">
+              <Building2 className="h-4 w-4 text-muted-foreground mr-1.5 shrink-0" />
               <SelectValue placeholder="All universities" />
             </SelectTrigger>
             <SelectContent>
@@ -233,7 +307,7 @@ export function StudentMyCourses() {
             </SelectContent>
           </Select>
           <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="md:w-48 w-full h-10" aria-label="Filter by category">
+            <SelectTrigger className="w-full h-10" aria-label="Filter by category">
               <SelectValue placeholder="All categories" />
             </SelectTrigger>
             <SelectContent>
@@ -243,43 +317,83 @@ export function StudentMyCourses() {
               ))}
             </SelectContent>
           </Select>
+          <Select value={levelFilter} onValueChange={setLevelFilter}>
+            <SelectTrigger className="w-full h-10" aria-label="Filter by level">
+              <Signal className="h-4 w-4 text-muted-foreground mr-1.5 shrink-0" />
+              <SelectValue placeholder="All levels" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All levels</SelectItem>
+              <SelectItem value="BEGINNER">Beginner</SelectItem>
+              <SelectItem value="INTERMEDIATE">Intermediate</SelectItem>
+              <SelectItem value="ADVANCED">Advanced</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-full h-10" aria-label="Filter by type">
+              <SelectValue placeholder="All types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All types</SelectItem>
+              <SelectItem value="FREE">Free</SelectItem>
+              <SelectItem value="PAID">Paid</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={durationFilter} onValueChange={setDurationFilter}>
+            <SelectTrigger className="w-full h-10" aria-label="Filter by duration">
+              <SelectValue placeholder="All durations" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All durations</SelectItem>
+              <SelectItem value="short">Short (1–3 topics)</SelectItem>
+              <SelectItem value="medium">Medium (4–7 topics)</SelectItem>
+              <SelectItem value="long">Long (8+ topics)</SelectItem>
+            </SelectContent>
+          </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="md:w-40 w-full h-10" aria-label="Filter by status">
+            <SelectTrigger className="w-full h-10" aria-label="Filter by status">
               <SelectValue placeholder="All status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="all">All status</SelectItem>
               <SelectItem value="not-started">Not started</SelectItem>
               <SelectItem value="in-progress">In progress</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
             </SelectContent>
           </Select>
         </div>
+
         {hasActiveFilters && (
-          <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+          <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-t border-border pt-3">
             <p className="text-xs text-muted-foreground">
               Active filters:{" "}
               <span className="font-medium text-foreground">
                 {[
                   universityFilter !== "all" ? "university" : null,
                   category !== "all" ? "category" : null,
+                  levelFilter !== "all" ? "level" : null,
+                  typeFilter !== "all" ? "type" : null,
+                  durationFilter !== "all" ? "duration" : null,
                   statusFilter !== "all" ? "status" : null,
+                  sort !== "newest" ? "sort" : null,
                   querySearch !== "" ? "search" : null,
                 ]
                   .filter(Boolean)
                   .join(", ")}
               </span>
             </p>
-            <Button variant="ghost" size="sm" onClick={clearAllFilters} className="h-7 gap-1 text-muted-foreground">
+            <Button variant="ghost" size="sm" onClick={clearAllFilters} className="h-7 gap-1 text-muted-foreground self-start sm:self-auto">
               <X className="h-3 w-3" /> Clear all
             </Button>
           </div>
         )}
       </Card>
 
-      <p className="text-sm text-muted-foreground">
-        Showing <span className="font-semibold text-foreground">{filtered.length}</span> of {totalCourses} accessible courses
-      </p>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          Showing <span className="font-semibold text-foreground">{filtered.length}</span> of {totalCourses} accessible courses
+        </p>
+      </div>
 
       {filtered.length === 0 ? (
         <EmptyState
@@ -338,7 +452,7 @@ function CourseCard({ course, onOpen }: { course: CourseItem; onOpen: () => void
         />
         {/* Subtle gradient overlay for badge legibility */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 max-w-[calc(100%-1.5rem)]">
           <Badge
             className={
               course.accessType === "FREE"
@@ -348,6 +462,11 @@ function CourseCard({ course, onOpen }: { course: CourseItem; onOpen: () => void
           >
             {course.accessType === "FREE" ? "Free" : "Paid"}
           </Badge>
+          {course.level && (
+            <Badge className={cn("backdrop-blur-sm", LEVEL_BADGE_CLASS[course.level])}>
+              {LEVEL_LABELS[course.level]}
+            </Badge>
+          )}
           {course.category && (
             <Badge variant="outline" className="bg-background/85 backdrop-blur-sm border-border/60 text-foreground">
               {course.category}

@@ -12,8 +12,9 @@ import { useApiFetch } from "@/hooks/use-api";
 import {
   BookOpen, PlayCircle, ClipboardList, Award, TrendingUp, ArrowRight,
   CalendarDays, CheckCircle2, Lock, Clock, Sparkles, GraduationCap, CreditCard,
+  History, Video, FileText, XCircle, AlertTriangle, ArrowUpRight,
 } from "lucide-react";
-import { formatDate, formatPrice } from "@/types";
+import { formatDate, formatDateTime, formatPrice } from "@/types";
 
 interface SubscriptionInfo {
   planId: string;
@@ -62,11 +63,39 @@ interface OverviewData {
     issuedAt: string;
     certificateNumber: string;
   }[];
+  upcomingActivities?: UpcomingActivity[];
+}
+
+interface UpcomingActivity {
+  id: string;
+  type: "assignment" | "assessment";
+  courseId: string;
+  courseTitle: string;
+  title: string;
+  dueDate: string | null;
+  status: "available" | "locked" | "pending" | "submitted";
+  priority: "normal" | "overdue";
+}
+
+interface ActivityItem {
+  id: string;
+  type: "video_completed" | "assessment" | "submission" | "certificate";
+  courseId: string;
+  courseTitle: string;
+  title: string;
+  detail: string;
+  timestamp: string;
+  score?: number;
+  passed?: boolean;
+  certificateNumber?: string;
 }
 
 export function StudentOverview() {
   const navigate = useAppStore((s) => s.navigate);
   const { data, loading, error } = useApiFetch<OverviewData>("/api/student/overview");
+  const { data: activityData, loading: activityLoading } = useApiFetch<{ activities: ActivityItem[] }>(
+    "/api/student/recent-activity"
+  );
 
   if (loading) {
     return (
@@ -82,6 +111,7 @@ export function StudentOverview() {
           <Skeleton className="h-64 rounded-xl" />
           <Skeleton className="h-64 rounded-xl" />
         </div>
+        <Skeleton className="h-72 w-full rounded-xl" />
       </div>
     );
   }
@@ -427,8 +457,281 @@ export function StudentOverview() {
           </CardContent>
         </Card>
       </div>
+
+      {/* ─── Upcoming Activities (assignments + pending assessments) ─── */}
+      {data.upcomingActivities && data.upcomingActivities.length > 0 && (
+        <Card className="shadow-sm transition-all duration-200 hover:shadow-md">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <CalendarDays className="h-4 w-4 text-accent" />
+                Upcoming Activities
+              </CardTitle>
+              <CardDescription className="mt-1">
+                Pending assignments and assessments awaiting your attention
+              </CardDescription>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(["student", "assignments"])}
+              className="gap-1 text-accent hover:bg-accent/10 hover:text-accent"
+            >
+              View all <ArrowRight className="h-4 w-4" />
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {data.upcomingActivities.map((act) => (
+                <UpcomingActivityCard
+                  key={act.id}
+                  activity={act}
+                  onClick={() => navigate(["student", "learn", act.courseId])}
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ─── Recent Activity timeline ─── */}
+      <Card className="shadow-sm transition-all duration-200 hover:shadow-md">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle className="text-base flex items-center gap-2">
+              <History className="h-4 w-4 text-accent" />
+              Recent Activity
+            </CardTitle>
+            <CardDescription className="mt-1">
+              Your latest learning milestones — videos, assessments, submissions & certificates
+            </CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {activityLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-14 w-full rounded-lg" />
+              ))}
+            </div>
+          ) : activityData?.activities && activityData.activities.length > 0 ? (
+            <ol className="relative space-y-1 max-h-[28rem] overflow-y-auto scrollbar-thin pr-1">
+              {/* vertical spine */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute left-[1.45rem] top-2 bottom-2 w-px bg-gradient-to-b from-accent/40 via-border to-transparent"
+              />
+              {activityData.activities.map((a, i) => (
+                <ActivityTimelineRow key={a.id} item={a} isFirst={i === 0} />
+              ))}
+            </ol>
+          ) : (
+            <EmptyState
+              icon={<History className="h-5 w-5" />}
+              title="No activity yet"
+              description="Start a course and your recent learning activity will appear here."
+              action={
+                <Button size="sm" onClick={() => navigate(["student", "courses"])} className="gap-2">
+                  Browse Courses <ArrowRight className="h-4 w-4" />
+                </Button>
+              }
+            />
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
+}
+
+function UpcomingActivityCard({
+  activity,
+  onClick,
+}: {
+  activity: UpcomingActivity;
+  onClick: () => void;
+}) {
+  const isAssignment = activity.type === "assignment";
+  const isOverdue = activity.priority === "overdue";
+
+  const Icon = isAssignment ? ClipboardList : Video;
+
+  const statusBadge = (() => {
+    switch (activity.status) {
+      case "submitted":
+        return (
+          <Badge className="bg-success/15 text-success border-transparent">
+            <CheckCircle2 className="h-3 w-3" /> Submitted
+          </Badge>
+        );
+      case "available":
+        return (
+          <Badge className="bg-accent/10 text-accent border-transparent">
+            <CheckCircle2 className="h-3 w-3" /> Available
+          </Badge>
+        );
+      case "pending":
+        return (
+          <Badge className="bg-warning/15 text-warning border-transparent">
+            <Clock className="h-3 w-3" /> Pending
+          </Badge>
+        );
+      case "locked":
+      default:
+        return (
+          <Badge className="bg-muted text-muted-foreground border-transparent">
+            <Lock className="h-3 w-3" /> Locked
+          </Badge>
+        );
+    }
+  })();
+
+  return (
+    <button
+      onClick={onClick}
+      className="group relative text-left rounded-xl border border-border bg-card p-4 shadow-sm hover:shadow-md hover:border-accent/40 hover:-translate-y-0.5 transition-all duration-200"
+    >
+      <div className="flex items-start gap-3">
+        <div
+          className={`flex h-10 w-10 items-center justify-center rounded-lg shrink-0 ring-1 ${
+            isOverdue
+              ? "bg-destructive/10 text-destructive ring-destructive/20"
+              : isAssignment
+                ? "bg-accent/10 text-accent ring-accent/20"
+                : "bg-primary/10 text-primary ring-primary/20"
+          }`}
+        >
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-sm font-semibold text-foreground line-clamp-1 group-hover:text-accent transition-colors">
+              {activity.title}
+            </p>
+            <ArrowUpRight className="h-4 w-4 text-muted-foreground/60 group-hover:text-accent shrink-0 transition-colors" />
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+            {activity.courseTitle}
+          </p>
+          <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1 rounded-full bg-muted/60 px-2 py-0.5 text-[10px] uppercase tracking-wide font-medium text-muted-foreground">
+                {isAssignment ? "Assignment" : "Assessment"}
+              </span>
+              {activity.dueDate && (
+                <span
+                  className={`flex items-center gap-1 ${
+                    isOverdue ? "text-destructive font-medium" : ""
+                  }`}
+                >
+                  <Clock className="h-3 w-3" />
+                  {isOverdue ? "Overdue · " : "Due "}
+                  {formatDate(activity.dueDate)}
+                </span>
+              )}
+            </div>
+            {statusBadge}
+          </div>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function ActivityTimelineRow({
+  item,
+  isFirst,
+}: {
+  item: ActivityItem;
+  isFirst: boolean;
+}) {
+  const meta = activityMeta(item);
+  return (
+    <li
+      className={`relative flex gap-3 rounded-lg px-2 py-2.5 transition-colors duration-200 hover:bg-muted/40 ${
+        isFirst ? "" : ""
+      }`}
+    >
+      {/* node */}
+      <div className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ring-2 ring-background bg-soft-sage text-accent">
+        {meta.icon}
+      </div>
+      <div className="min-w-0 flex-1 pt-0.5">
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-sm font-medium text-foreground line-clamp-1">
+            {item.title}
+          </p>
+          <span className="text-[11px] text-muted-foreground whitespace-nowrap shrink-0">
+            {formatDateTime(item.timestamp)}
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+          <span className="text-muted-foreground/80">{item.courseTitle}</span>
+          {" · "}
+          {item.detail}
+        </p>
+        {meta.badge && <div className="mt-1.5">{meta.badge}</div>}
+      </div>
+    </li>
+  );
+}
+
+function activityMeta(item: ActivityItem): {
+  icon: React.ReactNode;
+  badge?: React.ReactNode;
+} {
+  switch (item.type) {
+    case "video_completed":
+      return {
+        icon: <Video className="h-4 w-4" />,
+        badge: (
+          <Badge className="bg-accent/10 text-accent border-transparent">
+            <CheckCircle2 className="h-3 w-3" /> Completed
+          </Badge>
+        ),
+      };
+    case "assessment":
+      return {
+        icon: item.passed ? (
+          <CheckCircle2 className="h-4 w-4 text-success" />
+        ) : (
+          <AlertTriangle className="h-4 w-4 text-warning" />
+        ),
+        badge: (
+          <Badge
+            className={
+              item.passed
+                ? "bg-success/15 text-success border-transparent"
+                : "bg-warning/15 text-warning border-transparent"
+            }
+          >
+            {item.passed ? "Passed" : "Attempted"}
+            {typeof item.score === "number" ? ` · ${item.score}%` : ""}
+          </Badge>
+        ),
+      };
+    case "submission":
+      return {
+        icon: <FileText className="h-4 w-4" />,
+        badge: (
+          <Badge className="bg-primary/10 text-primary border-transparent">
+            <CheckCircle2 className="h-3 w-3" /> Submitted
+          </Badge>
+        ),
+      };
+    case "certificate":
+      return {
+        icon: <Award className="h-4 w-4 text-success" />,
+        badge: item.certificateNumber ? (
+          <Badge className="bg-success/15 text-success border-transparent">
+            <Award className="h-3 w-3" /> {item.certificateNumber}
+          </Badge>
+        ) : undefined,
+      };
+    default:
+      return {
+        icon: <XCircle className="h-4 w-4" />,
+      };
+  }
 }
 
 function StatCard({

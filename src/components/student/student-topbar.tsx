@@ -22,6 +22,10 @@ const TITLES: Record<string, string> = {
   certificates: "Certificates",
   profile: "Profile",
   universities: "Explore Universities",
+  notes: "My Notes",
+  bookmarks: "My Bookmarks",
+  discussions: "Discussions",
+  notifications: "Notifications",
 };
 
 export function StudentTopbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {

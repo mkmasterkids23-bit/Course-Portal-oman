@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import {
   Building2, BookOpen, FileText, ClipboardList, Inbox,
   Award, Settings, LogOut, GraduationCap,
+  Users, BarChart3, PieChart, TrendingUp,
+  Megaphone, UserCog, CalendarDays, Palette,
 } from "lucide-react";
 import { apiPost } from "@/hooks/use-api";
 
@@ -17,6 +19,7 @@ const NAV_SECTIONS = [
       { label: "Overview", icon: Building2, segments: ["university", "overview"] },
       { label: "Courses", icon: BookOpen, segments: ["university", "courses"] },
       { label: "Learning Materials", icon: FileText, segments: ["university", "materials"] },
+      { label: "Scheduling", icon: CalendarDays, segments: ["university", "scheduling"] },
     ],
   },
   {
@@ -27,9 +30,21 @@ const NAV_SECTIONS = [
     ],
   },
   {
+    label: "Insights",
+    items: [
+      { label: "Students", icon: Users, segments: ["university", "students"] },
+      { label: "Course Analytics", icon: BarChart3, segments: ["university", "course-analytics"] },
+      { label: "Assessment Analytics", icon: PieChart, segments: ["university", "assessment-analytics"] },
+      { label: "Revenue", icon: TrendingUp, segments: ["university", "revenue"] },
+    ],
+  },
+  {
     label: "Organization",
     items: [
+      { label: "Announcements", icon: Megaphone, segments: ["university", "announcements"] },
+      { label: "Instructors", icon: UserCog, segments: ["university", "instructors"] },
       { label: "Certificates", icon: Award, segments: ["university", "certificates"] },
+      { label: "Branding", icon: Palette, segments: ["university", "branding"] },
       { label: "Settings", icon: Settings, segments: ["university", "settings"] },
     ],
   },
