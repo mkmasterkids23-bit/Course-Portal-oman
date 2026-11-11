@@ -358,9 +358,175 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
         </div>
       </div>
 
-      {/* ─── Mobile: stacked. Desktop: split. ─── */}
-      <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
-        {/* Left: player + materials + assignment */}
+      {/* ─── Layout: LEFT sidebar + RIGHT main content ─── */}
+      <div className="grid gap-5 lg:grid-cols-[300px_1fr]">
+        {/* ─── LEFT: Course Lessons Sidebar ─── */}
+        <div className="space-y-4">
+        <Card className="lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-6rem)] flex flex-col shadow-sm overflow-hidden">
+          {/* Sidebar header with circular progress */}
+          <CardHeader className="border-b border-border bg-gradient-to-br from-soft-sage/60 to-card">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-accent" />
+                  Course Lessons
+                </CardTitle>
+                <CardDescription className="mt-1 text-xs">
+                  {course.topics.length} topic{course.topics.length > 1 ? "s" : ""} · {course.courseCompletion.totalVideos} lessons
+                </CardDescription>
+              </div>
+              {/* Circular progress ring */}
+              <div className="relative shrink-0">
+                <svg className="h-14 w-14 -rotate-90" viewBox="0 0 56 56">
+                  <circle cx="28" cy="28" r="24" fill="none" stroke="currentColor" strokeWidth="4" className="text-muted" />
+                  <circle
+                    cx="28" cy="28" r="24" fill="none"
+                    stroke="currentColor" strokeWidth="4" strokeLinecap="round"
+                    className={course.courseCompletion.allCompleted ? "text-success" : "text-accent"}
+                    strokeDasharray={`${(course.courseCompletion.percent / 100) * 150.8} 150.8`}
+                    style={{ transition: "stroke-dasharray 0.6s cubic-bezier(0.4,0,0.2,1)" }}
+                  />
+                </svg>
+                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-foreground">
+                  {course.courseCompletion.percent}%
+                </span>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0 overflow-y-auto max-h-[60vh] lg:max-h-[calc(100vh-22rem)] scrollbar-thin">
+            {course.topics.length === 0 ? (
+              <p className="text-sm text-muted-foreground p-6 text-center">
+                No topics published yet.
+              </p>
+            ) : (
+              <Accordion
+                type="multiple"
+                defaultValue={[course.topics[0]?.id].filter(Boolean) as string[]}
+                className="px-3 py-2"
+              >
+                {course.topics.map((topic, topicIdx) => {
+                  const completedInTopic = topic.videos.filter(
+                    (v) => v.progress?.isCompleted
+                  ).length;
+                  const isActiveTopic = topic.id === activeTopic?.id;
+                  const topicComplete = completedInTopic === topic.videos.length && topic.videos.length > 0;
+                  return (
+                    <AccordionItem key={topic.id} value={topic.id} className="border-b border-border/60 last:border-b-0">
+                      <AccordionTrigger className="hover:no-underline px-2 py-3 rounded-lg hover:bg-muted/40 transition-colors">
+                        <div className="flex items-center gap-2.5 flex-1 min-w-0 text-left">
+                          <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-semibold ${
+                            topicComplete
+                              ? "bg-success/15 text-success"
+                              : isActiveTopic
+                                ? "bg-accent/15 text-accent"
+                                : "bg-muted text-muted-foreground"
+                          }`}>
+                            {topicComplete ? <CheckCircle2 className="h-3.5 w-3.5" /> : topicIdx + 1}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-sm font-semibold truncate ${isActiveTopic ? "text-accent" : "text-foreground"}`}>
+                              {topic.title}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground mt-0.5">
+                              {completedInTopic}/{topic.videos.length} lessons
+                            </p>
+                          </div>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="pb-2 pt-1">
+                        <ul className="space-y-0.5 ml-9">
+                          {topic.videos.map((video, videoIdx) => {
+                            const isActive = video.id === activeVideo?.id;
+                            const completed = video.progress?.isCompleted;
+                            return (
+                              <li key={video.id} className="relative">
+                                {videoIdx < topic.videos.length - 1 && (
+                                  <span className="absolute left-3 top-7 bottom-0 w-px bg-border" aria-hidden />
+                                )}
+                                <button
+                                  onClick={() => setUserSelectedVideoId(video.id)}
+                                  className={`group flex w-full items-start gap-2.5 rounded-lg px-2 py-2 text-left text-sm transition-all duration-200 ${
+                                    isActive
+                                      ? "bg-soft-sage text-primary"
+                                      : "text-foreground hover:bg-muted/60"
+                                  }`}
+                                >
+                                  <span className="relative z-10 mt-0.5 shrink-0 flex h-5 w-5 items-center justify-center rounded-full bg-card ring-1 ring-border">
+                                    {completed ? (
+                                      <CheckCircle2 className="h-4 w-4 text-success" />
+                                    ) : isActive ? (
+                                      <PlayCircle className="h-4 w-4 text-primary" />
+                                    ) : (
+                                      <PlayCircle className="h-4 w-4 text-muted-foreground/70 group-hover:text-foreground" />
+                                    )}
+                                  </span>
+                                  <span className="min-w-0 flex-1">
+                                    <span className={`flex items-center gap-1.5 truncate ${isActive ? "font-semibold text-primary" : "font-medium text-foreground group-hover:text-accent"}`}>
+                                      <span className="truncate">{video.title}</span>
+                                      {video.hasQuestions && (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <span className={cn(
+                                              "inline-flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px] font-semibold shrink-0",
+                                              video.assessmentPassed === true
+                                                ? "bg-success/15 text-success"
+                                                : video.assessmentPassed === false
+                                                  ? "bg-destructive/10 text-destructive"
+                                                  : "bg-accent/10 text-accent"
+                                            )}>
+                                              <HelpCircle className="h-3 w-3" />
+                                              {video.questionCount}
+                                            </span>
+                                          </TooltipTrigger>
+                                          <TooltipContent side="right">
+                                            {video.assessmentPassed === true
+                                              ? "Assessment passed"
+                                              : video.assessmentPassed === false
+                                                ? "Assessment not passed — retake needed"
+                                                : `${video.questionCount} question${video.questionCount > 1 ? "s" : ""} in this video`}
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      )}
+                                    </span>
+                                    {video.duration > 0 && (
+                                      <span className="block text-[11px] text-muted-foreground mt-0.5">
+                                        {formatVideoDuration(video.duration)}
+                                      </span>
+                                    )}
+                                  </span>
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
+            )}
+          </CardContent>
+          {/* Stats footer */}
+          <div className="border-t border-border p-4 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-1.5 text-muted-foreground">
+                <PlayCircle className="h-3.5 w-3.5 text-accent" />
+                Videos Watched
+              </span>
+              <span className="font-semibold text-foreground">{course.courseCompletion.completedVideos}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-1.5 text-muted-foreground">
+                <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                Topics Completed
+              </span>
+              <span className="font-semibold text-foreground">{course.courseCompletion.completedTopics}/{course.courseCompletion.totalTopics}</span>
+            </div>
+          </div>
+        </Card>
+        </div>
+
+        {/* ─── RIGHT: Main content area ─── */}
         <div className="space-y-5 min-w-0">
           {activeVideo ? (
             <VideoPlayer
@@ -499,144 +665,6 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
             </TabsContent>
           </Tabs>
         </div>
-
-        {/* Right: course sidebar */}
-        <Card className="lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-6rem)] flex flex-col shadow-sm overflow-hidden">
-          <CardHeader className="border-b border-border bg-gradient-to-br from-soft-sage/60 to-card">
-            <CardTitle className="text-base flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-accent" />
-              Course Lessons
-            </CardTitle>
-            <CardDescription className="mt-1">
-              {course.topics.length} topic{course.topics.length > 1 ? "s" : ""} · {course.courseCompletion.totalVideos} lessons
-            </CardDescription>
-            <div className="mt-2">
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-muted-foreground">Progress</span>
-                <span className="font-semibold text-foreground">{course.courseCompletion.percent}%</span>
-              </div>
-              <Progress
-                value={course.courseCompletion.percent}
-                className={`h-1.5 bg-muted ${course.courseCompletion.allCompleted ? "[&_[data-slot=progress-indicator]]:bg-success" : "[&_[data-slot=progress-indicator]]:bg-accent"}`}
-              />
-            </div>
-          </CardHeader>
-          <CardContent className="p-0 overflow-y-auto max-h-[70vh] lg:max-h-[calc(100vh-15rem)] scrollbar-thin">
-            {course.topics.length === 0 ? (
-              <p className="text-sm text-muted-foreground p-6 text-center">
-                No topics published yet.
-              </p>
-            ) : (
-              <Accordion
-                type="multiple"
-                defaultValue={[course.topics[0]?.id].filter(Boolean) as string[]}
-                className="px-3 py-2"
-              >
-                {course.topics.map((topic, topicIdx) => {
-                  const completedInTopic = topic.videos.filter(
-                    (v) => v.progress?.isCompleted
-                  ).length;
-                  const isActiveTopic = topic.id === activeTopic?.id;
-                  const topicComplete = completedInTopic === topic.videos.length && topic.videos.length > 0;
-                  return (
-                    <AccordionItem key={topic.id} value={topic.id} className="border-b border-border/60 last:border-b-0">
-                      <AccordionTrigger className="hover:no-underline px-2 py-3 rounded-lg hover:bg-muted/40 transition-colors">
-                        <div className="flex items-center gap-2.5 flex-1 min-w-0 text-left">
-                          <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-semibold ${
-                            topicComplete
-                              ? "bg-success/15 text-success"
-                              : isActiveTopic
-                                ? "bg-accent/15 text-accent"
-                                : "bg-muted text-muted-foreground"
-                          }`}>
-                            {topicComplete ? <CheckCircle2 className="h-3.5 w-3.5" /> : topicIdx + 1}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-semibold truncate ${isActiveTopic ? "text-accent" : "text-foreground"}`}>
-                              {topic.title}
-                            </p>
-                            <p className="text-[11px] text-muted-foreground mt-0.5">
-                              {completedInTopic}/{topic.videos.length} lessons
-                            </p>
-                          </div>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pb-2 pt-1">
-                        <ul className="space-y-0.5 ml-9">
-                          {topic.videos.map((video, videoIdx) => {
-                            const isActive = video.id === activeVideo?.id;
-                            const completed = video.progress?.isCompleted;
-                            return (
-                              <li key={video.id} className="relative">
-                                {/* Vertical connecting line */}
-                                {videoIdx < topic.videos.length - 1 && (
-                                  <span className="absolute left-3 top-7 bottom-0 w-px bg-border" aria-hidden />
-                                )}
-                                <button
-                                  onClick={() => setUserSelectedVideoId(video.id)}
-                                  className={`group flex w-full items-start gap-2.5 rounded-lg px-2 py-2 text-left text-sm transition-all duration-200 ${
-                                    isActive
-                                      ? "bg-soft-sage text-primary"
-                                      : "text-foreground hover:bg-muted/60"
-                                  }`}
-                                >
-                                  {/* Icon: status indicator */}
-                                  <span className="relative z-10 mt-0.5 shrink-0 flex h-5 w-5 items-center justify-center rounded-full bg-card ring-1 ring-border">
-                                    {completed ? (
-                                      <CheckCircle2 className="h-4 w-4 text-success" />
-                                    ) : isActive ? (
-                                      <PlayCircle className="h-4 w-4 text-primary" />
-                                    ) : (
-                                      <PlayCircle className="h-4 w-4 text-muted-foreground/70 group-hover:text-foreground" />
-                                    )}
-                                  </span>
-                                  <span className="min-w-0 flex-1">
-                                    <span className={`flex items-center gap-1.5 truncate ${isActive ? "font-semibold text-primary" : "font-medium text-foreground group-hover:text-accent"}`}>
-                                      <span className="truncate">{video.title}</span>
-                                      {video.hasQuestions && (
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <span className={cn(
-                                              "inline-flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px] font-semibold shrink-0",
-                                              video.assessmentPassed === true
-                                                ? "bg-success/15 text-success"
-                                                : video.assessmentPassed === false
-                                                  ? "bg-destructive/10 text-destructive"
-                                                  : "bg-accent/10 text-accent"
-                                            )}>
-                                              <HelpCircle className="h-3 w-3" />
-                                              {video.questionCount}
-                                            </span>
-                                          </TooltipTrigger>
-                                          <TooltipContent side="right">
-                                            {video.assessmentPassed === true
-                                              ? "Assessment passed"
-                                              : video.assessmentPassed === false
-                                                ? "Assessment not passed — retake needed"
-                                                : `${video.questionCount} question${video.questionCount > 1 ? "s" : ""} in this video`}
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      )}
-                                    </span>
-                                    {video.duration > 0 && (
-                                      <span className="block text-[11px] text-muted-foreground mt-0.5">
-                                        {formatVideoDuration(video.duration)}
-                                      </span>
-                                    )}
-                                  </span>
-                                </button>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </AccordionContent>
-                    </AccordionItem>
-                  );
-                })}
-              </Accordion>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
