@@ -14,6 +14,7 @@ import { AdminPlans } from "./admin-plans";
 import { AdminCertificates } from "./admin-certificates";
 import { AdminSettings } from "./admin-settings";
 import { AdminUniversities } from "./admin-universities";
+import { AdminUniversityDetail } from "./admin-university-detail";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -25,12 +26,20 @@ export function AdminDashboard() {
   const section = segments[1] || "overview";
 
   // If route is /admin/courses/:id → course editor
+  // If route is /admin/universities/:id → university detail page
   let content: React.ReactNode;
   if (section === "courses" && segments[2]) {
     content = (
       <AdminCourseEditor
         courseId={segments[2]}
         onBack={() => navigate(["admin", "courses"])}
+      />
+    );
+  } else if (section === "universities" && segments[2]) {
+    content = (
+      <AdminUniversityDetail
+        universityId={segments[2]}
+        onBack={() => navigate(["admin", "universities"])}
       />
     );
   } else {

@@ -1,0 +1,939 @@
+     1→"use client";
+     2→
+     3→import { useEffect, useMemo, useState } from "react";
+     4→import { Card } from "@/components/ui/card";
+     5→import { Button } from "@/components/ui/button";
+     6→import { Input } from "@/components/ui/input";
+     7→import { Label } from "@/components/ui/label";
+     8→import { Badge } from "@/components/ui/badge";
+     9→import { Skeleton } from "@/components/ui/skeleton";
+    10→import { Textarea } from "@/components/ui/textarea";
+    11→import {
+    12→  Dialog,
+    13→  DialogContent,
+    14→  DialogDescription,
+    15→  DialogFooter,
+    16→  DialogHeader,
+    17→  DialogTitle,
+    18→} from "@/components/ui/dialog";
+    19→import {
+    20→  AlertDialog,
+    21→  AlertDialogAction,
+    22→  AlertDialogCancel,
+    23→  AlertDialogContent,
+    24→  AlertDialogDescription,
+    25→  AlertDialogFooter,
+    26→  AlertDialogHeader,
+    27→  AlertDialogTitle,
+    28→} from "@/components/ui/alert-dialog";
+    29→import {
+    30→  DropdownMenu,
+    31→  DropdownMenuContent,
+    32→  DropdownMenuItem,
+    33→  DropdownMenuSeparator,
+    34→  DropdownMenuTrigger,
+    35→} from "@/components/ui/dropdown-menu";
+    36→import {
+    37→  Drawer,
+    38→  DrawerContent,
+    39→  DrawerDescription,
+    40→  DrawerHeader,
+    41→  DrawerTitle,
+    42→} from "@/components/ui/drawer";
+    43→import { EmptyState } from "@/components/shared/empty-state";
+    44→import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
+    45→import { useAppStore } from "@/stores/app-store";
+    46→import { toast } from "@/hooks/use-toast";
+    47→import { formatDate } from "@/types";
+    48→import {
+    49→  Building2, Search, Plus, MoreHorizontal, Pencil, Trash2,
+    50→  Eye, Mail, BookOpen, Layers, Video, ClipboardList, Calendar,
+    51→  Upload, GraduationCap,
+    52→} from "lucide-react";
+    53→
+    54→// ─── Types ──────────────────────────────────────────────────────────────
+    55→interface UniversityRow {
+    56→  id: string;
+    57→  name: string;
+    58→  logo: string | null;
+    59→  description: string | null;
+    60→  email: string;
+    61→  createdAt: string;
+    62→  courseCount: number;
+    63→}
+    64→
+    65→interface UniversitiesResponse {
+    66→  universities: UniversityRow[];
+    67→}
+    68→
+    69→interface UniversityCourseRow {
+    70→  id: string;
+    71→  title: string;
+    72→  description: string | null;
+    73→  thumbnail: string | null;
+    74→  category: string | null;
+    75→  accessType: "FREE" | "PAID";
+    76→  isPublished: boolean;
+    77→  createdAt: string;
+    78→  videosCount: number;
+    79→  topicsCount: number;
+    80→  assignmentsCount: number;
+    81→}
+    82→
+    83→interface UniversityDetail extends UniversityRow {
+    84→  updatedAt: string;
+    85→  courseCount: number;
+    86→  courses: UniversityCourseRow[];
+    87→}
+    88→
+    89→interface UniversityDetailResponse {
+    90→  university: UniversityDetail;
+    91→}
+    92→
+    93→// ─── Main Component ─────────────────────────────────────────────────────
+    94→export function AdminUniversities() {
+    95→  const query = useAppStore((s) => s.query);
+    96→  const [search, setSearch] = useState("");
+    97→  const [addOpen, setAddOpen] = useState(false);
+    98→  const [editTarget, setEditTarget] = useState<UniversityRow | null>(null);
+    99→  const [deleteTarget, setDeleteTarget] = useState<UniversityRow | null>(null);
+   100→  const [detailTarget, setDetailTarget] = useState<UniversityRow | null>(null);
+   101→
+   102→  const qs = useMemo(() => {
+   103→    if (!search.trim()) return "";
+   104→    return `?q=${encodeURIComponent(search.trim())}`;
+   105→  }, [search]);
+   106→
+   107→  const { data, loading, error, refetch } = useApiFetch<UniversitiesResponse>(
+   108→    qs ? `/api/admin/universities${qs}` : "/api/admin/universities",
+   109→  );
+   110→
+   111→  // Auto-open Add dialog when query.action=new
+   112→  const [lastAction, setLastAction] = useState<string | undefined>(undefined);
+   113→  if (query.action !== lastAction) {
+   114→    setLastAction(query.action);
+   115→    if (query.action === "new") setAddOpen(true);
+   116→  }
+   117→
+   118→  const universities = data?.universities || [];
+   119→
+   120→  return (
+   121→    <div className="space-y-4">
+   122→      {/* Toolbar */}
+   123→      <Card className="border-border bg-card p-4 shadow-sm">
+   124→        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+   125→          <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
+   126→            <div className="relative flex-1">
+   127→              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+   128→              <Input
+   129→                value={search}
+   130→                onChange={(e) => setSearch(e.target.value)}
+   131→                placeholder="Search universities…"
+   132→                className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
+   133→                aria-label="Search universities"
+   134→              />
+   135→            </div>
+   136→          </div>
+   137→          <Button className="h-9 gap-2" onClick={() => setAddOpen(true)}>
+   138→            <Plus className="h-4 w-4" /> Add University
+   139→          </Button>
+   140→        </div>
+   141→      </Card>
+   142→
+   143→      {/* Count summary */}
+   144→      {!loading && !error && universities.length > 0 && (
+   145→        <div className="flex items-center justify-between">
+   146→          <p className="text-sm text-muted-foreground">
+   147→            Showing <span className="font-medium text-foreground">{universities.length}</span>{" "}
+   148→            universit{universities.length !== 1 ? "ies" : "y"}
+   149→          </p>
+   150→        </div>
+   151→      )}
+   152→
+   153→      {/* Content */}
+   154→      {loading ? (
+   155→        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+   156→          {Array.from({ length: 6 }).map((_, i) => (
+   157→            <Card key={i} className="overflow-hidden border-border p-0">
+   158→              <div className="h-24 w-full bg-muted" />
+   159→              <div className="p-5 space-y-3">
+   160→                <Skeleton className="h-5 w-2/3" />
+   161→                <Skeleton className="h-4 w-full" />
+   162→                <Skeleton className="h-4 w-1/2" />
+   163→                <div className="flex gap-2 pt-2">
+   164→                  <Skeleton className="h-8 w-full" />
+   165→                  <Skeleton className="h-8 w-10" />
+   166→                </div>
+   167→              </div>
+   168→            </Card>
+   169→          ))}
+   170→        </div>
+   171→      ) : error ? (
+   172→        <EmptyState
+   173→          className="m-4"
+   174→          icon={<Building2 className="h-5 w-5" />}
+   175→          title="Couldn't load universities"
+   176→          description={error}
+   177→        />
+   178→      ) : universities.length === 0 ? (
+   179→        <EmptyState
+   180→          className="m-4"
+   181→          icon={<Building2 className="h-5 w-5" />}
+   182→          title={search.trim() ? "No matches found" : "No universities yet"}
+   183→          description={
+   184→            search.trim()
+   185→              ? "Try a different search term."
+   186→              : "Add your first university partner to start managing their courses."
+   187→          }
+   188→          action={
+   189→            !search.trim() ? (
+   190→              <Button onClick={() => setAddOpen(true)} className="gap-2">
+   191→                <Plus className="h-4 w-4" /> Add University
+   192→              </Button>
+   193→            ) : undefined
+   194→          }
+   195→        />
+   196→      ) : (
+   197→        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+   198→          {universities.map((u) => (
+   199→            <UniversityCard
+   200→              key={u.id}
+   201→              university={u}
+   202→              onView={() => setDetailTarget(u)}
+   203→              onEdit={() => setEditTarget(u)}
+   204→              onDelete={() => setDeleteTarget(u)}
+   205→            />
+   206→          ))}
+   207→        </div>
+   208→      )}
+   209→
+   210→      {/* Add dialog */}
+   211→      <UniversityFormDialog
+   212→        open={addOpen}
+   213→        onOpenChange={setAddOpen}
+   214→        onSaved={() => {
+   215→          refetch();
+   216→          setAddOpen(false);
+   217→          toast({ title: "University created" });
+   218→        }}
+   219→      />
+   220→
+   221→      {/* Edit dialog */}
+   222→      <UniversityFormDialog
+   223→        open={!!editTarget}
+   224→        onOpenChange={(v) => !v && setEditTarget(null)}
+   225→        target={editTarget}
+   226→        onSaved={() => {
+   227→          refetch();
+   228→          setEditTarget(null);
+   229→          toast({ title: "University updated" });
+   230→        }}
+   231→      />
+   232→
+   233→      {/* Detail drawer */}
+   234→      <UniversityDetailDrawer
+   235→        target={detailTarget}
+   236→        onOpenChange={(v) => !v && setDetailTarget(null)}
+   237→      />
+   238→
+   239→      {/* Delete confirm */}
+   240→      <AlertDialog
+   241→        open={!!deleteTarget}
+   242→        onOpenChange={(v) => !v && setDeleteTarget(null)}
+   243→      >
+   244→        <AlertDialogContent>
+   245→          <AlertDialogHeader>
+   246→            <AlertDialogTitle>Delete university?</AlertDialogTitle>
+   247→            <AlertDialogDescription>
+   248→              This will permanently delete{" "}
+   249→              <strong>{deleteTarget?.name}</strong> along with its linked login
+   250→              account. Courses authored by this university will be retained on
+   251→              the platform with their university link removed. This cannot be
+   252→              undone.
+   253→            </AlertDialogDescription>
+   254→          </AlertDialogHeader>
+   255→          <AlertDialogFooter>
+   256→            <AlertDialogCancel>Cancel</AlertDialogCancel>
+   257→            <AlertDialogAction
+   258→              className="bg-destructive text-white hover:bg-destructive/90"
+   259→              onClick={async () => {
+   260→                if (!deleteTarget) return;
+   261→                try {
+   262→                  await apiPost(
+   263→                    `/api/admin/universities/${deleteTarget.id}`,
+   264→                    null,
+   265→                    { method: "DELETE" },
+   266→                  );
+   267→                  toast({
+   268→                    title: "University deleted",
+   269→                    description: deleteTarget.name,
+   270→                  });
+   271→                  setDeleteTarget(null);
+   272→                  refetch();
+   273→                } catch {
+   274→                  /* toast handled in apiPost */
+   275→                }
+   276→              }}
+   277→            >
+   278→              Delete
+   279→            </AlertDialogAction>
+   280→          </AlertDialogFooter>
+   281→        </AlertDialogContent>
+   282→      </AlertDialog>
+   283→    </div>
+   284→  );
+   285→}
+   286→
+   287→// ─── University Card ────────────────────────────────────────────────────
+   288→function UniversityCard({
+   289→  university,
+   290→  onView,
+   291→  onEdit,
+   292→  onDelete,
+   293→}: {
+   294→  university: UniversityRow;
+   295→  onView: () => void;
+   296→  onEdit: () => void;
+   297→  onDelete: () => void;
+   298→}) {
+   299→  const initials = useMemo(
+   300→    () =>
+   301→      university.name
+   302→        .split(/\s+/)
+   303→        .map((w) => w[0])
+   304→        .filter(Boolean)
+   305→        .slice(0, 2)
+   306→        .join("")
+   307→        .toUpperCase(),
+   308→    [university.name],
+   309→  );
+   310→
+   311→  return (
+   312→    <Card className="group flex flex-col overflow-hidden border-border p-0 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-accent/30">
+   313→      {/* Banner / logo header */}
+   314→      <button
+   315→        onClick={onView}
+   316→        className="relative h-24 overflow-hidden bg-gradient-to-br from-primary/85 via-primary to-primary/70 text-left"
+   317→        aria-label={`View ${university.name} details`}
+   318→      >
+   319→        <div
+   320→          className="absolute inset-0 opacity-30"
+   321→          style={{
+   322→            backgroundImage:
+   323→              "radial-gradient(circle at 20% 50%, rgba(15,118,110,0.55), transparent 55%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.12), transparent 45%)",
+   324→          }}
+   325→        />
+   326→        <div className="relative flex h-full items-center gap-3 p-4">
+   327→          {university.logo ? (
+   328→            <img
+   329→              src={university.logo}
+   330→              alt={`${university.name} logo`}
+   331→              className="h-14 w-14 rounded-lg bg-background object-contain p-1 ring-1 ring-background/30 shadow-sm"
+   332→            />
+   333→          ) : (
+   334→            <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-background/95 text-primary font-heading text-lg font-bold shadow-sm">
+   335→              {initials || <GraduationCap className="h-6 w-6" />}
+   336→            </div>
+   337→          )}
+   338→          <div className="min-w-0 flex-1">
+   339→            <Badge className="border-0 bg-primary-foreground/15 text-primary-foreground backdrop-blur">
+   340→              <Building2 className="h-3 w-3 mr-1" /> University
+   341→            </Badge>
+   342→          </div>
+   343→        </div>
+   344→      </button>
+   345→
+   346→      {/* Content */}
+   347→      <div className="flex flex-1 flex-col p-5">
+   348→        <button onClick={onView} className="text-left">
+   349→          <h3 className="font-heading font-semibold text-foreground line-clamp-1 transition-colors duration-200 group-hover:text-accent">
+   350→            {university.name}
+   351→          </h3>
+   352→          <p className="mt-1 text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
+   353→            {university.description || "No description provided."}
+   354→          </p>
+   355→        </button>
+   356→
+   357→        {/* Email */}
+   358→        <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+   359→          <Mail className="h-3.5 w-3.5 text-accent" />
+   360→          <span className="truncate">{university.email}</span>
+   361→        </div>
+   362→
+   363→        {/* Stats row */}
+   364→        <div className="mt-4 flex items-center gap-4 border-t border-border pt-3 text-xs">
+   365→          <span className="flex items-center gap-1 text-muted-foreground">
+   366→            <BookOpen className="h-3.5 w-3.5 text-accent" />
+   367→            <span className="font-semibold text-foreground">{university.courseCount}</span>{" "}
+   368→            {university.courseCount === 1 ? "course" : "courses"}
+   369→          </span>
+   370→          <span className="flex items-center gap-1 text-muted-foreground ml-auto">
+   371→            <Calendar className="h-3.5 w-3.5 text-accent" />
+   372→            {formatDate(university.createdAt)}
+   373→          </span>
+   374→        </div>
+   375→
+   376→        {/* Actions */}
+   377→        <div className="mt-4 flex items-center gap-2">
+   378→          <Button size="sm" className="h-9 flex-1 gap-1.5" onClick={onView}>
+   379→            <Eye className="h-3.5 w-3.5" /> View Details
+   380→          </Button>
+   381→          <Button
+   382→            variant="outline"
+   383→            size="sm"
+   384→            className="h-9 gap-1.5"
+   385→            onClick={onEdit}
+   386→            aria-label="Edit"
+   387→          >
+   388→            <Pencil className="h-3.5 w-3.5" />
+   389→            <span className="sr-only">Edit</span>
+   390→          </Button>
+   391→          <DropdownMenu>
+   392→            <DropdownMenuTrigger asChild>
+   393→              <Button
+   394→                variant="outline"
+   395→                size="sm"
+   396→                className="h-9 px-2"
+   397→                aria-label={`More actions for ${university.name}`}
+   398→              >
+   399→                <MoreHorizontal className="h-3.5 w-3.5" />
+   400→              </Button>
+   401→            </DropdownMenuTrigger>
+   402→            <DropdownMenuContent align="end" className="w-48">
+   403→              <DropdownMenuItem onClick={onView} className="gap-2">
+   404→                <Eye className="h-4 w-4 text-muted-foreground" /> View details
+   405→              </DropdownMenuItem>
+   406→              <DropdownMenuItem onClick={onEdit} className="gap-2">
+   407→                <Pencil className="h-4 w-4 text-muted-foreground" /> Edit details
+   408→              </DropdownMenuItem>
+   409→              <DropdownMenuSeparator />
+   410→              <DropdownMenuItem
+   411→                variant="destructive"
+   412→                onClick={onDelete}
+   413→                className="gap-2"
+   414→              >
+   415→                <Trash2 className="h-4 w-4" /> Delete
+   416→              </DropdownMenuItem>
+   417→            </DropdownMenuContent>
+   418→          </DropdownMenu>
+   419→        </div>
+   420→      </div>
+   421→    </Card>
+   422→  );
+   423→}
+   424→
+   425→// ─── Form Dialog (Add / Edit) ───────────────────────────────────────────
+   426→interface FormValues {
+   427→  name: string;
+   428→  email: string;
+   429→  password: string;
+   430→  description: string;
+   431→  logoFile: File | null;
+   432→  logoPreview: string | null;
+   433→}
+   434→
+   435→function UniversityFormDialog({
+   436→  open,
+   437→  onOpenChange,
+   438→  target,
+   439→  onSaved,
+   440→}: {
+   441→  open: boolean;
+   442→  onOpenChange: (v: boolean) => void;
+   443→  target?: UniversityRow | null;
+   444→  onSaved: () => void;
+   445→}) {
+   446→  const isEdit = !!target;
+   447→  const [values, setValues] = useState<FormValues>({
+   448→    name: "",
+   449→    email: "",
+   450→    password: "",
+   451→    description: "",
+   452→    logoFile: null,
+   453→    logoPreview: null,
+   454→  });
+   455→  const [saving, setSaving] = useState(false);
+   456→
+   457→  useEffect(() => {
+   458→    if (target) {
+   459→      setValues({
+   460→        name: target.name,
+   461→        email: target.email,
+   462→        password: "",
+   463→        description: target.description || "",
+   464→        logoFile: null,
+   465→        logoPreview: target.logo,
+   466→      });
+   467→    } else if (open) {
+   468→      setValues({
+   469→        name: "",
+   470→        email: "",
+   471→        password: "",
+   472→        description: "",
+   473→        logoFile: null,
+   474→        logoPreview: null,
+   475→      });
+   476→    }
+   477→  }, [target, open]);
+   478→
+   479→  function onLogoSelected(file: File | null) {
+   480→    if (!file) {
+   481→      setValues((v) => ({ ...v, logoFile: null, logoPreview: target?.logo || null }));
+   482→      return;
+   483→    }
+   484→    const previewUrl = URL.createObjectURL(file);
+   485→    setValues((v) => ({ ...v, logoFile: file, logoPreview: previewUrl }));
+   486→  }
+   487→
+   488→  async function submit() {
+   489→    if (!values.name.trim()) {
+   490→      toast({ title: "Name required", variant: "destructive" });
+   491→      return;
+   492→    }
+   493→    if (!values.email.trim()) {
+   494→      toast({ title: "Email required", variant: "destructive" });
+   495→      return;
+   496→    }
+   497→    if (!isEdit && !values.password) {
+   498→      toast({ title: "Password required", variant: "destructive" });
+   499→      return;
+   500→    }
+   501→    if (values.password && values.password.length < 6) {
+   502→      toast({
+   503→        title: "Password too short",
+   504→        description: "Must be at least 6 characters.",
+   505→        variant: "destructive",
+   506→      });
+   507→      return;
+   508→    }
+   509→
+   510→    setSaving(true);
+   511→    try {
+   512→      const fd = new FormData();
+   513→      fd.append("name", values.name.trim());
+   514→      fd.append("email", values.email.trim());
+   515→      if (values.password) fd.append("password", values.password);
+   516→      if (values.description.trim()) fd.append("description", values.description.trim());
+   517→      if (values.logoFile) fd.append("logo", values.logoFile);
+   518→
+   519→      const url = isEdit
+   520→        ? `/api/admin/universities/${target!.id}`
+   521→        : "/api/admin/universities";
+   522→
+   523→      // apiUpload uses POST; for PUT we fetch directly with FormData.
+   524→      if (isEdit) {
+   525→        const res = await fetch(url, {
+   526→          method: "PUT",
+   527→          body: fd,
+   528→          credentials: "include",
+   529→        });
+   530→        const json = await res.json();
+   531→        if (!res.ok) {
+   532→          const msg = json.error || `Request failed (${res.status})`;
+   533→          toast({ title: "Error", description: msg, variant: "destructive" });
+   534→          throw new Error(msg);
+   535→        }
+   536→      } else {
+   537→        await apiUpload(url, fd);
+   538→      }
+   539→      onSaved();
+   540→    } catch {
+   541→      /* toast handled in helpers */
+   542→    } finally {
+   543→      setSaving(false);
+   544→    }
+   545→  }
+   546→
+   547→  const previewInitials = values.name
+   548→    .split(/\s+/)
+   549→    .map((w) => w[0])
+   550→    .filter(Boolean)
+   551→    .slice(0, 2)
+   552→    .join("")
+   553→    .toUpperCase();
+   554→
+   555→  return (
+   556→    <Dialog open={open} onOpenChange={onOpenChange}>
+   557→      <DialogContent className="sm:max-w-lg">
+   558→        <DialogHeader>
+   559→          <DialogTitle className="font-heading text-lg font-semibold">
+   560→            {isEdit ? "Edit University" : "Add New University"}
+   561→          </DialogTitle>
+   562→          <DialogDescription>
+   563→            {isEdit
+   564→              ? "Update the university profile and its linked login account."
+   565→              : "Create a university profile and a login account with role UNIVERSITY."}
+   566→          </DialogDescription>
+   567→        </DialogHeader>
+   568→        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+   569→          {/* Logo preview + upload */}
+   570→          <div className="space-y-1.5">
+   571→            <Label className="text-xs font-medium text-muted-foreground">Logo</Label>
+   572→            <div className="flex items-center gap-3">
+   573→              <div className="h-16 w-16 overflow-hidden rounded-lg bg-muted flex items-center justify-center shrink-0 ring-1 ring-border">
+   574→                {values.logoPreview ? (
+   575→                  <img
+   576→                    src={values.logoPreview}
+   577→                    alt=""
+   578→                    className="h-full w-full object-contain p-1"
+   579→                  />
+   580→                ) : previewInitials ? (
+   581→                  <span className="font-heading text-lg font-bold text-primary">
+   582→                    {previewInitials}
+   583→                  </span>
+   584→                ) : (
+   585→                  <Building2 className="h-5 w-5 text-muted-foreground" />
+   586→                )}
+   587→              </div>
+   588→              <div className="flex-1 space-y-1.5">
+   589→                <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs text-accent hover:underline">
+   590→                  <Upload className="h-3.5 w-3.5" />
+   591→                  {values.logoFile ? "Change image" : "Upload logo"}
+   592→                  <input
+   593→                    type="file"
+   594→                    accept="image/*"
+   595→                    className="hidden"
+   596→                    onChange={(e) => {
+   597→                      const f = e.target.files?.[0] || null;
+   598→                      onLogoSelected(f);
+   599→                    }}
+   600→                  />
+   601→                </label>
+   602→                <p className="text-xs text-muted-foreground">
+   603→                  PNG, JPG, WebP — square format recommended.
+   604→                </p>
+   605→              </div>
+   606→            </div>
+   607→          </div>
+   608→
+   609→          <div className="space-y-1.5">
+   610→            <Label htmlFor="uf-name" className="text-xs font-medium text-muted-foreground">
+   611→              University Name
+   612→            </Label>
+   613→            <Input
+   614→              id="uf-name"
+   615→              value={values.name}
+   616→              onChange={(e) => setValues({ ...values, name: e.target.value })}
+   617→              placeholder="e.g. Sultan Qaboos University"
+   618→              className="h-9 rounded-lg"
+   619→            />
+   620→          </div>
+   621→
+   622→          <div className="space-y-1.5">
+   623→            <Label htmlFor="uf-email" className="text-xs font-medium text-muted-foreground">
+   624→              Login Email
+   625→            </Label>
+   626→            <Input
+   627→              id="uf-email"
+   628→              type="email"
+   629→              value={values.email}
+   630→              onChange={(e) => setValues({ ...values, email: e.target.value })}
+   631→              placeholder="university@example.com"
+   632→              className="h-9 rounded-lg"
+   633→            />
+   634→          </div>
+   635→
+   636→          <div className="space-y-1.5">
+   637→            <Label htmlFor="uf-pass" className="text-xs font-medium text-muted-foreground">
+   638→              Password {isEdit && <span className="text-muted-foreground/70">(leave blank to keep current)</span>}
+   639→            </Label>
+   640→            <Input
+   641→              id="uf-pass"
+   642→              type="password"
+   643→              value={values.password}
+   644→              onChange={(e) => setValues({ ...values, password: e.target.value })}
+   645→              placeholder="Minimum 6 characters"
+   646→              className="h-9 rounded-lg"
+   647→            />
+   648→          </div>
+   649→
+   650→          <div className="space-y-1.5">
+   651→            <Label htmlFor="uf-desc" className="text-xs font-medium text-muted-foreground">
+   652→              Description <span className="text-muted-foreground/70">(optional)</span>
+   653→            </Label>
+   654→            <Textarea
+   655→              id="uf-desc"
+   656→              value={values.description}
+   657→              onChange={(e) => setValues({ ...values, description: e.target.value })}
+   658→              placeholder="Short summary shown on the university card"
+   659→              rows={3}
+   660→              className="rounded-lg"
+   661→            />
+   662→          </div>
+   663→        </div>
+   664→        <DialogFooter>
+   665→          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>
+   666→            Cancel
+   667→          </Button>
+   668→          <Button disabled={saving} className="h-9" onClick={submit}>
+   669→            {saving ? "Saving…" : isEdit ? "Save Changes" : "Create University"}
+   670→          </Button>
+   671→        </DialogFooter>
+   672→      </DialogContent>
+   673→    </Dialog>
+   674→  );
+   675→}
+   676→
+   677→// ─── Detail Drawer ──────────────────────────────────────────────────────
+   678→function UniversityDetailDrawer({
+   679→  target,
+   680→  onOpenChange,
+   681→}: {
+   682→  target: UniversityRow | null;
+   683→  onOpenChange: (v: boolean) => void;
+   684→}) {
+   685→  const open = !!target;
+   686→  const { data, loading, error } = useApiFetch<UniversityDetailResponse>(
+   687→    target ? `/api/admin/universities/${target.id}` : null,
+   688→  );
+   689→
+   690→  // Reset fetch when drawer closes — pass null url above handles that
+   691→  const university = data?.university || target;
+   692→  const initials = useMemo(() => {
+   693→    if (!university) return "";
+   694→    return university.name
+   695→      .split(/\s+/)
+   696→      .map((w) => w[0])
+   697→      .filter(Boolean)
+   698→      .slice(0, 2)
+   699→      .join("")
+   700→      .toUpperCase();
+   701→  }, [university]);
+   702→
+   703→  return (
+   704→    <Drawer open={open} onOpenChange={onOpenChange}>
+   705→      <DrawerContent className="max-h-[88vh]">
+   706→        <div className="mx-auto w-full max-w-3xl">
+   707→          <DrawerHeader className="border-b border-border">
+   708→            <DrawerTitle className="font-heading text-xl font-semibold text-foreground">
+   709→              {university?.name}
+   710→            </DrawerTitle>
+   711→            <DrawerDescription>
+   712→              {university?.description || "No description provided."}
+   713→            </DrawerDescription>
+   714→          </DrawerHeader>
+   715→
+   716→          <div className="space-y-4 p-4 md:p-6 overflow-y-auto max-h-[calc(88vh-6rem)] scrollbar-thin">
+   717→            {loading ? (
+   718→              <div className="space-y-3">
+   719→                <Skeleton className="h-24 w-full rounded-lg" />
+   720→                <Skeleton className="h-6 w-40" />
+   721→                <Skeleton className="h-32 w-full rounded-lg" />
+   722→              </div>
+   723→            ) : error ? (
+   724→              <EmptyState
+   725→                icon={<Building2 className="h-5 w-5" />}
+   726→                title="Couldn't load details"
+   727→                description={error}
+   728→              />
+   729→            ) : university ? (
+   730→              <>
+   731→                {/* Header card */}
+   732→                <Card className="overflow-hidden border-border p-0">
+   733→                  <div className="relative h-24 bg-gradient-to-br from-primary/85 via-primary to-primary/70">
+   734→                    <div
+   735→                      className="absolute inset-0 opacity-30"
+   736→                      style={{
+   737→                        backgroundImage:
+   738→                          "radial-gradient(circle at 20% 50%, rgba(15,118,110,0.55), transparent 55%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.12), transparent 45%)",
+   739→                      }}
+   740→                    />
+   741→                  </div>
+   742→                  <div className="relative -mt-10 px-5 pb-5">
+   743→                    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+   744→                      <div className="flex items-end gap-3">
+   745→                        {university.logo ? (
+   746→                          <img
+   747→                            src={university.logo}
+   748→                            alt={`${university.name} logo`}
+   749→                            className="h-20 w-20 rounded-xl bg-background object-contain p-1.5 ring-2 ring-background shadow-sm"
+   750→                          />
+   751→                        ) : (
+   752→                          <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-background text-primary font-heading text-2xl font-bold ring-2 ring-background shadow-sm">
+   753→                            {initials || <GraduationCap className="h-7 w-7" />}
+   754→                          </div>
+   755→                        )}
+   756→                        <div className="pb-1">
+   757→                          <Badge className="gap-1">
+   758→                            <Building2 className="h-3 w-3" /> University Partner
+   759→                          </Badge>
+   760→                        </div>
+   761→                      </div>
+   762→                    </div>
+   763→                  </div>
+   764→                </Card>
+   765→
+   766→                {/* Stats row */}
+   767→                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+   768→                  <DetailStat
+   769→                    icon={<BookOpen className="h-4 w-4" />}
+   770→                    label="Courses"
+   771→                    value={university.courseCount}
+   772→                  />
+   773→                  <DetailStat
+   774→                    icon={<Mail className="h-4 w-4" />}
+   775→                    label="Email"
+   776→                    value={university.email}
+   777→                    isText
+   778→                  />
+   779→                  <DetailStat
+   780→                    icon={<Calendar className="h-4 w-4" />}
+   781→                    label="Joined"
+   782→                    value={formatDate(university.createdAt)}
+   783→                    isText
+   784→                  />
+   785→                  <DetailStat
+   786→                    icon={<GraduationCap className="h-4 w-4" />}
+   787→                    label="Status"
+   788→                    value="Active"
+   789→                    isText
+   790→                  />
+   791→                </div>
+   792→
+   793→                {/* Description block */}
+   794→                {university.description && (
+   795→                  <Card className="border-border p-5">
+   796→                    <h4 className="font-heading text-sm font-semibold text-foreground mb-2">
+   797→                      About
+   798→                    </h4>
+   799→                    <p className="text-sm text-muted-foreground leading-relaxed">
+   800→                      {university.description}
+   801→                    </p>
+   802→                  </Card>
+   803→                )}
+   804→
+   805→                {/* Courses list */}
+   806→                <div className="space-y-3">
+   807→                  <div className="flex items-center justify-between">
+   808→                    <h4 className="font-heading text-sm font-semibold text-foreground">
+   809→                      Courses by this University
+   810→                    </h4>
+   811→                    <Badge variant="outline">
+   812→                      {university.courseCount} total
+   813→                    </Badge>
+   814→                  </div>
+   815→
+   816→                  {university.courses?.length === 0 ? (
+   817→                    <EmptyState
+   818→                      icon={<BookOpen className="h-5 w-5" />}
+   819→                      title="No courses yet"
+   820→                      description="This university hasn't authored any courses."
+   821→                    />
+   822→                  ) : (
+   823→                    <div className="space-y-2">
+   824→                      {university.courses?.map((c) => (
+   825→                        <CourseRowItem key={c.id} course={c} />
+   826→                      ))}
+   827→                    </div>
+   828→                  )}
+   829→                </div>
+   830→              </>
+   831→            ) : null}
+   832→          </div>
+   833→        </div>
+   834→      </DrawerContent>
+   835→    </Drawer>
+   836→  );
+   837→}
+   838→
+   839→function DetailStat({
+   840→  icon,
+   841→  label,
+   842→  value,
+   843→  isText,
+   844→}: {
+   845→  icon: React.ReactNode;
+   846→  label: string;
+   847→  value: number | string;
+   848→  isText?: boolean;
+   849→}) {
+   850→  return (
+   851→    <Card className="border-border p-3">
+   852→      <div className="flex items-center gap-2 text-accent">
+   853→        {icon}
+   854→        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+   855→          {label}
+   856→        </span>
+   857→      </div>
+   858→      <p
+   859→        className={`mt-1.5 font-heading font-semibold text-foreground ${
+   860→          isText ? "text-sm truncate" : "text-xl"
+   861→        }`}
+   862→        title={isText ? String(value) : undefined}
+   863→      >
+   864→        {isText && typeof value === "string"
+   865→          ? value.length > 22
+   866→            ? value.slice(0, 20) + "…"
+   867→            : value
+   868→          : typeof value === "number"
+   869→            ? value.toLocaleString()
+   870→            : value}
+   871→      </p>
+   872→    </Card>
+   873→  );
+   874→}
+   875→
+   876→function CourseRowItem({ course }: { course: UniversityCourseRow }) {
+   877→  return (
+   878→    <Card className="border-border p-3 transition-colors duration-200 hover:bg-muted/30">
+   879→      <div className="flex items-start gap-3">
+   880→        <div className="h-12 w-20 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border">
+   881→          {course.thumbnail ? (
+   882→            <img
+   883→              src={course.thumbnail}
+   884→              alt=""
+   885→              className="h-full w-full object-cover"
+   886→            />
+   887→          ) : (
+   888→            <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+   889→              <BookOpen className="h-4 w-4" />
+   890→            </div>
+   891→          )}
+   892→        </div>
+   893→        <div className="min-w-0 flex-1">
+   894→          <div className="flex items-start justify-between gap-2">
+   895→            <h5 className="font-medium text-sm text-foreground line-clamp-1">
+   896→              {course.title}
+   897→            </h5>
+   898→            <div className="flex gap-1 shrink-0">
+   899→              {course.accessType === "FREE" ? (
+   900→                <Badge variant="outline" className="text-success border-success/30">
+   901→                  Free
+   902→                </Badge>
+   903→              ) : (
+   904→                <Badge variant="outline" className="text-primary border-primary/30">
+   905→                  Paid
+   906→                </Badge>
+   907→              )}
+   908→              {course.isPublished ? (
+   909→                <Badge className="bg-success/95 text-success-foreground">Published</Badge>
+   910→              ) : (
+   911→                <Badge variant="outline">Draft</Badge>
+   912→              )}
+   913→            </div>
+   914→          </div>
+   915→          {course.description && (
+   916→            <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
+   917→              {course.description}
+   918→            </p>
+   919→          )}
+   920→          <div className="mt-1.5 flex items-center gap-3 text-[11px] text-muted-foreground">
+   921→            <span className="flex items-center gap-1">
+   922→              <Layers className="h-3 w-3 text-accent" />
+   923→              {course.topicsCount} topics
+   924→            </span>
+   925→            <span className="flex items-center gap-1">
+   926→              <Video className="h-3 w-3 text-accent" />
+   927→              {course.videosCount} lessons
+   928→            </span>
+   929→            <span className="flex items-center gap-1">
+   930→              <ClipboardList className="h-3 w-3 text-accent" />
+   931→              {course.assignmentsCount} assignments
+   932→            </span>
+   933→          </div>
+   934→        </div>
+   935→      </div>
+   936→    </Card>
+   937→  );
+   938→}
+   939→

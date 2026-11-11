@@ -93,11 +93,11 @@ interface UniversityDetailResponse {
 // ─── Main Component ─────────────────────────────────────────────────────
 export function AdminUniversities() {
   const query = useAppStore((s) => s.query);
+  const navigate = useAppStore((s) => s.navigate);
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<UniversityRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<UniversityRow | null>(null);
-  const [detailTarget, setDetailTarget] = useState<UniversityRow | null>(null);
 
   const qs = useMemo(() => {
     if (!search.trim()) return "";
@@ -199,7 +199,7 @@ export function AdminUniversities() {
             <UniversityCard
               key={u.id}
               university={u}
-              onView={() => setDetailTarget(u)}
+              onView={() => navigate(["admin", "universities", u.id])}
               onEdit={() => setEditTarget(u)}
               onDelete={() => setDeleteTarget(u)}
             />
@@ -228,12 +228,6 @@ export function AdminUniversities() {
           setEditTarget(null);
           toast({ title: "University updated" });
         }}
-      />
-
-      {/* Detail drawer */}
-      <UniversityDetailDrawer
-        target={detailTarget}
-        onOpenChange={(v) => !v && setDetailTarget(null)}
       />
 
       {/* Delete confirm */}
