@@ -24,6 +24,7 @@ export async function GET() {
       recentCertificatesRaw,
       coursesRaw,
       studentIdsRaw,
+      totalUniversities,
     ] = await Promise.all([
       db.user.count({ where: { role: "STUDENT" } }),
       db.course.count(),
@@ -84,6 +85,8 @@ export async function GET() {
         where: { role: "STUDENT" },
         select: { id: true },
       }),
+      // Total universities registered on the platform
+      db.university.count(),
     ]);
 
     // Calculate course performance data for the bar chart
@@ -175,6 +178,7 @@ export async function GET() {
       pendingReviews,
       coursePerformance,
       studentCompletionBuckets,
+      totalUniversities,
     });
   } catch (e) {
     const authErr = await handleAuthError(e);

@@ -12,7 +12,7 @@ import { formatDateTime } from "@/types";
 import {
   Users, BookOpen, Award, CreditCard, FileText, ClipboardList,
   TrendingUp, ArrowRight, UserPlus, PlusCircle,
-  Sparkles, Video,
+  Sparkles, Video, Building2,
 } from "lucide-react";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -31,6 +31,7 @@ interface OverviewData {
   totalCertificatesIssued: number;
   totalVideoLessons: number;
   pendingReviews: number;
+  totalUniversities: number;
   recentStudents: { id: string; name: string; email: string; createdAt: string }[];
   recentCourses: { id: string; title: string; createdAt: string; isPublished: boolean }[];
   recentSubmissions: {
@@ -131,8 +132,8 @@ export function AdminOverview() {
         />
       ) : data ? (
         <>
-          {/* Primary stat cards — 5 elegant cards */}
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-5 stagger-children">
+          {/* Primary stat cards — 6 elegant cards */}
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6 stagger-children">
             <PremiumStatCard
               icon={<BookOpen className="h-5 w-5" />}
               label="Total Courses"
@@ -168,6 +169,13 @@ export function AdminOverview() {
               value={data.totalCertificatesIssued}
               hint="lifetime issued"
               tone="green"
+            />
+            <PremiumStatCard
+              icon={<Building2 className="h-5 w-5" />}
+              label="Universities"
+              value={data.totalUniversities}
+              hint="partner institutions"
+              tone="teal"
             />
           </div>
 
@@ -458,8 +466,8 @@ function QuickActionButton({ icon, label, onClick }: { icon: React.ReactNode; la
 function OverviewSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5 stagger-children">
-        {Array.from({ length: 5 }).map((_, i) => (
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6 stagger-children">
+        {Array.from({ length: 6 }).map((_, i) => (
           <Card key={i} className="p-5">
             <Skeleton className="h-10 w-10 rounded-lg mb-3" />
             <Skeleton className="h-8 w-16 mb-2" />

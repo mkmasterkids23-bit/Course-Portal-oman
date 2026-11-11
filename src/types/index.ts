@@ -1,15 +1,18 @@
 // Shared client-side types and route helpers
 
-export type Role = "ADMIN" | "STUDENT" | null;
+export type Role = "ADMIN" | "STUDENT" | "UNIVERSITY" | null;
 
 export interface PublicUser {
   id: string;
   email: string;
   name: string;
-  role: "ADMIN" | "STUDENT";
+  role: "ADMIN" | "STUDENT" | "UNIVERSITY";
   phone: string | null;
   bio: string | null;
   profilePhoto: string | null;
+  universityId: string | null;
+  universityName: string | null;
+  universityLogo: string | null;
 }
 
 export interface SubscriptionPlanPublic {
@@ -37,6 +40,7 @@ export interface CoursePublic {
   topicsCount: number;
   videosCount: number;
   planNames: string[];
+  university?: { id: string; name: string; logo: string | null } | null;
 }
 
 // Route parser for hash-based SPA routing

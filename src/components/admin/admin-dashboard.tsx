@@ -13,6 +13,7 @@ import { AdminSubmissions } from "./admin-submissions";
 import { AdminPlans } from "./admin-plans";
 import { AdminCertificates } from "./admin-certificates";
 import { AdminSettings } from "./admin-settings";
+import { AdminUniversities } from "./admin-universities";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -36,6 +37,9 @@ export function AdminDashboard() {
     switch (section) {
       case "overview":
         content = <AdminOverview />;
+        break;
+      case "universities":
+        content = <AdminUniversities />;
         break;
       case "students":
         content = <AdminStudents />;

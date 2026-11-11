@@ -6,13 +6,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, BookOpen, PlayCircle, ClipboardList, CreditCard,
-  Award, User, LogOut, GraduationCap
+  Award, User, LogOut, GraduationCap, Building2
 } from "lucide-react";
 import { apiPost } from "@/hooks/use-api";
 
 const NAV = [
   { label: "Overview", icon: LayoutDashboard, segments: ["student", "overview"] },
   { label: "My Courses", icon: BookOpen, segments: ["student", "courses"] },
+  { label: "Universities", icon: Building2, segments: ["student", "universities"] },
   { label: "My Assignments", icon: ClipboardList, segments: ["student", "assignments"] },
   { label: "My Subscription", icon: CreditCard, segments: ["student", "subscription"] },
   { label: "My Certificates", icon: Award, segments: ["student", "certificates"] },

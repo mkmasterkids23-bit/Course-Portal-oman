@@ -28,13 +28,13 @@ export function PublicSite() {
   // NotFoundPage flash that happens between authLoading flipping to false
   // and the redirect effect running.
   useEffect(() => {
-    if (first === "admin" || first === "student") {
-      // user is null here (otherwise AdminDashboard / StudentDashboard would render)
+    if (first === "admin" || first === "student" || first === "university") {
+      // user is null here (otherwise the dashboard would render)
       navigate([""]);
     }
   }, [first, navigate]);
 
-  if (first === "admin" || first === "student") {
+  if (first === "admin" || first === "student" || first === "university") {
     // Show loader while the redirect above takes effect
     return <FullPageLoader />;
   }

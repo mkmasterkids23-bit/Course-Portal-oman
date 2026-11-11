@@ -10,6 +10,7 @@ import { StudentAssignments } from "./student-assignments";
 import { StudentSubscription } from "./student-subscription";
 import { StudentCertificates } from "./student-certificates";
 import { StudentProfile } from "./student-profile";
+import { StudentUniversities } from "./student-universities";
 import { ExpiredScreen } from "./expired-screen";
 import { useApiFetch } from "@/hooks/use-api";
 import { cn } from "@/lib/utils";
@@ -66,6 +67,9 @@ export function StudentDashboard() {
       break;
     case "courses":
       content = <StudentMyCourses />;
+      break;
+    case "universities":
+      content = <StudentUniversities />;
       break;
     case "assignments":
       content = <StudentAssignments />;

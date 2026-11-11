@@ -1,4 +1,4 @@
-// Prisma schema for Lumina Learning — Online Training & Course Management Platform
+// Prisma schema for CourseLearn — Multi-University Learning Management Platform
 
 generator client {
   provider = "prisma-client-js"
@@ -14,17 +14,33 @@ model User {
   email         String   @unique
   passwordHash  String
   name          String
-  role          String   @default("STUDENT") // STUDENT | ADMIN
+  role          String   @default("STUDENT") // STUDENT | ADMIN | UNIVERSITY
   phone         String?
   bio           String?
   profilePhoto  String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  university       University?
   subscriptions    Subscription[]
   videoProgress    VideoProgress[]
   submissions      AssignmentSubmission[]
   certificates     Certificate[]
+}
+
+model University {
+  id          String   @id @default(cuid())
+  name        String
+  logo        String?
+  description String?
+  userId      String   @unique  // links to the User account (login credentials)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courses     Course[]
+
+  @@index([userId])
 }
 
 model SubscriptionPlan {
@@ -69,16 +85,18 @@ model Subscription {
 }
 
 model Course {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  thumbnail   String?
-  category    String?
-  accessType  String   @default("FREE") // FREE | PAID
-  isPublished Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  thumbnail     String?
+  category      String?
+  accessType    String   @default("FREE") // FREE | PAID
+  isPublished   Boolean  @default(false)
+  universityId  String?  // null = platform course (main admin), or university-owned
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
+  university       University? @relation(fields: [universityId], references: [id], onDelete: SetNull)
   topics         Topic[]
   videos         VideoLesson[]
   materials      LearningMaterial[]
@@ -86,6 +104,8 @@ model Course {
   planAccess     CoursePlanAccess[]
   certificates   Certificate[]
   certificateTemplate CertificateTemplate?
+
+  @@index([universityId])
 }
 
 model CoursePlanAccess {
@@ -219,7 +239,7 @@ model CertificateTemplate {
   isEnabled       Boolean  @default(true)
   title           String   @default("Certificate of Completion")
   bodyText        String   @default("This certificate is proudly presented to {{studentName}} for successfully completing the course {{courseName}}.")
-  organizationName String  @default("Lumina Learning")
+  organizationName String  @default("CourseLearn")
   layout          String   @default("CLASSIC")
   templateRef     String?
   createdAt       DateTime @default(now())

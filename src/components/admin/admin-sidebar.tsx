@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList, Inbox,
-  CreditCard, Award, Settings, LogOut
+  CreditCard, Award, Settings, LogOut, Building2,
 } from "lucide-react";
 import { apiPost } from "@/hooks/use-api";
 
@@ -15,6 +15,7 @@ const NAV_SECTIONS = [
     label: "Management",
     items: [
       { label: "Overview", icon: LayoutDashboard, segments: ["admin", "overview"] },
+      { label: "Universities", icon: Building2, segments: ["admin", "universities"] },
       { label: "Students", icon: Users, segments: ["admin", "students"] },
       { label: "Courses", icon: BookOpen, segments: ["admin", "courses"] },
       { label: "Learning Materials", icon: FileText, segments: ["admin", "materials"] },

@@ -21,16 +21,21 @@ export async function POST(req: Request) {
     }
     const { email, password } = parsed.data;
 
-    const user = await db.user.findUnique({ where: { email: email.toLowerCase() } });
+    const user = await db.user.findUnique({
+      where: { email: email.toLowerCase() },
+      include: { university: { select: { id: true, name: true, logo: true } } },
+    });
     if (!user || !verifyPassword(password, user.passwordHash)) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
+    const role = user.role as "ADMIN" | "STUDENT" | "UNIVERSITY";
     const token = signSession({
       userId: user.id,
-      role: user.role as "ADMIN" | "STUDENT",
+      role,
       email: user.email,
       name: user.name,
+      universityId: user.university?.id ?? null,
     });
 
     const res = NextResponse.json({
@@ -38,10 +43,13 @@ export async function POST(req: Request) {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: user.role as "ADMIN" | "STUDENT",
+        role,
         phone: user.phone,
         bio: user.bio,
         profilePhoto: user.profilePhoto,
+        universityId: user.university?.id ?? null,
+        universityName: user.university?.name ?? null,
+        universityLogo: user.university?.logo ?? null,
       },
     });
     res.cookies.set(SESSION_COOKIE, token, SESSION_COOKIE_OPTIONS);

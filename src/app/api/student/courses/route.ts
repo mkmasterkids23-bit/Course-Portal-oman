@@ -11,7 +11,7 @@ export async function GET() {
   try {
     const user = await requireStudent();
 
-    const [subscription, allCourses] = await Promise.all([
+    const [subscription, allCourses, universities] = await Promise.all([
       getStudentSubscription(user.id),
       db.course.findMany({
         where: { isPublished: true },
@@ -23,8 +23,13 @@ export async function GET() {
           thumbnail: true,
           category: true,
           accessType: true,
+          university: { select: { id: true, name: true, logo: true } },
           planAccess: { include: { plan: { select: { id: true, name: true } } } },
         },
+      }),
+      db.university.findMany({
+        orderBy: { name: "asc" },
+        select: { id: true, name: true, logo: true },
       }),
     ]);
 
@@ -64,6 +69,7 @@ export async function GET() {
         select: { thumbnail: true, videoUrl: true, source: true },
       });
 
+      const uni = c.university;
       accessibleCourses.push({
         id: c.id,
         title: c.title,
@@ -74,6 +80,7 @@ export async function GET() {
         firstVideoSource: firstVideo?.source || null,
         category: c.category,
         accessType: c.accessType as "FREE" | "PAID",
+        university: uni ? { id: uni.id, name: uni.name, logo: uni.logo } : null,
         topicsCount: stats.totalTopics,
         videosCount: stats.totalVideos,
         completedVideos: stats.completedVideos,
@@ -89,6 +96,11 @@ export async function GET() {
       courses: accessibleCourses,
       subscription,
       expired: !isSubActive && subscription !== null,
+      universities: universities.map((u) => ({
+        id: u.id,
+        name: u.name,
+        logo: u.logo,
+      })),
     });
   } catch (e) {
     const authErr = await handleAuthError(e);

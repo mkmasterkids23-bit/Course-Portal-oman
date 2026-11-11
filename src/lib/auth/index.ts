@@ -6,10 +6,13 @@ export interface CurrentUser {
   id: string;
   email: string;
   name: string;
-  role: "ADMIN" | "STUDENT";
+  role: "ADMIN" | "STUDENT" | "UNIVERSITY";
   phone: string | null;
   bio: string | null;
   profilePhoto: string | null;
+  universityId: string | null;
+  universityName: string | null;
+  universityLogo: string | null;
 }
 
 export async function getSession(): Promise<SessionPayload | null> {
@@ -32,6 +35,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
       phone: true,
       bio: true,
       profilePhoto: true,
+      university: { select: { id: true, name: true, logo: true } },
     },
   });
   if (!user) return null;
@@ -39,10 +43,13 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     id: user.id,
     email: user.email,
     name: user.name,
-    role: user.role as "ADMIN" | "STUDENT",
+    role: user.role as "ADMIN" | "STUDENT" | "UNIVERSITY",
     phone: user.phone,
     bio: user.bio,
     profilePhoto: user.profilePhoto,
+    universityId: user.university?.id ?? null,
+    universityName: user.university?.name ?? null,
+    universityLogo: user.university?.logo ?? null,
   };
 }
 
@@ -58,6 +65,23 @@ export async function requireStudent(): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user || user.role !== "STUDENT") {
     throw new Error("STUDENT_ONLY");
+  }
+  return user;
+}
+
+export async function requireUniversity(): Promise<CurrentUser> {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "UNIVERSITY" || !user.universityId) {
+    throw new Error("UNIVERSITY_ONLY");
+  }
+  return user;
+}
+
+/** Allow either ADMIN or UNIVERSITY role (for shared endpoints). */
+export async function requireAdminOrUniversity(): Promise<CurrentUser> {
+  const user = await getCurrentUser();
+  if (!user || (user.role !== "ADMIN" && user.role !== "UNIVERSITY")) {
+    throw new Error("ADMIN_OR_UNIVERSITY_ONLY");
   }
   return user;
 }
@@ -138,6 +162,8 @@ export async function handleAuthError(e: unknown) {
   if (e instanceof Error) {
     if (e.message === "ADMIN_ONLY") return errorResponse("Admin access required", 403, "ADMIN_ONLY");
     if (e.message === "STUDENT_ONLY") return errorResponse("Student access required", 403, "STUDENT_ONLY");
+    if (e.message === "UNIVERSITY_ONLY") return errorResponse("University access required", 403, "UNIVERSITY_ONLY");
+    if (e.message === "ADMIN_OR_UNIVERSITY_ONLY") return errorResponse("Admin or university access required", 403, "ADMIN_OR_UNIVERSITY_ONLY");
   }
   return null;
 }

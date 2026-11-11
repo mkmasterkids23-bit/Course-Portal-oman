@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
+import { UniversityBadge, type UniversityRef } from "@/components/shared/university-badge";
 import { useApiFetch } from "@/hooks/use-api";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -16,7 +17,7 @@ import {
 import { CourseThumbnail } from "@/components/shared/course-thumbnail";
 import {
   Search, BookOpen, Video, PlayCircle, CheckCircle2, AlertTriangle,
-  ArrowRight, ShieldCheck,
+  ArrowRight, ShieldCheck, X, Building2,
 } from "lucide-react";
 
 interface CourseItem {
@@ -26,6 +27,7 @@ interface CourseItem {
   thumbnail: string | null;
   category: string | null;
   accessType: "FREE" | "PAID";
+  university?: UniversityRef | null;
   topicsCount: number;
   videosCount: number;
   completedVideos: number;
@@ -45,15 +47,25 @@ interface CoursesData {
   courses: CourseItem[];
   subscription: SubscriptionInfo | null;
   expired: boolean;
+  universities?: UniversityRef[];
 }
 
 export function StudentMyCourses() {
   const navigate = useAppStore((s) => s.navigate);
+  const routeQuery = useAppStore((s) => s.query);
   const { data, loading, error } = useApiFetch<CoursesData>("/api/student/courses");
 
-  const [query, setQuery] = useState("");
+  // Initial university filter is derived from the route query (?university=ID),
+  // e.g. when arriving from the Universities directory. Because the dashboard
+  // remounts this component when the section key changes (universities →
+  // courses), reading the query at mount-time is sufficient; manual changes
+  // from the dropdown afterwards still update local state.
+  const [querySearch, setQuerySearch] = useState("");
   const [category, setCategory] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [universityFilter, setUniversityFilter] = useState<string>(
+    routeQuery?.university || "all"
+  );
 
   const categories = useMemo(() => {
     const set = new Set<string>();
@@ -63,14 +75,19 @@ export function StudentMyCourses() {
     return Array.from(set).sort();
   }, [data]);
 
+  const universities = data?.universities || [];
+
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = querySearch.trim().toLowerCase();
     return (data?.courses || []).filter((c) => {
       if (q) {
         const hay = (c.title + " " + (c.description || "") + " " + (c.category || "")).toLowerCase();
         if (!hay.includes(q)) return false;
       }
       if (category !== "all" && c.category !== category) return false;
+      if (universityFilter !== "all") {
+        if (!c.university || c.university.id !== universityFilter) return false;
+      }
       if (statusFilter === "in-progress") {
         if (!(c.completedVideos > 0 && c.percent < 100)) return false;
       } else if (statusFilter === "completed") {
@@ -80,7 +97,31 @@ export function StudentMyCourses() {
       }
       return true;
     });
-  }, [data, query, category, statusFilter]);
+  }, [data, querySearch, category, statusFilter, universityFilter]);
+
+  const activeUniversity = useMemo(() => {
+    if (universityFilter === "all") return null;
+    const found = universities.find((u) => u.id === universityFilter);
+    return found || null;
+  }, [universityFilter, universities]);
+
+  function clearUniversityFilter() {
+    setUniversityFilter("all");
+    // Also clear the query param from the URL so a reload doesn't reapply it.
+    if (routeQuery?.university) {
+      navigate(["student", "courses"]);
+    }
+  }
+
+  function clearAllFilters() {
+    setQuerySearch("");
+    setCategory("all");
+    setStatusFilter("all");
+    setUniversityFilter("all");
+    if (routeQuery?.university) {
+      navigate(["student", "courses"]);
+    }
+  }
 
   if (loading) {
     return (
@@ -108,6 +149,8 @@ export function StudentMyCourses() {
 
   const expired = data?.expired;
   const totalCourses = data?.courses.length || 0;
+  const hasActiveFilters =
+    querySearch !== "" || category !== "all" || statusFilter !== "all" || universityFilter !== "all";
 
   return (
     <div className="space-y-6">
@@ -133,19 +176,62 @@ export function StudentMyCourses() {
         </Card>
       )}
 
-      {/* Filters */}
+      {/* Active university filter banner */}
+      {activeUniversity && (
+        <Card className="border-accent/30 bg-gradient-to-br from-light-teal to-card shadow-sm">
+          <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 text-accent shrink-0 ring-1 ring-accent/20">
+                <Building2 className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">
+                  Showing courses from {activeUniversity.name}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Filtered to {filtered.length} course{filtered.length === 1 ? "" : "s"} from this university.
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearUniversityFilter}
+              className="gap-1.5 shrink-0"
+            >
+              <X className="h-3.5 w-3.5" /> Clear university filter
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Faceted filters toolbar */}
       <Card className="p-4 shadow-sm">
-        <div className="grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-center">
+        <div className="grid gap-3 md:grid-cols-[1fr_auto_auto_auto] md:items-center">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              value={querySearch}
+              onChange={(e) => setQuerySearch(e.target.value)}
               placeholder="Search courses..."
               className="pl-9 h-10"
               aria-label="Search courses"
             />
           </div>
+          <Select value={universityFilter} onValueChange={setUniversityFilter}>
+            <SelectTrigger className="md:w-52 w-full h-10" aria-label="Filter by university">
+              <Building2 className="h-4 w-4 text-muted-foreground mr-1.5" />
+              <SelectValue placeholder="All universities" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All universities</SelectItem>
+              {universities.map((u) => (
+                <SelectItem key={u.id} value={u.id}>
+                  {u.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger className="md:w-48 w-full h-10" aria-label="Filter by category">
               <SelectValue placeholder="All categories" />
@@ -169,6 +255,26 @@ export function StudentMyCourses() {
             </SelectContent>
           </Select>
         </div>
+        {hasActiveFilters && (
+          <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+            <p className="text-xs text-muted-foreground">
+              Active filters:{" "}
+              <span className="font-medium text-foreground">
+                {[
+                  universityFilter !== "all" ? "university" : null,
+                  category !== "all" ? "category" : null,
+                  statusFilter !== "all" ? "status" : null,
+                  querySearch !== "" ? "search" : null,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+              </span>
+            </p>
+            <Button variant="ghost" size="sm" onClick={clearAllFilters} className="h-7 gap-1 text-muted-foreground">
+              <X className="h-3 w-3" /> Clear all
+            </Button>
+          </div>
+        )}
       </Card>
 
       <p className="text-sm text-muted-foreground">
@@ -190,7 +296,7 @@ export function StudentMyCourses() {
                 Browse Public Catalog <ArrowRight className="h-4 w-4" />
               </Button>
             ) : (
-              <Button variant="outline" onClick={() => { setQuery(""); setCategory("all"); setStatusFilter("all"); }}>
+              <Button variant="outline" onClick={clearAllFilters}>
                 Clear filters
               </Button>
             )
@@ -232,7 +338,7 @@ function CourseCard({ course, onOpen }: { course: CourseItem; onOpen: () => void
         />
         {/* Subtle gradient overlay for badge legibility */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-        <div className="absolute top-3 left-3 flex gap-1.5">
+        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
           <Badge
             className={
               course.accessType === "FREE"
@@ -264,10 +370,13 @@ function CourseCard({ course, onOpen }: { course: CourseItem; onOpen: () => void
       </div>
 
       <CardContent className="p-5 space-y-3.5">
-        <div>
+        <div className="space-y-2">
           <h3 className="font-heading text-base font-semibold text-foreground line-clamp-1 group-hover:text-accent transition-colors">
             {course.title}
           </h3>
+          {course.university && (
+            <UniversityBadge university={course.university} size="xs" />
+          )}
           <p className="text-sm text-muted-foreground line-clamp-2 mt-1 min-h-[2.5rem]">
             {course.description || "No description provided."}
           </p>

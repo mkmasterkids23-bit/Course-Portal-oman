@@ -27,6 +27,7 @@ export async function GET() {
         thumbnail: true,
         planAccess: { select: { planId: true } },
         accessType: true,
+        university: { select: { id: true, name: true, logo: true } },
       },
     });
 
@@ -83,6 +84,7 @@ export async function GET() {
           orderBy: { displayOrder: "asc" },
           select: { thumbnail: true, videoUrl: true, source: true },
         });
+        const uni = courseMeta.university;
         continueLearning.push({
           courseId: cid,
           courseTitle: courseMeta.title,
@@ -92,6 +94,7 @@ export async function GET() {
           lastVideoId: lastProgress.videoId,
           lastVideoTitle: lastProgress.video.title,
           percent: stats.percent,
+          university: uni ? { id: uni.id, name: uni.name, logo: uni.logo } : null,
         });
       }
     }

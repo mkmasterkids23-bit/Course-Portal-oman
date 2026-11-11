@@ -2,25 +2,37 @@
 
 import { useState, useMemo } from "react";
 import { useAppStore } from "@/stores/app-store";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { CourseThumbnail } from "@/components/shared/course-thumbnail";
+import { UniversityBadge, type UniversityRef } from "@/components/shared/university-badge";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { useApiFetch } from "@/hooks/use-api";
-import { BookOpen, Video, ShieldCheck, Search, Lock, SlidersHorizontal } from "lucide-react";
+import { BookOpen, Video, ShieldCheck, Search, Lock, SlidersHorizontal, X, Building2, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CoursePublic } from "@/types";
 
+interface CoursesResponse {
+  courses: CoursePublic[];
+  universities?: UniversityRef[];
+}
+
 export function CoursesPage() {
   const navigate = useAppStore((s) => s.navigate);
-  const { data, loading } = useApiFetch<{ courses: CoursePublic[] }>("/api/public/courses");
+  const { data, loading } = useApiFetch<CoursesResponse>("/api/public/courses");
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("");
+  const [universityFilter, setUniversityFilter] = useState<string>("all");
 
   const courses = data?.courses || [];
+  const universities = data?.universities || [];
+
   const categories = useMemo(
     () => Array.from(new Set(courses.map((c) => c.category).filter(Boolean))) as string[],
     [courses]
@@ -29,11 +41,31 @@ export function CoursesPage() {
   const filtered = useMemo(() => {
     return courses.filter((c) => {
       if (category && c.category !== category) return false;
+      if (universityFilter !== "all") {
+        if (!c.university || c.university.id !== universityFilter) return false;
+      }
       if (q && !`${c.title} ${c.description || ""}`.toLowerCase().includes(q.toLowerCase()))
         return false;
       return true;
     });
-  }, [courses, q, category]);
+  }, [courses, q, category, universityFilter]);
+
+  const activeUniversity = useMemo(() => {
+    if (universityFilter === "all") return null;
+    return universities.find((u) => u.id === universityFilter) || null;
+  }, [universityFilter, universities]);
+
+  function clearUniversityFilter() {
+    setUniversityFilter("all");
+  }
+
+  function clearAll() {
+    setQ("");
+    setCategory("");
+    setUniversityFilter("all");
+  }
+
+  const hasActiveFilters = q !== "" || category !== "" || universityFilter !== "all";
 
   return (
     <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-12">
@@ -48,6 +80,99 @@ export function CoursesPage() {
         </p>
       </div>
 
+      {/* Explore by University */}
+      {universities.length > 0 && (
+        <div className="mb-8">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-light-teal text-accent">
+                <Building2 className="h-4 w-4" />
+              </span>
+              <h2 className="font-heading text-base font-semibold tracking-tight text-foreground">
+                Explore by University
+              </h2>
+            </div>
+            {activeUniversity && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearUniversityFilter}
+                className="h-8 gap-1 text-muted-foreground"
+              >
+                <X className="h-3.5 w-3.5" /> Clear
+              </Button>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {universities.map((u) => {
+              const isActive = universityFilter === u.id;
+              return (
+                <button
+                  key={u.id}
+                  onClick={() => setUniversityFilter(isActive ? "all" : u.id)}
+                  className={cn(
+                    "group flex items-center gap-3 rounded-xl border bg-card p-3 text-left shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5",
+                    isActive
+                      ? "border-accent/60 ring-1 ring-accent/25"
+                      : "border-border hover:border-accent/40"
+                  )}
+                  aria-pressed={isActive}
+                >
+                  {u.logo ? (
+                    <img
+                      src={u.logo}
+                      alt={`${u.name} logo`}
+                      className="h-9 w-9 shrink-0 rounded-lg object-cover bg-white ring-1 ring-border"
+                    />
+                  ) : (
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground ring-1 ring-primary/30">
+                      <Building2 className="h-4 w-4" />
+                    </span>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground line-clamp-1 group-hover:text-accent transition-colors">
+                      {u.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {isActive ? "Filtering" : "View courses"}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Active university banner */}
+      {activeUniversity && (
+        <Card className="mb-6 border-accent/30 bg-gradient-to-br from-light-teal to-card shadow-sm">
+          <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 text-accent shrink-0 ring-1 ring-accent/20">
+                <Building2 className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">
+                  Filtered by: {activeUniversity.name}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Showing {filtered.length} course{filtered.length === 1 ? "" : "s"} from this university.
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearUniversityFilter}
+              className="gap-1.5 shrink-0"
+            >
+              <X className="h-3.5 w-3.5" /> Remove filter
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filters */}
       <div className="mb-6 flex flex-col gap-3 rounded-xl border border-border bg-card p-4 md:flex-row md:items-center md:gap-4 shadow-sm">
         <div className="relative flex-1">
@@ -59,6 +184,22 @@ export function CoursesPage() {
             className="h-9 pl-9"
           />
         </div>
+        {universities.length > 0 && (
+          <Select value={universityFilter} onValueChange={setUniversityFilter}>
+            <SelectTrigger className="md:w-52 w-full h-9" aria-label="Filter by university">
+              <Building2 className="h-3.5 w-3.5 text-muted-foreground mr-1.5" />
+              <SelectValue placeholder="All universities" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All universities</SelectItem>
+              {universities.map((u) => (
+                <SelectItem key={u.id} value={u.id}>
+                  {u.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         {categories.length > 0 && (
           <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
             <span className="hidden items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground md:inline-flex">
@@ -87,11 +228,18 @@ export function CoursesPage() {
         )}
       </div>
 
-      {/* Result count */}
+      {/* Result count + clear all */}
       {!loading && (
-        <div className="mb-4 text-xs text-muted-foreground">
-          Showing <span className="font-medium text-foreground">{filtered.length}</span> of{" "}
-          <span className="font-medium text-foreground">{courses.length}</span> courses
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground">
+            Showing <span className="font-medium text-foreground">{filtered.length}</span> of{" "}
+            <span className="font-medium text-foreground">{courses.length}</span> courses
+          </p>
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" onClick={clearAll} className="h-7 gap-1 text-muted-foreground">
+              <X className="h-3 w-3" /> Clear all filters
+            </Button>
+          )}
         </div>
       )}
 
@@ -113,6 +261,13 @@ export function CoursesPage() {
           icon={<BookOpen className="h-5 w-5" />}
           title="No courses found"
           description="Try adjusting your search or filters."
+          action={
+            hasActiveFilters ? (
+              <Button variant="outline" onClick={clearAll} className="gap-1">
+                <X className="h-4 w-4" /> Clear filters
+              </Button>
+            ) : undefined
+          }
         />
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -156,13 +311,18 @@ export function CoursesPage() {
                   </div>
                 )}
               </div>
-              <div className="space-y-2.5 p-5">
-                <h3 className="font-heading text-[15px] font-semibold tracking-tight text-foreground line-clamp-1 transition-colors group-hover:text-accent">
-                  {c.title}
-                </h3>
-                <p className="min-h-[2.5rem] text-sm text-muted-foreground line-clamp-2">
-                  {c.description || "No description provided."}
-                </p>
+              <CardContent className="space-y-2.5 p-5">
+                <div className="space-y-2">
+                  <h3 className="font-heading text-[15px] font-semibold tracking-tight text-foreground line-clamp-1 transition-colors group-hover:text-accent">
+                    {c.title}
+                  </h3>
+                  {c.university && (
+                    <UniversityBadge university={c.university} size="xs" />
+                  )}
+                  <p className="min-h-[2.5rem] text-sm text-muted-foreground line-clamp-2">
+                    {c.description || "No description provided."}
+                  </p>
+                </div>
                 <div className="flex items-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1.5">
                     <BookOpen className="h-3.5 w-3.5" /> {c.topicsCount} topics
@@ -176,9 +336,22 @@ export function CoursesPage() {
                     </span>
                   )}
                 </div>
-              </div>
+              </CardContent>
             </Card>
           ))}
+        </div>
+      )}
+
+      {/* CTA when filtering by university */}
+      {activeUniversity && filtered.length > 0 && (
+        <div className="mt-10 flex flex-col items-center gap-3 rounded-xl border border-accent/20 bg-light-teal/40 p-6 text-center">
+          <p className="text-sm text-muted-foreground">
+            Ready to start learning at {activeUniversity.name}?
+          </p>
+          <Button onClick={() => navigate(["register"])} className="gap-2 shadow-sm">
+            Create an account
+            <ArrowRight className="h-4 w-4" />
+          </Button>
         </div>
       )}
     </div>

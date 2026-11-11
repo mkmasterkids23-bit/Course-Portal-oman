@@ -2,11 +2,12 @@
 
 import { useAppStore } from "@/stores/app-store";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { CourseThumbnail } from "@/components/shared/course-thumbnail";
+import { UniversityBadge } from "@/components/shared/university-badge";
 import { useApiFetch } from "@/hooks/use-api";
 import {
   ArrowRight, BookOpen, Award, Users, Clock, CheckCircle2,
@@ -415,6 +416,9 @@ function CourseCardMini({ course, onOpen }: { course: CoursePublic; onOpen: () =
         <h3 className="font-heading text-[15px] font-semibold tracking-tight text-foreground line-clamp-1 transition-colors group-hover:text-accent">
           {course.title}
         </h3>
+        {course.university && (
+          <UniversityBadge university={course.university} size="xs" />
+        )}
         <p className="min-h-[2.5rem] text-sm text-muted-foreground line-clamp-2">
           {course.description || "No description provided."}
         </p>
