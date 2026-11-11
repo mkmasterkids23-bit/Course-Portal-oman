@@ -615,7 +615,7 @@ function VideoFormDialog({
         const res = await fetch(`/api/admin/videos/${target.id}`, {
           method: "PUT",
           body: fd,
-          credentials: "same-origin",
+          credentials: "include",
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || "Failed to update video");
@@ -930,7 +930,7 @@ function MaterialFormDialog({
         const res = await fetch(`/api/admin/materials/${target.id}`, {
           method: "PUT",
           body: fd,
-          credentials: "same-origin",
+          credentials: "include",
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || "Failed");
@@ -1225,7 +1225,7 @@ function AssignmentFormDialog({
         const res = await fetch(`/api/admin/assignments/${target.id}`, {
           method: "PUT",
           body: fd,
-          credentials: "same-origin",
+          credentials: "include",
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || "Failed");

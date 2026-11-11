@@ -392,7 +392,7 @@ function GlobalMaterialFormDialog({
         const res = await fetch(`/api/admin/materials/${target.id}`, {
           method: "PUT",
           body: fd,
-          credentials: "same-origin",
+          credentials: "include",
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || "Failed");
