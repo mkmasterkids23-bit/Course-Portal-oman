@@ -69,28 +69,33 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col overflow-hidden bg-gradient-to-br from-background via-background to-light-teal/60">
+    <div className="relative min-h-screen flex flex-col overflow-hidden bg-soft-sage/40">
       <div
-        className="pointer-events-none absolute inset-0 -z-10 opacity-80"
+        className="pointer-events-none absolute inset-0 -z-10 opacity-90"
         style={{
           background:
-            "radial-gradient(circle at 15% 20%, rgba(15,118,110,0.10), transparent 45%), radial-gradient(circle at 85% 80%, rgba(23,37,84,0.06), transparent 45%)",
+            "radial-gradient(circle at 15% 20%, rgba(120,151,134,0.18), transparent 45%), radial-gradient(circle at 85% 80%, rgba(52,79,66,0.08), transparent 45%)",
         }}
       />
 
       {/* Top bar */}
       <div className="flex items-center justify-between p-4 md:px-6 lg:px-8">
         <BrandLogo onClick={() => navigate([""])} />
-        <Button variant="ghost" size="sm" onClick={() => navigate([""])} className="gap-2 h-9">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate([""])}
+          className="gap-2 h-9 text-foreground hover:bg-soft-sage"
+        >
           <ArrowLeft className="h-4 w-4" /> Back to home
         </Button>
       </div>
 
       <div className="flex flex-1 items-center justify-center px-4 pb-12">
-        <Card className="w-full max-w-2xl p-6 shadow-md md:p-8">
+        <Card className="w-full max-w-2xl rounded-lg border border-border bg-card p-6 shadow-md md:p-8">
           {/* Header */}
           <div className="mb-6 space-y-3 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-accent text-accent-foreground shadow-sm">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
               <UserPlus className="h-6 w-6" />
             </div>
             <div className="space-y-1">
@@ -108,14 +113,14 @@ export function RegisterPage() {
             <div
               className={cn(
                 "flex items-center gap-2",
-                step === 1 ? "text-accent" : "text-muted-foreground"
+                step === 1 ? "text-primary" : "text-muted-foreground"
               )}
             >
               <span
                 className={cn(
                   "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all duration-200",
                   step === 1
-                    ? "bg-accent text-accent-foreground shadow-sm"
+                    ? "bg-primary text-primary-foreground shadow-sm"
                     : step > 1
                     ? "bg-success text-success-foreground"
                     : "bg-muted text-muted-foreground"
@@ -129,14 +134,14 @@ export function RegisterPage() {
             <div
               className={cn(
                 "flex items-center gap-2",
-                step === 2 ? "text-accent" : "text-muted-foreground"
+                step === 2 ? "text-primary" : "text-muted-foreground"
               )}
             >
               <span
                 className={cn(
                   "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all duration-200",
                   step === 2
-                    ? "bg-accent text-accent-foreground shadow-sm"
+                    ? "bg-primary text-primary-foreground shadow-sm"
                     : "bg-muted text-muted-foreground"
                 )}
               >
@@ -231,7 +236,7 @@ export function RegisterPage() {
                     setError(null);
                     setStep(2);
                   }}
-                  className="h-10 w-full gap-2"
+                  className="h-10 w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   Continue to plan selection
                   <ArrowRight className="h-4 w-4" />
@@ -242,7 +247,7 @@ export function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => navigate(["login"])}
-                    className="font-medium text-accent transition-colors hover:text-accent/80 hover:underline"
+                    className="font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
                   >
                     Sign in
                   </button>
@@ -276,10 +281,10 @@ export function RegisterPage() {
                             key={p.id}
                             onClick={() => setSelectedPlanId(p.id)}
                             className={cn(
-                              "w-full rounded-xl border p-4 text-left transition-all duration-200",
+                              "w-full rounded-lg border p-4 text-left transition-all duration-200",
                               selected
-                                ? "border-accent bg-light-teal/60 ring-1 ring-accent/30"
-                                : "border-border bg-card hover:border-accent/40 hover:bg-muted/30"
+                                ? "border-primary bg-soft-sage/60 ring-1 ring-primary/30"
+                                : "border-border bg-card hover:border-accent/40 hover:bg-soft-sage/30"
                             )}
                           >
                             <div className="flex items-start justify-between gap-3">
@@ -289,12 +294,12 @@ export function RegisterPage() {
                                     {p.name}
                                   </span>
                                   {p.isPopular && (
-                                    <Badge className="bg-accent text-accent-foreground text-[10px]">
+                                    <Badge className="bg-primary text-primary-foreground text-[10px]">
                                       <Sparkles className="h-2.5 w-2.5" /> Popular
                                     </Badge>
                                   )}
                                   {selected && (
-                                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-accent text-accent-foreground">
+                                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
                                       <CheckCircle2 className="h-3 w-3" />
                                     </span>
                                   )}
@@ -329,7 +334,7 @@ export function RegisterPage() {
                 </div>
 
                 {selectedPlan && (
-                  <div className="rounded-lg border border-border bg-muted/40 p-4 text-sm">
+                  <div className="rounded-lg border border-border bg-soft-sage/40 p-4 text-sm">
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Selected plan</span>
                       <span className="font-medium text-foreground">{selectedPlan.name}</span>
@@ -355,14 +360,14 @@ export function RegisterPage() {
                     type="button"
                     variant="outline"
                     onClick={() => setStep(1)}
-                    className="h-10 gap-2"
+                    className="h-10 gap-2 border-border bg-card hover:bg-soft-sage"
                   >
                     <ArrowLeftIcon className="h-4 w-4" /> Back
                   </Button>
                   <Button
                     type="submit"
                     disabled={submitting || !selectedPlanId}
-                    className="h-10 flex-1 gap-2"
+                    className="h-10 flex-1 gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     {submitting ? (
                       <>

@@ -80,10 +80,10 @@ export function StudentUniversities() {
     <div className="space-y-6">
       {/* Header */}
       <Card className="relative overflow-hidden border-border shadow-sm">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary/80" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-accent/80" />
         <div
           className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full opacity-50"
-          style={{ background: "radial-gradient(circle, rgba(15,118,110,0.45), transparent 70%)" }}
+          style={{ background: "radial-gradient(circle, rgba(120,151,134,0.45), transparent 70%)" }}
         />
         <CardContent className="relative p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="text-primary-foreground">
@@ -180,8 +180,8 @@ function UniversityCard({
       className="group flex flex-col overflow-hidden p-0 cursor-pointer shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-1 hover:border-accent/40"
       onClick={onOpen}
     >
-      <div className="relative flex h-28 items-center justify-center bg-gradient-to-br from-light-teal via-card to-accent/[0.04]">
-        <div className="pointer-events-none absolute inset-0 opacity-60" style={{ background: "radial-gradient(circle at 30% 30%, rgba(15,118,110,0.08), transparent 60%)" }} />
+      <div className="relative flex h-28 items-center justify-center bg-gradient-to-br from-soft-sage via-card to-accent/[0.04]">
+        <div className="pointer-events-none absolute inset-0 opacity-60" style={{ background: "radial-gradient(circle at 30% 30%, rgba(120,151,134,0.08), transparent 60%)" }} />
         {university.logo ? (
           <img
             src={university.logo}
@@ -204,7 +204,7 @@ function UniversityCard({
           </p>
         </div>
         <div className="mt-auto flex items-center justify-between border-t border-border pt-3">
-          <Badge className="bg-light-teal text-accent border-transparent">
+          <Badge className="bg-soft-sage text-primary border-transparent">
             <BookOpen className="h-3 w-3" />
             {university.courseCount} course{university.courseCount === 1 ? "" : "s"}
           </Badge>

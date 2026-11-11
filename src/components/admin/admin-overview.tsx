@@ -62,7 +62,8 @@ interface OverviewData {
   };
 }
 
-const PIE_COLORS = ["#E2E8F0", "#94A3B8", "#0F766E", "#172554", "#15803D"];
+// Sage palette — light sage → deep forest → success green
+const PIE_COLORS = ["#E5EAE5", "#A5B8AD", "#789786", "#344F42", "#43866A"];
 
 export function AdminOverview() {
   const navigate = useAppStore((s) => s.navigate);
@@ -90,12 +91,12 @@ export function AdminOverview() {
   return (
     <div className="space-y-6">
       {/* Premium welcome header */}
-      <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary via-primary to-primary/85 p-6 text-primary-foreground shadow-sm">
+      <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary via-primary to-[#2A3F35] p-6 text-primary-foreground shadow-[0_2px_8px_rgba(37,51,43,0.12)]">
         <div
-          className="absolute inset-0 opacity-25"
+          className="absolute inset-0 opacity-30"
           style={{
             backgroundImage:
-              "radial-gradient(circle at 20% 50%, rgba(15,118,110,0.5), transparent 55%), radial-gradient(circle at 85% 15%, rgba(255,255,255,0.12), transparent 45%), radial-gradient(circle at 70% 90%, rgba(15,118,110,0.3), transparent 50%)",
+              "radial-gradient(circle at 20% 50%, rgba(120,151,134,0.45), transparent 55%), radial-gradient(circle at 85% 15%, rgba(252,252,250,0.12), transparent 45%), radial-gradient(circle at 70% 90%, rgba(120,151,134,0.3), transparent 50%)",
           }}
         />
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -139,21 +140,21 @@ export function AdminOverview() {
               label="Total Courses"
               value={data.totalCourses}
               hint={`${data.totalFreeCourses} free · ${data.totalPaidCourses} paid`}
-              tone="navy"
+              tone="forest"
             />
             <PremiumStatCard
               icon={<Users className="h-5 w-5" />}
               label="Enrolled Students"
               value={data.totalStudents}
               hint={`${data.totalActiveSubscriptions} active subs`}
-              tone="teal"
+              tone="sage"
             />
             <PremiumStatCard
               icon={<Video className="h-5 w-5" />}
               label="Video Lessons"
               value={data.totalVideoLessons}
               hint="published lessons"
-              tone="navy"
+              tone="forest"
             />
             <PremiumStatCard
               icon={<ClipboardList className="h-5 w-5" />}
@@ -175,7 +176,7 @@ export function AdminOverview() {
               label="Universities"
               value={data.totalUniversities}
               hint="partner institutions"
-              tone="teal"
+              tone="sage"
             />
           </div>
 
@@ -204,19 +205,19 @@ export function AdminOverview() {
                 ) : (
                   <ResponsiveContainer width="100%" height={260}>
                     <BarChart data={data.coursePerformance} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E5EAE5" vertical={false} />
                       <XAxis
                         dataKey="title"
-                        tick={{ fontSize: 11, fill: "#64748B" }}
+                        tick={{ fontSize: 11, fill: "#77827B" }}
                         tickLine={false}
-                        axisLine={{ stroke: "#E2E8F0" }}
+                        axisLine={{ stroke: "#E5EAE5" }}
                         interval={0}
                         angle={-15}
                         textAnchor="end"
                         height={60}
                       />
                       <YAxis
-                        tick={{ fontSize: 11, fill: "#64748B" }}
+                        tick={{ fontSize: 11, fill: "#77827B" }}
                         tickLine={false}
                         axisLine={false}
                         allowDecimals={false}
@@ -224,14 +225,14 @@ export function AdminOverview() {
                       <Tooltip
                         contentStyle={{
                           borderRadius: 8,
-                          border: "1px solid #E2E8F0",
+                          border: "1px solid #E5EAE5",
                           fontSize: 12,
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                          boxShadow: "0 4px 12px rgba(37,51,43,0.08)",
                         }}
-                        cursor={{ fill: "#F1F5F9" }}
+                        cursor={{ fill: "#E8EFEA" }}
                       />
-                      <Bar dataKey="lessons" fill="#172554" radius={[4, 4, 0, 0]} name="Lessons" />
-                      <Bar dataKey="certificates" fill="#0F766E" radius={[4, 4, 0, 0]} name="Certificates" />
+                      <Bar dataKey="lessons" fill="#344F42" radius={[4, 4, 0, 0]} name="Lessons" />
+                      <Bar dataKey="certificates" fill="#789786" radius={[4, 4, 0, 0]} name="Certificates" />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -275,7 +276,7 @@ export function AdminOverview() {
                         <Tooltip
                           contentStyle={{
                             borderRadius: 8,
-                            border: "1px solid #E2E8F0",
+                            border: "1px solid #E5EAE5",
                             fontSize: 12,
                           }}
                         />
@@ -425,12 +426,12 @@ function PremiumStatCard({
   label: string;
   value: number;
   hint?: string;
-  tone: "navy" | "teal" | "amber" | "green";
+  tone: "forest" | "sage" | "amber" | "green";
   urgent?: boolean;
 }) {
   const toneClasses = {
-    navy: "bg-primary/10 text-primary",
-    teal: "bg-accent/10 text-accent",
+    forest: "bg-primary/10 text-primary",
+    sage: "bg-soft-sage text-accent",
     amber: "bg-warning/15 text-warning",
     green: "bg-success/15 text-success",
   };
@@ -456,7 +457,7 @@ function PremiumStatCard({
 
 function QuickActionButton({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
   return (
-    <Button variant="outline" size="sm" className="h-9 gap-2 border-border bg-card transition-all duration-200 hover:border-accent/30 hover:bg-light-teal/40" onClick={onClick}>
+    <Button variant="outline" size="sm" className="h-9 gap-2 border-border bg-card transition-all duration-200 hover:border-accent/40 hover:bg-soft-sage/50 hover:text-primary" onClick={onClick}>
       <span className="text-accent">{icon}</span>
       {label}
     </Button>

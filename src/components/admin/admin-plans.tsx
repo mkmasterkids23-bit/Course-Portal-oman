@@ -67,7 +67,7 @@ export function AdminPlans() {
 
   return (
     <div className="space-y-4">
-      <Card className="border-border bg-gradient-to-br from-card to-muted/20 p-5 shadow-sm">
+      <Card className="border-border bg-gradient-to-br from-card via-card to-soft-sage/40 p-5 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="font-heading text-lg font-semibold text-foreground">Subscription Plans</h2>

@@ -34,7 +34,7 @@ export function UniversityBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full bg-light-teal text-accent border border-accent/15 px-2 py-0.5 text-xs font-medium",
+        "inline-flex items-center gap-1.5 rounded-full bg-soft-sage text-primary border border-accent/15 px-2 py-0.5 text-xs font-medium",
         className
       )}
     >

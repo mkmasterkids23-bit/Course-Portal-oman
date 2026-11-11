@@ -104,18 +104,18 @@ export function UniversitySidebar({ onNavigate }: { onNavigate?: () => void }) {
                     className={cn(
                       "group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200",
                       active
-                        ? "bg-light-teal text-accent font-semibold"
+                        ? "bg-soft-sage text-primary font-semibold"
                         : "font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                     )}
                   >
                     {active && (
-                      <span className="absolute left-0 top-1/2 h-6 -translate-y-1/2 w-1 rounded-r-full bg-accent" />
+                      <span className="absolute left-0 top-1/2 h-6 -translate-y-1/2 w-1 rounded-r-full bg-primary" />
                     )}
                     <item.icon
                       className={cn(
                         "h-4 w-4 shrink-0 transition-colors duration-200",
                         active
-                          ? "text-accent"
+                          ? "text-primary"
                           : "text-muted-foreground/70 group-hover:text-foreground"
                       )}
                     />

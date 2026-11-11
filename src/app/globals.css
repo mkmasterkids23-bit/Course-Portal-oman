@@ -43,10 +43,12 @@
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
   --color-info: var(--info);
-  --color-deep-navy: var(--deep-navy);
-  --color-secondary-slate: var(--secondary-slate);
-  --color-muted-text: var(--muted-text);
-  --color-light-teal: var(--light-teal);
+  --color-deep-forest: var(--deep-forest);
+  --color-primary-sage: var(--primary-sage);
+  --color-soft-sage: var(--soft-sage);
+  --color-canvas: var(--canvas);
+  --color-warm-white: var(--warm-white);
+  --color-muted-bg: var(--muted-bg);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -54,98 +56,100 @@
 }
 
 :root {
-  /* ─── Exact colour palette from design spec ─── */
-  --radius: 0.625rem; /* 10px standard card radius */
+  /* ─── Sage Green + Warm White Design System ─── */
+  --radius: 0.5rem; /* 8px — clean, professional radius */
 
   /* Backgrounds & surfaces */
-  --background: #F8FAFC;       /* Main Background */
-  --foreground: #0F172A;       /* Primary Text */
-  --card: #FFFFFF;             /* White Surface */
-  --card-foreground: #0F172A;  /* Primary Text on cards */
+  --background: #F5F7F4;       /* Canvas Background */
+  --foreground: #25332B;       /* Primary Text */
+  --card: #FFFFFF;             /* Pure White */
+  --card-foreground: #25332B;
   --popover: #FFFFFF;
-  --popover-foreground: #0F172A;
+  --popover-foreground: #25332B;
 
   /* Brand colours */
-  --primary: #172554;          /* Primary Navy */
-  --primary-foreground: #F8FAFC;
-  --secondary: #E2E8F0;        /* Light border-level surface */
-  --secondary-foreground: #1E293B; /* Deep Navy */
-  --muted: #F1F5F9;
-  --muted-foreground: #64748B; /* Secondary Text */
-  --accent: #0F766E;           /* Muted Teal */
-  --accent-foreground: #F8FAFC;
+  --primary: #344F42;          /* Deep Forest — primary actions, selected nav */
+  --primary-foreground: #FCFCFA; /* Warm White */
+  --secondary: #E5EAE5;        /* Border-level surface */
+  --secondary-foreground: #344F42;
+  --muted: #F0F4F0;            /* Muted Background */
+  --muted-foreground: #77827B; /* Secondary Text */
+  --accent: #789786;           /* Primary Sage — accent colour */
+  --accent-foreground: #FCFCFA;
 
   /* Extended palette tokens */
-  --deep-navy: #1E293B;
-  --secondary-slate: #334155;
-  --muted-text: #94A3B8;       /* Muted Text */
-  --light-teal: #F0FDFA;       /* Light Teal Surface */
-  --info: #2563EB;             /* Information */
+  --deep-forest: #344F42;      /* Deep Forest */
+  --primary-sage: #789786;     /* Primary Sage */
+  --soft-sage: #E8EFEA;        /* Soft Sage */
+  --canvas: #F5F7F4;           /* Canvas Background */
+  --warm-white: #FCFCFA;       /* Warm White */
+  --muted-bg: #F0F4F0;         /* Muted Background */
+  --info: #668BAA;             /* Information */
 
   /* Status colours */
-  --destructive: #B91C1C;      /* Error */
-  --success: #15803D;          /* Success */
-  --success-foreground: #F8FAFC;
-  --warning: #B45309;          /* Warning */
-  --warning-foreground: #F8FAFC;
+  --destructive: #C96A6A;      /* Error */
+  --success: #43866A;          /* Success */
+  --success-foreground: #FCFCFA;
+  --warning: #D9A441;          /* Warning */
+  --warning-foreground: #FCFCFA;
 
   /* Borders & inputs */
-  --border: #E2E8F0;
-  --input: #E2E8F0;
-  --ring: #0F766E;
+  --border: #E5EAE5;
+  --input: #E5EAE5;
+  --ring: #789786;             /* Primary Sage ring */
 
-  /* Charts — use brand palette */
-  --chart-1: #172554;  /* Primary Navy */
-  --chart-2: #0F766E;  /* Muted Teal */
-  --chart-3: #334155;  /* Secondary Slate */
-  --chart-4: #B45309;  /* Warning */
-  --chart-5: #15803D;  /* Success */
+  /* Charts — sage and neutral tones */
+  --chart-1: #344F42;  /* Deep Forest */
+  --chart-2: #789786;  /* Primary Sage */
+  --chart-3: #A5B8AD;  /* Light Sage */
+  --chart-4: #D9A441;  /* Warning */
+  --chart-5: #43866A;  /* Success */
 
   /* Sidebar */
   --sidebar: #FFFFFF;
-  --sidebar-foreground: #0F172A;
-  --sidebar-primary: #172554;
-  --sidebar-primary-foreground: #F8FAFC;
-  --sidebar-accent: #F0FDFA;   /* Light Teal Surface for active items */
-  --sidebar-accent-foreground: #0F766E;
-  --sidebar-border: #E2E8F0;
-  --sidebar-ring: #0F766E;
+  --sidebar-foreground: #25332B;
+  --sidebar-primary: #344F42;
+  --sidebar-primary-foreground: #FCFCFA;
+  --sidebar-accent: #E8EFEA;   /* Soft Sage for active items */
+  --sidebar-accent-foreground: #344F42;
+  --sidebar-border: #E5EAE5;
+  --sidebar-ring: #789786;
 }
 
 .dark {
-  --background: #0B1220;
-  --foreground: #E2E8F0;
-  --card: #0F172A;
-  --card-foreground: #E2E8F0;
-  --popover: #0F172A;
-  --popover-foreground: #E2E8F0;
-  --primary: #F1F5F9;
-  --primary-foreground: #0B1220;
-  --secondary: #1E293B;
-  --secondary-foreground: #E2E8F0;
-  --muted: #1E293B;
-  --muted-foreground: #94A3B8;
-  --accent: #0F766E;
-  --accent-foreground: #F8FAFC;
-  --destructive: #DC2626;
+  --background: #1A2420;
+  --foreground: #E8EFEA;
+  --card: #243029;
+  --card-foreground: #E8EFEA;
+  --popover: #243029;
+  --popover-foreground: #E8EFEA;
+  --primary: #E8EFEA;
+  --primary-foreground: #1A2420;
+  --secondary: #2D3A33;
+  --secondary-foreground: #E8EFEA;
+  --muted: #2D3A33;
+  --muted-foreground: #95A59B;
+  --accent: #789786;
+  --accent-foreground: #FCFCFA;
+  --destructive: #C96A6A;
   --border: rgba(255,255,255,0.08);
   --input: rgba(255,255,255,0.12);
-  --ring: #0F766E;
-  --success: #22C55E;
-  --warning: #F59E0B;
-  --chart-1: #0F766E;
-  --chart-2: #94A3B8;
-  --chart-3: #CBD5E1;
-  --chart-4: #F59E0B;
-  --chart-5: #22C55E;
-  --sidebar: #0F172A;
-  --sidebar-foreground: #E2E8F0;
-  --sidebar-primary: #F1F5F9;
-  --sidebar-primary-foreground: #0B1220;
-  --sidebar-accent: #1E293B;
-  --sidebar-accent-foreground: #F1F5F9;
+  --ring: #789786;
+  --success: #43866A;
+  --warning: #D9A441;
+  --chart-1: #789786;
+  --chart-2: #95A59B;
+  --chart-3: #B5C4BC;
+  --chart-4: #D9A441;
+  --chart-5: #43866A;
+  --sidebar: #243029;
+  --sidebar-foreground: #E8EFEA;
+  --sidebar-primary: #E8EFEA;
+  --sidebar-primary-foreground: #1A2420;
+  --sidebar-accent: #2D3A33;
+  --sidebar-accent-foreground: #E8EFEA;
   --sidebar-border: rgba(255,255,255,0.08);
-  --sidebar-ring: #0F766E;
+  --sidebar-ring: #789786;
 }
 
 @layer base {
@@ -166,50 +170,37 @@
     letter-spacing: -0.02em;
     color: var(--foreground);
   }
-  /* Consistent focus-visible ring across all interactive elements */
   :focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
-  /* Remove default button/input styling residue */
   button { cursor: pointer; }
   button:disabled { cursor: not-allowed; }
 }
 
 /* ─── Premium component polish layer ─── */
 @layer components {
-  /* Consistent card elevation */
   .card-elevated {
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+    box-shadow: 0 1px 3px rgba(37, 51, 43, 0.04), 0 1px 2px rgba(37, 51, 43, 0.02);
   }
   .card-elevated:hover {
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06), 0 2px 4px rgba(15, 23, 42, 0.03);
+    box-shadow: 0 4px 12px rgba(37, 51, 43, 0.06), 0 2px 4px rgba(37, 51, 43, 0.03);
   }
-
-  /* Premium stat card icon container */
   .stat-icon {
     @apply flex h-10 w-10 items-center justify-center rounded-xl shrink-0;
   }
-
-  /* Consistent section divider */
   .section-divider {
     @apply h-px w-full bg-border;
   }
-
-  /* Premium table styling */
   .premium-table thead th {
     @apply text-xs font-semibold uppercase tracking-wider text-muted-foreground;
   }
   .premium-table tbody tr {
     @apply transition-colors;
   }
-
-  /* Status badge base */
   .status-badge {
     @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium;
   }
-
-  /* Subtle entrance animation */
   .animate-entrance {
     animation: entrance 0.3s ease-out both;
   }
@@ -217,8 +208,6 @@
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
-
-  /* Staggered list entrance — applies incremental delay to children */
   .stagger-children > * {
     animation: entrance 0.35s ease-out both;
   }
@@ -229,8 +218,6 @@
   .stagger-children > *:nth-child(5) { animation-delay: 0.18s; }
   .stagger-children > *:nth-child(6) { animation-delay: 0.22s; }
   .stagger-children > *:nth-child(n+7) { animation-delay: 0.26s; }
-
-  /* Page content transition */
   .animate-page-in {
     animation: page-in 0.25s ease-out both;
   }
@@ -238,27 +225,19 @@
     from { opacity: 0; transform: translateY(6px); }
     to { opacity: 1; transform: translateY(0); }
   }
-
-  /* Smooth scale-in for cards on hover */
   .hover-lift {
     @apply transition-all duration-200;
   }
   .hover-lift:hover {
     transform: translateY(-2px);
   }
-
-  /* Progress bar smooth fill — applies to all Progress components globally */
   [data-slot="progress-indicator"] {
     transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
-
-  /* Button press feedback */
   button:active:not(:disabled) {
     transform: scale(0.97);
     transition: transform 0.1s ease;
   }
-
-  /* Link underline animation */
   .link-underline {
     background-image: linear-gradient(currentColor, currentColor);
     background-size: 0% 1px;
@@ -271,7 +250,6 @@
   }
 }
 
-/* ─── Reduced motion: disable animations for accessibility ─── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -281,7 +259,6 @@
   }
 }
 
-/* Custom scrollbar */
 .scrollbar-thin::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -298,7 +275,6 @@
   background: var(--accent);
 }
 
-/* Animations */
 @keyframes fade-in-up {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
@@ -319,7 +295,6 @@
   animation: shimmer 1.4s infinite;
 }
 
-/* Hide native number input arrows for cleaner forms */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;

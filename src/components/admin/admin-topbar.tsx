@@ -49,7 +49,7 @@ export function AdminTopbar({ onToggleSidebar }: { onToggleSidebar: () => void }
     .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border/80 bg-background/70 px-4 shadow-sm backdrop-blur-xl transition-shadow duration-300 md:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border/80 bg-background/75 px-4 shadow-[0_1px_3px_rgba(37,51,43,0.04)] backdrop-blur-xl transition-shadow duration-300 md:px-6">
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"
@@ -62,19 +62,19 @@ export function AdminTopbar({ onToggleSidebar }: { onToggleSidebar: () => void }
         </Button>
         <div className="flex flex-col gap-0.5">
           <h1 className="font-heading text-xl font-semibold leading-tight tracking-tight text-foreground">{title}</h1>
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground/80">Admin Dashboard</p>
+          <p className="text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground/80">CourseLearn · Admin</p>
         </div>
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="hidden items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-accent shadow-sm transition-colors duration-200 sm:flex">
+        <div className="hidden items-center gap-1.5 rounded-full border border-accent/25 bg-soft-sage px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary shadow-sm transition-colors duration-200 sm:flex">
           <Shield className="h-3 w-3" />
           <span>Administrator</span>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="group flex items-center gap-2.5 rounded-lg p-1 pr-2 transition-all duration-200 hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
-              <Avatar className="h-9 w-9 ring-2 ring-accent/15 transition-all duration-200 group-hover:ring-accent/40">
+              <Avatar className="h-9 w-9 ring-2 ring-accent/20 ring-offset-2 ring-offset-background transition-all duration-200 group-hover:ring-accent/40">
                 <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">{initials}</AvatarFallback>
               </Avatar>
               <div className="hidden text-left md:block">

@@ -11,13 +11,13 @@ import {
 import { apiPost } from "@/hooks/use-api";
 
 const NAV = [
-  { label: "Overview", icon: LayoutDashboard, segments: ["student", "overview"] },
-  { label: "My Courses", icon: BookOpen, segments: ["student", "courses"] },
-  { label: "Universities", icon: Building2, segments: ["student", "universities"] },
-  { label: "My Assignments", icon: ClipboardList, segments: ["student", "assignments"] },
+  { label: "Dashboard", icon: LayoutDashboard, segments: ["student", "overview"] },
+  { label: "Explore Universities", icon: Building2, segments: ["student", "universities"] },
+  { label: "Explore Courses", icon: BookOpen, segments: ["student", "courses"] },
+  { label: "Assignments", icon: ClipboardList, segments: ["student", "assignments"] },
   { label: "My Subscription", icon: CreditCard, segments: ["student", "subscription"] },
-  { label: "My Certificates", icon: Award, segments: ["student", "certificates"] },
-  { label: "My Profile", icon: User, segments: ["student", "profile"] },
+  { label: "Certificates", icon: Award, segments: ["student", "certificates"] },
+  { label: "Profile", icon: User, segments: ["student", "profile"] },
 ];
 
 export function StudentSidebar({ onNavigate }: { onNavigate?: () => void }) {
@@ -33,13 +33,13 @@ export function StudentSidebar({ onNavigate }: { onNavigate?: () => void }) {
   }
 
   return (
-    <aside className="relative flex h-full w-full flex-col border-r border-sidebar-border bg-gradient-to-b from-card via-card to-muted/40">
+    <aside className="relative flex h-full w-full flex-col border-r border-sidebar-border bg-gradient-to-b from-card via-card to-soft-sage/30">
       {/* Subtle accent right edge */}
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-accent/0 via-accent/30 to-accent/0" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-accent/0 via-accent/20 to-accent/0" />
 
       {/* Logo header — premium gradient accent */}
       <div className="relative flex h-16 items-center border-b border-sidebar-border/80 px-5">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-accent/5 via-transparent to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-soft-sage/40 via-transparent to-transparent" />
         <BrandLogo onClick={() => { navigate(["student", "overview"]); onNavigate?.(); }} />
       </div>
 
@@ -61,22 +61,22 @@ export function StudentSidebar({ onNavigate }: { onNavigate?: () => void }) {
                 className={cn(
                   "group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200",
                   active
-                    ? "bg-light-teal text-accent font-semibold shadow-sm"
+                    ? "bg-soft-sage text-primary font-semibold shadow-sm"
                     : "font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground"
                 )}
               >
                 {active && (
-                  <span className="absolute left-0 top-1/2 h-7 -translate-y-1/2 w-1 rounded-r-full bg-accent shadow-[0_0_0_3px_rgba(15,118,110,0.12)]" />
+                  <span className="absolute left-0 top-1/2 h-7 -translate-y-1/2 w-1 rounded-r-full bg-primary shadow-[0_0_0_3px_rgba(52,79,66,0.12)]" />
                 )}
                 <item.icon className={cn(
                   "h-4 w-4 shrink-0 transition-colors duration-200",
                   active
-                    ? "text-accent"
+                    ? "text-primary"
                     : "text-muted-foreground/70 group-hover:text-foreground"
                 )} />
                 <span className="flex-1 text-left">{item.label}</span>
                 {active && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-accent ring-2 ring-accent/20" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary ring-2 ring-primary/20" />
                 )}
               </button>
             );
@@ -84,7 +84,7 @@ export function StudentSidebar({ onNavigate }: { onNavigate?: () => void }) {
         </nav>
 
         {/* Premium upsell card */}
-        <div className="mt-6 rounded-xl border border-accent/20 bg-gradient-to-br from-light-teal to-accent/[0.04] p-4">
+        <div className="mt-6 rounded-xl border border-accent/20 bg-gradient-to-br from-soft-sage to-accent/[0.04] p-4">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/15 text-accent">
               <GraduationCap className="h-4 w-4" />

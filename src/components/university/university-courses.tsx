@@ -137,7 +137,7 @@ export function UniversityCourses() {
 
   return (
     <div className="space-y-4">
-      <Card className="border-border bg-card p-4 shadow-sm">
+      <Card className="rounded-lg border-border bg-card p-4 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative flex-1">
@@ -205,7 +205,7 @@ export function UniversityCourses() {
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="overflow-hidden border-border p-0">
+            <Card key={i} className="overflow-hidden rounded-lg border-border p-0">
               <Skeleton className="h-36 w-full rounded-none" />
               <div className="p-5 space-y-3">
                 <Skeleton className="h-4 w-1/3" />
@@ -657,7 +657,7 @@ function CourseCard({
   onDelete: () => void;
 }) {
   return (
-    <Card className="group flex flex-col overflow-hidden border-border p-0 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-accent/30">
+    <Card className="group flex flex-col overflow-hidden rounded-lg border-border p-0 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-accent/40">
       {/* Cover image */}
       <button onClick={onManage} className="relative h-36 overflow-hidden bg-muted text-left">
         <CourseThumbnail

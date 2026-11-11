@@ -105,16 +105,16 @@ export function StudentOverview() {
     <div className="space-y-6">
       {/* ─── Premium welcome header ─── */}
       <Card className="relative overflow-hidden border-border shadow-sm">
-        {/* Navy gradient backdrop */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary/80" />
-        {/* Decorative teal glow */}
+        {/* Deep forest gradient backdrop */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-accent/80" />
+        {/* Decorative sage glow */}
         <div
           className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full opacity-60"
-          style={{ background: "radial-gradient(circle, rgba(15,118,110,0.45), transparent 70%)" }}
+          style={{ background: "radial-gradient(circle, rgba(120,151,134,0.45), transparent 70%)" }}
         />
         <div
           className="pointer-events-none absolute -right-10 bottom-0 h-40 w-40 rounded-full opacity-40"
-          style={{ background: "radial-gradient(circle, rgba(240,253,250,0.3), transparent 70%)" }}
+          style={{ background: "radial-gradient(circle, rgba(232,239,234,0.3), transparent 70%)" }}
         />
         <CardContent className="relative p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="text-primary-foreground">
@@ -199,7 +199,7 @@ export function StudentOverview() {
           </CardContent>
         </Card>
       ) : (
-        <Card className="border-accent/30 bg-gradient-to-br from-light-teal to-card shadow-sm">
+        <Card className="border-accent/30 bg-gradient-to-br from-soft-sage to-card shadow-sm">
           <CardContent className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent shrink-0 ring-1 ring-accent/20">
@@ -345,7 +345,7 @@ export function StudentOverview() {
                 {data.upcomingAssignments.slice(0, 5).map((a) => (
                   <li
                     key={a.id}
-                    className="group flex items-start justify-between gap-3 rounded-lg border border-border bg-card p-3 hover:border-accent/30 hover:bg-light-teal/30 transition-all duration-200"
+                    className="group flex items-start justify-between gap-3 rounded-lg border border-border bg-card p-3 hover:border-accent/30 hover:bg-soft-sage/30 transition-all duration-200"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-foreground line-clamp-1">{a.assignmentTitle}</p>
@@ -404,7 +404,7 @@ export function StudentOverview() {
                 {data.recentCertificates.map((c) => (
                   <li
                     key={c.id}
-                    className="group flex items-start justify-between gap-3 rounded-lg border border-border bg-card p-3 hover:border-accent/30 hover:bg-light-teal/30 transition-all duration-200"
+                    className="group flex items-start justify-between gap-3 rounded-lg border border-border bg-card p-3 hover:border-accent/30 hover:bg-soft-sage/30 transition-all duration-200"
                   >
                     <div className="flex items-start gap-3 min-w-0 flex-1">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-accent/15 to-accent/5 text-accent shrink-0 ring-1 ring-accent/20">

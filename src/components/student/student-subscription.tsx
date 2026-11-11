@@ -157,7 +157,7 @@ export function StudentSubscription() {
                 </Button>
               </div>
             ) : (
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-gradient-to-br from-light-teal/60 to-card p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-gradient-to-br from-soft-sage/60 to-card p-4">
                 <div className="flex items-start gap-3">
                   <Clock className="h-5 w-5 text-accent shrink-0 mt-0.5" />
                   <div>
@@ -276,7 +276,7 @@ export function StudentSubscription() {
 
 function MetaBox({ label, value, icon, highlight }: { label: string; value: string; icon?: React.ReactNode; highlight?: boolean }) {
   return (
-    <div className={`rounded-lg border p-3.5 ${highlight ? "border-accent/30 bg-light-teal/60" : "border-border bg-card"}`}>
+    <div className={`rounded-lg border p-3.5 ${highlight ? "border-accent/30 bg-soft-sage/60" : "border-border bg-card"}`}>
       <p className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
         {icon && <span className="text-accent">{icon}</span>}
         {label}

@@ -121,7 +121,7 @@ export function ExpiredScreen() {
                   Expired
                 </Badge>
               </div>
-              <div className="mt-4 flex items-start gap-2.5 rounded-lg border border-accent/20 bg-light-teal/40 p-3.5 text-xs text-muted-foreground">
+              <div className="mt-4 flex items-start gap-2.5 rounded-lg border border-accent/20 bg-soft-sage/40 p-3.5 text-xs text-muted-foreground">
                 <ShieldCheck className="h-4 w-4 text-accent shrink-0 mt-0.5" />
                 <span>
                   Your account, learning history, assignment submissions and certificates remain preserved.

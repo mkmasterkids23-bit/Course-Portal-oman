@@ -5,20 +5,20 @@ import { Compass, ArrowRight, Home } from "lucide-react";
 
 export function NotFoundPage({ onHome }: { onHome: () => void }) {
   return (
-    <div className="relative min-h-[70vh] overflow-hidden">
+    <div className="relative min-h-[70vh] overflow-hidden bg-soft-sage/30">
       <div
-        className="pointer-events-none absolute inset-0 -z-10 opacity-80"
+        className="pointer-events-none absolute inset-0 -z-10 opacity-90"
         style={{
           background:
-            "radial-gradient(circle at 30% 30%, rgba(15,118,110,0.08), transparent 50%), radial-gradient(circle at 70% 70%, rgba(23,37,84,0.05), transparent 50%)",
+            "radial-gradient(circle at 30% 30%, rgba(120,151,134,0.16), transparent 50%), radial-gradient(circle at 70% 70%, rgba(52,79,66,0.06), transparent 50%)",
         }}
       />
       <div className="mx-auto flex max-w-xl flex-col items-center justify-center px-4 py-20 text-center">
         <div className="relative mb-6">
-          <span className="font-heading text-[120px] font-bold leading-none tracking-tight text-muted/60">
+          <span className="font-heading text-[120px] font-bold leading-none tracking-tight text-soft-sage">
             404
           </span>
-          <div className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-2xl border border-border bg-card text-accent shadow-sm">
+          <div className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-lg border border-border bg-card text-accent shadow-sm">
             <Compass className="h-7 w-7" />
           </div>
         </div>
@@ -30,13 +30,16 @@ export function NotFoundPage({ onHome }: { onHome: () => void }) {
           track.
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <Button onClick={onHome} className="h-10 gap-2 px-5">
+          <Button
+            onClick={onHome}
+            className="h-10 gap-2 px-5 bg-primary text-primary-foreground hover:bg-primary/90"
+          >
             <Home className="h-4 w-4" /> Back to home
           </Button>
           <Button
             variant="outline"
             onClick={onHome}
-            className="h-10 gap-2 px-5"
+            className="h-10 gap-2 px-5 border-border bg-card hover:bg-soft-sage"
           >
             Browse courses
             <ArrowRight className="h-4 w-4" />

@@ -292,7 +292,7 @@ export function AdminStudents() {
                   >
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold ring-1 ring-border shrink-0">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-soft-sage text-primary text-xs font-semibold ring-1 ring-border shrink-0">
                           {s.name
                             .split(" ")
                             .map((w) => w[0])

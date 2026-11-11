@@ -70,7 +70,7 @@ export function UniversityCertificates() {
 
   return (
     <div className="space-y-4">
-      <Card className="border-border bg-card p-4 shadow-sm">
+      <Card className="rounded-lg border-border bg-card p-4 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative flex-1">
@@ -100,7 +100,7 @@ export function UniversityCertificates() {
 
       {/* Summary banner */}
       {!loading && !error && (
-        <div className="flex items-center gap-3 rounded-xl border border-accent/20 bg-light-teal/30 p-4">
+        <div className="flex items-center gap-3 rounded-lg border border-accent/20 bg-soft-sage/60 p-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/15 text-accent shrink-0">
             <Award className="h-5 w-5" />
           </div>
@@ -116,7 +116,7 @@ export function UniversityCertificates() {
         </div>
       )}
 
-      <Card className="border-border bg-card p-0 shadow-sm overflow-hidden">
+      <Card className="rounded-lg border-border bg-card p-0 shadow-sm overflow-hidden">
         {loading ? (
           <div className="space-y-2 p-4">
             {Array.from({ length: 6 }).map((_, i) => (

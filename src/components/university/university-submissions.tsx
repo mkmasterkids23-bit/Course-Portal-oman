@@ -123,7 +123,7 @@ export function UniversitySubmissions() {
 
   return (
     <div className="space-y-4">
-      <Card className="border-border bg-card p-4 shadow-sm">
+      <Card className="rounded-lg border-border bg-card p-4 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative flex-1">
@@ -174,7 +174,7 @@ export function UniversitySubmissions() {
         )}
       </Card>
 
-      <Card className="border-border bg-card p-0 shadow-sm overflow-hidden">
+      <Card className="rounded-lg border-border bg-card p-0 shadow-sm overflow-hidden">
         {loading ? (
           <div className="space-y-2 p-4">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -356,7 +356,7 @@ function SubmissionDetailDialog({
         ) : s ? (
           <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
             {/* Student info */}
-            <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+            <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
               <h4 className="font-heading text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
                 Student
               </h4>
@@ -395,7 +395,7 @@ function SubmissionDetailDialog({
             </div>
 
             {/* Assignment info */}
-            <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+            <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
               <h4 className="font-heading text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
                 Assignment
               </h4>
@@ -429,7 +429,7 @@ function SubmissionDetailDialog({
             </div>
 
             {/* Submission file */}
-            <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+            <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="font-heading text-sm font-semibold text-foreground">Submitted Work</h4>
@@ -464,7 +464,7 @@ function SubmissionDetailDialog({
             </div>
 
             {/* Review form */}
-            <div className="rounded-xl border border-border bg-card p-4 shadow-sm space-y-3">
+            <div className="rounded-lg border border-border bg-card p-4 shadow-sm space-y-3">
               <h4 className="font-heading text-sm font-semibold text-foreground">Review</h4>
               <div className="space-y-1.5">
                 <Label htmlFor="sub-status" className="text-xs font-medium text-muted-foreground">

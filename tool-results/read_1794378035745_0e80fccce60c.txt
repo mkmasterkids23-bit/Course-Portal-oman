@@ -1,0 +1,933 @@
+     1→     1→"use client";
+     2→     2→
+     3→     3→import { useEffect, useMemo, useState } from "react";
+     4→     4→import { Card } from "@/components/ui/card";
+     5→     5→import { Button } from "@/components/ui/button";
+     6→     6→import { Input } from "@/components/ui/input";
+     7→     7→import { Label } from "@/components/ui/label";
+     8→     8→import { Badge } from "@/components/ui/badge";
+     9→     9→import { Skeleton } from "@/components/ui/skeleton";
+    10→    10→import { Textarea } from "@/components/ui/textarea";
+    11→    11→import {
+    12→    12→  Dialog,
+    13→    13→  DialogContent,
+    14→    14→  DialogDescription,
+    15→    15→  DialogFooter,
+    16→    16→  DialogHeader,
+    17→    17→  DialogTitle,
+    18→    18→} from "@/components/ui/dialog";
+    19→    19→import {
+    20→    20→  AlertDialog,
+    21→    21→  AlertDialogAction,
+    22→    22→  AlertDialogCancel,
+    23→    23→  AlertDialogContent,
+    24→    24→  AlertDialogDescription,
+    25→    25→  AlertDialogFooter,
+    26→    26→  AlertDialogHeader,
+    27→    27→  AlertDialogTitle,
+    28→    28→} from "@/components/ui/alert-dialog";
+    29→    29→import {
+    30→    30→  DropdownMenu,
+    31→    31→  DropdownMenuContent,
+    32→    32→  DropdownMenuItem,
+    33→    33→  DropdownMenuSeparator,
+    34→    34→  DropdownMenuTrigger,
+    35→    35→} from "@/components/ui/dropdown-menu";
+    36→    36→import {
+    37→    37→  Drawer,
+    38→    38→  DrawerContent,
+    39→    39→  DrawerDescription,
+    40→    40→  DrawerHeader,
+    41→    41→  DrawerTitle,
+    42→    42→} from "@/components/ui/drawer";
+    43→    43→import { EmptyState } from "@/components/shared/empty-state";
+    44→    44→import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
+    45→    45→import { useAppStore } from "@/stores/app-store";
+    46→    46→import { toast } from "@/hooks/use-toast";
+    47→    47→import { formatDate } from "@/types";
+    48→    48→import {
+    49→    49→  Building2, Search, Plus, MoreHorizontal, Pencil, Trash2,
+    50→    50→  Eye, Mail, BookOpen, Layers, Video, ClipboardList, Calendar,
+    51→    51→  Upload, GraduationCap,
+    52→    52→} from "lucide-react";
+    53→    53→
+    54→    54→// ─── Types ──────────────────────────────────────────────────────────────
+    55→    55→interface UniversityRow {
+    56→    56→  id: string;
+    57→    57→  name: string;
+    58→    58→  logo: string | null;
+    59→    59→  description: string | null;
+    60→    60→  email: string;
+    61→    61→  createdAt: string;
+    62→    62→  courseCount: number;
+    63→    63→}
+    64→    64→
+    65→    65→interface UniversitiesResponse {
+    66→    66→  universities: UniversityRow[];
+    67→    67→}
+    68→    68→
+    69→    69→interface UniversityCourseRow {
+    70→    70→  id: string;
+    71→    71→  title: string;
+    72→    72→  description: string | null;
+    73→    73→  thumbnail: string | null;
+    74→    74→  category: string | null;
+    75→    75→  accessType: "FREE" | "PAID";
+    76→    76→  isPublished: boolean;
+    77→    77→  createdAt: string;
+    78→    78→  videosCount: number;
+    79→    79→  topicsCount: number;
+    80→    80→  assignmentsCount: number;
+    81→    81→}
+    82→    82→
+    83→    83→interface UniversityDetail extends UniversityRow {
+    84→    84→  updatedAt: string;
+    85→    85→  courseCount: number;
+    86→    86→  courses: UniversityCourseRow[];
+    87→    87→}
+    88→    88→
+    89→    89→interface UniversityDetailResponse {
+    90→    90→  university: UniversityDetail;
+    91→    91→}
+    92→    92→
+    93→    93→// ─── Main Component ─────────────────────────────────────────────────────
+    94→    94→export function AdminUniversities() {
+    95→    95→  const query = useAppStore((s) => s.query);
+    96→    96→  const navigate = useAppStore((s) => s.navigate);
+    97→    97→  const [search, setSearch] = useState("");
+    98→    98→  const [addOpen, setAddOpen] = useState(false);
+    99→    99→  const [editTarget, setEditTarget] = useState<UniversityRow | null>(null);
+   100→   100→  const [deleteTarget, setDeleteTarget] = useState<UniversityRow | null>(null);
+   101→   101→
+   102→   102→  const qs = useMemo(() => {
+   103→   103→    if (!search.trim()) return "";
+   104→   104→    return `?q=${encodeURIComponent(search.trim())}`;
+   105→   105→  }, [search]);
+   106→   106→
+   107→   107→  const { data, loading, error, refetch } = useApiFetch<UniversitiesResponse>(
+   108→   108→    qs ? `/api/admin/universities${qs}` : "/api/admin/universities",
+   109→   109→  );
+   110→   110→
+   111→   111→  // Auto-open Add dialog when query.action=new
+   112→   112→  const [lastAction, setLastAction] = useState<string | undefined>(undefined);
+   113→   113→  if (query.action !== lastAction) {
+   114→   114→    setLastAction(query.action);
+   115→   115→    if (query.action === "new") setAddOpen(true);
+   116→   116→  }
+   117→   117→
+   118→   118→  const universities = data?.universities || [];
+   119→   119→
+   120→   120→  return (
+   121→   121→    <div className="space-y-4">
+   122→   122→      {/* Toolbar */}
+   123→   123→      <Card className="border-border bg-card p-4 shadow-sm">
+   124→   124→        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+   125→   125→          <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
+   126→   126→            <div className="relative flex-1">
+   127→   127→              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+   128→   128→              <Input
+   129→   129→                value={search}
+   130→   130→                onChange={(e) => setSearch(e.target.value)}
+   131→   131→                placeholder="Search universities…"
+   132→   132→                className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
+   133→   133→                aria-label="Search universities"
+   134→   134→              />
+   135→   135→            </div>
+   136→   136→          </div>
+   137→   137→          <Button className="h-9 gap-2" onClick={() => setAddOpen(true)}>
+   138→   138→            <Plus className="h-4 w-4" /> Add University
+   139→   139→          </Button>
+   140→   140→        </div>
+   141→   141→      </Card>
+   142→   142→
+   143→   143→      {/* Count summary */}
+   144→   144→      {!loading && !error && universities.length > 0 && (
+   145→   145→        <div className="flex items-center justify-between">
+   146→   146→          <p className="text-sm text-muted-foreground">
+   147→   147→            Showing <span className="font-medium text-foreground">{universities.length}</span>{" "}
+   148→   148→            universit{universities.length !== 1 ? "ies" : "y"}
+   149→   149→          </p>
+   150→   150→        </div>
+   151→   151→      )}
+   152→   152→
+   153→   153→      {/* Content */}
+   154→   154→      {loading ? (
+   155→   155→        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+   156→   156→          {Array.from({ length: 6 }).map((_, i) => (
+   157→   157→            <Card key={i} className="overflow-hidden border-border p-0">
+   158→   158→              <div className="h-24 w-full bg-muted" />
+   159→   159→              <div className="p-5 space-y-3">
+   160→   160→                <Skeleton className="h-5 w-2/3" />
+   161→   161→                <Skeleton className="h-4 w-full" />
+   162→   162→                <Skeleton className="h-4 w-1/2" />
+   163→   163→                <div className="flex gap-2 pt-2">
+   164→   164→                  <Skeleton className="h-8 w-full" />
+   165→   165→                  <Skeleton className="h-8 w-10" />
+   166→   166→                </div>
+   167→   167→              </div>
+   168→   168→            </Card>
+   169→   169→          ))}
+   170→   170→        </div>
+   171→   171→      ) : error ? (
+   172→   172→        <EmptyState
+   173→   173→          className="m-4"
+   174→   174→          icon={<Building2 className="h-5 w-5" />}
+   175→   175→          title="Couldn't load universities"
+   176→   176→          description={error}
+   177→   177→        />
+   178→   178→      ) : universities.length === 0 ? (
+   179→   179→        <EmptyState
+   180→   180→          className="m-4"
+   181→   181→          icon={<Building2 className="h-5 w-5" />}
+   182→   182→          title={search.trim() ? "No matches found" : "No universities yet"}
+   183→   183→          description={
+   184→   184→            search.trim()
+   185→   185→              ? "Try a different search term."
+   186→   186→              : "Add your first university partner to start managing their courses."
+   187→   187→          }
+   188→   188→          action={
+   189→   189→            !search.trim() ? (
+   190→   190→              <Button onClick={() => setAddOpen(true)} className="gap-2">
+   191→   191→                <Plus className="h-4 w-4" /> Add University
+   192→   192→              </Button>
+   193→   193→            ) : undefined
+   194→   194→          }
+   195→   195→        />
+   196→   196→      ) : (
+   197→   197→        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+   198→   198→          {universities.map((u) => (
+   199→   199→            <UniversityCard
+   200→   200→              key={u.id}
+   201→   201→              university={u}
+   202→   202→              onView={() => navigate(["admin", "universities", u.id])}
+   203→   203→              onEdit={() => setEditTarget(u)}
+   204→   204→              onDelete={() => setDeleteTarget(u)}
+   205→   205→            />
+   206→   206→          ))}
+   207→   207→        </div>
+   208→   208→      )}
+   209→   209→
+   210→   210→      {/* Add dialog */}
+   211→   211→      <UniversityFormDialog
+   212→   212→        open={addOpen}
+   213→   213→        onOpenChange={setAddOpen}
+   214→   214→        onSaved={() => {
+   215→   215→          refetch();
+   216→   216→          setAddOpen(false);
+   217→   217→          toast({ title: "University created" });
+   218→   218→        }}
+   219→   219→      />
+   220→   220→
+   221→   221→      {/* Edit dialog */}
+   222→   222→      <UniversityFormDialog
+   223→   223→        open={!!editTarget}
+   224→   224→        onOpenChange={(v) => !v && setEditTarget(null)}
+   225→   225→        target={editTarget}
+   226→   226→        onSaved={() => {
+   227→   227→          refetch();
+   228→   228→          setEditTarget(null);
+   229→   229→          toast({ title: "University updated" });
+   230→   230→        }}
+   231→   231→      />
+   232→   232→
+   233→   233→      {/* Delete confirm */}
+   234→   234→      <AlertDialog
+   235→   235→        open={!!deleteTarget}
+   236→   236→        onOpenChange={(v) => !v && setDeleteTarget(null)}
+   237→   237→      >
+   238→   238→        <AlertDialogContent>
+   239→   239→          <AlertDialogHeader>
+   240→   240→            <AlertDialogTitle>Delete university?</AlertDialogTitle>
+   241→   241→            <AlertDialogDescription>
+   242→   242→              This will permanently delete{" "}
+   243→   243→              <strong>{deleteTarget?.name}</strong> along with its linked login
+   244→   244→              account. Courses authored by this university will be retained on
+   245→   245→              the platform with their university link removed. This cannot be
+   246→   246→              undone.
+   247→   247→            </AlertDialogDescription>
+   248→   248→          </AlertDialogHeader>
+   249→   249→          <AlertDialogFooter>
+   250→   250→            <AlertDialogCancel>Cancel</AlertDialogCancel>
+   251→   251→            <AlertDialogAction
+   252→   252→              className="bg-destructive text-white hover:bg-destructive/90"
+   253→   253→              onClick={async () => {
+   254→   254→                if (!deleteTarget) return;
+   255→   255→                try {
+   256→   256→                  await apiPost(
+   257→   257→                    `/api/admin/universities/${deleteTarget.id}`,
+   258→   258→                    null,
+   259→   259→                    { method: "DELETE" },
+   260→   260→                  );
+   261→   261→                  toast({
+   262→   262→                    title: "University deleted",
+   263→   263→                    description: deleteTarget.name,
+   264→   264→                  });
+   265→   265→                  setDeleteTarget(null);
+   266→   266→                  refetch();
+   267→   267→                } catch {
+   268→   268→                  /* toast handled in apiPost */
+   269→   269→                }
+   270→   270→              }}
+   271→   271→            >
+   272→   272→              Delete
+   273→   273→            </AlertDialogAction>
+   274→   274→          </AlertDialogFooter>
+   275→   275→        </AlertDialogContent>
+   276→   276→      </AlertDialog>
+   277→   277→    </div>
+   278→   278→  );
+   279→   279→}
+   280→   280→
+   281→   281→// ─── University Card ────────────────────────────────────────────────────
+   282→   282→function UniversityCard({
+   283→   283→  university,
+   284→   284→  onView,
+   285→   285→  onEdit,
+   286→   286→  onDelete,
+   287→   287→}: {
+   288→   288→  university: UniversityRow;
+   289→   289→  onView: () => void;
+   290→   290→  onEdit: () => void;
+   291→   291→  onDelete: () => void;
+   292→   292→}) {
+   293→   293→  const initials = useMemo(
+   294→   294→    () =>
+   295→   295→      university.name
+   296→   296→        .split(/\s+/)
+   297→   297→        .map((w) => w[0])
+   298→   298→        .filter(Boolean)
+   299→   299→        .slice(0, 2)
+   300→   300→        .join("")
+   301→   301→        .toUpperCase(),
+   302→   302→    [university.name],
+   303→   303→  );
+   304→   304→
+   305→   305→  return (
+   306→   306→    <Card className="group flex flex-col overflow-hidden border-border p-0 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-accent/30">
+   307→   307→      {/* Banner / logo header */}
+   308→   308→      <button
+   309→   309→        onClick={onView}
+   310→   310→        className="relative h-24 overflow-hidden bg-gradient-to-br from-primary/85 via-primary to-primary/70 text-left"
+   311→   311→        aria-label={`View ${university.name} details`}
+   312→   312→      >
+   313→   313→        <div
+   314→   314→          className="absolute inset-0 opacity-30"
+   315→   315→          style={{
+   316→   316→            backgroundImage:
+   317→   317→              "radial-gradient(circle at 20% 50%, rgba(15,118,110,0.55), transparent 55%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.12), transparent 45%)",
+   318→   318→          }}
+   319→   319→        />
+   320→   320→        <div className="relative flex h-full items-center gap-3 p-4">
+   321→   321→          {university.logo ? (
+   322→   322→            <img
+   323→   323→              src={university.logo}
+   324→   324→              alt={`${university.name} logo`}
+   325→   325→              className="h-14 w-14 rounded-lg bg-background object-contain p-1 ring-1 ring-background/30 shadow-sm"
+   326→   326→            />
+   327→   327→          ) : (
+   328→   328→            <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-background/95 text-primary font-heading text-lg font-bold shadow-sm">
+   329→   329→              {initials || <GraduationCap className="h-6 w-6" />}
+   330→   330→            </div>
+   331→   331→          )}
+   332→   332→          <div className="min-w-0 flex-1">
+   333→   333→            <Badge className="border-0 bg-primary-foreground/15 text-primary-foreground backdrop-blur">
+   334→   334→              <Building2 className="h-3 w-3 mr-1" /> University
+   335→   335→            </Badge>
+   336→   336→          </div>
+   337→   337→        </div>
+   338→   338→      </button>
+   339→   339→
+   340→   340→      {/* Content */}
+   341→   341→      <div className="flex flex-1 flex-col p-5">
+   342→   342→        <button onClick={onView} className="text-left">
+   343→   343→          <h3 className="font-heading font-semibold text-foreground line-clamp-1 transition-colors duration-200 group-hover:text-accent">
+   344→   344→            {university.name}
+   345→   345→          </h3>
+   346→   346→          <p className="mt-1 text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
+   347→   347→            {university.description || "No description provided."}
+   348→   348→          </p>
+   349→   349→        </button>
+   350→   350→
+   351→   351→        {/* Email */}
+   352→   352→        <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+   353→   353→          <Mail className="h-3.5 w-3.5 text-accent" />
+   354→   354→          <span className="truncate">{university.email}</span>
+   355→   355→        </div>
+   356→   356→
+   357→   357→        {/* Stats row */}
+   358→   358→        <div className="mt-4 flex items-center gap-4 border-t border-border pt-3 text-xs">
+   359→   359→          <span className="flex items-center gap-1 text-muted-foreground">
+   360→   360→            <BookOpen className="h-3.5 w-3.5 text-accent" />
+   361→   361→            <span className="font-semibold text-foreground">{university.courseCount}</span>{" "}
+   362→   362→            {university.courseCount === 1 ? "course" : "courses"}
+   363→   363→          </span>
+   364→   364→          <span className="flex items-center gap-1 text-muted-foreground ml-auto">
+   365→   365→            <Calendar className="h-3.5 w-3.5 text-accent" />
+   366→   366→            {formatDate(university.createdAt)}
+   367→   367→          </span>
+   368→   368→        </div>
+   369→   369→
+   370→   370→        {/* Actions */}
+   371→   371→        <div className="mt-4 flex items-center gap-2">
+   372→   372→          <Button size="sm" className="h-9 flex-1 gap-1.5" onClick={onView}>
+   373→   373→            <Eye className="h-3.5 w-3.5" /> View Details
+   374→   374→          </Button>
+   375→   375→          <Button
+   376→   376→            variant="outline"
+   377→   377→            size="sm"
+   378→   378→            className="h-9 gap-1.5"
+   379→   379→            onClick={onEdit}
+   380→   380→            aria-label="Edit"
+   381→   381→          >
+   382→   382→            <Pencil className="h-3.5 w-3.5" />
+   383→   383→            <span className="sr-only">Edit</span>
+   384→   384→          </Button>
+   385→   385→          <DropdownMenu>
+   386→   386→            <DropdownMenuTrigger asChild>
+   387→   387→              <Button
+   388→   388→                variant="outline"
+   389→   389→                size="sm"
+   390→   390→                className="h-9 px-2"
+   391→   391→                aria-label={`More actions for ${university.name}`}
+   392→   392→              >
+   393→   393→                <MoreHorizontal className="h-3.5 w-3.5" />
+   394→   394→              </Button>
+   395→   395→            </DropdownMenuTrigger>
+   396→   396→            <DropdownMenuContent align="end" className="w-48">
+   397→   397→              <DropdownMenuItem onClick={onView} className="gap-2">
+   398→   398→                <Eye className="h-4 w-4 text-muted-foreground" /> View details
+   399→   399→              </DropdownMenuItem>
+   400→   400→              <DropdownMenuItem onClick={onEdit} className="gap-2">
+   401→   401→                <Pencil className="h-4 w-4 text-muted-foreground" /> Edit details
+   402→   402→              </DropdownMenuItem>
+   403→   403→              <DropdownMenuSeparator />
+   404→   404→              <DropdownMenuItem
+   405→   405→                variant="destructive"
+   406→   406→                onClick={onDelete}
+   407→   407→                className="gap-2"
+   408→   408→              >
+   409→   409→                <Trash2 className="h-4 w-4" /> Delete
+   410→   410→              </DropdownMenuItem>
+   411→   411→            </DropdownMenuContent>
+   412→   412→          </DropdownMenu>
+   413→   413→        </div>
+   414→   414→      </div>
+   415→   415→    </Card>
+   416→   416→  );
+   417→   417→}
+   418→   418→
+   419→   419→// ─── Form Dialog (Add / Edit) ───────────────────────────────────────────
+   420→   420→interface FormValues {
+   421→   421→  name: string;
+   422→   422→  email: string;
+   423→   423→  password: string;
+   424→   424→  description: string;
+   425→   425→  logoFile: File | null;
+   426→   426→  logoPreview: string | null;
+   427→   427→}
+   428→   428→
+   429→   429→function UniversityFormDialog({
+   430→   430→  open,
+   431→   431→  onOpenChange,
+   432→   432→  target,
+   433→   433→  onSaved,
+   434→   434→}: {
+   435→   435→  open: boolean;
+   436→   436→  onOpenChange: (v: boolean) => void;
+   437→   437→  target?: UniversityRow | null;
+   438→   438→  onSaved: () => void;
+   439→   439→}) {
+   440→   440→  const isEdit = !!target;
+   441→   441→  const [values, setValues] = useState<FormValues>({
+   442→   442→    name: "",
+   443→   443→    email: "",
+   444→   444→    password: "",
+   445→   445→    description: "",
+   446→   446→    logoFile: null,
+   447→   447→    logoPreview: null,
+   448→   448→  });
+   449→   449→  const [saving, setSaving] = useState(false);
+   450→   450→
+   451→   451→  useEffect(() => {
+   452→   452→    if (target) {
+   453→   453→      setValues({
+   454→   454→        name: target.name,
+   455→   455→        email: target.email,
+   456→   456→        password: "",
+   457→   457→        description: target.description || "",
+   458→   458→        logoFile: null,
+   459→   459→        logoPreview: target.logo,
+   460→   460→      });
+   461→   461→    } else if (open) {
+   462→   462→      setValues({
+   463→   463→        name: "",
+   464→   464→        email: "",
+   465→   465→        password: "",
+   466→   466→        description: "",
+   467→   467→        logoFile: null,
+   468→   468→        logoPreview: null,
+   469→   469→      });
+   470→   470→    }
+   471→   471→  }, [target, open]);
+   472→   472→
+   473→   473→  function onLogoSelected(file: File | null) {
+   474→   474→    if (!file) {
+   475→   475→      setValues((v) => ({ ...v, logoFile: null, logoPreview: target?.logo || null }));
+   476→   476→      return;
+   477→   477→    }
+   478→   478→    const previewUrl = URL.createObjectURL(file);
+   479→   479→    setValues((v) => ({ ...v, logoFile: file, logoPreview: previewUrl }));
+   480→   480→  }
+   481→   481→
+   482→   482→  async function submit() {
+   483→   483→    if (!values.name.trim()) {
+   484→   484→      toast({ title: "Name required", variant: "destructive" });
+   485→   485→      return;
+   486→   486→    }
+   487→   487→    if (!values.email.trim()) {
+   488→   488→      toast({ title: "Email required", variant: "destructive" });
+   489→   489→      return;
+   490→   490→    }
+   491→   491→    if (!isEdit && !values.password) {
+   492→   492→      toast({ title: "Password required", variant: "destructive" });
+   493→   493→      return;
+   494→   494→    }
+   495→   495→    if (values.password && values.password.length < 6) {
+   496→   496→      toast({
+   497→   497→        title: "Password too short",
+   498→   498→        description: "Must be at least 6 characters.",
+   499→   499→        variant: "destructive",
+   500→   500→      });
+   501→   501→      return;
+   502→   502→    }
+   503→   503→
+   504→   504→    setSaving(true);
+   505→   505→    try {
+   506→   506→      const fd = new FormData();
+   507→   507→      fd.append("name", values.name.trim());
+   508→   508→      fd.append("email", values.email.trim());
+   509→   509→      if (values.password) fd.append("password", values.password);
+   510→   510→      if (values.description.trim()) fd.append("description", values.description.trim());
+   511→   511→      if (values.logoFile) fd.append("logo", values.logoFile);
+   512→   512→
+   513→   513→      const url = isEdit
+   514→   514→        ? `/api/admin/universities/${target!.id}`
+   515→   515→        : "/api/admin/universities";
+   516→   516→
+   517→   517→      // apiUpload uses POST; for PUT we fetch directly with FormData.
+   518→   518→      if (isEdit) {
+   519→   519→        const res = await fetch(url, {
+   520→   520→          method: "PUT",
+   521→   521→          body: fd,
+   522→   522→          credentials: "include",
+   523→   523→        });
+   524→   524→        const json = await res.json();
+   525→   525→        if (!res.ok) {
+   526→   526→          const msg = json.error || `Request failed (${res.status})`;
+   527→   527→          toast({ title: "Error", description: msg, variant: "destructive" });
+   528→   528→          throw new Error(msg);
+   529→   529→        }
+   530→   530→      } else {
+   531→   531→        await apiUpload(url, fd);
+   532→   532→      }
+   533→   533→      onSaved();
+   534→   534→    } catch {
+   535→   535→      /* toast handled in helpers */
+   536→   536→    } finally {
+   537→   537→      setSaving(false);
+   538→   538→    }
+   539→   539→  }
+   540→   540→
+   541→   541→  const previewInitials = values.name
+   542→   542→    .split(/\s+/)
+   543→   543→    .map((w) => w[0])
+   544→   544→    .filter(Boolean)
+   545→   545→    .slice(0, 2)
+   546→   546→    .join("")
+   547→   547→    .toUpperCase();
+   548→   548→
+   549→   549→  return (
+   550→   550→    <Dialog open={open} onOpenChange={onOpenChange}>
+   551→   551→      <DialogContent className="sm:max-w-lg">
+   552→   552→        <DialogHeader>
+   553→   553→          <DialogTitle className="font-heading text-lg font-semibold">
+   554→   554→            {isEdit ? "Edit University" : "Add New University"}
+   555→   555→          </DialogTitle>
+   556→   556→          <DialogDescription>
+   557→   557→            {isEdit
+   558→   558→              ? "Update the university profile and its linked login account."
+   559→   559→              : "Create a university profile and a login account with role UNIVERSITY."}
+   560→   560→          </DialogDescription>
+   561→   561→        </DialogHeader>
+   562→   562→        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+   563→   563→          {/* Logo preview + upload */}
+   564→   564→          <div className="space-y-1.5">
+   565→   565→            <Label className="text-xs font-medium text-muted-foreground">Logo</Label>
+   566→   566→            <div className="flex items-center gap-3">
+   567→   567→              <div className="h-16 w-16 overflow-hidden rounded-lg bg-muted flex items-center justify-center shrink-0 ring-1 ring-border">
+   568→   568→                {values.logoPreview ? (
+   569→   569→                  <img
+   570→   570→                    src={values.logoPreview}
+   571→   571→                    alt=""
+   572→   572→                    className="h-full w-full object-contain p-1"
+   573→   573→                  />
+   574→   574→                ) : previewInitials ? (
+   575→   575→                  <span className="font-heading text-lg font-bold text-primary">
+   576→   576→                    {previewInitials}
+   577→   577→                  </span>
+   578→   578→                ) : (
+   579→   579→                  <Building2 className="h-5 w-5 text-muted-foreground" />
+   580→   580→                )}
+   581→   581→              </div>
+   582→   582→              <div className="flex-1 space-y-1.5">
+   583→   583→                <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs text-accent hover:underline">
+   584→   584→                  <Upload className="h-3.5 w-3.5" />
+   585→   585→                  {values.logoFile ? "Change image" : "Upload logo"}
+   586→   586→                  <input
+   587→   587→                    type="file"
+   588→   588→                    accept="image/*"
+   589→   589→                    className="hidden"
+   590→   590→                    onChange={(e) => {
+   591→   591→                      const f = e.target.files?.[0] || null;
+   592→   592→                      onLogoSelected(f);
+   593→   593→                    }}
+   594→   594→                  />
+   595→   595→                </label>
+   596→   596→                <p className="text-xs text-muted-foreground">
+   597→   597→                  PNG, JPG, WebP — square format recommended.
+   598→   598→                </p>
+   599→   599→              </div>
+   600→   600→            </div>
+   601→   601→          </div>
+   602→   602→
+   603→   603→          <div className="space-y-1.5">
+   604→   604→            <Label htmlFor="uf-name" className="text-xs font-medium text-muted-foreground">
+   605→   605→              University Name
+   606→   606→            </Label>
+   607→   607→            <Input
+   608→   608→              id="uf-name"
+   609→   609→              value={values.name}
+   610→   610→              onChange={(e) => setValues({ ...values, name: e.target.value })}
+   611→   611→              placeholder="e.g. Sultan Qaboos University"
+   612→   612→              className="h-9 rounded-lg"
+   613→   613→            />
+   614→   614→          </div>
+   615→   615→
+   616→   616→          <div className="space-y-1.5">
+   617→   617→            <Label htmlFor="uf-email" className="text-xs font-medium text-muted-foreground">
+   618→   618→              Login Email
+   619→   619→            </Label>
+   620→   620→            <Input
+   621→   621→              id="uf-email"
+   622→   622→              type="email"
+   623→   623→              value={values.email}
+   624→   624→              onChange={(e) => setValues({ ...values, email: e.target.value })}
+   625→   625→              placeholder="university@example.com"
+   626→   626→              className="h-9 rounded-lg"
+   627→   627→            />
+   628→   628→          </div>
+   629→   629→
+   630→   630→          <div className="space-y-1.5">
+   631→   631→            <Label htmlFor="uf-pass" className="text-xs font-medium text-muted-foreground">
+   632→   632→              Password {isEdit && <span className="text-muted-foreground/70">(leave blank to keep current)</span>}
+   633→   633→            </Label>
+   634→   634→            <Input
+   635→   635→              id="uf-pass"
+   636→   636→              type="password"
+   637→   637→              value={values.password}
+   638→   638→              onChange={(e) => setValues({ ...values, password: e.target.value })}
+   639→   639→              placeholder="Minimum 6 characters"
+   640→   640→              className="h-9 rounded-lg"
+   641→   641→            />
+   642→   642→          </div>
+   643→   643→
+   644→   644→          <div className="space-y-1.5">
+   645→   645→            <Label htmlFor="uf-desc" className="text-xs font-medium text-muted-foreground">
+   646→   646→              Description <span className="text-muted-foreground/70">(optional)</span>
+   647→   647→            </Label>
+   648→   648→            <Textarea
+   649→   649→              id="uf-desc"
+   650→   650→              value={values.description}
+   651→   651→              onChange={(e) => setValues({ ...values, description: e.target.value })}
+   652→   652→              placeholder="Short summary shown on the university card"
+   653→   653→              rows={3}
+   654→   654→              className="rounded-lg"
+   655→   655→            />
+   656→   656→          </div>
+   657→   657→        </div>
+   658→   658→        <DialogFooter>
+   659→   659→          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>
+   660→   660→            Cancel
+   661→   661→          </Button>
+   662→   662→          <Button disabled={saving} className="h-9" onClick={submit}>
+   663→   663→            {saving ? "Saving…" : isEdit ? "Save Changes" : "Create University"}
+   664→   664→          </Button>
+   665→   665→        </DialogFooter>
+   666→   666→      </DialogContent>
+   667→   667→    </Dialog>
+   668→   668→  );
+   669→   669→}
+   670→   670→
+   671→   671→// ─── Detail Drawer ──────────────────────────────────────────────────────
+   672→   672→function UniversityDetailDrawer({
+   673→   673→  target,
+   674→   674→  onOpenChange,
+   675→   675→}: {
+   676→   676→  target: UniversityRow | null;
+   677→   677→  onOpenChange: (v: boolean) => void;
+   678→   678→}) {
+   679→   679→  const open = !!target;
+   680→   680→  const { data, loading, error } = useApiFetch<UniversityDetailResponse>(
+   681→   681→    target ? `/api/admin/universities/${target.id}` : null,
+   682→   682→  );
+   683→   683→
+   684→   684→  // Reset fetch when drawer closes — pass null url above handles that
+   685→   685→  const university = data?.university || target;
+   686→   686→  const initials = useMemo(() => {
+   687→   687→    if (!university) return "";
+   688→   688→    return university.name
+   689→   689→      .split(/\s+/)
+   690→   690→      .map((w) => w[0])
+   691→   691→      .filter(Boolean)
+   692→   692→      .slice(0, 2)
+   693→   693→      .join("")
+   694→   694→      .toUpperCase();
+   695→   695→  }, [university]);
+   696→   696→
+   697→   697→  return (
+   698→   698→    <Drawer open={open} onOpenChange={onOpenChange}>
+   699→   699→      <DrawerContent className="max-h-[88vh]">
+   700→   700→        <div className="mx-auto w-full max-w-3xl">
+   701→   701→          <DrawerHeader className="border-b border-border">
+   702→   702→            <DrawerTitle className="font-heading text-xl font-semibold text-foreground">
+   703→   703→              {university?.name}
+   704→   704→            </DrawerTitle>
+   705→   705→            <DrawerDescription>
+   706→   706→              {university?.description || "No description provided."}
+   707→   707→            </DrawerDescription>
+   708→   708→          </DrawerHeader>
+   709→   709→
+   710→   710→          <div className="space-y-4 p-4 md:p-6 overflow-y-auto max-h-[calc(88vh-6rem)] scrollbar-thin">
+   711→   711→            {loading ? (
+   712→   712→              <div className="space-y-3">
+   713→   713→                <Skeleton className="h-24 w-full rounded-lg" />
+   714→   714→                <Skeleton className="h-6 w-40" />
+   715→   715→                <Skeleton className="h-32 w-full rounded-lg" />
+   716→   716→              </div>
+   717→   717→            ) : error ? (
+   718→   718→              <EmptyState
+   719→   719→                icon={<Building2 className="h-5 w-5" />}
+   720→   720→                title="Couldn't load details"
+   721→   721→                description={error}
+   722→   722→              />
+   723→   723→            ) : university ? (
+   724→   724→              <>
+   725→   725→                {/* Header card */}
+   726→   726→                <Card className="overflow-hidden border-border p-0">
+   727→   727→                  <div className="relative h-24 bg-gradient-to-br from-primary/85 via-primary to-primary/70">
+   728→   728→                    <div
+   729→   729→                      className="absolute inset-0 opacity-30"
+   730→   730→                      style={{
+   731→   731→                        backgroundImage:
+   732→   732→                          "radial-gradient(circle at 20% 50%, rgba(15,118,110,0.55), transparent 55%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.12), transparent 45%)",
+   733→   733→                      }}
+   734→   734→                    />
+   735→   735→                  </div>
+   736→   736→                  <div className="relative -mt-10 px-5 pb-5">
+   737→   737→                    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+   738→   738→                      <div className="flex items-end gap-3">
+   739→   739→                        {university.logo ? (
+   740→   740→                          <img
+   741→   741→                            src={university.logo}
+   742→   742→                            alt={`${university.name} logo`}
+   743→   743→                            className="h-20 w-20 rounded-xl bg-background object-contain p-1.5 ring-2 ring-background shadow-sm"
+   744→   744→                          />
+   745→   745→                        ) : (
+   746→   746→                          <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-background text-primary font-heading text-2xl font-bold ring-2 ring-background shadow-sm">
+   747→   747→                            {initials || <GraduationCap className="h-7 w-7" />}
+   748→   748→                          </div>
+   749→   749→                        )}
+   750→   750→                        <div className="pb-1">
+   751→   751→                          <Badge className="gap-1">
+   752→   752→                            <Building2 className="h-3 w-3" /> University Partner
+   753→   753→                          </Badge>
+   754→   754→                        </div>
+   755→   755→                      </div>
+   756→   756→                    </div>
+   757→   757→                  </div>
+   758→   758→                </Card>
+   759→   759→
+   760→   760→                {/* Stats row */}
+   761→   761→                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+   762→   762→                  <DetailStat
+   763→   763→                    icon={<BookOpen className="h-4 w-4" />}
+   764→   764→                    label="Courses"
+   765→   765→                    value={university.courseCount}
+   766→   766→                  />
+   767→   767→                  <DetailStat
+   768→   768→                    icon={<Mail className="h-4 w-4" />}
+   769→   769→                    label="Email"
+   770→   770→                    value={university.email}
+   771→   771→                    isText
+   772→   772→                  />
+   773→   773→                  <DetailStat
+   774→   774→                    icon={<Calendar className="h-4 w-4" />}
+   775→   775→                    label="Joined"
+   776→   776→                    value={formatDate(university.createdAt)}
+   777→   777→                    isText
+   778→   778→                  />
+   779→   779→                  <DetailStat
+   780→   780→                    icon={<GraduationCap className="h-4 w-4" />}
+   781→   781→                    label="Status"
+   782→   782→                    value="Active"
+   783→   783→                    isText
+   784→   784→                  />
+   785→   785→                </div>
+   786→   786→
+   787→   787→                {/* Description block */}
+   788→   788→                {university.description && (
+   789→   789→                  <Card className="border-border p-5">
+   790→   790→                    <h4 className="font-heading text-sm font-semibold text-foreground mb-2">
+   791→   791→                      About
+   792→   792→                    </h4>
+   793→   793→                    <p className="text-sm text-muted-foreground leading-relaxed">
+   794→   794→                      {university.description}
+   795→   795→                    </p>
+   796→   796→                  </Card>
+   797→   797→                )}
+   798→   798→
+   799→   799→                {/* Courses list */}
+   800→   800→                <div className="space-y-3">
+   801→   801→                  <div className="flex items-center justify-between">
+   802→   802→                    <h4 className="font-heading text-sm font-semibold text-foreground">
+   803→   803→                      Courses by this University
+   804→   804→                    </h4>
+   805→   805→                    <Badge variant="outline">
+   806→   806→                      {university.courseCount} total
+   807→   807→                    </Badge>
+   808→   808→                  </div>
+   809→   809→
+   810→   810→                  {university.courses?.length === 0 ? (
+   811→   811→                    <EmptyState
+   812→   812→                      icon={<BookOpen className="h-5 w-5" />}
+   813→   813→                      title="No courses yet"
+   814→   814→                      description="This university hasn't authored any courses."
+   815→   815→                    />
+   816→   816→                  ) : (
+   817→   817→                    <div className="space-y-2">
+   818→   818→                      {university.courses?.map((c) => (
+   819→   819→                        <CourseRowItem key={c.id} course={c} />
+   820→   820→                      ))}
+   821→   821→                    </div>
+   822→   822→                  )}
+   823→   823→                </div>
+   824→   824→              </>
+   825→   825→            ) : null}
+   826→   826→          </div>
+   827→   827→        </div>
+   828→   828→      </DrawerContent>
+   829→   829→    </Drawer>
+   830→   830→  );
+   831→   831→}
+   832→   832→
+   833→   833→function DetailStat({
+   834→   834→  icon,
+   835→   835→  label,
+   836→   836→  value,
+   837→   837→  isText,
+   838→   838→}: {
+   839→   839→  icon: React.ReactNode;
+   840→   840→  label: string;
+   841→   841→  value: number | string;
+   842→   842→  isText?: boolean;
+   843→   843→}) {
+   844→   844→  return (
+   845→   845→    <Card className="border-border p-3">
+   846→   846→      <div className="flex items-center gap-2 text-accent">
+   847→   847→        {icon}
+   848→   848→        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+   849→   849→          {label}
+   850→   850→        </span>
+   851→   851→      </div>
+   852→   852→      <p
+   853→   853→        className={`mt-1.5 font-heading font-semibold text-foreground ${
+   854→   854→          isText ? "text-sm truncate" : "text-xl"
+   855→   855→        }`}
+   856→   856→        title={isText ? String(value) : undefined}
+   857→   857→      >
+   858→   858→        {isText && typeof value === "string"
+   859→   859→          ? value.length > 22
+   860→   860→            ? value.slice(0, 20) + "…"
+   861→   861→            : value
+   862→   862→          : typeof value === "number"
+   863→   863→            ? value.toLocaleString()
+   864→   864→            : value}
+   865→   865→      </p>
+   866→   866→    </Card>
+   867→   867→  );
+   868→   868→}
+   869→   869→
+   870→   870→function CourseRowItem({ course }: { course: UniversityCourseRow }) {
+   871→   871→  return (
+   872→   872→    <Card className="border-border p-3 transition-colors duration-200 hover:bg-muted/30">
+   873→   873→      <div className="flex items-start gap-3">
+   874→   874→        <div className="h-12 w-20 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border">
+   875→   875→          {course.thumbnail ? (
+   876→   876→            <img
+   877→   877→              src={course.thumbnail}
+   878→   878→              alt=""
+   879→   879→              className="h-full w-full object-cover"
+   880→   880→            />
+   881→   881→          ) : (
+   882→   882→            <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+   883→   883→              <BookOpen className="h-4 w-4" />
+   884→   884→            </div>
+   885→   885→          )}
+   886→   886→        </div>
+   887→   887→        <div className="min-w-0 flex-1">
+   888→   888→          <div className="flex items-start justify-between gap-2">
+   889→   889→            <h5 className="font-medium text-sm text-foreground line-clamp-1">
+   890→   890→              {course.title}
+   891→   891→            </h5>
+   892→   892→            <div className="flex gap-1 shrink-0">
+   893→   893→              {course.accessType === "FREE" ? (
+   894→   894→                <Badge variant="outline" className="text-success border-success/30">
+   895→   895→                  Free
+   896→   896→                </Badge>
+   897→   897→              ) : (
+   898→   898→                <Badge variant="outline" className="text-primary border-primary/30">
+   899→   899→                  Paid
+   900→   900→                </Badge>
+   901→   901→              )}
+   902→   902→              {course.isPublished ? (
+   903→   903→                <Badge className="bg-success/95 text-success-foreground">Published</Badge>
+   904→   904→              ) : (
+   905→   905→                <Badge variant="outline">Draft</Badge>
+   906→   906→              )}
+   907→   907→            </div>
+   908→   908→          </div>
+   909→   909→          {course.description && (
+   910→   910→            <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
+   911→   911→              {course.description}
+   912→   912→            </p>
+   913→   913→          )}
+   914→   914→          <div className="mt-1.5 flex items-center gap-3 text-[11px] text-muted-foreground">
+   915→   915→            <span className="flex items-center gap-1">
+   916→   916→              <Layers className="h-3 w-3 text-accent" />
+   917→   917→              {course.topicsCount} topics
+   918→   918→            </span>
+   919→   919→            <span className="flex items-center gap-1">
+   920→   920→              <Video className="h-3 w-3 text-accent" />
+   921→   921→              {course.videosCount} lessons
+   922→   922→            </span>
+   923→   923→            <span className="flex items-center gap-1">
+   924→   924→              <ClipboardList className="h-3 w-3 text-accent" />
+   925→   925→              {course.assignmentsCount} assignments
+   926→   926→            </span>
+   927→   927→          </div>
+   928→   928→        </div>
+   929→   929→      </div>
+   930→   930→    </Card>
+   931→   931→  );
+   932→   932→}
+   933→   933→

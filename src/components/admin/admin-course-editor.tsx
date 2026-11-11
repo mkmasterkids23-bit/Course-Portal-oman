@@ -186,11 +186,11 @@ export function AdminCourseEditor({ courseId, onBack }: { courseId: string; onBa
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="rounded-xl border border-border bg-card p-1 shadow-sm overflow-x-auto scrollbar-thin">
             <TabsList className="w-full justify-start h-auto flex-wrap bg-transparent gap-1">
-              <TabsTrigger value="topics" className="gap-1.5 rounded-lg data-[state=active]:bg-light-teal data-[state=active]:text-accent data-[state=active]:shadow-sm"><VideoIcon className="h-3.5 w-3.5" /> Topics &amp; Videos</TabsTrigger>
-              <TabsTrigger value="materials" className="gap-1.5 rounded-lg data-[state=active]:bg-light-teal data-[state=active]:text-accent data-[state=active]:shadow-sm"><FileText className="h-3.5 w-3.5" /> Materials</TabsTrigger>
-              <TabsTrigger value="assignments" className="gap-1.5 rounded-lg data-[state=active]:bg-light-teal data-[state=active]:text-accent data-[state=active]:shadow-sm"><ClipboardList className="h-3.5 w-3.5" /> Assignments</TabsTrigger>
-              <TabsTrigger value="certificate" className="gap-1.5 rounded-lg data-[state=active]:bg-light-teal data-[state=active]:text-accent data-[state=active]:shadow-sm"><Award className="h-3.5 w-3.5" /> Certificate</TabsTrigger>
-              <TabsTrigger value="settings" className="gap-1.5 rounded-lg data-[state=active]:bg-light-teal data-[state=active]:text-accent data-[state=active]:shadow-sm"><Settings className="h-3.5 w-3.5" /> Settings</TabsTrigger>
+              <TabsTrigger value="topics" className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:shadow-sm"><VideoIcon className="h-3.5 w-3.5" /> Topics &amp; Videos</TabsTrigger>
+              <TabsTrigger value="materials" className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:shadow-sm"><FileText className="h-3.5 w-3.5" /> Materials</TabsTrigger>
+              <TabsTrigger value="assignments" className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:shadow-sm"><ClipboardList className="h-3.5 w-3.5" /> Assignments</TabsTrigger>
+              <TabsTrigger value="certificate" className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:shadow-sm"><Award className="h-3.5 w-3.5" /> Certificate</TabsTrigger>
+              <TabsTrigger value="settings" className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:shadow-sm"><Settings className="h-3.5 w-3.5" /> Settings</TabsTrigger>
             </TabsList>
           </div>
 
@@ -1373,7 +1373,7 @@ function CertificateTab({ course, onRefresh }: { course: CourseDetail; onRefresh
           </CardHeader>
           <CardContent className="p-0 space-y-3">
             {/* Info banner explaining the three certificate modes */}
-            <div className="rounded-xl border border-accent/20 bg-light-teal/40 p-3">
+            <div className="rounded-xl border border-accent/25 bg-soft-sage/60 p-3">
               <div className="flex items-start gap-2">
                 <div className="flex h-6 w-6 items-center justify-center rounded-md bg-accent/15 text-accent shrink-0 mt-0.5">
                   <Info className="h-3.5 w-3.5" />

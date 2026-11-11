@@ -435,7 +435,7 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
 
         {/* Right: course sidebar */}
         <Card className="lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-6rem)] flex flex-col shadow-sm overflow-hidden">
-          <CardHeader className="border-b border-border bg-gradient-to-br from-light-teal/60 to-card">
+          <CardHeader className="border-b border-border bg-gradient-to-br from-soft-sage/60 to-card">
             <CardTitle className="text-base flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-accent" />
               Course Lessons
@@ -509,7 +509,7 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
                                   onClick={() => setUserSelectedVideoId(video.id)}
                                   className={`group flex w-full items-start gap-2.5 rounded-lg px-2 py-2 text-left text-sm transition-all duration-200 ${
                                     isActive
-                                      ? "bg-light-teal text-accent"
+                                      ? "bg-soft-sage text-primary"
                                       : "text-foreground hover:bg-muted/60"
                                   }`}
                                 >
@@ -518,13 +518,13 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
                                     {completed ? (
                                       <CheckCircle2 className="h-4 w-4 text-success" />
                                     ) : isActive ? (
-                                      <PlayCircle className="h-4 w-4 text-accent" />
+                                      <PlayCircle className="h-4 w-4 text-primary" />
                                     ) : (
                                       <PlayCircle className="h-4 w-4 text-muted-foreground/70 group-hover:text-foreground" />
                                     )}
                                   </span>
                                   <span className="min-w-0 flex-1">
-                                    <span className={`flex items-center gap-1.5 truncate ${isActive ? "font-semibold text-accent" : "font-medium text-foreground group-hover:text-accent"}`}>
+                                    <span className={`flex items-center gap-1.5 truncate ${isActive ? "font-semibold text-primary" : "font-medium text-foreground group-hover:text-accent"}`}>
                                       <span className="truncate">{video.title}</span>
                                       {video.hasQuestions && (
                                         <Tooltip>
@@ -1430,14 +1430,14 @@ function QuestionOverlay({
       aria-modal="true"
       aria-label={`Question ${answeredCount + 1} of ${totalCount}`}
     >
-      <div className="w-full max-w-md rounded-xl border border-white/10 bg-card shadow-2xl ring-1 ring-black/5 overflow-hidden">
-        {/* Header strip */}
-        <div className="flex items-center justify-between gap-2 border-b border-border bg-gradient-to-r from-accent/10 to-transparent px-4 py-2.5">
+      <div className="w-full max-w-md rounded-xl border border-accent/20 bg-card shadow-2xl ring-1 ring-accent/10 overflow-hidden">
+        {/* Header strip — sage themed */}
+        <div className="flex items-center justify-between gap-2 border-b border-accent/15 bg-gradient-to-r from-soft-sage to-transparent px-4 py-2.5">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-accent/15 text-accent shrink-0">
+            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-accent/15 text-primary shrink-0">
               <HelpCircle className="h-3.5 w-3.5" />
             </span>
-            <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-accent truncate">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary truncate">
               Quick Check
             </span>
           </div>
@@ -1464,8 +1464,8 @@ function QuestionOverlay({
                   className={cn(
                     "group flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-all duration-150",
                     isSelected
-                      ? "border-accent bg-accent/5 ring-1 ring-accent/30"
-                      : "border-border bg-card hover:border-accent/40 hover:bg-light-teal/40",
+                      ? "border-accent bg-soft-sage ring-1 ring-accent/30"
+                      : "border-border bg-card hover:border-accent/40 hover:bg-soft-sage/40",
                     showFeedback && "cursor-default opacity-70"
                   )}
                   aria-pressed={isSelected}
@@ -1544,7 +1544,7 @@ function AssessmentResultOverlay({
       aria-modal="true"
       aria-label="Assessment result"
     >
-      <div className="w-full max-w-md max-h-full overflow-y-auto scrollbar-thin rounded-xl border border-white/10 bg-card shadow-2xl ring-1 ring-black/5">
+      <div className="w-full max-w-md max-h-full overflow-y-auto scrollbar-thin rounded-xl border border-border bg-card shadow-2xl ring-1 ring-black/5">
         {/* Header — pass/fail banner */}
         <div
           className={cn(
@@ -1674,7 +1674,7 @@ function MaterialRow({ material }: { material: MaterialItem }) {
         href={material.fileUrl}
         target="_blank"
         rel="noreferrer"
-        className="group flex items-start gap-3 rounded-lg border border-border bg-card p-3 hover:border-accent/40 hover:bg-light-teal/40 transition-all duration-200"
+        className="group flex items-start gap-3 rounded-lg border border-border bg-card p-3 hover:border-accent/40 hover:bg-soft-sage/40 transition-all duration-200"
       >
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 text-accent shrink-0 ring-1 ring-accent/20">
           <Icon className="h-4 w-4" />

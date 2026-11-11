@@ -47,12 +47,12 @@ export function UniversityOverview() {
   return (
     <div className="space-y-6">
       {/* Premium welcome header */}
-      <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary via-primary to-primary/85 p-6 text-primary-foreground shadow-sm">
+      <div className="relative overflow-hidden rounded-lg border border-primary/20 bg-gradient-to-br from-primary via-primary to-primary/85 p-6 text-primary-foreground shadow-sm">
         <div
           className="absolute inset-0 opacity-25"
           style={{
             backgroundImage:
-              "radial-gradient(circle at 20% 50%, rgba(15,118,110,0.5), transparent 55%), radial-gradient(circle at 85% 15%, rgba(255,255,255,0.12), transparent 45%), radial-gradient(circle at 70% 90%, rgba(15,118,110,0.3), transparent 50%)",
+              "radial-gradient(circle at 20% 50%, rgba(120,151,134,0.45), transparent 55%), radial-gradient(circle at 85% 15%, rgba(252,252,250,0.14), transparent 45%), radial-gradient(circle at 70% 90%, rgba(67,134,106,0.35), transparent 50%)",
           }}
         />
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -126,7 +126,7 @@ export function UniversityOverview() {
           {/* Recent activity + quick actions row */}
           <div className="grid gap-4 lg:grid-cols-3">
             {/* Recent submissions */}
-            <Card className="overflow-hidden border-border bg-card shadow-sm lg:col-span-2">
+            <Card className="overflow-hidden rounded-lg border-border bg-card shadow-sm lg:col-span-2">
               <div className="flex items-center justify-between border-b border-border p-5">
                 <div className="flex items-center gap-2.5">
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-warning/15 text-warning">
@@ -182,7 +182,7 @@ export function UniversityOverview() {
             </Card>
 
             {/* Quick actions card */}
-            <Card className="border-dashed border-border bg-card/50 shadow-sm">
+            <Card className="border-dashed rounded-lg border-border bg-card/50 shadow-sm">
               <CardContent className="p-5">
                 <div className="flex items-center gap-2">
                   <h3 className="font-heading text-sm font-semibold text-foreground">
@@ -225,7 +225,7 @@ export function UniversityOverview() {
           </div>
 
           {/* Recent courses */}
-          <Card className="overflow-hidden border-border bg-card shadow-sm">
+          <Card className="overflow-hidden rounded-lg border-border bg-card shadow-sm">
             <div className="flex items-center justify-between border-b border-border p-5">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 text-accent">
@@ -331,7 +331,7 @@ function PremiumStatCard({
 
   return (
     <Card
-      className={`group overflow-hidden border-border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${borderClass}`}
+      className={`group overflow-hidden rounded-lg border-border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${borderClass}`}
     >
       <div className="flex flex-col gap-3">
         <div
@@ -364,7 +364,7 @@ function QuickActionButton({
     <Button
       variant="outline"
       size="sm"
-      className="h-9 w-full justify-start gap-2 border-border bg-card transition-all duration-200 hover:border-accent/30 hover:bg-light-teal/40"
+      className="h-9 w-full justify-start gap-2 border-border bg-card transition-all duration-200 hover:border-accent/30 hover:bg-soft-sage/40"
       onClick={onClick}
     >
       <span className="text-accent">{icon}</span>

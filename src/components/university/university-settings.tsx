@@ -151,7 +151,7 @@ export function UniversitySettings() {
   return (
     <div className="space-y-5 max-w-4xl">
       {/* University Overview Stats */}
-      <Card className="border-border bg-card p-5 shadow-sm">
+      <Card className="rounded-lg border-border bg-card p-5 shadow-sm">
         <CardHeader className="p-0">
           <CardTitle className="font-heading text-base font-semibold">
             University Overview
@@ -181,7 +181,7 @@ export function UniversitySettings() {
       </Card>
 
       {/* University Profile Card */}
-      <Card className="border-border bg-card p-5 shadow-sm">
+      <Card className="rounded-lg border-border bg-card p-5 shadow-sm">
         <CardHeader className="p-0">
           <CardTitle className="font-heading text-base font-semibold flex items-center gap-2">
             <Building2 className="h-4 w-4 text-accent" /> University Profile
@@ -192,17 +192,17 @@ export function UniversitySettings() {
         </CardHeader>
         <CardContent className="p-0 mt-4 space-y-4">
           {/* Brand block */}
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center rounded-xl border border-border bg-gradient-to-br from-primary/5 to-accent/5 p-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center rounded-lg border border-border bg-gradient-to-br from-primary/5 to-accent/5 p-4">
             {profileLoading ? (
-              <Skeleton className="h-16 w-16 rounded-xl" />
+              <Skeleton className="h-16 w-16 rounded-lg" />
             ) : user?.universityLogo || uni?.logo ? (
               <img
                 src={user?.universityLogo || uni?.logo || ""}
                 alt={uni?.name || "University logo"}
-                className="h-16 w-16 rounded-xl object-cover ring-2 ring-accent/20 shrink-0"
+                className="h-16 w-16 rounded-lg object-cover ring-2 ring-accent/20 shrink-0"
               />
             ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-primary text-primary-foreground ring-2 ring-accent/20 shrink-0">
+              <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-primary text-primary-foreground ring-2 ring-accent/20 shrink-0">
                 <GraduationCap className="h-7 w-7" />
               </div>
             )}
@@ -317,7 +317,7 @@ export function UniversitySettings() {
       </Card>
 
       {/* Change Password */}
-      <Card className="border-border bg-card p-5 shadow-sm">
+      <Card className="rounded-lg border-border bg-card p-5 shadow-sm">
         <CardHeader className="p-0">
           <CardTitle className="font-heading text-base font-semibold flex items-center gap-2">
             <Lock className="h-4 w-4 text-accent" /> Change Password
@@ -377,7 +377,7 @@ export function UniversitySettings() {
       </Card>
 
       {/* Signed-in user info */}
-      <Card className="border-border bg-card p-5 shadow-sm">
+      <Card className="rounded-lg border-border bg-card p-5 shadow-sm">
         <CardHeader className="p-0">
           <CardTitle className="font-heading text-base font-semibold">Signed-in Account</CardTitle>
           <CardDescription className="mt-1">
@@ -385,7 +385,7 @@ export function UniversitySettings() {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0 mt-4">
-          <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center gap-4 rounded-lg border border-border bg-card p-4">
             <Avatar className="h-12 w-12 ring-2 ring-accent/15">
               <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
                 {initials}
@@ -419,7 +419,7 @@ export function UniversitySettings() {
 
 function StatBox({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-3 flex items-center gap-3 shadow-sm transition-shadow hover:shadow-md">
+    <div className="rounded-lg border border-border bg-card p-3 flex items-center gap-3 shadow-sm transition-shadow hover:shadow-md">
       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 text-accent shrink-0">
         {icon}
       </div>

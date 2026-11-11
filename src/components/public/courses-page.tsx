@@ -68,15 +68,16 @@ export function CoursesPage() {
   const hasActiveFilters = q !== "" || category !== "" || universityFilter !== "all";
 
   return (
-    <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-12">
+    <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-12 md:py-16">
       {/* Header */}
-      <div className="mb-8 space-y-2">
+      <div className="mb-10 space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wider text-accent">Course Catalog</p>
-        <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
-          All Courses
+        <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[32px]">
+          Explore Courses
         </h1>
-        <p className="max-w-2xl text-sm text-muted-foreground">
-          Browse our complete catalog. Register and pick a learning plan to start learning.
+        <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
+          Browse our complete catalog across multiple universities. Register and pick a learning
+          plan to start learning.
         </p>
       </div>
 
@@ -85,7 +86,7 @@ export function CoursesPage() {
         <div className="mb-8">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-light-teal text-accent">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-soft-sage text-accent">
                 <Building2 className="h-4 w-4" />
               </span>
               <h2 className="font-heading text-base font-semibold tracking-tight text-foreground">
@@ -97,7 +98,7 @@ export function CoursesPage() {
                 variant="ghost"
                 size="sm"
                 onClick={clearUniversityFilter}
-                className="h-8 gap-1 text-muted-foreground"
+                className="h-8 gap-1 text-muted-foreground hover:bg-soft-sage/60"
               >
                 <X className="h-3.5 w-3.5" /> Clear
               </Button>
@@ -111,9 +112,9 @@ export function CoursesPage() {
                   key={u.id}
                   onClick={() => setUniversityFilter(isActive ? "all" : u.id)}
                   className={cn(
-                    "group flex items-center gap-3 rounded-xl border bg-card p-3 text-left shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5",
+                    "group flex items-center gap-3 rounded-lg border bg-card p-3 text-left shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5",
                     isActive
-                      ? "border-accent/60 ring-1 ring-accent/25"
+                      ? "border-primary ring-1 ring-primary/25"
                       : "border-border hover:border-accent/40"
                   )}
                   aria-pressed={isActive}
@@ -130,7 +131,7 @@ export function CoursesPage() {
                     </span>
                   )}
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground line-clamp-1 group-hover:text-accent transition-colors">
+                    <p className="text-sm font-medium text-foreground line-clamp-1 group-hover:text-primary transition-colors">
                       {u.name}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
@@ -146,10 +147,10 @@ export function CoursesPage() {
 
       {/* Active university banner */}
       {activeUniversity && (
-        <Card className="mb-6 border-accent/30 bg-gradient-to-br from-light-teal to-card shadow-sm">
+        <Card className="mb-6 border-primary/20 bg-soft-sage/40 shadow-sm">
           <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 text-accent shrink-0 ring-1 ring-accent/20">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-soft-sage text-accent shrink-0 ring-1 ring-accent/20">
                 <Building2 className="h-5 w-5" />
               </div>
               <div className="min-w-0">
@@ -165,7 +166,7 @@ export function CoursesPage() {
               variant="outline"
               size="sm"
               onClick={clearUniversityFilter}
-              className="gap-1.5 shrink-0"
+              className="gap-1.5 shrink-0 border-border bg-card hover:bg-soft-sage"
             >
               <X className="h-3.5 w-3.5" /> Remove filter
             </Button>
@@ -174,7 +175,7 @@ export function CoursesPage() {
       )}
 
       {/* Filters */}
-      <div className="mb-6 flex flex-col gap-3 rounded-xl border border-border bg-card p-4 md:flex-row md:items-center md:gap-4 shadow-sm">
+      <div className="mb-6 flex flex-col gap-3 rounded-lg border border-border bg-card p-4 md:flex-row md:items-center md:gap-4 shadow-sm">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -209,7 +210,10 @@ export function CoursesPage() {
               variant={category === "" ? "default" : "outline"}
               size="sm"
               onClick={() => setCategory("")}
-              className="h-8 shrink-0"
+              className={cn(
+                "h-8 shrink-0",
+                category === "" ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border-border bg-card hover:bg-soft-sage"
+              )}
             >
               All
             </Button>
@@ -219,7 +223,10 @@ export function CoursesPage() {
                 variant={category === cat ? "default" : "outline"}
                 size="sm"
                 onClick={() => setCategory(cat)}
-                className="h-8 shrink-0"
+                className={cn(
+                  "h-8 shrink-0",
+                  category === cat ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border-border bg-card hover:bg-soft-sage"
+                )}
               >
                 {cat}
               </Button>
@@ -236,7 +243,12 @@ export function CoursesPage() {
             <span className="font-medium text-foreground">{courses.length}</span> courses
           </p>
           {hasActiveFilters && (
-            <Button variant="ghost" size="sm" onClick={clearAll} className="h-7 gap-1 text-muted-foreground">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearAll}
+              className="h-7 gap-1 text-muted-foreground hover:bg-soft-sage/60"
+            >
               <X className="h-3 w-3" /> Clear all filters
             </Button>
           )}
@@ -263,7 +275,7 @@ export function CoursesPage() {
           description="Try adjusting your search or filters."
           action={
             hasActiveFilters ? (
-              <Button variant="outline" onClick={clearAll} className="gap-1">
+              <Button variant="outline" onClick={clearAll} className="gap-1 border-border bg-card hover:bg-soft-sage">
                 <X className="h-4 w-4" /> Clear filters
               </Button>
             ) : undefined
@@ -274,7 +286,7 @@ export function CoursesPage() {
           {filtered.map((c) => (
             <Card
               key={c.id}
-              className="group cursor-pointer overflow-hidden p-0 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-accent/40"
+              className="group cursor-pointer overflow-hidden p-0 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-accent/40"
               onClick={() => navigate(["register"])}
             >
               <div className="relative h-44 overflow-hidden bg-muted">
@@ -313,7 +325,7 @@ export function CoursesPage() {
               </div>
               <CardContent className="space-y-2.5 p-5">
                 <div className="space-y-2">
-                  <h3 className="font-heading text-[15px] font-semibold tracking-tight text-foreground line-clamp-1 transition-colors group-hover:text-accent">
+                  <h3 className="font-heading text-[15px] font-semibold tracking-tight text-foreground line-clamp-1 transition-colors group-hover:text-primary">
                     {c.title}
                   </h3>
                   {c.university && (
@@ -344,11 +356,14 @@ export function CoursesPage() {
 
       {/* CTA when filtering by university */}
       {activeUniversity && filtered.length > 0 && (
-        <div className="mt-10 flex flex-col items-center gap-3 rounded-xl border border-accent/20 bg-light-teal/40 p-6 text-center">
+        <div className="mt-10 flex flex-col items-center gap-3 rounded-lg border border-accent/20 bg-soft-sage/40 p-6 text-center">
           <p className="text-sm text-muted-foreground">
             Ready to start learning at {activeUniversity.name}?
           </p>
-          <Button onClick={() => navigate(["register"])} className="gap-2 shadow-sm">
+          <Button
+            onClick={() => navigate(["register"])}
+            className="gap-2 shadow-sm bg-primary text-primary-foreground hover:bg-primary/90"
+          >
             Create an account
             <ArrowRight className="h-4 w-4" />
           </Button>

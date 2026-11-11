@@ -110,7 +110,7 @@ export function UniversityMaterials() {
 
   return (
     <div className="space-y-4">
-      <Card className="border-border bg-card p-4 shadow-sm">
+      <Card className="rounded-lg border-border bg-card p-4 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative flex-1">
@@ -153,7 +153,7 @@ export function UniversityMaterials() {
         </div>
       </Card>
 
-      <Card className="border-border bg-card p-0 shadow-sm overflow-hidden">
+      <Card className="rounded-lg border-border bg-card p-0 shadow-sm overflow-hidden">
         {loading ? (
           <div className="space-y-2 p-4">
             {Array.from({ length: 6 }).map((_, i) => (

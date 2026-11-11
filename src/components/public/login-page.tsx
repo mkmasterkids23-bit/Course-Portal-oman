@@ -46,29 +46,34 @@ export function LoginPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col overflow-hidden bg-gradient-to-br from-background via-background to-light-teal/60">
+    <div className="relative min-h-screen flex flex-col overflow-hidden bg-soft-sage/40">
       {/* Subtle decorative shapes */}
       <div
-        className="pointer-events-none absolute inset-0 -z-10 opacity-80"
+        className="pointer-events-none absolute inset-0 -z-10 opacity-90"
         style={{
           background:
-            "radial-gradient(circle at 15% 20%, rgba(15,118,110,0.10), transparent 45%), radial-gradient(circle at 85% 80%, rgba(23,37,84,0.06), transparent 45%)",
+            "radial-gradient(circle at 15% 20%, rgba(120,151,134,0.18), transparent 45%), radial-gradient(circle at 85% 80%, rgba(52,79,66,0.08), transparent 45%)",
         }}
       />
 
       {/* Top bar */}
       <div className="flex items-center justify-between p-4 md:px-6 lg:px-8">
         <BrandLogo onClick={() => navigate([""])} />
-        <Button variant="ghost" size="sm" onClick={() => navigate([""])} className="gap-2 h-9">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate([""])}
+          className="gap-2 h-9 text-foreground hover:bg-soft-sage"
+        >
           <ArrowLeft className="h-4 w-4" /> Back to home
         </Button>
       </div>
 
       <div className="flex flex-1 items-center justify-center px-4 py-10">
-        <Card className="w-full max-w-md p-6 shadow-md md:p-8">
+        <Card className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-md md:p-8">
           {/* Header */}
           <div className="mb-6 space-y-3 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
               <LogIn className="h-6 w-6" />
             </div>
             <div className="space-y-1">
@@ -134,7 +139,11 @@ export function LoginPage() {
               </div>
             )}
 
-            <Button type="submit" disabled={loading} className="h-10 w-full gap-2">
+            <Button
+              type="submit"
+              disabled={loading}
+              className="h-10 w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+            >
               {loading ? (
                 <>
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
@@ -150,7 +159,7 @@ export function LoginPage() {
           </form>
 
           {/* Demo credentials box */}
-          <div className="mt-6 rounded-lg border border-border bg-muted/40 p-4">
+          <div className="mt-6 rounded-lg border border-border bg-soft-sage/40 p-4">
             <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <ShieldCheck className="h-3.5 w-3.5 text-accent" />
               Demo admin credentials
@@ -175,7 +184,7 @@ export function LoginPage() {
             Don&apos;t have an account?{" "}
             <button
               onClick={() => navigate(["register"])}
-              className="font-medium text-accent transition-colors hover:text-accent/80 hover:underline"
+              className="font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
             >
               Register here
             </button>

@@ -243,35 +243,35 @@ export function UniversityCourseEditor({
         <Skeleton className="h-96 w-full" />
       ) : (
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="rounded-xl border border-border bg-card p-1 shadow-sm overflow-x-auto scrollbar-thin">
+          <div className="rounded-lg border border-border bg-card p-1 shadow-sm overflow-x-auto scrollbar-thin">
             <TabsList className="w-full justify-start h-auto flex-wrap bg-transparent gap-1">
               <TabsTrigger
                 value="topics"
-                className="gap-1.5 rounded-lg data-[state=active]:bg-light-teal data-[state=active]:text-accent data-[state=active]:shadow-sm"
+                className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-sm"
               >
                 <VideoIcon className="h-3.5 w-3.5" /> Topics &amp; Videos
               </TabsTrigger>
               <TabsTrigger
                 value="materials"
-                className="gap-1.5 rounded-lg data-[state=active]:bg-light-teal data-[state=active]:text-accent data-[state=active]:shadow-sm"
+                className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-sm"
               >
                 <FileText className="h-3.5 w-3.5" /> Materials
               </TabsTrigger>
               <TabsTrigger
                 value="assignments"
-                className="gap-1.5 rounded-lg data-[state=active]:bg-light-teal data-[state=active]:text-accent data-[state=active]:shadow-sm"
+                className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-sm"
               >
                 <ClipboardList className="h-3.5 w-3.5" /> Assignments
               </TabsTrigger>
               <TabsTrigger
                 value="certificate"
-                className="gap-1.5 rounded-lg data-[state=active]:bg-light-teal data-[state=active]:text-accent data-[state=active]:shadow-sm"
+                className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-sm"
               >
                 <Award className="h-3.5 w-3.5" /> Certificate
               </TabsTrigger>
               <TabsTrigger
                 value="settings"
-                className="gap-1.5 rounded-lg data-[state=active]:bg-light-teal data-[state=active]:text-accent data-[state=active]:shadow-sm"
+                className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-sm"
               >
                 <Settings className="h-3.5 w-3.5" /> Settings
               </TabsTrigger>
@@ -367,7 +367,7 @@ function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () 
           {course.topics.map((topic, idx) => (
             <Card
               key={topic.id}
-              className="overflow-hidden border-border bg-card p-0 shadow-sm transition-shadow hover:shadow-md"
+              className="overflow-hidden rounded-lg border-border bg-card p-0 shadow-sm transition-shadow hover:shadow-md"
             >
               <div className="flex items-center gap-2 p-3 bg-gradient-to-r from-muted/40 to-muted/10">
                 <div className="flex flex-col">
@@ -1083,7 +1083,7 @@ function MaterialsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: 
       ) : (
         <div className="space-y-3">
           {grouped.map((g) => (
-            <Card key={g.topicId} className="overflow-hidden border-border bg-card p-0 shadow-sm">
+            <Card key={g.topicId} className="overflow-hidden rounded-lg border-border bg-card p-0 shadow-sm">
               <div className="border-b border-border bg-muted/30 px-4 py-2.5">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {g.topicTitle || "Unassigned materials"}
@@ -1452,7 +1452,7 @@ function AssignmentsTab({ course, onRefresh }: { course: CourseDetail; onRefresh
           {course.assignments.map((a) => (
             <Card
               key={a.id}
-              className="p-4 space-y-3 border-border bg-card shadow-sm transition-shadow hover:shadow-md"
+              className="rounded-lg p-4 space-y-3 border-border bg-card shadow-sm transition-shadow hover:shadow-md"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
@@ -1863,7 +1863,7 @@ function CertificateTab({ course, onRefresh }: { course: CourseDetail; onRefresh
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="p-5 space-y-3 border-border bg-card shadow-sm">
+        <Card className="rounded-lg p-5 space-y-3 border-border bg-card shadow-sm">
           <CardHeader className="p-0">
             <CardTitle className="text-sm font-heading font-semibold">
               Template Settings
@@ -1873,7 +1873,7 @@ function CertificateTab({ course, onRefresh }: { course: CourseDetail; onRefresh
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0 space-y-3">
-            <div className="rounded-xl border border-accent/20 bg-light-teal/40 p-3">
+            <div className="rounded-lg border border-accent/20 bg-soft-sage/50 p-3">
               <div className="flex items-start gap-2">
                 <div className="flex h-6 w-6 items-center justify-center rounded-md bg-accent/15 text-accent shrink-0 mt-0.5">
                   <Info className="h-3.5 w-3.5" />
@@ -1972,7 +1972,7 @@ function CertificateTab({ course, onRefresh }: { course: CourseDetail; onRefresh
           </CardContent>
         </Card>
 
-        <Card className="p-5 space-y-3 border-border bg-card shadow-sm">
+        <Card className="rounded-lg p-5 space-y-3 border-border bg-card shadow-sm">
           <CardHeader className="p-0">
             <CardTitle className="text-sm font-heading font-semibold">Live Preview</CardTitle>
             <CardDescription className="mt-1">How the certificate will look.</CardDescription>
@@ -2032,7 +2032,7 @@ function CertificatePreview({
   }
   if (layout === "MODERN") {
     return (
-      <div className="rounded-xl border-2 border-accent/40 bg-gradient-to-br from-accent/[0.04] to-primary/[0.04] p-6">
+      <div className="rounded-lg border-2 border-accent/40 bg-gradient-to-br from-accent/[0.04] to-primary/[0.04] p-6">
         <div className="flex items-center justify-between">
           <Award className="h-8 w-8 text-accent" />
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -2149,7 +2149,7 @@ function SettingsTab({
 
   return (
     <div className="space-y-4">
-      <Card className="p-5 space-y-3 border-border bg-card shadow-sm">
+      <Card className="rounded-lg p-5 space-y-3 border-border bg-card shadow-sm">
         <CardHeader className="p-0">
           <CardTitle className="font-heading text-base font-semibold">Course Details</CardTitle>
           <CardDescription className="mt-1">
@@ -2258,7 +2258,7 @@ function SettingsTab({
       </Card>
 
       {/* Danger zone */}
-      <Card className="border-destructive/30 p-5 shadow-sm">
+      <Card className="rounded-lg border-destructive/30 p-5 shadow-sm">
         <CardHeader className="p-0">
           <CardTitle className="font-heading text-base font-semibold text-destructive">
             Danger Zone
@@ -2266,7 +2266,7 @@ function SettingsTab({
           <CardDescription className="mt-1">Permanent actions that cannot be undone.</CardDescription>
         </CardHeader>
         <CardContent className="p-0 mt-4">
-          <div className="flex items-center justify-between rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+          <div className="flex items-center justify-between rounded-lg border border-destructive/30 bg-destructive/5 p-4">
             <div>
               <p className="text-sm font-medium text-foreground">Delete this course</p>
               <p className="text-xs text-muted-foreground mt-0.5">
@@ -2393,10 +2393,10 @@ function VideoQuestionsPanel({
   }
 
   return (
-    <div className="rounded-xl border border-accent/20 bg-accent/[0.03] p-3">
+    <div className="rounded-lg border border-accent/20 bg-soft-sage/40 p-3">
       <div className="flex items-center justify-between gap-2 mb-2">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-accent/10 text-accent shrink-0">
+          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-accent/15 text-accent shrink-0">
             <HelpCircle className="h-3.5 w-3.5" />
           </span>
           <div className="min-w-0">
@@ -2428,18 +2428,18 @@ function VideoQuestionsPanel({
 
       {loading ? (
         <div className="space-y-2">
-          <Skeleton className="h-16 w-full rounded-xl" />
-          <Skeleton className="h-16 w-full rounded-xl" />
+          <Skeleton className="h-16 w-full rounded-lg" />
+          <Skeleton className="h-16 w-full rounded-lg" />
         </div>
       ) : error ? (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-center">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-center">
           <p className="text-xs text-destructive">{error}</p>
           <Button variant="outline" size="sm" className="mt-2 h-7" onClick={refetch}>
             Retry
           </Button>
         </div>
       ) : sorted.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-card/50 py-6 text-center">
+        <div className="rounded-lg border border-dashed border-border bg-card/50 py-6 text-center">
           <ListChecks className="h-5 w-5 text-muted-foreground/40 mx-auto mb-1.5" />
           <p className="text-xs text-muted-foreground">
             No questions yet. Add one to quiz viewers during playback.
@@ -2450,7 +2450,7 @@ function VideoQuestionsPanel({
           {sorted.map((q, qi) => (
             <div
               key={q.id}
-              className="rounded-xl border border-border bg-card p-3 transition-shadow hover:shadow-sm"
+              className="rounded-lg border border-border bg-card p-3 transition-shadow hover:shadow-sm"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">

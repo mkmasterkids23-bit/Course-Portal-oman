@@ -307,14 +307,14 @@ function UniversityCard({
       {/* Banner / logo header */}
       <button
         onClick={onView}
-        className="relative h-24 overflow-hidden bg-gradient-to-br from-primary/85 via-primary to-primary/70 text-left"
+        className="relative h-24 overflow-hidden bg-gradient-to-br from-primary via-primary to-[#2A3F35] text-left"
         aria-label={`View ${university.name} details`}
       >
         <div
           className="absolute inset-0 opacity-30"
           style={{
             backgroundImage:
-              "radial-gradient(circle at 20% 50%, rgba(15,118,110,0.55), transparent 55%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.12), transparent 45%)",
+              "radial-gradient(circle at 20% 50%, rgba(120,151,134,0.55), transparent 55%), radial-gradient(circle at 80% 20%, rgba(252,252,250,0.12), transparent 45%)",
           }}
         />
         <div className="relative flex h-full items-center gap-3 p-4">
@@ -724,12 +724,12 @@ function UniversityDetailDrawer({
               <>
                 {/* Header card */}
                 <Card className="overflow-hidden border-border p-0">
-                  <div className="relative h-24 bg-gradient-to-br from-primary/85 via-primary to-primary/70">
+                  <div className="relative h-24 bg-gradient-to-br from-primary via-primary to-[#2A3F35]">
                     <div
                       className="absolute inset-0 opacity-30"
                       style={{
                         backgroundImage:
-                          "radial-gradient(circle at 20% 50%, rgba(15,118,110,0.55), transparent 55%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.12), transparent 45%)",
+                          "radial-gradient(circle at 20% 50%, rgba(120,151,134,0.55), transparent 55%), radial-gradient(circle at 80% 20%, rgba(252,252,250,0.12), transparent 45%)",
                       }}
                     />
                   </div>

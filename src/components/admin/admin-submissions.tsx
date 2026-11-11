@@ -195,7 +195,7 @@ export function AdminSubmissions() {
                 <TableRow key={s.id} className="hover:bg-muted/40">
                   <TableCell>
                     <div className="flex items-center gap-3 min-w-0 max-w-[200px]">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0 ring-1 ring-border">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-soft-sage text-primary text-xs font-semibold shrink-0 ring-1 ring-border">
                         {s.studentName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
                       </div>
                       <div className="min-w-0">
@@ -326,7 +326,7 @@ function SubmissionDetailDialog({
             <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
               <h4 className="font-heading text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Student</h4>
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold shrink-0">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold shrink-0 ring-2 ring-soft-sage">
                   {s.student.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
                 </div>
                 <div className="grid flex-1 grid-cols-2 gap-3 text-sm">

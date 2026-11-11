@@ -15,12 +15,13 @@ import { Menu, LogOut, ChevronDown, GraduationCap, User as UserIcon, CreditCard 
 import { apiPost } from "@/hooks/use-api";
 
 const TITLES: Record<string, string> = {
-  overview: "My Overview",
-  courses: "My Courses",
-  assignments: "My Assignments",
+  overview: "Dashboard",
+  courses: "Explore Courses",
+  assignments: "Assignments",
   subscription: "My Subscription",
-  certificates: "My Certificates",
-  profile: "My Profile",
+  certificates: "Certificates",
+  profile: "Profile",
+  universities: "Explore Universities",
 };
 
 export function StudentTopbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {

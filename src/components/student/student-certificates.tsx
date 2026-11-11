@@ -70,10 +70,10 @@ export function StudentCertificates() {
     <div className="space-y-6">
       {/* Header banner */}
       <Card className="overflow-hidden border-accent/20 shadow-sm">
-        <div className="relative bg-gradient-to-br from-light-teal via-accent/[0.06] to-card">
+        <div className="relative bg-gradient-to-br from-soft-sage via-accent/[0.06] to-card">
           <div
             className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full opacity-50"
-            style={{ background: "radial-gradient(circle, rgba(15,118,110,0.18), transparent 70%)" }}
+            style={{ background: "radial-gradient(circle, rgba(120,151,134,0.18), transparent 70%)" }}
           />
           <CardContent className="relative p-5 flex items-start gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15 text-accent shrink-0 ring-1 ring-accent/20">
@@ -99,7 +99,7 @@ export function StudentCertificates() {
             <div className="relative h-32 bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center overflow-hidden">
               {/* Decorative pattern */}
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.25),transparent_60%)] pointer-events-none" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(15,118,110,0.35),transparent_50%)] pointer-events-none" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(120,151,134,0.35),transparent_50%)] pointer-events-none" />
               {/* Subtle pattern */}
               <div className="pointer-events-none absolute inset-0 opacity-20" style={{ backgroundImage: "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(255,255,255,0.05) 10px, rgba(255,255,255,0.05) 20px)" }} />
               <Award className="relative h-12 w-12 text-primary-foreground drop-shadow-lg transition-transform duration-300 group-hover:scale-110" />
@@ -160,7 +160,7 @@ export function StudentCertificates() {
       {/* Preview dialog with iframe */}
       <Dialog open={!!previewCert} onOpenChange={(o) => !o && setPreviewCert(null)}>
         <DialogContent className="max-w-5xl w-full h-[90vh] flex flex-col p-0 gap-0">
-          <DialogHeader className="p-4 border-b border-border flex-row items-center justify-between space-y-0 bg-gradient-to-r from-light-teal/60 to-card">
+          <DialogHeader className="p-4 border-b border-border flex-row items-center justify-between space-y-0 bg-gradient-to-r from-soft-sage/60 to-card">
             <div>
               <DialogTitle className="text-base">{previewCert?.templateTitle}</DialogTitle>
               <DialogDescription>{previewCert?.courseTitle}</DialogDescription>

@@ -51,9 +51,9 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
   }
 
   return (
-    <aside className="relative flex h-full w-full flex-col border-r border-sidebar-border bg-gradient-to-b from-card via-muted/20 to-muted/50">
+    <aside className="relative flex h-full w-full flex-col border-r border-sidebar-border bg-gradient-to-b from-card via-card to-soft-sage/40">
       {/* Subtle accent right edge */}
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-accent/0 via-accent/40 to-accent/0" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-accent/0 via-accent/30 to-accent/0" />
 
       {/* Logo header */}
       <div className="flex h-16 items-center border-b border-sidebar-border/80 px-5">
@@ -64,7 +64,7 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
         <nav className="space-y-6">
           {NAV_SECTIONS.map((section) => (
             <div key={section.label} className="space-y-1">
-              <p className="px-3 pb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground/60">
+              <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
                 {section.label}
               </p>
               {section.items.map((item) => {
@@ -76,17 +76,17 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
                     className={cn(
                       "group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200",
                       active
-                        ? "bg-light-teal text-accent font-semibold"
+                        ? "bg-soft-sage text-primary font-semibold"
                         : "font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                     )}
                   >
                     {active && (
-                      <span className="absolute left-0 top-1/2 h-6 -translate-y-1/2 w-1 rounded-r-full bg-accent" />
+                      <span className="absolute left-0 top-1/2 h-6 -translate-y-1/2 w-1 rounded-r-full bg-primary" />
                     )}
                     <item.icon className={cn(
                       "h-4 w-4 shrink-0 transition-colors duration-200",
                       active
-                        ? "text-accent"
+                        ? "text-primary"
                         : "text-muted-foreground/70 group-hover:text-foreground"
                     )} />
                     <span>{item.label}</span>

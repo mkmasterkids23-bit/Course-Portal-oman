@@ -13,8 +13,14 @@ export function AboutPage() {
   return (
     <div>
       {/* ─────────── Hero ─────────── */}
-      <section className="relative overflow-hidden border-b border-border">
-        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/[0.03] via-background to-light-teal" />
+      <section className="relative overflow-hidden border-b border-border bg-soft-sage/40">
+        <div
+          className="pointer-events-none absolute inset-0 -z-10 opacity-90"
+          style={{
+            background:
+              "radial-gradient(circle at 80% 20%, rgba(120,151,134,0.18), transparent 55%), radial-gradient(circle at 10% 80%, rgba(52,79,66,0.06), transparent 55%)",
+          }}
+        />
         <div className="mx-auto max-w-4xl px-4 md:px-6 lg:px-8 py-16 text-center md:py-20">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm">
             <Sparkles className="h-3.5 w-3.5 text-accent" />
@@ -32,7 +38,7 @@ export function AboutPage() {
       </section>
 
       {/* ─────────── Mission ─────────── */}
-      <section className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-16">
+      <section className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-20">
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 lg:items-center">
           <div className="space-y-5">
             <p className="text-xs font-semibold uppercase tracking-wider text-accent">Our Mission</p>
@@ -59,7 +65,7 @@ export function AboutPage() {
               { icon: Award, value: "5,400+", label: "Certificates issued" },
             ].map((s) => (
               <Card key={s.label} className="p-5 text-center shadow-sm transition-all duration-200 hover:shadow-md">
-                <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-light-teal text-accent">
+                <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-soft-sage text-accent">
                   <s.icon className="h-5 w-5" />
                 </div>
                 <p className="font-heading text-2xl font-bold tabular-nums tracking-tight text-foreground">
@@ -73,9 +79,9 @@ export function AboutPage() {
       </section>
 
       {/* ─────────── Approach ─────────── */}
-      <section className="border-y border-border bg-muted/30">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-16">
-          <div className="mb-10 space-y-2 text-center">
+      <section className="border-y border-border bg-muted/40">
+        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-20">
+          <div className="mb-12 space-y-2 text-center">
             <p className="text-xs font-semibold uppercase tracking-wider text-accent">Our Approach</p>
             <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
               A complete learning journey
@@ -95,7 +101,7 @@ export function AboutPage() {
                 <span className="absolute -top-3 left-6 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold tabular-nums text-primary-foreground shadow-sm">
                   {i + 1}
                 </span>
-                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-light-teal text-accent">
+                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-soft-sage text-accent">
                   <step.icon className="h-5 w-5" />
                 </div>
                 <h3 className="font-heading text-sm font-semibold tracking-tight text-foreground">
@@ -109,8 +115,8 @@ export function AboutPage() {
       </section>
 
       {/* ─────────── Values ─────────── */}
-      <section className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-16">
-        <div className="mb-10 space-y-2 text-center">
+      <section className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-20">
+        <div className="mb-12 space-y-2 text-center">
           <p className="text-xs font-semibold uppercase tracking-wider text-accent">What We Stand For</p>
           <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
             Principles behind every course
@@ -126,7 +132,7 @@ export function AboutPage() {
               key={v.title}
               className="p-6 shadow-sm transition-all duration-200 hover:shadow-md hover:border-accent/40"
             >
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-light-teal text-accent">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-soft-sage text-accent">
                 <v.icon className="h-5 w-5" />
               </div>
               <h3 className="font-heading text-sm font-semibold tracking-tight text-foreground">
@@ -140,19 +146,19 @@ export function AboutPage() {
 
       {/* ─────────── CTA ─────────── */}
       <section className="bg-primary text-primary-foreground">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-14 text-center">
-          <h2 className="font-heading text-2xl font-semibold tracking-tight md:text-[28px]">
+        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-16 text-center md:py-20">
+          <h2 className="font-heading text-2xl font-semibold tracking-tight md:text-[32px]">
             Start learning today
           </h2>
-          <p className="mx-auto mt-2 max-w-xl text-sm text-primary-foreground/80 md:text-base">
+          <p className="mx-auto mt-3 max-w-xl text-sm text-primary-foreground/80 md:text-base">
             Join thousands of learners building real skills with CourseLearn.
           </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <div className="mt-7 flex flex-wrap justify-center gap-3">
             <Button
               size="lg"
               variant="secondary"
               onClick={() => navigate(["register"])}
-              className="gap-2 h-11 px-6"
+              className="gap-2 h-11 px-6 bg-primary-foreground text-primary hover:bg-primary-foreground/90"
             >
               Get Started
               <ArrowRight className="h-4 w-4" />

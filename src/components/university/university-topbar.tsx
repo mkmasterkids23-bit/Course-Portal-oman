@@ -50,7 +50,7 @@ export function UniversityTopbar({ onToggleSidebar }: { onToggleSidebar: () => v
   const uniName = user?.universityName || "University";
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border/80 bg-background/70 px-4 shadow-sm backdrop-blur-xl transition-shadow duration-300 md:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border/80 bg-background/80 px-4 shadow-sm backdrop-blur-xl transition-shadow duration-300 md:px-6">
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"
@@ -72,14 +72,14 @@ export function UniversityTopbar({ onToggleSidebar }: { onToggleSidebar: () => v
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="hidden items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-accent shadow-sm transition-colors duration-200 sm:flex">
+        <div className="hidden items-center gap-1.5 rounded-full border border-primary/15 bg-soft-sage/60 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary shadow-sm transition-colors duration-200 sm:flex">
           <Building2 className="h-3 w-3" />
           <span className="max-w-[180px] truncate">{uniName}</span>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="group flex items-center gap-2.5 rounded-lg p-1 pr-2 transition-all duration-200 hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
-              <Avatar className="h-9 w-9 ring-2 ring-accent/15 transition-all duration-200 group-hover:ring-accent/40">
+              <Avatar className="h-9 w-9 ring-2 ring-primary/15 transition-all duration-200 group-hover:ring-primary/40">
                 <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">
                   {initials}
                 </AvatarFallback>

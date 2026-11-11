@@ -178,7 +178,7 @@ export function StudentMyCourses() {
 
       {/* Active university filter banner */}
       {activeUniversity && (
-        <Card className="border-accent/30 bg-gradient-to-br from-light-teal to-card shadow-sm">
+        <Card className="border-accent/30 bg-gradient-to-br from-soft-sage to-card shadow-sm">
           <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 text-accent shrink-0 ring-1 ring-accent/20">

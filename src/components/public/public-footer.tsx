@@ -8,7 +8,7 @@ export function PublicFooter() {
   const navigate = useAppStore((s) => s.navigate);
 
   return (
-    <footer className="mt-auto border-t border-border bg-card">
+    <footer className="mt-auto bg-card border-t border-border">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-14">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand column */}
@@ -29,7 +29,7 @@ export function PublicFooter() {
                   key={label}
                   href="#"
                   aria-label={label}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-accent hover:bg-light-teal"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-all duration-200 hover:border-accent hover:text-accent hover:bg-soft-sage"
                 >
                   <Icon className="h-4 w-4" />
                 </a>
@@ -53,7 +53,7 @@ export function PublicFooter() {
                 <li key={item.label}>
                   <button
                     onClick={() => navigate(item.segments)}
-                    className="text-muted-foreground transition-colors duration-200 hover:text-accent"
+                    className="text-muted-foreground transition-colors duration-200 hover:text-primary"
                   >
                     {item.label}
                   </button>
@@ -73,7 +73,7 @@ export function PublicFooter() {
                   <li key={label}>
                     <button
                       onClick={() => navigate(["courses"])}
-                      className="text-muted-foreground transition-colors duration-200 hover:text-accent"
+                      className="text-muted-foreground transition-colors duration-200 hover:text-primary"
                     >
                       {label}
                     </button>
@@ -90,19 +90,19 @@ export function PublicFooter() {
             </h4>
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-3">
-                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-light-teal text-accent">
+                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-soft-sage text-accent">
                   <Mail className="h-3.5 w-3.5" />
                 </span>
                 <span className="text-muted-foreground">hello@courselearn.dev</span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-light-teal text-accent">
+                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-soft-sage text-accent">
                   <Phone className="h-3.5 w-3.5" />
                 </span>
                 <span className="text-muted-foreground">+968 9000 0000</span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-light-teal text-accent">
+                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-soft-sage text-accent">
                   <MapPin className="h-3.5 w-3.5" />
                 </span>
                 <span className="text-muted-foreground">Muscat, Sultanate of Oman</span>
