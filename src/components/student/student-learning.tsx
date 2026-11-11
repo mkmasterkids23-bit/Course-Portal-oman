@@ -16,10 +16,12 @@ import {
 } from "@/components/ui/tooltip";
 import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
 import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import {
   ArrowLeft, PlayCircle, CheckCircle2, Lock, FileText, Download, Link as LinkIcon,
   Upload, Award, ClipboardList, AlertTriangle, Clock, Video as VideoIcon, Info,
   Maximize2, Minimize2, ChevronLeft, ChevronRight, BookOpen, Sparkles,
+  HelpCircle, XCircle, RefreshCw, ListChecks,
 } from "lucide-react";
 import { formatDateTime } from "@/types";
 
@@ -40,7 +42,47 @@ interface VideoItem {
   thumbnail: string | null;
   displayOrder: number;
   duration: number;
+  hasQuestions: boolean;
+  questionCount: number;
+  assessmentPassed: boolean | null; // null = no questions, true/false if has questions
   progress: VideoProgressInfo | null;
+}
+
+// ─── Video Assessment types ───
+// Mirrors the shape returned by GET /api/student/videos/[videoId]/questions
+// (note: correctAnswer is intentionally NOT included by the API for security).
+interface VideoQuestionData {
+  id: string;
+  question: string;
+  options: string[];
+  timestamp: number;
+}
+
+interface VideoAssessmentSummary {
+  score: number;
+  passed: boolean;
+  attempts: number;
+}
+
+// Mirrors the POST assessment response — includes per-question correctness
+// because the server validates answers server-side and reveals them here.
+interface AssessmentAnswerResult {
+  questionId: string;
+  question: string;
+  options: string[];
+  selectedAnswer: number;
+  correctAnswer: number;
+  correct: boolean;
+}
+
+interface AssessmentResult {
+  id?: string;
+  score: number;
+  passed: boolean;
+  attempts: number;
+  correctCount: number;
+  totalQuestions: number;
+  answers: AssessmentAnswerResult[];
 }
 
 interface TopicItem {
@@ -318,6 +360,7 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
               prevVideo={prevVideo}
               nextVideo={nextVideo}
               onNavigateLesson={(id) => setUserSelectedVideoId(id)}
+              refetchCourse={refetch}
             />
           ) : (
             <EmptyState
@@ -481,8 +524,32 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
                                     )}
                                   </span>
                                   <span className="min-w-0 flex-1">
-                                    <span className={`block truncate ${isActive ? "font-semibold text-accent" : "font-medium text-foreground group-hover:text-accent"}`}>
-                                      {video.title}
+                                    <span className={`flex items-center gap-1.5 truncate ${isActive ? "font-semibold text-accent" : "font-medium text-foreground group-hover:text-accent"}`}>
+                                      <span className="truncate">{video.title}</span>
+                                      {video.hasQuestions && (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <span className={cn(
+                                              "inline-flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px] font-semibold shrink-0",
+                                              video.assessmentPassed === true
+                                                ? "bg-success/15 text-success"
+                                                : video.assessmentPassed === false
+                                                  ? "bg-destructive/10 text-destructive"
+                                                  : "bg-accent/10 text-accent"
+                                            )}>
+                                              <HelpCircle className="h-3 w-3" />
+                                              {video.questionCount}
+                                            </span>
+                                          </TooltipTrigger>
+                                          <TooltipContent side="right">
+                                            {video.assessmentPassed === true
+                                              ? "Assessment passed"
+                                              : video.assessmentPassed === false
+                                                ? "Assessment not passed — retake needed"
+                                                : `${video.questionCount} question${video.questionCount > 1 ? "s" : ""} in this video`}
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      )}
                                     </span>
                                     {video.duration > 0 && (
                                       <span className="block text-[11px] text-muted-foreground mt-0.5">
@@ -517,6 +584,7 @@ function VideoPlayer({
   prevVideo,
   nextVideo,
   onNavigateLesson,
+  refetchCourse,
 }: {
   video: VideoItem;
   topicTitle: string | null;
@@ -528,6 +596,7 @@ function VideoPlayer({
   prevVideo: VideoItem | null;
   nextVideo: VideoItem | null;
   onNavigateLesson: (id: string) => void;
+  refetchCourse?: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const lastTimeRef = useRef<number>(0);
@@ -536,6 +605,34 @@ function VideoPlayer({
   const lastPostRef = useRef<number>(0);
   const resumeAppliedRef = useRef<boolean>(false);
   const [expanded, setExpanded] = useState(false);
+
+  // ─── Video Assessment state ───
+  // Fetches the questions for THIS video (without correctAnswer — security).
+  // The hook is unconditional (rules of hooks); the URL just changes per video.
+  const questionsUrl = `/api/student/videos/${video.id}/questions`;
+  const {
+    data: questionsData,
+    loading: questionsLoading,
+    refetch: refetchQuestions,
+  } = useApiFetch<{
+    questions: VideoQuestionData[];
+    assessment: VideoAssessmentSummary | null;
+  }>(questionsUrl);
+
+  // Currently-displayed question popup (null = no popup shown).
+  const [activeQuestion, setActiveQuestion] = useState<VideoQuestionData | null>(null);
+  // Map of questionId → selected option index (answers given this session).
+  const [answeredMap, setAnsweredMap] = useState<Map<string, number>>(new Map());
+  // Currently-selected option in the active popup (null = nothing selected yet).
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  // Brief "Answer saved" confirmation shown after submitting a popup answer.
+  const [showFeedback, setShowFeedback] = useState(false);
+  // Result returned from POST /assessment — when set, the result overlay shows.
+  const [assessmentResult, setAssessmentResult] = useState<AssessmentResult | null>(null);
+  // True while the assessment POST is in flight.
+  const [submittingAssessment, setSubmittingAssessment] = useState(false);
+  // Timer ref for the post-submit feedback delay (cleared on unmount/video change).
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // YouTube completion timer
   const ytStartRef = useRef<number | null>(null);
@@ -548,6 +645,15 @@ function VideoPlayer({
     video.progress?.isCompleted || false
   );
   const [posting, setPosting] = useState(false);
+
+  // Are question popups active for this viewing session?
+  // They are NOT active if the student has already passed the assessment —
+  // in that case the video plays freely and the "Passed" badge is shown.
+  const questionsActive = Boolean(
+    questionsData &&
+      questionsData.questions.length > 0 &&
+      questionsData.assessment?.passed !== true
+  );
 
   // Reset on video change
   useEffect(() => {
@@ -563,7 +669,50 @@ function VideoPlayer({
       clearInterval(ytTimerRef.current);
       ytTimerRef.current = null;
     }
+    // ─── Reset assessment state ───
+    setActiveQuestion(null);
+    setSelectedAnswer(null);
+    setAnsweredMap(new Map());
+    setShowFeedback(false);
+    setAssessmentResult(null);
+    setSubmittingAssessment(false);
+    if (feedbackTimerRef.current) {
+      clearTimeout(feedbackTimerRef.current);
+      feedbackTimerRef.current = null;
+    }
   }, [video.id]);
+
+  // ─── Missed-question catch-up ───
+  // Fires when questions data arrives, when a popup/feedback dismisses, or when
+  // the student answers a question. If the playhead has already moved past an
+  // unanswered question's timestamp (e.g. they resumed a half-watched video, or
+  // the questions fetch landed late), pause and surface that question now.
+  useEffect(() => {
+    if (!questionsActive || !questionsData) return;
+    if (activeQuestion || assessmentResult || showFeedback || submittingAssessment) return;
+    const el = videoRef.current;
+    if (!el) return;
+    const cur = el.currentTime;
+    const missed = questionsData.questions.find(
+      (q) => !answeredMap.has(q.id) && cur >= q.timestamp - 0.5
+    );
+    if (missed && !el.paused) {
+      try {
+        el.pause();
+        lastTimeRef.current = el.currentTime;
+      } catch {}
+      setActiveQuestion(missed);
+      setSelectedAnswer(null);
+    }
+  }, [
+    questionsActive,
+    questionsData,
+    activeQuestion,
+    assessmentResult,
+    showFeedback,
+    submittingAssessment,
+    answeredMap,
+  ]);
 
   // For HTML5 video: apply resume position once metadata is loaded.
   const handleLoadedMetadata = () => {
@@ -590,6 +739,39 @@ function VideoPlayer({
     if (!el) return;
     const cur = el.currentTime;
     const last = lastTimeRef.current;
+
+    // ─── Question trigger check ───
+    // Pause and surface a popup the moment the playhead crosses an unanswered
+    // question's timestamp going forward. We require BOTH:
+    //   - cur >= q.timestamp    (we're at or past it)
+    //   - last < q.timestamp    (we were before it on the previous tick — i.e.
+    //                            this is a forward crossing, not a re-tick while
+    //                            paused, and not a backward seek landing past it)
+    // The 0.5s tolerance from the spec is absorbed by `last < q.timestamp` —
+    // timeupdate fires ~4×/s so `last` is at most ~0.25s behind `cur`.
+    if (
+      questionsActive &&
+      !activeQuestion &&
+      !assessmentResult &&
+      !showFeedback &&
+      !submittingAssessment &&
+      questionsData
+    ) {
+      for (const q of questionsData.questions) {
+        if (answeredMap.has(q.id)) continue;
+        if (cur >= q.timestamp && last < q.timestamp) {
+          try {
+            el.pause();
+            lastTimeRef.current = cur;
+          } catch {}
+          setActiveQuestion(q);
+          setSelectedAnswer(null);
+          return; // do NOT accumulate watch time for this tick
+        }
+      }
+    }
+
+    // Watch time tracking — only counts normal forward playback deltas.
     const delta = cur - last;
     // Only count normal playback deltas (0 to 1.5s). This rejects both seeks
     // (large positive deltas) and rewinds (negative deltas).
@@ -608,10 +790,35 @@ function VideoPlayer({
   };
 
   // Seeked event — log; backend rejects completion if watchTime < 85%.
+  // Also catches forward-seek-past-question: if the student scrubs the
+  // progress bar past an unanswered question, pause and surface that question
+  // so they can't skip it.
   const handleSeeked = () => {
     const el = videoRef.current;
     if (!el) return;
-    lastTimeRef.current = el.currentTime;
+    const newTime = el.currentTime;
+    lastTimeRef.current = newTime;
+
+    if (
+      questionsActive &&
+      !activeQuestion &&
+      !assessmentResult &&
+      !showFeedback &&
+      !submittingAssessment &&
+      questionsData
+    ) {
+      // Find the earliest unanswered question we've now skipped past.
+      const skipped = questionsData.questions.find(
+        (q) => !answeredMap.has(q.id) && newTime > q.timestamp + 0.5
+      );
+      if (skipped) {
+        try {
+          el.pause();
+        } catch {}
+        setActiveQuestion(skipped);
+        setSelectedAnswer(null);
+      }
+    }
   };
 
   // Ended event — submit final progress with completion hint.
@@ -718,6 +925,154 @@ function VideoPlayer({
     }
   };
 
+  /* ──────────────────────────────────────────────────────────────
+     Video Assessment — submit, retake, dismiss handlers
+     ────────────────────────────────────────────────────────────── */
+
+  // Submit the collected answers to the server. The server evaluates
+  // correctness (correctAnswer never leaves the server) and returns the
+  // score, pass/fail, and per-question correctness for review.
+  const submitAssessment = useCallback(
+    async (answersMap: Map<string, number>) => {
+      if (!questionsData || submittingAssessment) return;
+      setSubmittingAssessment(true);
+      try {
+        const answers = questionsData.questions.map((q) => ({
+          questionId: q.id,
+          selectedAnswer: answersMap.get(q.id) ?? -1,
+        }));
+        const res = await apiPost<{ assessment: AssessmentResult }>(
+          `/api/student/videos/${video.id}/assessment`,
+          { answers }
+        );
+        setAssessmentResult(res.assessment);
+        // Refresh the questions endpoint so the assessment badge reflects
+        // the latest passed/attempts state, and refresh the parent course
+        // data so the sidebar + course completion update.
+        refetchQuestions();
+        refetchCourse?.();
+        if (res.assessment.passed) {
+          toast({
+            title: "Assessment Passed!",
+            description: `You scored ${res.assessment.score}% (${res.assessment.correctCount}/${res.assessment.totalQuestions} correct).`,
+          });
+        }
+      } catch {
+        // apiPost surfaces the error toast
+      } finally {
+        setSubmittingAssessment(false);
+      }
+    },
+    [questionsData, submittingAssessment, video.id, refetchQuestions, refetchCourse]
+  );
+
+  // After a popup answer is submitted + the brief confirmation shows, decide
+  // what to do next: either surface the next missed question (e.g. if the
+  // student had seeked forward past several), or auto-submit if all answered,
+  // or simply resume playback.
+  const afterAnswerSubmitted = useCallback(
+    (newMap: Map<string, number>) => {
+      setShowFeedback(false);
+      setActiveQuestion(null);
+      setSelectedAnswer(null);
+
+      if (questionsData && newMap.size >= questionsData.questions.length) {
+        // All answered → auto-submit the assessment
+        void submitAssessment(newMap);
+        return;
+      }
+
+      // If the playhead is already past another unanswered question (e.g.
+      // after a forward seek that skipped several), surface the next one
+      // instead of resuming playback.
+      const cur = videoRef.current?.currentTime || 0;
+      if (questionsData) {
+        const nextQ = questionsData.questions.find(
+          (q) => !newMap.has(q.id) && cur >= q.timestamp - 0.5
+        );
+        if (nextQ) {
+          setActiveQuestion(nextQ);
+          setSelectedAnswer(null);
+          return;
+        }
+      }
+
+      // Otherwise resume normal playback
+      try {
+        const el = videoRef.current;
+        if (el && el.paused) {
+          void el.play().catch(() => {});
+        }
+      } catch {}
+    },
+    [questionsData, submitAssessment]
+  );
+
+  // Submit the currently-selected answer for the active popup question.
+  // Shows a brief "Answer saved" confirmation, then advances via
+  // afterAnswerSubmitted.
+  const handleSubmitAnswer = useCallback(() => {
+    if (!activeQuestion || selectedAnswer === null) return;
+    const qid = activeQuestion.id;
+    const newMap = new Map(answeredMap);
+    newMap.set(qid, selectedAnswer);
+    setAnsweredMap(newMap);
+    setShowFeedback(true);
+
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    feedbackTimerRef.current = setTimeout(() => {
+      feedbackTimerRef.current = null;
+      afterAnswerSubmitted(newMap);
+    }, 1200);
+  }, [activeQuestion, selectedAnswer, answeredMap, afterAnswerSubmitted]);
+
+  // Reset all in-session assessment state and let the student try again.
+  // Seeks back to ~1s before the first question so popups re-trigger as the
+  // video plays forward.
+  const handleRetake = useCallback(() => {
+    setAssessmentResult(null);
+    setActiveQuestion(null);
+    setSelectedAnswer(null);
+    setAnsweredMap(new Map());
+    setShowFeedback(false);
+    setSubmittingAssessment(false);
+    if (feedbackTimerRef.current) {
+      clearTimeout(feedbackTimerRef.current);
+      feedbackTimerRef.current = null;
+    }
+    const el = videoRef.current;
+    if (el && questionsData && questionsData.questions.length > 0) {
+      const firstTs = questionsData.questions[0].timestamp;
+      const target = Math.max(0, firstTs - 1);
+      try {
+        el.currentTime = target;
+        lastTimeRef.current = target;
+        void el.play().catch(() => {});
+      } catch {}
+    }
+  }, [questionsData]);
+
+  // Dismiss the result overlay after a passing attempt — just resume the video.
+  const handleDismissResult = useCallback(() => {
+    setAssessmentResult(null);
+    try {
+      const el = videoRef.current;
+      if (el && el.paused) {
+        void el.play().catch(() => {});
+      }
+    } catch {}
+  }, []);
+
+  // Cleanup the feedback timer on unmount so it can't fire on stale state.
+  useEffect(() => {
+    return () => {
+      if (feedbackTimerRef.current) {
+        clearTimeout(feedbackTimerRef.current);
+        feedbackTimerRef.current = null;
+      }
+    };
+  }, []);
+
   /* YouTube handling */
   const ytEmbedUrl = useMemo(() => toYouTubeEmbed(video.videoUrl), [video.videoUrl]);
   const isYouTube = video.source === "YOUTUBE" && ytEmbedUrl !== null;
@@ -743,6 +1098,68 @@ function VideoPlayer({
       }
     };
   }, [isYouTube, video.id]);
+
+  // Pre-compute the assessment status badge + overlay JSX so both the compact
+  // and expanded views can render the same overlays without duplication.
+  const currentAssessment: VideoAssessmentSummary | null =
+    assessmentResult
+      ? {
+          score: assessmentResult.score,
+          passed: assessmentResult.passed,
+          attempts: assessmentResult.attempts,
+        }
+      : questionsData?.assessment ?? null;
+
+  const hasQuestions = Boolean(questionsData && questionsData.questions.length > 0);
+
+  const assessmentStatusBadge = hasQuestions ? (
+    currentAssessment?.passed === true ? (
+      <Badge className="bg-success/15 text-success border-transparent">
+        <CheckCircle2 className="h-3 w-3" /> Assessment Passed ✓
+      </Badge>
+    ) : currentAssessment && currentAssessment.attempts > 0 ? (
+      <Badge className="bg-destructive/10 text-destructive border-transparent">
+        <AlertTriangle className="h-3 w-3" /> Assessment Failed — Retake Needed
+      </Badge>
+    ) : (
+      <Badge className="bg-warning/15 text-warning border-transparent">
+        <ClipboardList className="h-3 w-3" /> Assessment Required
+      </Badge>
+    )
+  ) : null;
+
+  // Overlay JSX rendered on top of the video element (question popup or
+  // assessment result card). Same JSX reused in compact + expanded views.
+  const videoOverlays = (
+    <>
+      {activeQuestion && (
+        <QuestionOverlay
+          question={activeQuestion}
+          selectedAnswer={selectedAnswer}
+          showFeedback={showFeedback}
+          onSelect={(idx) => setSelectedAnswer(idx)}
+          onSubmit={handleSubmitAnswer}
+          answeredCount={answeredMap.size}
+          totalCount={questionsData?.questions.length ?? 0}
+        />
+      )}
+      {assessmentResult && (
+        <AssessmentResultOverlay
+          result={assessmentResult}
+          onRetake={handleRetake}
+          onDismiss={handleDismissResult}
+          submitting={submittingAssessment}
+        />
+      )}
+      {/* Subtle "loading questions" hint while the questions fetch is in flight
+          and we don't yet know whether this video has them. */}
+      {questionsLoading && !questionsData && (
+        <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 rounded-lg bg-black/60 px-2.5 py-1.5 text-[11px] font-medium text-white/80 backdrop-blur-sm">
+          <Clock className="h-3 w-3 animate-spin" /> Loading quiz…
+        </div>
+      )}
+    </>
+  );
 
   // Render the right player
   return (
@@ -805,6 +1222,7 @@ function VideoPlayer({
                   onEnded={handleEnded}
                 />
               )}
+              {videoOverlays}
             </div>
           </div>
         </div>
@@ -849,6 +1267,7 @@ function VideoPlayer({
                 <Maximize2 className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Expand</span>
               </button>
+              {videoOverlays}
             </div>
           </div>
         </div>
@@ -866,13 +1285,32 @@ function VideoPlayer({
               {video.description && (
                 <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{video.description}</p>
               )}
+              {hasQuestions && (
+                <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5">
+                  <ListChecks className="h-3.5 w-3.5 text-accent" />
+                  This lesson includes {questionsData!.questions.length} in-video question{questionsData!.questions.length > 1 ? "s" : ""}.
+                  {" "}
+                  {currentAssessment?.passed === true
+                    ? "You've passed the assessment — the video will play without interruption."
+                    : currentAssessment && currentAssessment.attempts > 0
+                      ? `Previous score: ${currentAssessment.score}%. Retake the assessment by watching again.`
+                      : "Answer each one as it appears to complete the assessment."}
+                </p>
+              )}
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
               {posting && (
                 <span className="text-xs text-muted-foreground flex items-center gap-1.5">
                   <Clock className="h-3 w-3 animate-spin" /> Saving...
                 </span>
               )}
+              {hasQuestions && (
+                <Badge variant="outline" className="border-accent/30 text-accent gap-1">
+                  <ListChecks className="h-3 w-3" />
+                  {questionsData!.questions.length} Question{questionsData!.questions.length > 1 ? "s" : ""}
+                </Badge>
+              )}
+              {assessmentStatusBadge}
               {localCompleted ? (
                 <Badge className="bg-success/15 text-success border-transparent">
                   <CheckCircle2 className="h-3 w-3" /> Completed
@@ -959,6 +1397,273 @@ function VideoPlayer({
 }
 
 /* ===================== Helpers ===================== */
+
+/* ──────────────────────────────────────────────────────────────
+   QuestionOverlay — inline popup rendered on top of the video
+   ──────────────────────────────────────────────────────────────
+   Shows one question at a time. The student must select an option and
+   submit before the video can resume. After submit, a brief "Answer
+   saved" confirmation is shown (the actual correct/incorrect feedback
+   is deferred to the final assessment result, since correctAnswer is
+   never sent to the client for security reasons). */
+function QuestionOverlay({
+  question,
+  selectedAnswer,
+  showFeedback,
+  onSelect,
+  onSubmit,
+  answeredCount,
+  totalCount,
+}: {
+  question: VideoQuestionData;
+  selectedAnswer: number | null;
+  showFeedback: boolean;
+  onSelect: (idx: number) => void;
+  onSubmit: () => void;
+  answeredCount: number;
+  totalCount: number;
+}) {
+  return (
+    <div
+      className="absolute inset-0 z-30 flex items-center justify-center bg-black/85 backdrop-blur-sm p-3 sm:p-4 animate-in fade-in duration-150"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Question ${answeredCount + 1} of ${totalCount}`}
+    >
+      <div className="w-full max-w-md rounded-xl border border-white/10 bg-card shadow-2xl ring-1 ring-black/5 overflow-hidden">
+        {/* Header strip */}
+        <div className="flex items-center justify-between gap-2 border-b border-border bg-gradient-to-r from-accent/10 to-transparent px-4 py-2.5">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-accent/15 text-accent shrink-0">
+              <HelpCircle className="h-3.5 w-3.5" />
+            </span>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-accent truncate">
+              Quick Check
+            </span>
+          </div>
+          <span className="text-[11px] font-medium text-muted-foreground tabular-nums shrink-0">
+            {answeredCount + 1} / {totalCount}
+          </span>
+        </div>
+
+        {/* Body */}
+        <div className="p-4 sm:p-5 space-y-4">
+          <p className="text-base font-semibold text-foreground leading-relaxed">
+            {question.question}
+          </p>
+
+          <div className="space-y-2">
+            {question.options.map((opt, idx) => {
+              const isSelected = selectedAnswer === idx;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  disabled={showFeedback}
+                  onClick={() => onSelect(idx)}
+                  className={cn(
+                    "group flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-all duration-150",
+                    isSelected
+                      ? "border-accent bg-accent/5 ring-1 ring-accent/30"
+                      : "border-border bg-card hover:border-accent/40 hover:bg-light-teal/40",
+                    showFeedback && "cursor-default opacity-70"
+                  )}
+                  aria-pressed={isSelected}
+                >
+                  <span
+                    className={cn(
+                      "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold transition-colors",
+                      isSelected
+                        ? "border-accent bg-accent text-accent-foreground"
+                        : "border-border text-muted-foreground group-hover:border-accent/50"
+                    )}
+                  >
+                    {String.fromCharCode(65 + idx)}
+                  </span>
+                  <span className={cn(
+                    "text-sm",
+                    isSelected ? "font-medium text-foreground" : "text-foreground"
+                  )}>
+                    {opt}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Footer — submit / feedback */}
+          <div className="flex items-center justify-between gap-3 pt-1">
+            <p className="text-[11px] text-muted-foreground">
+              {showFeedback
+                ? "Answer recorded — your video will resume shortly."
+                : "Pick an answer to continue."}
+            </p>
+            {showFeedback ? (
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-success/15 px-2.5 py-1.5 text-xs font-medium text-success">
+                <CheckCircle2 className="h-3.5 w-3.5" /> Saved
+              </span>
+            ) : (
+              <Button
+                onClick={onSubmit}
+                disabled={selectedAnswer === null}
+                size="sm"
+                className="gap-2 shadow-sm"
+              >
+                Submit Answer
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────
+   AssessmentResultOverlay — shown after all questions are answered
+   ──────────────────────────────────────────────────────────────
+   Reveals the final score, pass/fail status, and per-question
+   correctness (the only place where correctAnswer is revealed — the
+   server returns it in the POST response). */
+function AssessmentResultOverlay({
+  result,
+  onRetake,
+  onDismiss,
+  submitting,
+}: {
+  result: AssessmentResult;
+  onRetake: () => void;
+  onDismiss: () => void;
+  submitting: boolean;
+}) {
+  const passed = result.passed;
+  return (
+    <div
+      className="absolute inset-0 z-30 flex items-center justify-center bg-black/85 backdrop-blur-sm p-3 sm:p-4 animate-in fade-in duration-150"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Assessment result"
+    >
+      <div className="w-full max-w-md max-h-full overflow-y-auto scrollbar-thin rounded-xl border border-white/10 bg-card shadow-2xl ring-1 ring-black/5">
+        {/* Header — pass/fail banner */}
+        <div
+          className={cn(
+            "flex flex-col items-center text-center px-5 py-5 border-b",
+            passed ? "border-success/20 bg-success/5" : "border-destructive/20 bg-destructive/5"
+          )}
+        >
+          <div
+            className={cn(
+              "flex h-14 w-14 items-center justify-center rounded-full mb-2.5",
+              passed ? "bg-success/15" : "bg-destructive/10"
+            )}
+          >
+            {passed ? (
+              <CheckCircle2 className="h-7 w-7 text-success" />
+            ) : (
+              <AlertTriangle className="h-7 w-7 text-destructive" />
+            )}
+          </div>
+          <h3 className={cn(
+            "text-lg font-semibold",
+            passed ? "text-success" : "text-destructive"
+          )}>
+            {passed ? "Assessment Passed!" : "Assessment Failed"}
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            {passed
+              ? `You scored ${result.score}% — ${result.correctCount}/${result.totalQuestions} correct.`
+              : `Score: ${result.score}%. You need 70% to pass. You can retake the assessment.`}
+          </p>
+          {/* Score ring */}
+          <div className="mt-3 w-full max-w-[220px]">
+            <Progress
+              value={result.score}
+              className={cn(
+                "h-2 bg-muted",
+                passed
+                  ? "[&_[data-slot=progress-indicator]]:bg-success"
+                  : "[&_[data-slot=progress-indicator]]:bg-destructive"
+              )}
+            />
+            <div className="flex justify-between text-[10px] text-muted-foreground mt-1 tabular-nums">
+              <span>0%</span>
+              <span className="font-semibold text-foreground">{result.score}%</span>
+              <span>100%</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Per-question review */}
+        <div className="p-4 sm:p-5 space-y-2.5">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Review
+          </p>
+          {result.answers.map((a, idx) => (
+            <div
+              key={a.questionId}
+              className={cn(
+                "rounded-lg border p-3",
+                a.correct
+                  ? "border-success/20 bg-success/5"
+                  : "border-destructive/20 bg-destructive/5"
+              )}
+            >
+              <div className="flex items-start gap-2">
+                {a.correct ? (
+                  <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                ) : (
+                  <XCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-medium text-foreground leading-relaxed">
+                    <span className="text-muted-foreground mr-1">Q{idx + 1}.</span>
+                    {a.question}
+                  </p>
+                  {!a.correct && a.selectedAnswer >= 0 && (
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Your answer:{" "}
+                      <span className="text-destructive font-medium line-clamp-1">
+                        {a.options[a.selectedAnswer]}
+                      </span>
+                    </p>
+                  )}
+                  {!a.correct && (
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Correct:{" "}
+                      <span className="text-success font-medium line-clamp-1">
+                        {a.options[a.correctAnswer]}
+                      </span>
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer actions */}
+        <div className="flex items-center justify-end gap-2 border-t border-border bg-muted/30 px-4 py-3">
+          {passed ? (
+            <Button onClick={onDismiss} size="sm" className="gap-2 shadow-sm">
+              <CheckCircle2 className="h-4 w-4" /> Continue watching
+            </Button>
+          ) : (
+            <Button
+              onClick={onRetake}
+              disabled={submitting}
+              size="sm"
+              className="gap-2 shadow-sm"
+            >
+              <RefreshCw className={cn("h-4 w-4", submitting && "animate-spin")} />
+              {submitting ? "Retaking…" : "Retake Assessment"}
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function MaterialRow({ material }: { material: MaterialItem }) {
   const isLink = material.type === "LINK";

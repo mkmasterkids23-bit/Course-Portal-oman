@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -47,11 +47,13 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
 import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import { formatDate, formatDateTime, type SubscriptionPlanPublic } from "@/types";
 import {
   ArrowLeft, Plus, Pencil, Trash2, ChevronUp, ChevronDown, Video as VideoIcon,
   FileText, ClipboardList, Award, Settings, BookOpen, Upload, Eye, EyeOff,
   GripVertical, ExternalLink, Save, Info,
+  ListChecks, Check, Clock, PlusCircle, X, HelpCircle,
 } from "lucide-react";
 
 interface CourseDetail {
@@ -90,6 +92,19 @@ interface VideoRow {
   displayOrder: number;
   isPublished: boolean;
   duration: number;
+}
+
+interface VideoQuestion {
+  id: string;
+  videoId: string;
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  timestamp: number;
+}
+
+interface QuestionsResponse {
+  questions: VideoQuestion[];
 }
 
 interface MaterialRow {
@@ -298,6 +313,11 @@ function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () 
   const [addVideoFor, setAddVideoFor] = useState<TopicRow | null>(null);
   const [editVideo, setEditVideo] = useState<VideoRow | null>(null);
   const [deleteVideo, setDeleteVideo] = useState<VideoRow | null>(null);
+  const [questionsOpenFor, setQuestionsOpenFor] = useState<string | null>(null);
+  const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
+  const reportCount = useCallback((videoId: string, n: number) => {
+    setQuestionCounts((prev) => (prev[videoId] === n ? prev : { ...prev, [videoId]: n }));
+  }, []);
 
   async function moveTopic(topic: TopicRow, dir: -1 | 1) {
     const sorted = [...course.topics].sort((a, b) => a.displayOrder - b.displayOrder);
@@ -439,51 +459,92 @@ function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () 
                     </div>
                   ) : (
                     <ul className="divide-y divide-border">
-                      {topic.videos.map((v, vi) => (
-                        <li
-                          key={v.id}
-                          className="flex items-center gap-3 py-2.5 transition-colors hover:bg-muted/40 -mx-2 px-2 rounded"
-                        >
-                          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-accent/10 text-accent text-[11px] font-semibold shrink-0">
-                            {vi + 1}
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-foreground truncate">{v.title}</p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {v.source === "UPLOAD"
-                                ? "Uploaded video"
-                                : v.source === "YOUTUBE"
-                                ? "YouTube"
-                                : "External URL"}
-                            </p>
+                      {topic.videos.map((v, vi) => {
+                        const qOpen = questionsOpenFor === v.id;
+                        const qCount = questionCounts[v.id] ?? 0;
+                        return (
+                        <li key={v.id} className="-mx-2 px-2 rounded">
+                          <div className="flex items-center gap-3 py-2.5 transition-colors hover:bg-muted/40">
+                            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-accent/10 text-accent text-[11px] font-semibold shrink-0">
+                              {vi + 1}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-foreground truncate">{v.title}</p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {v.source === "UPLOAD"
+                                  ? "Uploaded video"
+                                  : v.source === "YOUTUBE"
+                                  ? "YouTube"
+                                  : "External URL"}
+                              </p>
+                            </div>
+                            {qCount > 0 && (
+                              <Badge
+                                variant="outline"
+                                className="gap-1 border-accent/30 bg-accent/5 text-accent text-[10px]"
+                                title={`${qCount} question${qCount === 1 ? "" : "s"}`}
+                              >
+                                <ListChecks className="h-3 w-3" />
+                                {qCount}
+                              </Badge>
+                            )}
+                            {v.isPublished ? (
+                              <Badge className="bg-success/15 text-success text-[10px]">Published</Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-muted-foreground text-[10px]">
+                                Draft
+                              </Badge>
+                            )}
+                            <Button
+                              variant={qOpen ? "secondary" : "ghost"}
+                              size="icon"
+                              aria-label="Manage questions"
+                              aria-pressed={qOpen}
+                              className={cn(
+                                "h-7 w-7 shrink-0",
+                                qOpen ? "text-accent" : "text-muted-foreground hover:text-accent"
+                              )}
+                              onClick={() => setQuestionsOpenFor(qOpen ? null : v.id)}
+                            >
+                              <ListChecks className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              aria-label="Edit video"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              onClick={() => setEditVideo(v)}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              aria-label="Delete video"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                              onClick={() => setDeleteVideo(v)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                            <VideoQuestionsBadge
+                              videoId={v.id}
+                              active={!qOpen}
+                              reportCount={reportCount}
+                            />
                           </div>
-                          {v.isPublished ? (
-                            <Badge className="bg-success/15 text-success text-[10px]">Published</Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-muted-foreground text-[10px]">
-                              Draft
-                            </Badge>
+                          {qOpen && (
+                            <div className="pb-3 pt-0.5">
+                              <VideoQuestionsPanel
+                                videoId={v.id}
+                                videoTitle={v.title}
+                                onClose={() => setQuestionsOpenFor(null)}
+                                reportCount={reportCount}
+                              />
+                            </div>
                           )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label="Edit video"
-                            className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                            onClick={() => setEditVideo(v)}
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label="Delete video"
-                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                            onClick={() => setDeleteVideo(v)}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
                         </li>
-                      ))}
+                        );
+                      })}
                     </ul>
                   )}
                 </div>
@@ -2255,5 +2316,512 @@ function SettingsTab({
         </button>
       </div>
     </div>
+  );
+}
+
+// ============= VIDEO QUESTIONS MANAGEMENT =============
+function formatTimestamp(seconds: number): string {
+  const total = Number.isFinite(seconds) ? Math.max(0, Math.floor(seconds)) : 0;
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+/**
+ * Silent loader that pre-fetches the question count for a video so a badge
+ * can be shown on the video row before the manager is opened. Renders nothing.
+ */
+function VideoQuestionsBadge({
+  videoId,
+  active,
+  reportCount,
+}: {
+  videoId: string;
+  active: boolean;
+  reportCount: (videoId: string, n: number) => void;
+}) {
+  const { data } = useApiFetch<QuestionsResponse>(
+    active ? `/api/university/videos/${videoId}/questions` : null
+  );
+  useEffect(() => {
+    if (data) reportCount(videoId, data.questions.length);
+  }, [data, videoId, reportCount]);
+  return null;
+}
+
+/**
+ * Inline panel shown beneath a video row when "Manage questions" is toggled.
+ * Handles listing, creating, editing and deleting in-video questions.
+ */
+function VideoQuestionsPanel({
+  videoId,
+  videoTitle,
+  onClose,
+  reportCount,
+}: {
+  videoId: string;
+  videoTitle: string;
+  onClose: () => void;
+  reportCount: (videoId: string, n: number) => void;
+}) {
+  const { data, loading, error, refetch } = useApiFetch<QuestionsResponse>(
+    `/api/university/videos/${videoId}/questions`
+  );
+  const [addOpen, setAddOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<VideoQuestion | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<VideoQuestion | null>(null);
+
+  const questions = data?.questions ?? [];
+  const sorted = [...questions].sort((a, b) => a.timestamp - b.timestamp);
+
+  useEffect(() => {
+    if (data) reportCount(videoId, data.questions.length);
+  }, [data, videoId, reportCount]);
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    try {
+      await apiPost(`/api/university/questions/${deleteTarget.id}`, null, {
+        method: "DELETE",
+      });
+      toast({ title: "Question deleted" });
+      setDeleteTarget(null);
+      refetch();
+    } catch {
+      /* toast handled by apiPost */
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-accent/20 bg-accent/[0.03] p-3">
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-accent/10 text-accent shrink-0">
+            <HelpCircle className="h-3.5 w-3.5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-foreground truncate">
+              In-video questions
+            </p>
+            <p className="text-[11px] text-muted-foreground truncate">
+              {questions.length === 0
+                ? "No questions yet"
+                : `${questions.length} question${questions.length === 1 ? "" : "s"}`}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <Button size="sm" className="h-7 gap-1.5" onClick={() => setAddOpen(true)}>
+            <Plus className="h-3.5 w-3.5" /> Add Question
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Close questions panel"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            onClick={onClose}
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="space-y-2">
+          <Skeleton className="h-16 w-full rounded-xl" />
+          <Skeleton className="h-16 w-full rounded-xl" />
+        </div>
+      ) : error ? (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-center">
+          <p className="text-xs text-destructive">{error}</p>
+          <Button variant="outline" size="sm" className="mt-2 h-7" onClick={refetch}>
+            Retry
+          </Button>
+        </div>
+      ) : sorted.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border bg-card/50 py-6 text-center">
+          <ListChecks className="h-5 w-5 text-muted-foreground/40 mx-auto mb-1.5" />
+          <p className="text-xs text-muted-foreground">
+            No questions yet. Add one to quiz viewers during playback.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2 max-h-80 overflow-y-auto pr-1 scrollbar-thin">
+          {sorted.map((q, qi) => (
+            <div
+              key={q.id}
+              className="rounded-xl border border-border bg-card p-3 transition-shadow hover:shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Badge
+                      variant="outline"
+                      className="gap-1 text-[10px] text-muted-foreground"
+                    >
+                      <Clock className="h-3 w-3" /> {formatTimestamp(q.timestamp)}
+                    </Badge>
+                    <span className="text-[10px] text-muted-foreground/70">#{qi + 1}</span>
+                  </div>
+                  <p className="text-sm font-medium text-foreground break-words">{q.question}</p>
+                </div>
+                <div className="flex items-center gap-0.5 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Edit question"
+                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                    onClick={() => setEditTarget(q)}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Delete question"
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    onClick={() => setDeleteTarget(q)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+              <ul className="mt-2 space-y-1">
+                {q.options.map((opt, oi) => {
+                  const isCorrect = oi === q.correctAnswer;
+                  return (
+                    <li
+                      key={oi}
+                      className={cn(
+                        "flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm",
+                        isCorrect
+                          ? "bg-success/10 text-foreground ring-1 ring-success/30"
+                          : "bg-muted/40 text-muted-foreground"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold shrink-0",
+                          isCorrect
+                            ? "bg-success text-success-foreground"
+                            : "bg-muted-foreground/15 text-muted-foreground"
+                        )}
+                      >
+                        {isCorrect ? <Check className="h-3 w-3" /> : String.fromCharCode(65 + oi)}
+                      </span>
+                      <span className="flex-1 break-words">{opt}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <QuestionFormDialog
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        videoId={videoId}
+        videoTitle={videoTitle}
+        onSaved={() => {
+          setAddOpen(false);
+          refetch();
+        }}
+      />
+      <QuestionFormDialog
+        open={!!editTarget}
+        onOpenChange={(v) => !v && setEditTarget(null)}
+        videoId={videoId}
+        videoTitle={videoTitle}
+        target={editTarget}
+        onSaved={() => {
+          setEditTarget(null);
+          refetch();
+        }}
+      />
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(v) => !v && setDeleteTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete question?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This question (at{" "}
+              {deleteTarget ? formatTimestamp(deleteTarget.timestamp) : ""}) will be permanently
+              removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90"
+              onClick={handleDelete}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+/**
+ * Add/Edit dialog for a single in-video question. Dynamic options list with a
+ * radio to mark the correct answer, plus minutes/seconds for the pop-up time.
+ */
+function QuestionFormDialog({
+  open,
+  onOpenChange,
+  videoId,
+  videoTitle,
+  target,
+  onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  videoId: string;
+  videoTitle: string;
+  target?: VideoQuestion | null;
+  onSaved: () => void;
+}) {
+  const [question, setQuestion] = useState("");
+  const [options, setOptions] = useState<string[]>(["", ""]);
+  const [correctAnswer, setCorrectAnswer] = useState(0);
+  const [minutes, setMinutes] = useState("0");
+  const [seconds, setSeconds] = useState("0");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    if (target) {
+      setQuestion(target.question);
+      setOptions(
+        target.options.length >= 2 ? [...target.options] : [...target.options, ""]
+      );
+      setCorrectAnswer(
+        Math.max(0, Math.min(target.correctAnswer, (target.options.length || 1) - 1))
+      );
+      const total = Math.max(0, Math.floor(target.timestamp || 0));
+      setMinutes(String(Math.floor(total / 60)));
+      setSeconds(String(total % 60));
+    } else {
+      setQuestion("");
+      setOptions(["", ""]);
+      setCorrectAnswer(0);
+      setMinutes("0");
+      setSeconds("0");
+    }
+  }, [open, target]);
+
+  function updateOption(i: number, value: string) {
+    setOptions((prev) => prev.map((o, idx) => (idx === i ? value : o)));
+  }
+  function addOption() {
+    setOptions((prev) => [...prev, ""]);
+  }
+  function removeOption(i: number) {
+    setOptions((prev) => (prev.length <= 2 ? prev : prev.filter((_, idx) => idx !== i)));
+    setCorrectAnswer((prev) => {
+      if (i < prev) return prev - 1;
+      if (i === prev) return 0;
+      return prev;
+    });
+  }
+
+  const totalSeconds =
+    Math.max(0, parseInt(minutes || "0", 10) || 0) * 60 +
+    Math.max(0, Math.min(59, parseInt(seconds || "0", 10) || 0));
+
+  async function submit() {
+    const q = question.trim();
+    if (!q) {
+      toast({ title: "Question text required", variant: "destructive" });
+      return;
+    }
+    const opts = options.map((o) => o.trim());
+    if (opts.length < 2) {
+      toast({ title: "At least 2 options required", variant: "destructive" });
+      return;
+    }
+    if (opts.some((o) => !o)) {
+      toast({ title: "Fill in all options", variant: "destructive" });
+      return;
+    }
+    if (correctAnswer < 0 || correctAnswer >= opts.length) {
+      toast({ title: "Select a correct answer", variant: "destructive" });
+      return;
+    }
+    const payload = {
+      question: q,
+      options: opts,
+      correctAnswer,
+      timestamp: totalSeconds,
+    };
+    setSaving(true);
+    try {
+      if (target) {
+        await apiPost(`/api/university/questions/${target.id}`, payload, {
+          method: "PUT",
+        });
+        toast({ title: "Question updated" });
+      } else {
+        await apiPost(`/api/university/videos/${videoId}/questions`, payload);
+        toast({ title: "Question added" });
+      }
+      onSaved();
+    } catch {
+      /* toast handled by apiPost */
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="font-heading text-lg font-semibold">
+            {target ? "Edit Question" : "Add In-video Question"}
+          </DialogTitle>
+          <DialogDescription>
+            For <span className="font-medium text-foreground">{videoTitle}</span>. The question
+            pops up at the chosen timestamp during playback.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
+          <div className="space-y-1.5">
+            <Label htmlFor="q-text" className="text-xs font-medium text-muted-foreground">
+              Question
+            </Label>
+            <Textarea
+              id="q-text"
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              rows={2}
+              placeholder="e.g. What is the main idea discussed in this section?"
+              className="rounded-lg"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-medium text-muted-foreground">Answer options</Label>
+              <span className="text-[11px] text-muted-foreground">
+                Select the radio for the correct answer
+              </span>
+            </div>
+            <div className="space-y-2">
+              {options.map((opt, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={correctAnswer === i}
+                    aria-label={`Mark option ${String.fromCharCode(65 + i)} as correct`}
+                    onClick={() => setCorrectAnswer(i)}
+                    className={cn(
+                      "mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors",
+                      correctAnswer === i
+                        ? "border-accent bg-accent"
+                        : "border-input bg-background hover:border-accent/60"
+                    )}
+                  >
+                    {correctAnswer === i && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-accent-foreground" />
+                    )}
+                  </button>
+                  <Input
+                    value={opt}
+                    onChange={(e) => updateOption(i, e.target.value)}
+                    placeholder={`Option ${String.fromCharCode(65 + i)}`}
+                    className="h-9 flex-1 rounded-lg"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Remove option ${String.fromCharCode(65 + i)}`}
+                    disabled={options.length <= 2}
+                    className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
+                    onClick={() => removeOption(i)}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5"
+              onClick={addOption}
+            >
+              <PlusCircle className="h-3.5 w-3.5" /> Add Option
+            </Button>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium text-muted-foreground">
+              Pop-up timestamp
+            </Label>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="q-min" className="text-[11px] text-muted-foreground">
+                  Minutes
+                </Label>
+                <Input
+                  id="q-min"
+                  type="number"
+                  min={0}
+                  value={minutes}
+                  onChange={(e) => setMinutes(e.target.value)}
+                  className="h-9 rounded-lg"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="q-sec" className="text-[11px] text-muted-foreground">
+                  Seconds
+                </Label>
+                <Input
+                  id="q-sec"
+                  type="number"
+                  min={0}
+                  max={59}
+                  value={seconds}
+                  onChange={(e) => setSeconds(e.target.value)}
+                  className="h-9 rounded-lg"
+                />
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Question appears at{" "}
+              <span className="font-medium text-foreground">
+                {formatTimestamp(totalSeconds)}
+              </span>{" "}
+              into the video.
+            </p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button disabled={saving} className="h-9 gap-1.5" onClick={submit}>
+            {saving ? (
+              "Saving…"
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                {target ? "Save Changes" : "Add Question"}
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

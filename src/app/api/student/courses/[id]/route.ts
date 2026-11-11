@@ -69,6 +69,22 @@ export async function GET(
     });
     const progressMap = new Map(progressRows.map((p) => [p.videoId, p]));
 
+    // ─── Video Assessment data ───
+    // Fetch which videos have questions and which assessments the student has passed
+    const [videoQuestionsCount, passedAssessments] = await Promise.all([
+      db.videoQuestion.groupBy({
+        by: ["videoId"],
+        where: { videoId: { in: videoIds } },
+        _count: { id: true },
+      }),
+      db.videoAssessment.findMany({
+        where: { studentId: user.id, videoId: { in: videoIds }, passed: true },
+        select: { videoId: true },
+      }),
+    ]);
+    const questionCountMap = new Map(videoQuestionsCount.map((q) => [q.videoId, q._count.id]));
+    const passedAssessmentSet = new Set(passedAssessments.map((a) => a.videoId));
+
     // Fetch the student's submission for this course's assignment(s)
     const assignmentIds = course.assignments.map((a) => a.id);
     const submissions = await db.assignmentSubmission.findMany({
@@ -114,6 +130,11 @@ export async function GET(
             thumbnail: v.thumbnail,
             displayOrder: v.displayOrder,
             duration: v.duration,
+            hasQuestions: (questionCountMap.get(v.id) ?? 0) > 0,
+            questionCount: questionCountMap.get(v.id) ?? 0,
+            assessmentPassed: (questionCountMap.get(v.id) ?? 0) > 0
+              ? passedAssessmentSet.has(v.id)
+              : null, // null = no questions (no assessment needed)
             progress: p
               ? {
                   lastPosition: p.lastPosition,

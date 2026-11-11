@@ -26,6 +26,7 @@ model User {
   videoProgress    VideoProgress[]
   submissions      AssignmentSubmission[]
   certificates     Certificate[]
+  videoAssessments VideoAssessment[]
 }
 
 model University {
@@ -150,9 +151,11 @@ model VideoLesson {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  topic      Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
-  progress   VideoProgress[]
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  topic       Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  progress    VideoProgress[]
+  questions   VideoQuestion[]
+  assessments VideoAssessment[]
 
   @@index([courseId])
   @@index([topicId])
@@ -263,5 +266,41 @@ model Certificate {
   course          Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, courseId])
+  @@index([studentId])
+}
+
+// ─── Video-Based Interactive Assessment ────────────────────────────────
+
+model VideoQuestion {
+  id            String   @id @default(cuid())
+  videoId       String
+  question      String
+  options       String   @default("[]") // JSON array of answer option strings
+  correctAnswer Int      @default(0) // index into options array
+  timestamp     Float    @default(0) // seconds into the video when question appears
+  displayOrder  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  video         VideoLesson @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@index([videoId])
+}
+
+model VideoAssessment {
+  id           String   @id @default(cuid())
+  studentId    String
+  videoId      String
+  score        Int      @default(0) // percentage 0-100
+  passed       Boolean  @default(false) // true if score >= 70
+  answers      String   @default("[]") // JSON: [{questionId, selectedAnswer, correct}]
+  attempts     Int      @default(1)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  student      User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  video        VideoLesson @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, videoId])
   @@index([studentId])
 }

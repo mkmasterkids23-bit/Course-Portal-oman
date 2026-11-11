@@ -85,6 +85,35 @@ export async function getCourseCompletionStats(
   });
   const completedVideoIds = new Set(completedProgress.map((p) => p.videoId));
 
+  // ─── Video Assessment Check ───
+  // If a video has questions, the student must also pass the assessment (>= 70%)
+  // for that video to be considered "fully completed" for topic-unlock purposes.
+  // Fetch which videos have questions
+  const videosWithQuestions = await db.videoQuestion.findMany({
+    where: { videoId: { in: videoIds } },
+    select: { videoId: true },
+    distinct: ["videoId"],
+  });
+  const videoIdsWithQuestions = new Set(videosWithQuestions.map((q) => q.videoId));
+
+  // Fetch passed assessments for this student
+  const passedAssessments = await db.videoAssessment.findMany({
+    where: { studentId, videoId: { in: videoIds }, passed: true },
+    select: { videoId: true },
+  });
+  const passedAssessmentVideoIds = new Set(passedAssessments.map((a) => a.videoId));
+
+  // A video is "fully completed" if:
+  // 1. It's watched completely (in completedVideoIds), AND
+  // 2. If it has questions, the assessment is passed (in passedAssessmentVideoIds)
+  const fullyCompletedVideoIds = new Set(
+    videoIds.filter(
+      (vid) =>
+        completedVideoIds.has(vid) &&
+        (!videoIdsWithQuestions.has(vid) || passedAssessmentVideoIds.has(vid))
+    )
+  );
+
   // Group videos by topic
   const videosByTopic = new Map<string, Set<string>>();
   for (const v of videos) {
@@ -93,11 +122,11 @@ export async function getCourseCompletionStats(
   }
   let completedTopics = 0;
   for (const [, vIds] of videosByTopic) {
-    const allDone = Array.from(vIds).every((id) => completedVideoIds.has(id));
+    const allDone = Array.from(vIds).every((id) => fullyCompletedVideoIds.has(id));
     if (allDone) completedTopics++;
   }
 
-  const completedVideos = completedVideoIds.size;
+  const completedVideos = fullyCompletedVideoIds.size;
   const percent = Math.round((completedVideos / videos.length) * 100);
   return {
     totalTopics: topics.length,
