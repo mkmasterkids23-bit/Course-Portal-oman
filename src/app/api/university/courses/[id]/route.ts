@@ -274,11 +274,13 @@ export async function PUT(
     }
 
     return NextResponse.json({ ok: true });
-  } catch (e) {
+  } catch (e: any) {
     const authErr = await handleAuthError(e);
     if (authErr) return authErr;
     console.error("[university/courses PUT]", e);
-    return errorResponse("Failed to update course", 500);
+    // Return the specific error message for debugging
+    const errMsg = e?.message || "Failed to update course";
+    return errorResponse(errMsg, 500);
   }
 }
 
