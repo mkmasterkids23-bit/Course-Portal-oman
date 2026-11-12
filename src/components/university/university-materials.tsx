@@ -60,6 +60,7 @@ interface CourseDetailForForm {
 
 export function UniversityMaterials() {
   const { t } = useI18n();
+  const navigate = useAppStore((s) => s.navigate);
   const query = useAppStore((s) => s.query);
   const [search, setSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState<string>("ALL");
@@ -297,7 +298,13 @@ export function UniversityMaterials() {
 }
 
 function GlobalMaterialFormDialog({
-  open, onOpenChange, courses, courseDetail, target, onCourseChange, onSaved,
+  open,
+  onOpenChange,
+  courses,
+  courseDetail,
+  target,
+  onCourseChange,
+  onSaved,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -307,6 +314,7 @@ function GlobalMaterialFormDialog({
   onCourseChange: (id: string) => void;
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [courseId, setCourseId] = useState<string>("");

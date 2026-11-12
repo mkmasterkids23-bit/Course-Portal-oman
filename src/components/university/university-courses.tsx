@@ -84,8 +84,8 @@ interface PlansResponse {
 
 export function UniversityCourses() {
   const { t } = useI18n();
-  const query = useAppStore((s) => s.query);
   const navigate = useAppStore((s) => s.navigate);
+  const query = useAppStore((s) => s.query);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [published, setPublished] = useState<"ALL" | "true" | "false">("ALL");
@@ -794,6 +794,7 @@ function CourseCard({
   onTogglePublish: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <Card className="group flex flex-col overflow-hidden rounded-lg border-border p-0 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-accent/40">
       {/* Cover image */}

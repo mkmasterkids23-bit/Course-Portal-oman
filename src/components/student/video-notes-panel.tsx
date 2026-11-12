@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n/store";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -49,8 +50,6 @@ interface NotesResponse {
  * timestamp — the UI shows a hint in that case.
  */
 export function VideoNotesPanel({
-  courseId,
-  topicId,
   videoId,
   videoTitle,
   getCurrentTime,
@@ -68,6 +67,7 @@ export function VideoNotesPanel({
   /** False for YouTube videos (no way to read currentTime). */
   canCaptureTimestamp?: boolean;
 }) {
+  const { t } = useI18n();
   const { data, loading, refetch, setData } = useApiFetch<NotesResponse>(
     `/api/student/notes?courseId=${encodeURIComponent(courseId)}`
   );

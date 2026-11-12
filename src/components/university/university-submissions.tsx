@@ -81,8 +81,8 @@ interface SubmissionDetail {
 
 export function UniversitySubmissions() {
   const { t } = useI18n();
-  const query = useAppStore((s) => s.query);
   const navigate = useAppStore((s) => s.navigate);
+  const query = useAppStore((s) => s.query);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "SUBMITTED" | "REVIEWED">("ALL");
   const [courseFilter, setCourseFilter] = useState<string>("ALL");
@@ -282,14 +282,13 @@ export function UniversitySubmissions() {
 }
 
 function SubmissionDetailDialog({
-  submissionId,
-  onOpenChange,
   onReviewed,
 }: {
   submissionId: string | null;
   onOpenChange: (v: boolean) => void;
   onReviewed: () => void;
 }) {
+  const { t } = useI18n();
   const { data, loading, error } = useApiFetch<{ submission: SubmissionDetail }>(
     submissionId ? `/api/university/submissions/${submissionId}` : null,
     { skip: !submissionId }

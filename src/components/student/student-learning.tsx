@@ -157,7 +157,7 @@ interface CourseResponse { course: CourseDetail }
 
 export function StudentLearning({ courseId, onBack }: { courseId: string; onBack: () => void }) {
   const { t } = useI18n();
-  const { data, loading, error, refetch, setData } = useApiFetch<CourseResponse>(
+  const { data, loading, error, refetch } = useApiFetch<CourseResponse>(
     `/api/student/courses/${courseId}`
   );
 
@@ -1797,6 +1797,7 @@ function AssessmentResultOverlay({
 }
 
 function MaterialRow({ material }: { material: MaterialItem }) {
+  const { t } = useI18n();
   const isLink = material.type === "LINK";
   const Icon = isLink ? LinkIcon : FileText;
   return (
@@ -1830,14 +1831,13 @@ function MaterialRow({ material }: { material: MaterialItem }) {
 /* ===================== Locked Assignment Placeholder ===================== */
 
 function LockedAssignmentCard({
-  completedVideos,
-  totalVideos,
   percent,
 }: {
   completedVideos: number;
   totalVideos: number;
   percent: number;
 }) {
+  const { t } = useI18n();
   return (
     <Card className="border-dashed border-border bg-muted/20 shadow-sm">
       <CardContent className="p-6">
@@ -1874,12 +1874,11 @@ function LockedAssignmentCard({
 }
 
 function AssignmentPanel({
-  course,
-  onSubmitted,
 }: {
   course: CourseDetail;
   onSubmitted: () => void;
 }) {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);

@@ -151,8 +151,6 @@ export function UniversityCourseEditor({
   courseId: string;
   onBack: () => void;
 }) {
-  const { t } = useI18n();
-  const query = useAppStore((s) => s.query);
   const navigate = useAppStore((s) => s.navigate);
   const [activeTab, setActiveTab] = useState<string>("topics");
 
@@ -308,8 +306,7 @@ export function UniversityCourseEditor({
 
 // ============= TOPICS & VIDEOS TAB =============
 function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () => void }) {
-  const [expandedId, setExpandedId] = useState<string | null>(course.topics[0]?.id || null);
-  const [addTopicOpen, setAddTopicOpen] = useState(false);
+  const { t } = useI18n();
   const [editTopic, setEditTopic] = useState<TopicRow | null>(null);
   const [deleteTopic, setDeleteTopic] = useState<TopicRow | null>(null);
   const [addVideoFor, setAddVideoFor] = useState<TopicRow | null>(null);
@@ -1039,8 +1036,7 @@ function VideoFormDialog({
 
 // ============= MATERIALS TAB =============
 function MaterialsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () => void }) {
-  const [addOpen, setAddOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<MaterialRow | null>(null);
+  const { t } = useI18n();
   const [deleteTarget, setDeleteTarget] = useState<MaterialRow | null>(null);
 
   const grouped = useMemo(() => {
@@ -1416,8 +1412,7 @@ function MaterialFormDialog({
 
 // ============= ASSIGNMENTS TAB =============
 function AssignmentsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () => void }) {
-  const navigate = useAppStore((s) => s.navigate);
-  const [addOpen, setAddOpen] = useState(false);
+  const { t } = useI18n();
   const [editTarget, setEditTarget] = useState<AssignmentRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AssignmentRow | null>(null);
 
@@ -1591,7 +1586,6 @@ function AssignmentsTab({ course, onRefresh }: { course: CourseDetail; onRefresh
 }
 
 function AssignmentFormDialog({
-  open,
   onOpenChange,
   courseId,
   target,

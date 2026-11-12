@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n/store";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -88,12 +89,11 @@ interface RepliesResponse {
  * scrolls into view.
  */
 export function CourseDiscussionsPanel({
-  courseId,
-  highlightDiscussionId,
 }: {
   courseId: string;
   highlightDiscussionId?: string | null;
 }) {
+  const { t } = useI18n();
   const { data, loading, error, refetch, setData } = useApiFetch<DiscussionsResponse>(
     `/api/student/discussions?courseId=${encodeURIComponent(courseId)}`
   );
@@ -346,8 +346,6 @@ export function CourseDiscussionsPanel({
 /* ──────────────────────────────────────────────────────────────────────── */
 
 function DiscussionThread({
-  discussion,
-  defaultOpen,
   onReplyPosted,
   onDeleted,
   onUpdated,
@@ -358,6 +356,7 @@ function DiscussionThread({
   onDeleted: (id: string) => void;
   onUpdated: (updated: DiscussionItem) => void;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(defaultOpen);
   const [replyDraft, setReplyDraft] = useState("");
   const [postingReply, setPostingReply] = useState(false);
@@ -679,6 +678,7 @@ function DiscussionThread({
 /* ──────────────────────────────────────────────────────────────────────── */
 
 function ReplyRow({ reply }: { reply: ReplyItem }) {
+  const { t } = useI18n();
   const initials = reply.author.name
     .split(" ")
     .map((s) => s[0])

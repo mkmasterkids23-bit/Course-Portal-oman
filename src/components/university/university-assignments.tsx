@@ -57,8 +57,8 @@ interface AssignmentListRow {
 
 export function UniversityAssignments() {
   const { t } = useI18n();
-  const query = useAppStore((s) => s.query);
   const navigate = useAppStore((s) => s.navigate);
+  const query = useAppStore((s) => s.query);
   const [search, setSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState<string>("ALL");
   const [addOpen, setAddOpen] = useState(false);
@@ -276,7 +276,11 @@ export function UniversityAssignments() {
 }
 
 function AssignmentFormDialog({
-  open, onOpenChange, courses, target, onSaved,
+  open,
+  onOpenChange,
+  courses,
+  target,
+  onSaved,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -284,6 +288,7 @@ function AssignmentFormDialog({
   target: AssignmentListRow | null;
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [instructions, setInstructions] = useState("");

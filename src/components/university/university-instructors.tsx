@@ -122,8 +122,6 @@ const DEFAULT_FORM: FormValues = {
 };
 
 export function UniversityInstructors() {
-  const { t } = useI18n();
-  const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "active" | "inactive">(
     "ALL"
   );
@@ -526,8 +524,6 @@ function initials(name: string): string {
 
 // ─── Form Dialog ──────────────────────────────────────────────────────────
 function InstructorFormDialog({
-  open,
-  onOpenChange,
   target,
   courses,
   onSaved,
@@ -538,6 +534,7 @@ function InstructorFormDialog({
   courses: CourseListItem[];
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const isEdit = !!target;
   const [values, setValues] = useState<FormValues>(DEFAULT_FORM);
   const [saving, setSaving] = useState(false);

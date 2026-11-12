@@ -85,8 +85,6 @@ interface DiscussionDetail {
 }
 
 export function UniversityDiscussions() {
-  const { t } = useI18n();
-  const [search, setSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState("ALL");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DiscussionItem | null>(null);
@@ -274,14 +272,13 @@ export function UniversityDiscussions() {
 // ─── Discussion Detail Dialog ───────────────────────────────────────────
 
 function DiscussionDetailDialog({
-  discussionId,
-  onClose,
   onDelete,
 }: {
   discussionId: string;
   onClose: () => void;
   onDelete: (d: DiscussionItem) => void;
 }) {
+  const { t } = useI18n();
   const { data, loading, error, refetch } = useApiFetch<{ discussion: DiscussionDetail }>(
     `/api/university/discussions/${discussionId}`
   );
