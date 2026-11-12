@@ -121,7 +121,6 @@ export async function POST(req: Request) {
     if (aType === "PAID" && planIds.length > 0) {
       await db.coursePlanAccess.createMany({
         data: planIds.map((pid) => ({ courseId: course.id, planId: pid })),
-        skipDuplicates: true,
       });
     }
 

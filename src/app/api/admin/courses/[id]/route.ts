@@ -186,7 +186,6 @@ export async function PUT(
         if (planIds.length > 0) {
           await db.coursePlanAccess.createMany({
             data: planIds.map((pid) => ({ courseId: id, planId: pid })),
-            skipDuplicates: true,
           });
         }
       }
