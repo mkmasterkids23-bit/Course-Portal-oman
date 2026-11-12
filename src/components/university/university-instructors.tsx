@@ -122,6 +122,8 @@ const DEFAULT_FORM: FormValues = {
 };
 
 export function UniversityInstructors() {
+  const { t } = useI18n();
+  const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "active" | "inactive">(
     "ALL"
   );

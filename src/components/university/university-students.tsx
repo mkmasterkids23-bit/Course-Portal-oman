@@ -126,6 +126,8 @@ interface StudentProfile {
 // ---- Component ------------------------------------------------------------
 
 export function UniversityStudents() {
+  const { t } = useI18n();
+  const [search, setSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState<string>("ALL");
   const [viewId, setViewId] = useState<string | null>(null);
 
@@ -411,6 +413,8 @@ function StatTile({
 }
 
 function StudentProfileDialog({
+  studentId,
+  onOpenChange,
 }: {
   studentId: string | null;
   onOpenChange: (v: boolean) => void;

@@ -85,6 +85,8 @@ interface DiscussionDetail {
 }
 
 export function UniversityDiscussions() {
+  const { t } = useI18n();
+  const [search, setSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState("ALL");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DiscussionItem | null>(null);

@@ -282,6 +282,8 @@ export function UniversitySubmissions() {
 }
 
 function SubmissionDetailDialog({
+  submissionId,
+  onOpenChange,
   onReviewed,
 }: {
   submissionId: string | null;
