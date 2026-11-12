@@ -81,7 +81,7 @@ export function StudentSidebar({ onNavigate }: { onNavigate?: () => void }) {
                     ? "text-primary"
                     : "text-muted-foreground/70 group-hover:text-foreground"
                 )} />
-                <span className="flex-1 text-left">{t(item.labelKey as any)}</span>
+                <span className="flex-1 text-left truncate">{t(item.labelKey as any)}</span>
                 {active && (
                   <span className="h-1.5 w-1.5 rounded-full bg-primary ring-2 ring-primary/20" />
                 )}

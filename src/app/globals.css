@@ -322,14 +322,16 @@ input[type="number"]::-webkit-inner-spin-button {
   transform: scaleX(-1);
 }
 
-/* Flip sidebar layout for RTL */
-[dir="rtl"] .lg\:pl-64 {
-  padding-left: 0 !important;
-  padding-right: 16rem !important;
-}
-[dir="rtl"] .fixed.inset-y-0.left-0 {
-  left: auto !important;
-  right: 0 !important;
+/* Flip sidebar layout for RTL — only on desktop where sidebar is visible */
+@media (min-width: 1024px) {
+  [dir="rtl"] .lg\:pl-64 {
+    padding-left: 0 !important;
+    padding-right: 16rem !important;
+  }
+  [dir="rtl"] .fixed.inset-y-0.left-0 {
+    left: auto !important;
+    right: 0 !important;
+  }
 }
 
 /* Fix accordion chevron direction in RTL */
@@ -419,5 +421,11 @@ input[type="number"]::-webkit-inner-spin-button {
 /* Fix toast positioning */
 [dir="rtl"] [data-sonner-toaster] {
   direction: rtl;
+}
+
+/* Prevent horizontal scroll on all screen sizes */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
 }
 

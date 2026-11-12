@@ -516,7 +516,7 @@ function TopicFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">{target ? t("common.edit") : t("courses.addTopic")}</DialogTitle>
           <DialogDescription>{t("courses.topicDescription")}</DialogDescription>
@@ -641,7 +641,7 @@ function VideoFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">{target ? t("common.edit") : t("courses.addVideo")}</DialogTitle>
           <DialogDescription>{t("courses.videoSource")}</DialogDescription>
@@ -655,7 +655,7 @@ function VideoFormDialog({
             <Label htmlFor="v-desc" className="text-xs font-medium text-muted-foreground">{t("courses.videoDescription")}</Label>
             <Textarea id="v-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="rounded-lg" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-muted-foreground">{t("common.topic")}</Label>
               <Select value={topicId} onValueChange={setTopicId} disabled={!!fixedTopicId}>
@@ -725,7 +725,7 @@ function VideoFormDialog({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="v-order" className="text-xs font-medium text-muted-foreground">{t("courses.displayOrder")}</Label>
               <Input id="v-order" type="number" value={displayOrder} onChange={(e) => setDisplayOrder(e.target.value)} placeholder={t("courses.displayOrder")} className="h-9 rounded-lg" />
@@ -958,7 +958,7 @@ function MaterialFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">{target ? t("common.edit") : t("courses.addMaterial")}</DialogTitle>
           <DialogDescription>{t("courses.materialTitle")}</DialogDescription>
@@ -972,7 +972,7 @@ function MaterialFormDialog({
             <Label htmlFor="m-desc" className="text-xs font-medium text-muted-foreground">{t("courses.videoDescription")}</Label>
             <Textarea id="m-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="rounded-lg" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-muted-foreground">{t("common.topic")} ({t("common.optional")})</Label>
               <Select value={topicId} onValueChange={setTopicId}>
@@ -1255,7 +1255,7 @@ function AssignmentFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">{target ? t("common.edit") : t("courses.addAssignment")}</DialogTitle>
           <DialogDescription>{t("courses.assignmentInstructions")}</DialogDescription>
@@ -1292,7 +1292,7 @@ function AssignmentFormDialog({
               </div>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
               <Label htmlFor="a-pub" className="text-sm font-medium">{t("common.published")}</Label>
               <Switch id="a-pub" checked={isPublished} onCheckedChange={setIsPublished} />
@@ -1408,7 +1408,7 @@ function CertificateTab({ course, onRefresh }: { course: CourseDetail; onRefresh
               <Label htmlFor="c-body" className="text-xs font-medium text-muted-foreground">{t("courses.bodyText")}</Label>
               <Textarea id="c-body" value={bodyText} onChange={(e) => setBodyText(e.target.value)} rows={4} className="rounded-lg" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="c-org" className="text-xs font-medium text-muted-foreground">{t("courses.organizationName")}</Label>
                 <Input id="c-org" value={organizationName} onChange={(e) => setOrganizationName(e.target.value)} className="h-9 rounded-lg" />
@@ -1601,7 +1601,7 @@ function SettingsTab({
             <Label htmlFor="s-desc" className="text-xs font-medium text-muted-foreground">{t("common.description")}</Label>
             <Textarea id="s-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="rounded-lg" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="s-cat" className="text-xs font-medium text-muted-foreground">{t("common.category")}</Label>
               <Input id="s-cat" value={category} onChange={(e) => setCategory(e.target.value)} className="h-9 rounded-lg" />

@@ -82,9 +82,9 @@ export function PublicSite() {
   // (those are guarded above).
   if (first === "university" && second && !UNIVERSITY_DASHBOARD_SECTIONS.has(second)) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
         <PublicNavbar />
-        <main className="flex-1">
+        <main className="flex-1 overflow-x-hidden">
           <UniversityProfilePage universityId={second} />
         </main>
         <PublicFooter />
@@ -112,9 +112,9 @@ export function PublicSite() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
       <PublicNavbar />
-      <main className="flex-1">{page}</main>
+      <main className="flex-1 overflow-x-hidden">{page}</main>
       <PublicFooter />
     </div>
   );

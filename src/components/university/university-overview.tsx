@@ -92,7 +92,7 @@ export function UniversityOverview() {
       ) : data ? (
         <>
           {/* Primary stat cards */}
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 stagger-children">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4 stagger-children">
             <PremiumStatCard
               icon={<BookOpen className="h-5 w-5" />}
               label={t("dashboard.totalCourses")}
@@ -332,20 +332,20 @@ function PremiumStatCard({
 
   return (
     <Card
-      className={`group overflow-hidden rounded-lg border-border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${borderClass}`}
+      className={`group overflow-hidden rounded-lg border-border bg-card p-4 sm:p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${borderClass}`}
     >
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 min-w-0">
         <div
-          className={`flex h-11 w-11 items-center justify-center rounded-xl ${toneClasses[tone]} transition-transform duration-200 group-hover:scale-105`}
+          className={`flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl ${toneClasses[tone]} transition-transform duration-200 group-hover:scale-105 shrink-0`}
         >
           {icon}
         </div>
-        <div>
-          <p className="font-heading text-[28px] font-bold text-foreground leading-none tracking-tight">
+        <div className="min-w-0">
+          <p className="font-heading text-xl sm:text-2xl lg:text-[28px] font-bold text-foreground leading-none tracking-tight">
             {value.toLocaleString()}
           </p>
-          <p className="mt-1.5 text-[13px] font-medium text-foreground/90">{label}</p>
-          {hint && <p className="mt-0.5 text-[11px] text-muted-foreground">{hint}</p>}
+          <p className="mt-1.5 text-[13px] font-medium text-foreground/90 truncate">{label}</p>
+          {hint && <p className="mt-0.5 text-[11px] text-muted-foreground truncate">{hint}</p>}
         </div>
       </div>
     </Card>
@@ -377,7 +377,7 @@ function QuickActionButton({
 function OverviewSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 stagger-children">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4 stagger-children">
         {Array.from({ length: 4 }).map((_, i) => (
           <Card key={i} className="p-5">
             <Skeleton className="h-10 w-10 rounded-lg mb-3" />

@@ -103,7 +103,7 @@ export function UniversityCourseAnalytics() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-5 stagger-children">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-5 stagger-children">
         <StatCard
           icon={<BookOpen className="h-4 w-4" />}
           label="Published Courses"
@@ -292,7 +292,8 @@ export function UniversityCourseAnalytics() {
             description="Create and publish courses to see performance metrics here."
           />
         ) : (
-          <Table>
+          <div className="overflow-x-auto scrollbar-thin">
+<Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Course</TableHead>
@@ -334,6 +335,7 @@ export function UniversityCourseAnalytics() {
               ))}
             </TableBody>
           </Table>
+</div>
         )}
       </Card>
     </div>
@@ -370,15 +372,15 @@ function StatCard({
     warning: "bg-warning/15 text-warning",
   };
   return (
-    <Card className="group overflow-hidden rounded-lg border-border bg-card p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-      <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${tones[tone]} transition-transform group-hover:scale-105`}>
+    <Card className="group overflow-hidden rounded-lg border-border bg-card p-3 sm:p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md min-w-0">
+      <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${tones[tone]} transition-transform group-hover:scale-105 shrink-0`}>
         {icon}
       </div>
-      <p className="font-heading text-2xl font-bold text-foreground leading-none tracking-tight mt-3">
+      <p className="font-heading text-xl sm:text-2xl font-bold text-foreground leading-none tracking-tight mt-3 truncate">
         {value}
       </p>
-      <p className="text-[12px] font-medium text-foreground/90 mt-1.5">{label}</p>
-      {hint && <p className="text-[11px] text-muted-foreground mt-0.5">{hint}</p>}
+      <p className="text-[12px] font-medium text-foreground/90 mt-1.5 truncate">{label}</p>
+      {hint && <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{hint}</p>}
     </Card>
   );
 }
@@ -387,7 +389,7 @@ function AnalyticsSkeleton() {
   return (
     <div className="space-y-5">
       <Skeleton className="h-24 w-full rounded-lg" />
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {Array.from({ length: 5 }).map((_, i) => (
           <Card key={i} className="p-4">
             <Skeleton className="h-9 w-9 rounded-lg" />

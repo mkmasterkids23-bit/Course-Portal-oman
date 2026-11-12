@@ -80,7 +80,7 @@ export function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
@@ -99,7 +99,7 @@ export function AdminDashboard() {
 
       <div className="lg:pl-64">
         <AdminTopbar onToggleSidebar={() => setSidebarOpen((v) => !v)} />
-        <main className="p-4 md:p-6 lg:p-8 animate-page-in" key={section}>{content}</main>
+        <main className="p-3 sm:p-4 md:p-6 lg:p-8 animate-page-in" key={section}>{content}</main>
       </div>
     </div>
   );

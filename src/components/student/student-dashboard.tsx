@@ -16,6 +16,7 @@ import { StudentBookmarks } from "./student-bookmarks";
 import { StudentDiscussions } from "./student-discussions";
 import { StudentNotifications } from "./student-notifications";
 import { ExpiredScreen } from "./expired-screen";
+import { MobileBottomNav } from "./mobile-bottom-nav";
 import { useApiFetch } from "@/hooks/use-api";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -104,7 +105,7 @@ export function StudentDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/40 lg:hidden"
@@ -122,8 +123,9 @@ export function StudentDashboard() {
 
       <div className="lg:pl-64">
         <StudentTopbar onToggleSidebar={() => setSidebarOpen((v) => !v)} />
-        <main className="p-4 md:p-6 lg:p-8 animate-page-in" key={section}>{content}</main>
+        <main className="p-3 sm:p-4 md:p-6 lg:p-8 pb-16 lg:pb-0 animate-page-in" key={section}>{content}</main>
       </div>
+      <MobileBottomNav />
     </div>
   );
 }

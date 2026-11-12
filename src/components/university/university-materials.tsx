@@ -174,7 +174,8 @@ export function UniversityMaterials() {
             action={<Button onClick={openAdd} className="gap-2"><Plus className="h-4 w-4" /> Add Material</Button>}
           />
         ) : (
-          <Table>
+          <div className="overflow-x-auto scrollbar-thin">
+<Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Material</TableHead>
@@ -249,6 +250,7 @@ export function UniversityMaterials() {
               ))}
             </TableBody>
           </Table>
+</div>
         )}
       </Card>
 
@@ -407,7 +409,7 @@ function GlobalMaterialFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">{target ? "Edit Material" : "Add Learning Material"}</DialogTitle>
           <DialogDescription>Attach a downloadable file or external link to a course.</DialogDescription>
@@ -450,7 +452,7 @@ function GlobalMaterialFormDialog({
               </Select>
             </div>
           )}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-muted-foreground">Type</Label>
               <Select value={type} onValueChange={(v) => setType(v as "PDF" | "DOC" | "PRESENTATION" | "LINK")}>

@@ -99,7 +99,8 @@ export function AdminPlans() {
             action={<Button onClick={() => setAddOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> {t("dashboard.createPlan")}</Button>}
           />
         ) : (
-          <Table>
+          <div className="overflow-x-auto scrollbar-thin">
+<Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("table.plan")}</TableHead>
@@ -173,6 +174,7 @@ export function AdminPlans() {
               ))}
             </TableBody>
           </Table>
+</div>
         )}
       </Card>
 
@@ -350,7 +352,7 @@ function PlanFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">{target ? t("common.edit") : t("dashboard.createPlan")}</DialogTitle>
           <DialogDescription>{t("dashboard.createPlan")}</DialogDescription>
@@ -372,7 +374,7 @@ function PlanFormDialog({
           {/* Pricing & Duration section */}
           <div className="space-y-3">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{t("common.price")} & {t("common.duration")}</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="p-price" className="text-xs font-medium text-muted-foreground">{t("common.price")}</Label>
                 <Input id="p-price" type="number" min="0" step="0.01" value={values.price} onChange={(e) => setValues({ ...values, price: e.target.value })} className="h-9 rounded-lg" />
@@ -382,7 +384,7 @@ function PlanFormDialog({
                 <Input id="p-cur" value={values.currency} onChange={(e) => setValues({ ...values, currency: e.target.value })} maxLength={5} className="h-9 rounded-lg" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="p-dur" className="text-xs font-medium text-muted-foreground">{t("common.duration")}</Label>
                 <Input id="p-dur" type="number" min="1" value={values.duration} onChange={(e) => setValues({ ...values, duration: e.target.value })} className="h-9 rounded-lg" />
@@ -464,7 +466,7 @@ function PlanFormDialog({
           </div>
           <Separator />
           {/* Status toggles */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
               <Label htmlFor="p-active" className="text-sm font-medium">{t("common.active")}</Label>
               <Switch id="p-active" checked={values.isActive} onCheckedChange={(v) => setValues({ ...values, isActive: v })} />

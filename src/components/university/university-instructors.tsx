@@ -291,7 +291,8 @@ export function UniversityInstructors() {
       ) : (
         <Card className="rounded-lg border-border bg-card p-0 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <Table>
+            <div className="overflow-x-auto scrollbar-thin">
+<Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -443,6 +444,7 @@ export function UniversityInstructors() {
                 ))}
               </TableBody>
             </Table>
+</div>
           </div>
         </Card>
       )}
@@ -621,7 +623,7 @@ function InstructorFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">
             {isEdit ? "Edit Instructor" : "Add Instructor"}
@@ -633,7 +635,7 @@ function InstructorFormDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="max-h-[60vh] space-y-3 overflow-y-auto pr-1 scrollbar-thin">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5 col-span-2 sm:col-span-1">
               <Label
                 htmlFor="ins-name"
@@ -698,7 +700,7 @@ function InstructorFormDialog({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label
                 htmlFor="ins-phone"

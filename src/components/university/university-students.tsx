@@ -254,7 +254,8 @@ export function UniversityStudents() {
             }
           />
         ) : (
-          <Table>
+          <div className="overflow-x-auto scrollbar-thin">
+<Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Student</TableHead>
@@ -338,6 +339,7 @@ export function UniversityStudents() {
               ))}
             </TableBody>
           </Table>
+</div>
         )}
       </Card>
 
@@ -430,7 +432,7 @@ function StudentProfileDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">
             Student Profile

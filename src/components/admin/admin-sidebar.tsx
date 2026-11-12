@@ -91,7 +91,7 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
                         ? "text-primary"
                         : "text-muted-foreground/70 group-hover:text-foreground"
                     )} />
-                    <span>{t(item.label)}</span>
+                    <span className="truncate">{t(item.label)}</span>
                   </button>
                 );
               })}

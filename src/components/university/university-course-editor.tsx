@@ -730,7 +730,7 @@ function TopicFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">
             {target ? "Edit Topic" : "Add Topic"}
@@ -882,7 +882,7 @@ function VideoFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">
             {target ? "Edit Video" : "Add Video Lesson"}
@@ -904,7 +904,7 @@ function VideoFormDialog({
               className="h-9 rounded-lg"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-muted-foreground">Topic</Label>
               <Select value={selectedTopicId} onValueChange={setSelectedTopicId}>
@@ -999,7 +999,7 @@ function VideoFormDialog({
               onChange={(e) => setThumbFile(e.target.files?.[0] || null)}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="v-order" className="text-xs font-medium text-muted-foreground">
                 Display Order (optional)
@@ -1290,7 +1290,7 @@ function MaterialFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">
             {target ? "Edit Material" : "Add Learning Material"}
@@ -1324,7 +1324,7 @@ function MaterialFormDialog({
               className="rounded-lg"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-muted-foreground">Topic (optional)</Label>
               <Select value={topicId} onValueChange={setTopicId}>
@@ -1669,7 +1669,7 @@ function AssignmentFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">
             {target ? "Edit Assignment" : "Add Assignment"}
@@ -1753,7 +1753,7 @@ function AssignmentFormDialog({
               </div>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
               <Label htmlFor="a-pub" className="text-sm font-medium">
                 Published
@@ -1936,7 +1936,7 @@ function CertificateTab({ course, onRefresh }: { course: CourseDetail; onRefresh
                 <code className="bg-muted px-1 py-0.5 rounded">{"{{organizationName}}"}</code>
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="c-org" className="text-xs font-medium text-muted-foreground">
                   Organization Name
@@ -2176,7 +2176,7 @@ function SettingsTab({
               className="rounded-lg"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="s-cat" className="text-xs font-medium text-muted-foreground">
                 Category
@@ -2677,7 +2677,7 @@ function QuestionFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">
             {target ? "Edit Question" : "Add In-video Question"}
@@ -2764,7 +2764,7 @@ function QuestionFormDialog({
             <Label className="text-xs font-medium text-muted-foreground">
               Pop-up timestamp
             </Label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="q-min" className="text-[11px] text-muted-foreground">
                   Minutes

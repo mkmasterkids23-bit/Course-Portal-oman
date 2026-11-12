@@ -431,7 +431,7 @@ function CourseFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">{isEdit ? t("courses.editCourse") : t("courses.createNewCourse")}</DialogTitle>
           <DialogDescription>
@@ -449,7 +449,7 @@ function CourseFormDialog({
             <Label htmlFor="cf-desc" className="text-xs font-medium text-muted-foreground">{t("courses.courseDescription")}</Label>
             <Textarea id="cf-desc" value={values.description} onChange={(e) => setValues({ ...values, description: e.target.value })} placeholder={t("courses.courseDescription")} rows={3} className="rounded-lg" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="cf-cat" className="text-xs font-medium text-muted-foreground">{t("courses.courseCategory")}</Label>
               <Input id="cf-cat" value={values.category} onChange={(e) => setValues({ ...values, category: e.target.value })} placeholder={t("courses.courseCategory")} className="h-9 rounded-lg" />

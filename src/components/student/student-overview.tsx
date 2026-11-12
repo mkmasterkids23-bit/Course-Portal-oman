@@ -103,7 +103,7 @@ export function StudentOverview() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-36 w-full rounded-xl" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
+        <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
           {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-28 rounded-xl" />
           ))}
@@ -252,7 +252,7 @@ export function StudentOverview() {
       )}
 
       {/* ─── Summary stat cards ─── */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
+      <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
         <StatCard
           icon={<BookOpen className="h-5 w-5" />}
           label={t("student.availableCourses")}
@@ -753,13 +753,13 @@ function StatCard({
     warning: "bg-warning/15 text-warning ring-warning/20",
   };
   return (
-    <Card className="p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
-      <div className="flex items-center gap-3">
-        <div className={`flex h-11 w-11 items-center justify-center rounded-xl ring-1 ${tintClasses[tint]}`}>
+    <Card className="p-4 sm:p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 overflow-hidden">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className={`flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl ring-1 ${tintClasses[tint]} shrink-0`}>
           {icon}
         </div>
         <div className="min-w-0">
-          <p className="font-heading text-2xl font-bold text-foreground leading-none">{value}</p>
+          <p className="font-heading text-xl sm:text-2xl font-bold text-foreground leading-none truncate">{value}</p>
           <p className="text-xs text-muted-foreground mt-1.5 truncate">{label}</p>
         </div>
       </div>

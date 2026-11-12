@@ -40,7 +40,7 @@ export function PublicNavbar() {
           : "bg-card/60 backdrop-blur-sm border-b border-transparent"
       )}
     >
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-3 sm:px-4 md:px-6 lg:px-8 gap-3">
         <BrandLogo onClick={() => navigate([""])} />
 
         <nav className="hidden md:flex items-center gap-1">

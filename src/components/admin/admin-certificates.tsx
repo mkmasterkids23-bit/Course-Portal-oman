@@ -134,7 +134,8 @@ export function AdminCertificates() {
             description={t("courses.certificateDesc")}
           />
         ) : (
-          <Table>
+          <div className="overflow-x-auto scrollbar-thin">
+<Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("table.course")}</TableHead>
@@ -204,6 +205,7 @@ export function AdminCertificates() {
               ))}
             </TableBody>
           </Table>
+</div>
         )}
       </Card>
 
@@ -235,7 +237,7 @@ function IssuedCertificatesDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">Issued Certificates — {row?.courseTitle}</DialogTitle>
           <DialogDescription>
@@ -254,7 +256,8 @@ function IssuedCertificatesDialog({
           <EmptyState icon={<Award className="h-5 w-5" />} title="No certificates issued yet" description="Once students complete this course, their certificates will appear here." />
         ) : (
           <div className="max-h-[60vh] overflow-y-auto -mx-1 px-1 scrollbar-thin">
-            <Table>
+            <div className="overflow-x-auto scrollbar-thin">
+<Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Student</TableHead>
@@ -300,6 +303,7 @@ function IssuedCertificatesDialog({
                 ))}
               </TableBody>
             </Table>
+</div>
           </div>
         )}
       </DialogContent>

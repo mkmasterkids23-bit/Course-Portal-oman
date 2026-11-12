@@ -144,7 +144,8 @@ export function UniversityCertificates() {
             }
           />
         ) : (
-          <Table>
+          <div className="overflow-x-auto scrollbar-thin">
+<Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Student</TableHead>
@@ -200,6 +201,7 @@ export function UniversityCertificates() {
               ))}
             </TableBody>
           </Table>
+</div>
         )}
       </Card>
     </div>

@@ -54,28 +54,28 @@ export function UniversityTopbar({ onToggleSidebar }: { onToggleSidebar: () => v
   const uniName = user?.universityName || "University";
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border/80 bg-background/80 px-4 shadow-sm backdrop-blur-xl transition-shadow duration-300 md:px-6">
-      <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-2 sm:gap-4 border-b border-border/80 bg-background/80 px-3 sm:px-4 md:px-6 shadow-sm backdrop-blur-xl transition-shadow duration-300 overflow-x-hidden">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
         <Button
           variant="ghost"
           size="icon"
-          className="lg:hidden"
+          className="lg:hidden shrink-0"
           onClick={onToggleSidebar}
           aria-label="Toggle sidebar"
         >
           <Menu className="h-5 w-5" />
         </Button>
-        <div className="flex flex-col gap-0.5">
-          <h1 className="font-heading text-xl font-semibold leading-tight tracking-tight text-foreground">
+        <div className="flex flex-col gap-0.5 min-w-0">
+          <h1 className="font-heading text-base sm:text-xl font-semibold leading-tight tracking-tight text-foreground truncate">
             {title}
           </h1>
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground/80">
+          <p className="hidden sm:block text-xs font-medium uppercase tracking-wide text-muted-foreground/80 truncate">
             {t("nav.dashboard")}
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         <LanguageSwitcher />
         <div className="hidden items-center gap-1.5 rounded-full border border-primary/15 bg-soft-sage/60 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary shadow-sm transition-colors duration-200 sm:flex">
           <Building2 className="h-3 w-3" />
@@ -84,14 +84,14 @@ export function UniversityTopbar({ onToggleSidebar }: { onToggleSidebar: () => v
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="group flex items-center gap-2.5 rounded-lg p-1 pr-2 transition-all duration-200 hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
-              <Avatar className="h-9 w-9 ring-2 ring-primary/15 transition-all duration-200 group-hover:ring-primary/40">
+              <Avatar className="h-9 w-9 ring-2 ring-primary/15 transition-all duration-200 group-hover:ring-primary/40 shrink-0">
                 <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              <div className="hidden text-left md:block">
-                <p className="text-sm font-semibold leading-none text-foreground">{user?.name}</p>
-                <p className="mt-1 text-xs text-muted-foreground truncate max-w-[180px]">
+              <div className="hidden text-left sm:block min-w-0">
+                <p className="text-sm font-semibold leading-none text-foreground truncate">{user?.name}</p>
+                <p className="mt-1 text-xs text-muted-foreground truncate max-w-[140px] sm:max-w-[180px]">
                   {user?.email}
                 </p>
               </div>

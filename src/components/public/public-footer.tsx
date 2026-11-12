@@ -11,8 +11,8 @@ export function PublicFooter() {
 
   return (
     <footer className="mt-auto bg-card border-t border-border">
-      <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-14">
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8 py-10 sm:py-14">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10">
           {/* Brand column */}
           <div className="space-y-5 lg:col-span-1">
             <BrandLogo onClick={() => navigate([""])} />

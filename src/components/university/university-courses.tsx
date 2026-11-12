@@ -520,7 +520,7 @@ function CourseFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">
             {isEdit ? "Edit Course" : "Create New Course"}
@@ -557,7 +557,7 @@ function CourseFormDialog({
               className="rounded-lg"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="cf-cat" className="text-xs font-medium text-muted-foreground">
                 Category
@@ -621,7 +621,7 @@ function CourseFormDialog({
             </p>
           </div>
           {values.availabilityMode !== "ALWAYS" && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label
                   htmlFor="cf-start"

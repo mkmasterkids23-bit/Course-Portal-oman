@@ -395,16 +395,16 @@ function StatCard({
   label: string;
 }) {
   return (
-    <Card className="rounded-lg border-border bg-card p-4 shadow-sm">
-      <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-soft-sage text-primary">
+    <Card className="rounded-lg border-border bg-card p-3 sm:p-4 shadow-sm overflow-hidden">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-soft-sage text-primary shrink-0">
           {icon}
         </div>
-        <div>
-          <p className="text-xl font-heading font-semibold text-foreground">
+        <div className="min-w-0">
+          <p className="text-base sm:text-xl font-heading font-semibold text-foreground truncate">
             {value}
           </p>
-          <p className="text-[11px] text-muted-foreground">{label}</p>
+          <p className="text-[11px] text-muted-foreground truncate">{label}</p>
         </div>
       </div>
     </Card>
@@ -661,7 +661,7 @@ function ScheduleEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">
             Edit Schedule
@@ -710,7 +710,7 @@ function ScheduleEditDialog({
 
           {/* Dates */}
           {values.availabilityMode !== "ALWAYS" && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label
                   htmlFor="sch-start"

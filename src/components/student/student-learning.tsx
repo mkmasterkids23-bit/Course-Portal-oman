@@ -312,7 +312,7 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
   }
 
   return (
-    <div className="space-y-4 animate-page-in">
+    <div className="space-y-4 animate-page-in pb-20 lg:pb-4">
       {/* ─── Compact breadcrumb header ─── */}
       <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3 shadow-sm">
         <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -367,7 +367,7 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
       </div>
 
       {/* ─── Main Layout: LEFT content + RIGHT curriculum ─── */}
-      <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4">
         {/* ─── LEFT: Video + Tabs ─── */}
         <div className="space-y-4 min-w-0">
           {/* Video player */}
@@ -405,8 +405,8 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
 
           {/* ─── 4-Tab Interface below video ─── */}
           <Tabs defaultValue="overview" className="gap-0">
-            <div className="border-b border-border">
-              <TabsList className="bg-transparent border-0 p-0 h-auto gap-0">
+            <div className="border-b border-border overflow-x-auto scrollbar-thin">
+              <TabsList className="bg-transparent border-0 p-0 h-auto gap-0 flex-nowrap">
                 <TabsTrigger
                   value="overview"
                   className="rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent gap-1.5 px-4 py-2.5 text-sm font-medium transition-all"

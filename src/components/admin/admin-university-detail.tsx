@@ -117,7 +117,7 @@ export function AdminUniversityDetail({
           <Skeleton className="h-6 w-32" />
         </div>
         <Skeleton className="h-40 w-full rounded-xl" />
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-24 rounded-xl" />
           ))}
@@ -264,7 +264,7 @@ export function AdminUniversityDetail({
       </div>
 
       {/* ─── Stats Cards ─── */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 stagger-children">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4 stagger-children">
         <StatCard
           icon={<BookOpen className="h-5 w-5" />}
           label={t("dashboard.totalPublishedCourses")}
@@ -424,16 +424,16 @@ function StatCard({
   const toneClass =
     tone === "forest" ? "bg-primary/10 text-primary" : "bg-soft-sage text-accent";
   return (
-    <Card className="border-border p-5 shadow-sm transition-all duration-200 hover:shadow-md">
-      <div className="flex items-center gap-3">
+    <Card className="border-border p-4 sm:p-5 shadow-sm transition-all duration-200 hover:shadow-md overflow-hidden">
+      <div className="flex items-center gap-3 min-w-0">
         <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${toneClass} shrink-0`}>
           {icon}
         </div>
-        <div>
-          <p className="font-heading text-2xl font-bold text-foreground leading-none">
+        <div className="min-w-0">
+          <p className="font-heading text-xl sm:text-2xl font-bold text-foreground leading-none truncate">
             {value.toLocaleString()}
           </p>
-          <p className="text-xs font-medium text-muted-foreground mt-1.5">{label}</p>
+          <p className="text-xs font-medium text-muted-foreground mt-1.5 truncate">{label}</p>
         </div>
       </div>
     </Card>

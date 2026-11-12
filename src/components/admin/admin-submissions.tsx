@@ -181,7 +181,8 @@ export function AdminSubmissions() {
             description={t("common.submissions")}
           />
         ) : (
-          <Table>
+          <div className="overflow-x-auto scrollbar-thin">
+<Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("table.student")}</TableHead>
@@ -252,6 +253,7 @@ export function AdminSubmissions() {
               ))}
             </TableBody>
           </Table>
+</div>
         )}
       </Card>
 
@@ -308,7 +310,7 @@ function SubmissionDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">{t("common.submissions")}</DialogTitle>
           <DialogDescription>

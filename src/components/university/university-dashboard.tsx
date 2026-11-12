@@ -94,7 +94,7 @@ export function UniversityDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/40 lg:hidden"
@@ -112,7 +112,7 @@ export function UniversityDashboard() {
 
       <div className="lg:pl-64">
         <UniversityTopbar onToggleSidebar={() => setSidebarOpen((v) => !v)} />
-        <main className="p-4 md:p-6 lg:p-8 animate-page-in" key={section}>
+        <main className="p-3 sm:p-4 md:p-6 lg:p-8 animate-page-in" key={section}>
           {content}
         </main>
       </div>

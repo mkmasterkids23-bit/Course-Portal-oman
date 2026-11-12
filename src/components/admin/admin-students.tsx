@@ -274,7 +274,8 @@ export function AdminStudents() {
           />
         ) : (
           <>
-            <Table>
+            <div className="overflow-x-auto scrollbar-thin">
+<Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("table.student")}</TableHead>
@@ -366,6 +367,7 @@ export function AdminStudents() {
                 ))}
               </TableBody>
             </Table>
+</div>
 
             {/* Pagination */}
             <div className="flex items-center justify-between gap-2 border-t border-border bg-muted/20 px-4 py-3">
@@ -522,7 +524,7 @@ function AddStudentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">{t("dashboard.addStudent")}</DialogTitle>
           <DialogDescription>{t("dashboard.addStudent")}</DialogDescription>
@@ -619,7 +621,7 @@ function EditStudentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">{t("profile.editProfile")}</DialogTitle>
           <DialogDescription>{target?.email}</DialogDescription>

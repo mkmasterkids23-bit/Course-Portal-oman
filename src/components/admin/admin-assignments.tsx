@@ -144,7 +144,8 @@ export function AdminAssignments() {
             action={<Button onClick={openAdd} className="gap-2"><Plus className="h-4 w-4" /> {t("courses.addAssignment")}</Button>}
           />
         ) : (
-          <Table>
+          <div className="overflow-x-auto scrollbar-thin">
+<Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("common.assignment")}</TableHead>
@@ -227,6 +228,7 @@ export function AdminAssignments() {
               ))}
             </TableBody>
           </Table>
+</div>
         )}
       </Card>
 
@@ -362,7 +364,7 @@ function AssignmentFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">{target ? "Edit Assignment" : "Add Assignment"}</DialogTitle>
           <DialogDescription>Create a task for students to complete and submit.</DialogDescription>
@@ -393,7 +395,7 @@ function AssignmentFormDialog({
             <Label htmlFor="ga-ins" className="text-xs font-medium text-muted-foreground">Instructions</Label>
             <Textarea id="ga-ins" value={instructions} onChange={(e) => setInstructions(e.target.value)} rows={4} className="rounded-lg" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="ga-due" className="text-xs font-medium text-muted-foreground">Due Date (optional)</Label>
               <Input id="ga-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="h-9 rounded-lg" />
