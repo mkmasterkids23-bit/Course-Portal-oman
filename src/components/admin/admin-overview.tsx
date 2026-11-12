@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 import { formatDateTime } from "@/types";
 import {
   Users, BookOpen, Award, CreditCard, FileText, ClipboardList,
@@ -66,6 +67,7 @@ interface OverviewData {
 const PIE_COLORS = ["#E5EAE5", "#A5B8AD", "#789786", "#344F42", "#43866A"];
 
 export function AdminOverview() {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const query = useAppStore((s) => s.query);
   const { data, loading, error } = useApiFetch<OverviewData>("/api/admin/overview");
@@ -102,13 +104,13 @@ export function AdminOverview() {
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary-foreground/70">
-              Admin Console
+              {t("dashboard.adminConsole")}
             </p>
             <h2 className="font-heading mt-1 text-2xl font-bold tracking-tight sm:text-[28px]">
-              Welcome back, Administrator
+              {t("dashboard.welcome")}, {t("dashboard.adminConsole")}
             </h2>
             <p className="mt-1.5 text-sm text-primary-foreground/75 max-w-md">
-              Here&apos;s a snapshot of your platform today. Monitor learners, courses and engagement at a glance.
+              {t("dashboard.snapshot")}
             </p>
           </div>
           <Badge className="self-start gap-1.5 border-primary-foreground/20 bg-primary-foreground/10 px-3 py-1.5 text-xs font-medium text-primary-foreground backdrop-blur">
@@ -128,7 +130,7 @@ export function AdminOverview() {
       ) : error ? (
         <EmptyState
           icon={<TrendingUp className="h-5 w-5" />}
-          title="Couldn't load dashboard"
+          title={t("common.error")}
           description={error}
         />
       ) : data ? (
@@ -137,45 +139,45 @@ export function AdminOverview() {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6 stagger-children">
             <PremiumStatCard
               icon={<BookOpen className="h-5 w-5" />}
-              label="Total Courses"
+              label={t("dashboard.totalCourses")}
               value={data.totalCourses}
-              hint={`${data.totalFreeCourses} free · ${data.totalPaidCourses} paid`}
+              hint={`${data.totalFreeCourses} ${t("common.free")} · ${data.totalPaidCourses} ${t("common.paid")}`}
               tone="forest"
             />
             <PremiumStatCard
               icon={<Users className="h-5 w-5" />}
-              label="Enrolled Students"
+              label={t("dashboard.totalStudents")}
               value={data.totalStudents}
-              hint={`${data.totalActiveSubscriptions} active subs`}
+              hint={`${data.totalActiveSubscriptions} ${t("common.active")}`}
               tone="sage"
             />
             <PremiumStatCard
               icon={<Video className="h-5 w-5" />}
-              label="Video Lessons"
+              label={t("dashboard.totalVideoLessons")}
               value={data.totalVideoLessons}
-              hint="published lessons"
+              hint={t("courses.publishedLessons")}
               tone="forest"
             />
             <PremiumStatCard
               icon={<ClipboardList className="h-5 w-5" />}
-              label="Pending Reviews"
+              label={t("dashboard.pendingReviews")}
               value={data.pendingReviews}
-              hint={`${data.totalSubmittedAssignments} total submissions`}
+              hint={`${data.totalSubmittedAssignments} ${t("common.submissions")}`}
               tone="amber"
               urgent={data.pendingReviews > 0}
             />
             <PremiumStatCard
               icon={<Award className="h-5 w-5" />}
-              label="Certificates"
+              label={t("dashboard.certificatesIssued")}
               value={data.totalCertificatesIssued}
-              hint="lifetime issued"
+              hint={t("certificates.issuedOn")}
               tone="green"
             />
             <PremiumStatCard
               icon={<Building2 className="h-5 w-5" />}
-              label="Universities"
+              label={t("dashboard.totalUniversities")}
               value={data.totalUniversities}
-              hint="partner institutions"
+              hint={t("common.universities")}
               tone="sage"
             />
           </div>
@@ -187,20 +189,20 @@ export function AdminOverview() {
               <div className="flex items-center justify-between border-b border-border p-5">
                 <div>
                   <h3 className="font-heading text-base font-semibold text-foreground">
-                    Course Performance
+                    {t("dashboard.coursePerformance")}
                   </h3>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    Lessons & certificates per course
+                    {t("dashboard.snapshot")}
                   </p>
                 </div>
                 <Button variant="ghost" size="sm" className="gap-1 text-xs text-muted-foreground hover:text-accent" onClick={() => navigate(["admin", "courses"])}>
-                  View courses <ArrowRight className="h-3 w-3" />
+                  {t("common.viewCourses")} <ArrowRight className="h-3 w-3" />
                 </Button>
               </div>
               <div className="p-4">
                 {data.coursePerformance.length === 0 ? (
                   <div className="flex h-[260px] items-center justify-center text-sm text-muted-foreground">
-                    No courses to display yet
+                    {t("empty.noCourses")}
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height={260}>
@@ -244,17 +246,17 @@ export function AdminOverview() {
               <div className="flex items-center justify-between border-b border-border p-5">
                 <div>
                   <h3 className="font-heading text-base font-semibold text-foreground">
-                    Student Completion
+                    {t("dashboard.studentCompletion")}
                   </h3>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    Learning progress distribution
+                    {t("dashboard.snapshot")}
                   </p>
                 </div>
               </div>
               <div className="p-4">
                 {totalCompletionStudents === 0 ? (
                   <div className="flex h-[260px] items-center justify-center text-sm text-muted-foreground">
-                    No student data yet
+                    {t("empty.noStudents")}
                   </div>
                 ) : (
                   <div className="relative">
@@ -286,7 +288,7 @@ export function AdminOverview() {
                       <span className="font-heading text-2xl font-bold text-foreground">
                         {totalCompletionStudents}
                       </span>
-                      <span className="text-xs text-muted-foreground">students</span>
+                      <span className="text-xs text-muted-foreground">{t("common.students")}</span>
                     </div>
                   </div>
                 )}
@@ -314,17 +316,17 @@ export function AdminOverview() {
                     <Users className="h-4 w-4" />
                   </div>
                   <div>
-                    <h3 className="font-heading text-sm font-semibold text-foreground">Recently Registered Students</h3>
-                    <p className="text-xs text-muted-foreground">Latest enrollments</p>
+                    <h3 className="font-heading text-sm font-semibold text-foreground">{t("dashboard.recentStudents")}</h3>
+                    <p className="text-xs text-muted-foreground">{t("dashboard.recentActivity")}</p>
                   </div>
                 </div>
                 <Button variant="ghost" size="sm" className="gap-1 text-xs text-muted-foreground hover:text-accent" onClick={() => navigate(["admin", "students"])}>
-                  View all <ArrowRight className="h-3 w-3" />
+                  {t("common.viewAll")} <ArrowRight className="h-3 w-3" />
                 </Button>
               </div>
               <div className="p-2">
                 {data.recentStudents.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-8 text-center">No students yet</p>
+                  <p className="text-sm text-muted-foreground py-8 text-center">{t("empty.noStudents")}</p>
                 ) : (
                   <ul className="divide-y divide-border">
                     {data.recentStudents.slice(0, 5).map((s) => (
@@ -354,17 +356,17 @@ export function AdminOverview() {
                     <ClipboardList className="h-4 w-4" />
                   </div>
                   <div>
-                    <h3 className="font-heading text-sm font-semibold text-foreground">Recent Assignment Submissions</h3>
-                    <p className="text-xs text-muted-foreground">Latest student submissions</p>
+                    <h3 className="font-heading text-sm font-semibold text-foreground">{t("dashboard.recentSubmissions")}</h3>
+                    <p className="text-xs text-muted-foreground">{t("common.submissions")}</p>
                   </div>
                 </div>
                 <Button variant="ghost" size="sm" className="gap-1 text-xs text-muted-foreground hover:text-accent" onClick={() => navigate(["admin", "submissions"])}>
-                  View all <ArrowRight className="h-3 w-3" />
+                  {t("common.viewAll")} <ArrowRight className="h-3 w-3" />
                 </Button>
               </div>
               <div className="p-2">
                 {data.recentSubmissions.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-8 text-center">No submissions yet</p>
+                  <p className="text-sm text-muted-foreground py-8 text-center">{t("empty.noData")}</p>
                 ) : (
                   <ul className="divide-y divide-border">
                     {data.recentSubmissions.slice(0, 5).map((s) => (
@@ -393,17 +395,17 @@ export function AdminOverview() {
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-heading text-sm font-semibold text-foreground">Quick Actions</h3>
-                    <Badge variant="outline" className="text-[10px] uppercase tracking-wider text-muted-foreground">Shortcuts</Badge>
+                    <h3 className="font-heading text-sm font-semibold text-foreground">{t("dashboard.quickActions")}</h3>
+                    <Badge variant="outline" className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("dashboard.quickActions")}</Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">Jump straight into common tasks</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.snapshot")}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <QuickActionButton icon={<UserPlus className="h-4 w-4" />} label="Add Student" onClick={() => navigate(["admin", "students"], { action: "new" })} />
-                  <QuickActionButton icon={<PlusCircle className="h-4 w-4" />} label="Create Course" onClick={() => navigate(["admin", "courses"], { action: "new" })} />
-                  <QuickActionButton icon={<FileText className="h-4 w-4" />} label="Add Material" onClick={() => navigate(["admin", "materials"], { action: "new" })} />
-                  <QuickActionButton icon={<ClipboardList className="h-4 w-4" />} label="Create Assignment" onClick={() => navigate(["admin", "assignments"], { action: "new" })} />
-                  <QuickActionButton icon={<CreditCard className="h-4 w-4" />} label="Create Plan" onClick={() => navigate(["admin", "plans"], { action: "new" })} />
+                  <QuickActionButton icon={<UserPlus className="h-4 w-4" />} label={t("dashboard.addStudent")} onClick={() => navigate(["admin", "students"], { action: "new" })} />
+                  <QuickActionButton icon={<PlusCircle className="h-4 w-4" />} label={t("dashboard.createCourse")} onClick={() => navigate(["admin", "courses"], { action: "new" })} />
+                  <QuickActionButton icon={<FileText className="h-4 w-4" />} label={t("dashboard.addMaterial")} onClick={() => navigate(["admin", "materials"], { action: "new" })} />
+                  <QuickActionButton icon={<ClipboardList className="h-4 w-4" />} label={t("dashboard.createAssignment")} onClick={() => navigate(["admin", "assignments"], { action: "new" })} />
+                  <QuickActionButton icon={<CreditCard className="h-4 w-4" />} label={t("dashboard.createPlan")} onClick={() => navigate(["admin", "plans"], { action: "new" })} />
                 </div>
               </div>
             </CardContent>

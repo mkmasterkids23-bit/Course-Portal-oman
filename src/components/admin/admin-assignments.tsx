@@ -28,6 +28,7 @@ import {
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
 import { formatDate } from "@/types";
 import {
@@ -55,6 +56,7 @@ interface AssignmentListRow {
 }
 
 export function AdminAssignments() {
+  const { t } = useI18n();
   const query = useAppStore((s) => s.query);
   const navigate = useAppStore((s) => s.navigate);
   const [search, setSearch] = useState("");
@@ -101,17 +103,17 @@ export function AdminAssignments() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search assignments…"
+                placeholder={t("common.search")}
                 className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Search assignments"
+                aria-label={t("common.search")}
               />
             </div>
             <Select value={courseFilter} onValueChange={setCourseFilter}>
-              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[200px]" aria-label="Filter by course">
-                <SelectValue placeholder="All courses" />
+              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[200px]" aria-label={t("common.course")}>
+                <SelectValue placeholder={t("common.all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All courses</SelectItem>
+                <SelectItem value="ALL">{t("common.all")}</SelectItem>
                 {(coursesData?.courses || []).map((c) => (
                   <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
                 ))}
@@ -119,7 +121,7 @@ export function AdminAssignments() {
             </Select>
           </div>
           <Button className="h-9 gap-2" onClick={openAdd}>
-            <Plus className="h-4 w-4" /> Add Assignment
+            <Plus className="h-4 w-4" /> {t("courses.addAssignment")}
           </Button>
         </div>
       </Card>
@@ -132,25 +134,25 @@ export function AdminAssignments() {
             ))}
           </div>
         ) : error ? (
-          <EmptyState className="m-4" icon={<ClipboardList className="h-5 w-5" />} title="Couldn't load assignments" description={error} />
+          <EmptyState className="m-4" icon={<ClipboardList className="h-5 w-5" />} title={t("common.error")} description={error} />
         ) : assignments.length === 0 ? (
           <EmptyState
             className="m-4"
             icon={<ClipboardList className="h-5 w-5" />}
-            title="No assignments yet"
-            description="Create assignments so students can submit work for review."
-            action={<Button onClick={openAdd} className="gap-2"><Plus className="h-4 w-4" /> Add Assignment</Button>}
+            title={t("common.assignments")}
+            description={t("courses.assignmentInstructions")}
+            action={<Button onClick={openAdd} className="gap-2"><Plus className="h-4 w-4" /> {t("courses.addAssignment")}</Button>}
           />
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Assignment</TableHead>
-                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Course</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Due</TableHead>
-                <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Submissions</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
-                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("common.assignment")}</TableHead>
+                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">{t("table.course")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("courses.dueDate")}</TableHead>
+                <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("common.submissions")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("common.status")}</TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("table.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -178,9 +180,9 @@ export function AdminAssignments() {
                   </TableCell>
                   <TableCell>
                     {a.isPublished ? (
-                      <Badge className="bg-success/15 text-success">Published</Badge>
+                      <Badge className="bg-success/15 text-success">{t("common.published")}</Badge>
                     ) : (
-                      <Badge variant="outline" className="text-muted-foreground">Draft</Badge>
+                      <Badge variant="outline" className="text-muted-foreground">{t("common.draft")}</Badge>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
@@ -191,7 +193,7 @@ export function AdminAssignments() {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-accent"
-                          aria-label="View assignment brief"
+                          aria-label={t("common.view")}
                         >
                           <ExternalLink className="h-3.5 w-3.5" />
                         </a>

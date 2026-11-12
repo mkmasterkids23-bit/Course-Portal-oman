@@ -12,6 +12,7 @@ import { useApiFetch } from "@/hooks/use-api";
 import {
   Building2, BookOpen, Search, ArrowRight, GraduationCap,
 } from "lucide-react";
+import { useI18n } from "@/lib/i18n/store";
 
 interface UniversityListItem {
   id: string;
@@ -26,6 +27,7 @@ interface UniversitiesData {
 }
 
 export function StudentUniversities() {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const { data, loading, error } = useApiFetch<UniversitiesData>(
     "/api/public/universities"
@@ -69,9 +71,9 @@ export function StudentUniversities() {
     return (
       <EmptyState
         icon={<Building2 className="h-5 w-5" />}
-        title="Couldn't load universities"
+        title={t("universities.couldntLoad")}
         description={error}
-        action={<Button onClick={() => window.location.reload()}>Reload</Button>}
+        action={<Button onClick={() => window.location.reload()}>{t("common.reload")}</Button>}
       />
     );
   }
@@ -89,14 +91,13 @@ export function StudentUniversities() {
           <div className="text-primary-foreground">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-sm mb-3">
               <Building2 className="h-3.5 w-3.5" />
-              <span>Partner Universities</span>
+              <span>{t("universities.partnerUniversities")}</span>
             </div>
             <h1 className="font-heading text-2xl md:text-3xl font-bold text-white">
-              Browse by University
+              {t("universities.browseByUniversity")}
             </h1>
             <p className="text-white/80 mt-2 max-w-xl text-sm md:text-base">
-              Discover courses offered by our partner institutions. Pick a
-              university to filter its catalog and start learning.
+              {t("universities.browseByDesc")}
             </p>
           </div>
           <div className="flex gap-6 self-start md:self-center">
@@ -104,13 +105,13 @@ export function StudentUniversities() {
               <p className="font-heading text-3xl font-bold text-white leading-none">
                 {universities.length}
               </p>
-              <p className="text-xs text-white/70 mt-1">Universities</p>
+              <p className="text-xs text-white/70 mt-1">{t("universities.universitiesShort")}</p>
             </div>
             <div className="text-center">
               <p className="font-heading text-3xl font-bold text-white leading-none">
                 {totalCourses}
               </p>
-              <p className="text-xs text-white/70 mt-1">Published courses</p>
+              <p className="text-xs text-white/70 mt-1">{t("universities.publishedCourses")}</p>
             </div>
           </div>
         </CardContent>
@@ -123,32 +124,30 @@ export function StudentUniversities() {
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search universities by name or description..."
+            placeholder={t("universities.searchPlaceholder")}
             className="pl-9 h-10"
-            aria-label="Search universities"
+            aria-label={t("universities.searchAria")}
           />
         </div>
       </Card>
 
       <p className="text-sm text-muted-foreground">
-        Showing{" "}
-        <span className="font-semibold text-foreground">{filtered.length}</span>{" "}
-        of {universities.length} universities
+        {t("universities.showingOf").replace("{count}", String(filtered.length)).replace("{total}", String(universities.length))}
       </p>
 
       {filtered.length === 0 ? (
         <EmptyState
           icon={<Building2 className="h-5 w-5" />}
-          title={universities.length === 0 ? "No universities yet" : "No matches found"}
+          title={universities.length === 0 ? t("universities.noUniversitiesYet") : t("universities.noMatchesFound")}
           description={
             universities.length === 0
-              ? "Universities will appear here once administrators create them."
-              : "Try adjusting your search."
+              ? t("universities.willAppearHere")
+              : t("universities.tryAdjusting")
           }
           action={
             universities.length > 0 ? (
               <Button variant="outline" onClick={() => setQ("")}>
-                Clear search
+                {t("universities.clearSearch")}
               </Button>
             ) : undefined
           }
@@ -175,6 +174,7 @@ function UniversityCard({
   university: UniversityListItem;
   onOpen: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <Card
       className="group flex flex-col overflow-hidden p-0 cursor-pointer shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-1 hover:border-accent/40"
@@ -200,16 +200,16 @@ function UniversityCard({
             {university.name}
           </h3>
           <p className="text-sm text-muted-foreground line-clamp-3 mt-1 min-h-[3.75rem]">
-            {university.description || "No description provided."}
+            {university.description || t("courses.noDescription")}
           </p>
         </div>
         <div className="mt-auto flex items-center justify-between border-t border-border pt-3">
           <Badge className="bg-soft-sage text-primary border-transparent">
             <BookOpen className="h-3 w-3" />
-            {university.courseCount} course{university.courseCount === 1 ? "" : "s"}
+            {t("universities.coursesCount").replace("{count}", String(university.courseCount))}
           </Badge>
           <span className="inline-flex items-center gap-1 text-xs font-medium text-accent">
-            View courses
+            {t("universities.viewCourses")}
             <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
           </span>
         </div>

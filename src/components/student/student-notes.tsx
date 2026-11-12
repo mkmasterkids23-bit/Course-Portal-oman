@@ -42,6 +42,7 @@ import {
 } from "lucide-react";
 import { formatDateTime } from "@/types";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 
 interface NoteItem {
   id: string;
@@ -74,6 +75,7 @@ interface NotesResponse {
  *     learning page for the note's video
  */
 export function StudentNotes() {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const { data, loading, error, refetch, setData } = useApiFetch<NotesResponse>(
     "/api/student/notes"
@@ -121,8 +123,8 @@ export function StudentNotes() {
     if (!editing) return;
     if (!editContent.trim()) {
       toast({
-        title: "Note can't be empty",
-        description: "Write something before saving.",
+        title: t("notes.noteCantBeEmpty"),
+        description: t("notes.writeSomething"),
         variant: "destructive",
       });
       return;
@@ -141,7 +143,7 @@ export function StudentNotes() {
         });
       }
       setEditing(null);
-      toast({ title: "Note updated" });
+      toast({ title: t("notes.noteUpdated") });
     } catch {
       // apiPost surfaces the error toast
     } finally {
@@ -158,7 +160,7 @@ export function StudentNotes() {
       if (data) {
         setData({ notes: data.notes.filter((n) => n.id !== deleting.id) });
       }
-      toast({ title: "Note deleted" });
+      toast({ title: t("notes.noteDeleted") });
     } catch {
     } finally {
       setDeleting(null);
@@ -182,9 +184,9 @@ export function StudentNotes() {
     return (
       <EmptyState
         icon={<StickyNote className="h-5 w-5" />}
-        title="Couldn't load notes"
+        title={t("notes.couldntLoad")}
         description={error}
-        action={<Button onClick={() => refetch()}>Try again</Button>}
+        action={<Button onClick={() => refetch()}>{t("notes.tryAgain")}</Button>}
       />
     );
   }
@@ -203,12 +205,12 @@ export function StudentNotes() {
             </div>
             <div className="min-w-0">
               <h1 className="font-heading text-lg font-semibold text-foreground truncate">
-                My Notes
+                {t("notes.myNotes")}
               </h1>
               <p className="text-sm text-muted-foreground mt-0.5">
                 {total === 0
-                  ? "Capture insights from your video lessons."
-                  : `${total} note${total > 1 ? "s" : ""} across ${courseOptions.length} course${courseOptions.length > 1 ? "s" : ""}`}
+                  ? t("notes.captureInsights")
+                  : t("notes.notesAcrossCourses").replace("{count}", String(total)).replace("{courses}", String(courseOptions.length))}
               </p>
             </div>
           </div>
@@ -222,15 +224,15 @@ export function StudentNotes() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search notes, courses, topics…"
+            placeholder={t("notes.searchPlaceholder")}
             className="pl-9"
-            aria-label="Search notes"
+            aria-label={t("notes.searchNotes")}
           />
           {search && (
             <button
               onClick={() => setSearch("")}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
-              aria-label="Clear search"
+              aria-label={t("notes.clearSearch")}
             >
               <X className="h-4 w-4" />
             </button>
@@ -241,12 +243,12 @@ export function StudentNotes() {
             value={courseFilter}
             onValueChange={setCourseFilter}
           >
-            <SelectTrigger className="w-full" aria-label="Filter by course">
+            <SelectTrigger className="w-full" aria-label={t("notes.filterByCourse")}>
               <BookOpen className="h-4 w-4 text-muted-foreground mr-1.5" />
-              <SelectValue placeholder="All courses" />
+              <SelectValue placeholder={t("notes.allCourses")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All courses</SelectItem>
+              <SelectItem value="all">{t("notes.allCourses")}</SelectItem>
               {courseOptions.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
                   {c.title}
@@ -261,16 +263,16 @@ export function StudentNotes() {
       {filteredNotes.length === 0 ? (
         <EmptyState
           icon={<StickyNote className="h-5 w-5" />}
-          title={total === 0 ? "No notes yet" : "No notes match your search"}
+          title={total === 0 ? t("notes.noNotes") : t("notes.noNotesMatchSearch")}
           description={
             total === 0
-              ? "Open a course, watch a video, and capture key points as you go. Your notes will appear here."
-              : "Try a different search term or clear the course filter."
+              ? t("notes.createNotesDesc")
+              : t("notes.tryDifferentSearch")
           }
           action={
             total === 0 ? (
               <Button onClick={() => navigate(["student", "courses"])} className="gap-2">
-                Browse courses <ChevronRight className="h-4 w-4" />
+                {t("notes.browseCourses")} <ChevronRight className="h-4 w-4" />
               </Button>
             ) : (
               <Button
@@ -280,7 +282,7 @@ export function StudentNotes() {
                   setCourseFilter("all");
                 }}
               >
-                Clear filters
+                {t("notes.clearFilters")}
               </Button>
             )
           }
@@ -305,7 +307,7 @@ export function StudentNotes() {
       <Dialog open={editing !== null} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit note</DialogTitle>
+            <DialogTitle>{t("notes.editNote")}</DialogTitle>
             <DialogDescription>
               {editing?.course.title}
               {editing?.topic ? ` · ${editing.topic.title}` : ""}
@@ -317,16 +319,16 @@ export function StudentNotes() {
             onChange={(e) => setEditContent(e.target.value)}
             rows={6}
             autoFocus
-            placeholder="Update your note…"
+            placeholder={t("notes.updateNotePlaceholder")}
             className="resize-y"
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditing(null)} disabled={saving}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button onClick={saveEdit} disabled={saving} className="gap-2">
               <Pencil className="h-4 w-4" />
-              {saving ? "Saving…" : "Save changes"}
+              {saving ? t("common.saving") : t("notes.saveChanges")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -336,18 +338,18 @@ export function StudentNotes() {
       <AlertDialog open={deleting !== null} onOpenChange={(o) => !o && setDeleting(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this note?</AlertDialogTitle>
+            <AlertDialogTitle>{t("notes.deleteThisNote")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. The note will be permanently removed.
+              {t("notes.deleteCannotUndo")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -369,6 +371,7 @@ function NoteCard({
   onDelete: () => void;
   onSeekVideo: () => void;
 }) {
+  const { t } = useI18n();
   const wasEdited = new Date(note.updatedAt).getTime() > new Date(note.createdAt).getTime() + 1000;
 
   return (
@@ -402,7 +405,7 @@ function NoteCard({
               size="icon"
               className="h-7 w-7 text-muted-foreground hover:text-accent"
               onClick={onEdit}
-              aria-label="Edit note"
+              aria-label={t("notes.editNoteAria")}
             >
               <Pencil className="h-3.5 w-3.5" />
             </Button>
@@ -411,7 +414,7 @@ function NoteCard({
               size="icon"
               className="h-7 w-7 text-muted-foreground hover:text-destructive"
               onClick={onDelete}
-              aria-label="Delete note"
+              aria-label={t("notes.deleteNoteAria")}
             >
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
@@ -429,7 +432,7 @@ function NoteCard({
           <button
             onClick={onSeekVideo}
             className="inline-flex items-center gap-1.5 rounded-md border border-accent/30 bg-accent/5 px-2.5 py-1 text-xs font-medium text-accent hover:bg-accent/10 transition-colors"
-            title="Open video at this timestamp"
+            title={t("notes.openVideoAtTimestamp")}
           >
             <PlayCircle className="h-3.5 w-3.5" />
             {formatTimestamp(note.videoTimestamp)}
@@ -441,12 +444,12 @@ function NoteCard({
           <span className="flex items-center gap-1">
             <Clock className="h-3 w-3" />
             {wasEdited
-              ? `Updated ${formatDateTime(note.updatedAt)}`
-              : `Created ${formatDateTime(note.createdAt)}`}
+              ? `${t("notes.updated")} ${formatDateTime(note.updatedAt)}`
+              : `${t("notes.created")} ${formatDateTime(note.createdAt)}`}
           </span>
           {wasEdited && (
             <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-border text-muted-foreground">
-              edited
+              {t("notes.edited")}
             </Badge>
           )}
         </div>

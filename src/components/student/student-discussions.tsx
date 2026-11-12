@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { formatDateTime, formatDate } from "@/types";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 
 interface DiscussionItem {
   id: string;
@@ -50,6 +51,7 @@ interface DiscussionsResponse {
  * a pin icon; locked posts show a lock badge and remain read-only.
  */
 export function StudentDiscussions() {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const { data, loading, error, refetch } = useApiFetch<DiscussionsResponse>(
     "/api/student/discussions"
@@ -106,9 +108,9 @@ export function StudentDiscussions() {
     return (
       <EmptyState
         icon={<MessageSquare className="h-5 w-5" />}
-        title="Couldn't load discussions"
+        title={t("discussions.couldntLoad")}
         description={error}
-        action={<Button onClick={() => refetch()}>Try again</Button>}
+        action={<Button onClick={() => refetch()}>{t("discussions.tryAgain")}</Button>}
       />
     );
   }
@@ -127,12 +129,12 @@ export function StudentDiscussions() {
             </div>
             <div className="min-w-0">
               <h1 className="font-heading text-lg font-semibold text-foreground truncate">
-                Discussions
+                {t("discussions.title")}
               </h1>
               <p className="text-sm text-muted-foreground mt-0.5">
                 {total === 0
-                  ? "Join the conversation across your courses."
-                  : `${total} thread${total > 1 ? "s" : ""} across ${courseOptions.length} course${courseOptions.length > 1 ? "s" : ""}`}
+                  ? t("discussions.joinConversation")
+                  : t("discussions.threadsAcrossCourses").replace("{count}", String(total)).replace("{courses}", String(courseOptions.length))}
               </p>
             </div>
           </div>
@@ -146,15 +148,15 @@ export function StudentDiscussions() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search discussions…"
+            placeholder={t("discussions.searchPlaceholder")}
             className="pl-9"
-            aria-label="Search discussions"
+            aria-label={t("discussions.searchDiscussions")}
           />
           {search && (
             <button
               onClick={() => setSearch("")}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
-              aria-label="Clear search"
+              aria-label={t("discussions.clearSearch")}
             >
               <X className="h-4 w-4" />
             </button>
@@ -166,7 +168,7 @@ export function StudentDiscussions() {
               active={courseFilter === "all"}
               onClick={() => setCourseFilter("all")}
             >
-              All
+              {t("common.all")}
             </FilterChip>
             {courseOptions.map((c) => (
               <FilterChip
@@ -186,12 +188,12 @@ export function StudentDiscussions() {
         <EmptyState
           icon={<MessageSquare className="h-5 w-5" />}
           title={
-            total === 0 ? "No discussions yet" : "No threads match your search"
+            total === 0 ? t("discussions.noDiscussions") : t("discussions.noThreadsMatchSearch")
           }
           description={
             total === 0
-              ? "Discussions are created inside each course's learning page. Open a course to start a new thread or reply to an existing one."
-              : "Try a different search term or clear the filter."
+              ? t("discussions.createInsideCourse")
+              : t("discussions.tryDifferentOrClear")
           }
           action={
             total === 0 ? (
@@ -199,7 +201,7 @@ export function StudentDiscussions() {
                 onClick={() => navigate(["student", "courses"])}
                 className="gap-2"
               >
-                Browse courses <ChevronRight className="h-4 w-4" />
+                {t("discussions.browseCourses")} <ChevronRight className="h-4 w-4" />
               </Button>
             ) : (
               <Button
@@ -209,7 +211,7 @@ export function StudentDiscussions() {
                   setCourseFilter("all");
                 }}
               >
-                Clear filters
+                {t("discussions.clearFilters")}
               </Button>
             )
           }
@@ -264,6 +266,7 @@ function DiscussionRow({
   discussion: DiscussionItem;
   onClick: () => void;
 }) {
+  const { t } = useI18n();
   const initials = discussion.author.name
     .split(" ")
     .map((s) => s[0])
@@ -312,12 +315,12 @@ function DiscussionRow({
               <div className="flex items-center gap-1 shrink-0">
                 {discussion.isPinned && (
                   <Badge className="bg-accent/15 text-accent border-transparent px-1.5 py-0 h-5 gap-0.5">
-                    <Pin className="h-3 w-3" /> Pinned
+                    <Pin className="h-3 w-3" /> {t("discussions.pinned")}
                   </Badge>
                 )}
                 {discussion.isLocked && (
                   <Badge className="bg-muted text-muted-foreground border-transparent px-1.5 py-0 h-5 gap-0.5">
-                    <Lock className="h-3 w-3" /> Locked
+                    <Lock className="h-3 w-3" /> {t("discussions.locked")}
                   </Badge>
                 )}
               </div>
@@ -341,11 +344,11 @@ function DiscussionRow({
               )}
               <span className="flex items-center gap-1">
                 <Reply className="h-3 w-3" />
-                {discussion.replyCount} {discussion.replyCount === 1 ? "reply" : "replies"}
+                {t("discussions.replyCount").replace("{count}", String(discussion.replyCount)).replace("{word}", discussion.replyCount === 1 ? t("discussions.replyWordSingular") : t("discussions.replyWordPlural"))}
               </span>
               <span>
                 {wasUpdated
-                  ? `Updated ${formatDate(discussion.updatedAt)}`
+                  ? `${t("discussions.updatedShort")} ${formatDate(discussion.updatedAt)}`
                   : `${formatDateTime(discussion.createdAt)}`}
               </span>
             </div>

@@ -52,6 +52,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch, apiPost } from "@/hooks/use-api";
+import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
 import { formatDate } from "@/types";
 import {
@@ -121,6 +122,7 @@ const DEFAULT_FORM: FormValues = {
 };
 
 export function UniversityInstructors() {
+  const { t } = useI18n();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "active" | "inactive">(
     "ALL"
@@ -224,7 +226,7 @@ export function UniversityInstructors() {
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by name or email…"
                 className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Search instructors"
+                aria-label={t("common.search")}
               />
             </div>
             <Select
@@ -235,13 +237,13 @@ export function UniversityInstructors() {
             >
               <SelectTrigger
                 className="h-9 w-full rounded-lg sm:w-[140px]"
-                aria-label="Filter by status"
+                aria-label={t("common.status")}
               >
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="ALL">{t("common.allStatuses")}</SelectItem>
+                <SelectItem value="active">{t("common.active")}</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
               </SelectContent>
             </Select>
@@ -271,14 +273,14 @@ export function UniversityInstructors() {
         <EmptyState
           className="m-4"
           icon={<Users className="h-5 w-5" />}
-          title="Couldn't load instructors"
+          title={t("common.error")}
           description={error}
         />
       ) : instructors.length === 0 ? (
         <EmptyState
           className="m-4"
           icon={<Users className="h-5 w-5" />}
-          title="No instructors yet"
+          title={t("empty.noStudents")}
           description="Add teaching staff and assign them to specific courses. Instructors can be activated or deactivated anytime."
           action={
             <Button onClick={() => setAddOpen(true)} className="gap-2">
@@ -482,7 +484,7 @@ export function UniversityInstructors() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={async () => {

@@ -29,6 +29,7 @@ import {
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch, apiPost } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
 import { formatDate, formatPrice, durationUnitLabel, type SubscriptionPlanPublic } from "@/types";
 import {
@@ -39,6 +40,7 @@ import {
 interface PlansResponse { plans: SubscriptionPlanPublic[] }
 
 export function AdminPlans() {
+  const { t } = useI18n();
   const query = useAppStore((s) => s.query);
   const { data, loading, error, refetch } = useApiFetch<PlansResponse>("/api/admin/plans");
   const [addOpen, setAddOpen] = useState(false);
@@ -56,7 +58,7 @@ export function AdminPlans() {
     try {
       await apiPost(`/api/admin/plans/${plan.id}/activate`, { isActive: !plan.isActive }, { method: "PATCH" });
       toast({
-        title: plan.isActive ? "Plan deactivated" : "Plan activated",
+        title: plan.isActive ? t("common.cancel") : t("common.active"),
         description: plan.name,
       });
       refetch();
@@ -70,11 +72,11 @@ export function AdminPlans() {
       <Card className="border-border bg-gradient-to-br from-card via-card to-soft-sage/40 p-5 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="font-heading text-lg font-semibold text-foreground">Subscription Plans</h2>
-            <p className="text-sm text-muted-foreground mt-0.5">Define pricing tiers that students can subscribe to.</p>
+            <h2 className="font-heading text-lg font-semibold text-foreground">{t("common.subscriptionPlans")}</h2>
+            <p className="text-sm text-muted-foreground mt-0.5">{t("common.subscriptionPlans")}</p>
           </div>
           <Button className="h-9 gap-2" onClick={() => setAddOpen(true)}>
-            <Plus className="h-4 w-4" /> Create Plan
+            <Plus className="h-4 w-4" /> {t("dashboard.createPlan")}
           </Button>
         </div>
       </Card>
@@ -87,26 +89,26 @@ export function AdminPlans() {
             ))}
           </div>
         ) : error ? (
-          <EmptyState className="m-4" icon={<CreditCard className="h-5 w-5" />} title="Couldn't load plans" description={error} />
+          <EmptyState className="m-4" icon={<CreditCard className="h-5 w-5" />} title={t("common.error")} description={error} />
         ) : plans.length === 0 ? (
           <EmptyState
             className="m-4"
             icon={<CreditCard className="h-5 w-5" />}
-            title="No subscription plans yet"
-            description="Create your first plan to start enrolling students."
-            action={<Button onClick={() => setAddOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> Create Plan</Button>}
+            title={t("common.subscriptionPlans")}
+            description={t("common.subscriptionPlans")}
+            action={<Button onClick={() => setAddOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> {t("dashboard.createPlan")}</Button>}
           />
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Plan</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Price</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Duration</TableHead>
-                <TableHead className="hidden text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Features</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
-                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Created</TableHead>
-                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("table.plan")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("common.price")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("common.duration")}</TableHead>
+                <TableHead className="hidden text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">{t("common.features")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("common.status")}</TableHead>
+                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">{t("common.date")}</TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("table.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -117,7 +119,7 @@ export function AdminPlans() {
                       <p className="font-medium text-foreground">{p.name}</p>
                       {p.isPopular && (
                         <Badge className="bg-accent text-accent-foreground gap-1">
-                          <Star className="h-3 w-3 fill-current" /> Popular
+                          <Star className="h-3 w-3 fill-current" /> {t("common.popularPlan")}
                         </Badge>
                       )}
                     </div>
@@ -138,9 +140,9 @@ export function AdminPlans() {
                   </TableCell>
                   <TableCell>
                     {p.isActive ? (
-                      <Badge className="bg-success/15 text-success">Active</Badge>
+                      <Badge className="bg-success/15 text-success">{t("common.active")}</Badge>
                     ) : (
-                      <Badge variant="outline" className="text-muted-foreground">Inactive</Badge>
+                      <Badge variant="outline" className="text-muted-foreground">{t("common.expired")}</Badge>
                     )}
                   </TableCell>
                   <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
@@ -155,14 +157,14 @@ export function AdminPlans() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuItem onClick={() => { setEditTarget(p); setAddOpen(true); }} className="gap-2">
-                          <Pencil className="h-4 w-4 text-muted-foreground" /> Edit
+                          <Pencil className="h-4 w-4 text-muted-foreground" /> {t("common.edit")}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => toggleActive(p)} className="gap-2">
-                          {p.isActive ? "Deactivate" : "Activate"}
+                          {p.isActive ? t("common.cancel") : t("common.active")}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(p)} className="gap-2">
-                          <Trash2 className="h-4 w-4" /> Delete
+                          <Trash2 className="h-4 w-4" /> {t("common.delete")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -188,27 +190,26 @@ export function AdminPlans() {
       <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete subscription plan?</AlertDialogTitle>
+            <AlertDialogTitle>{t("common.delete")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will delete <strong>{deleteTarget?.name}</strong>. Plans assigned to existing subscriptions cannot be deleted —
-              deactivate them instead. Historical subscription records are always preserved.
+              {t("courses.deleteCourseConfirm")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={async () => {
                 if (!deleteTarget) return;
                 try {
                   await apiPost(`/api/admin/plans/${deleteTarget.id}`, null, { method: "DELETE" });
-                  toast({ title: "Plan deleted", description: deleteTarget.name });
+                  toast({ title: t("common.success"), description: deleteTarget.name });
                   setDeleteTarget(null);
                   refetch();
                 } catch { /* toast */ }
               }}
             >
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -251,6 +252,7 @@ function PlanFormDialog({
   target: SubscriptionPlanPublic | null;
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const [values, setValues] = useState<PlanFormValues>(EMPTY_VALUES);
   const [saving, setSaving] = useState(false);
 
@@ -302,17 +304,17 @@ function PlanFormDialog({
 
   async function submit() {
     if (!values.name.trim()) {
-      toast({ title: "Name required", variant: "destructive" });
+      toast({ title: t("common.name") + " " + t("common.required"), variant: "destructive" });
       return;
     }
     const priceNum = parseFloat(values.price);
     if (Number.isNaN(priceNum) || priceNum < 0) {
-      toast({ title: "Invalid price", variant: "destructive" });
+      toast({ title: t("common.price"), variant: "destructive" });
       return;
     }
     const durationNum = parseInt(values.duration, 10);
     if (Number.isNaN(durationNum) || durationNum < 1) {
-      toast({ title: "Invalid duration", variant: "destructive" });
+      toast({ title: t("common.duration"), variant: "destructive" });
       return;
     }
 
@@ -335,10 +337,10 @@ function PlanFormDialog({
       };
       if (target) {
         await apiPost(`/api/admin/plans/${target.id}`, payload, { method: "PUT" });
-        toast({ title: "Plan updated" });
+        toast({ title: t("common.success") });
       } else {
         await apiPost("/api/admin/plans", payload);
-        toast({ title: "Plan created" });
+        toast({ title: t("common.success") });
       }
       onSaved();
     } catch { /* toast */ } finally {
@@ -350,52 +352,52 @@ function PlanFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-heading text-lg font-semibold">{target ? "Edit Plan" : "Create Subscription Plan"}</DialogTitle>
-          <DialogDescription>Define pricing, duration and feature highlights.</DialogDescription>
+          <DialogTitle className="font-heading text-lg font-semibold">{target ? t("common.edit") : t("dashboard.createPlan")}</DialogTitle>
+          <DialogDescription>{t("dashboard.createPlan")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-1 scrollbar-thin">
           {/* Info section */}
           <div className="space-y-3">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Plan Information</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{t("subscription.planName")}</p>
             <div className="space-y-1.5">
-              <Label htmlFor="p-name" className="text-xs font-medium text-muted-foreground">Plan Name</Label>
-              <Input id="p-name" value={values.name} onChange={(e) => setValues({ ...values, name: e.target.value })} placeholder="e.g. Pro Annual" className="h-9 rounded-lg" />
+              <Label htmlFor="p-name" className="text-xs font-medium text-muted-foreground">{t("subscription.planName")}</Label>
+              <Input id="p-name" value={values.name} onChange={(e) => setValues({ ...values, name: e.target.value })} placeholder={t("subscription.planName")} className="h-9 rounded-lg" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="p-desc" className="text-xs font-medium text-muted-foreground">Description (optional)</Label>
+              <Label htmlFor="p-desc" className="text-xs font-medium text-muted-foreground">{t("common.description")} ({t("common.optional")})</Label>
               <Textarea id="p-desc" value={values.description} onChange={(e) => setValues({ ...values, description: e.target.value })} rows={2} className="rounded-lg" />
             </div>
           </div>
           <Separator />
           {/* Pricing & Duration section */}
           <div className="space-y-3">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Pricing & Duration</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{t("common.price")} & {t("common.duration")}</p>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="p-price" className="text-xs font-medium text-muted-foreground">Price</Label>
+                <Label htmlFor="p-price" className="text-xs font-medium text-muted-foreground">{t("common.price")}</Label>
                 <Input id="p-price" type="number" min="0" step="0.01" value={values.price} onChange={(e) => setValues({ ...values, price: e.target.value })} className="h-9 rounded-lg" />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="p-cur" className="text-xs font-medium text-muted-foreground">Currency</Label>
+                <Label htmlFor="p-cur" className="text-xs font-medium text-muted-foreground">{t("common.currency")}</Label>
                 <Input id="p-cur" value={values.currency} onChange={(e) => setValues({ ...values, currency: e.target.value })} maxLength={5} className="h-9 rounded-lg" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="p-dur" className="text-xs font-medium text-muted-foreground">Duration</Label>
+                <Label htmlFor="p-dur" className="text-xs font-medium text-muted-foreground">{t("common.duration")}</Label>
                 <Input id="p-dur" type="number" min="1" value={values.duration} onChange={(e) => setValues({ ...values, duration: e.target.value })} className="h-9 rounded-lg" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">Duration Unit</Label>
+                <Label className="text-xs font-medium text-muted-foreground">{t("common.duration")}</Label>
                 <Select value={values.durationUnit} onValueChange={(v) => setValues({ ...values, durationUnit: v as "DAYS" | "WEEKS" | "MONTHS" | "YEARS" })}>
                   <SelectTrigger className="w-full h-9 rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="DAYS">Days</SelectItem>
-                    <SelectItem value="WEEKS">Weeks</SelectItem>
-                    <SelectItem value="MONTHS">Months</SelectItem>
-                    <SelectItem value="YEARS">Years</SelectItem>
+                    <SelectItem value="DAYS">{t("common.duration")}</SelectItem>
+                    <SelectItem value="WEEKS">{t("common.duration")}</SelectItem>
+                    <SelectItem value="MONTHS">{t("common.duration")}</SelectItem>
+                    <SelectItem value="YEARS">{t("common.duration")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -405,12 +407,12 @@ function PlanFormDialog({
           {/* Features list */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Features</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{t("common.features")}</p>
               <Button variant="ghost" size="sm" className="h-7 gap-1 text-accent" onClick={addFeature}>
-                <PlusIcon className="h-3 w-3" /> Add
+                <PlusIcon className="h-3 w-3" /> {t("common.add")}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground -mt-1">Bullet points shown to students on the pricing card.</p>
+            <p className="text-xs text-muted-foreground -mt-1">{t("common.features")}</p>
             <div className="space-y-2">
               {values.features.map((f, i) => (
                 <div key={i} className="flex items-center gap-2 rounded-md border border-border bg-background p-1.5 pl-2.5 transition-colors focus-within:border-accent/30">
@@ -418,28 +420,28 @@ function PlanFormDialog({
                   <Input
                     value={f}
                     onChange={(e) => setFeature(i, e.target.value)}
-                    placeholder="e.g. Access to all premium courses"
+                    placeholder={t("common.features")}
                     className="h-8 rounded-md border-0 focus-visible:ring-0"
                   />
-                  <Button variant="ghost" size="icon" aria-label="Remove feature" onClick={() => removeFeature(i)} className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                  <Button variant="ghost" size="icon" aria-label={t("common.delete")} onClick={() => removeFeature(i)} className="h-7 w-7 text-muted-foreground hover:text-destructive">
                     <X className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               ))}
               {values.features.length === 0 && (
-                <p className="text-xs text-muted-foreground">No features added.</p>
+                <p className="text-xs text-muted-foreground">{t("common.noData")}</p>
               )}
             </div>
           </div>
           {/* Benefits list */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Benefits</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{t("common.benefits")}</p>
               <Button variant="ghost" size="sm" className="h-7 gap-1 text-accent" onClick={addBenefit}>
-                <PlusIcon className="h-3 w-3" /> Add
+                <PlusIcon className="h-3 w-3" /> {t("common.add")}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground -mt-1">Internal notes about this plan&apos;s advantages.</p>
+            <p className="text-xs text-muted-foreground -mt-1">{t("common.benefits")}</p>
             <div className="space-y-2">
               {values.benefits.map((b, i) => (
                 <div key={i} className="flex items-center gap-2 rounded-md border border-border bg-background p-1.5 pl-2.5 transition-colors focus-within:border-accent/30">
@@ -447,16 +449,16 @@ function PlanFormDialog({
                   <Input
                     value={b}
                     onChange={(e) => setBenefit(i, e.target.value)}
-                    placeholder="e.g. Priority support"
+                    placeholder={t("common.benefits")}
                     className="h-8 rounded-md border-0 focus-visible:ring-0"
                   />
-                  <Button variant="ghost" size="icon" aria-label="Remove benefit" onClick={() => removeBenefit(i)} className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                  <Button variant="ghost" size="icon" aria-label={t("common.delete")} onClick={() => removeBenefit(i)} className="h-7 w-7 text-muted-foreground hover:text-destructive">
                     <X className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               ))}
               {values.benefits.length === 0 && (
-                <p className="text-xs text-muted-foreground">No benefits added.</p>
+                <p className="text-xs text-muted-foreground">{t("common.noData")}</p>
               )}
             </div>
           </div>
@@ -464,19 +466,19 @@ function PlanFormDialog({
           {/* Status toggles */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
-              <Label htmlFor="p-active" className="text-sm font-medium">Active</Label>
+              <Label htmlFor="p-active" className="text-sm font-medium">{t("common.active")}</Label>
               <Switch id="p-active" checked={values.isActive} onCheckedChange={(v) => setValues({ ...values, isActive: v })} />
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
-              <Label htmlFor="p-popular" className="text-sm font-medium">Mark as Popular</Label>
+              <Label htmlFor="p-popular" className="text-sm font-medium">{t("common.popularPlan")}</Label>
               <Switch id="p-popular" checked={values.isPopular} onCheckedChange={(v) => setValues({ ...values, isPopular: v })} />
             </div>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
           <Button disabled={saving} className="h-9" onClick={submit}>
-            {saving ? "Saving…" : target ? "Save Changes" : "Create Plan"}
+            {saving ? t("common.saving") : target ? t("profile.saveChanges") : t("dashboard.createPlan")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 import { BrandLogo } from "@/components/shared/brand-logo";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -12,33 +13,34 @@ import { apiPost } from "@/hooks/use-api";
 
 const NAV_SECTIONS = [
   {
-    label: "Management",
+    label: "nav.management" as const,
     items: [
-      { label: "Overview", icon: LayoutDashboard, segments: ["admin", "overview"] },
-      { label: "Universities", icon: Building2, segments: ["admin", "universities"] },
-      { label: "Students", icon: Users, segments: ["admin", "students"] },
-      { label: "Courses", icon: BookOpen, segments: ["admin", "courses"] },
-      { label: "Learning Materials", icon: FileText, segments: ["admin", "materials"] },
+      { label: "nav.overview" as const, icon: LayoutDashboard, segments: ["admin", "overview"] },
+      { label: "admin.universities" as const, icon: Building2, segments: ["admin", "universities"] },
+      { label: "common.students" as const, icon: Users, segments: ["admin", "students"] },
+      { label: "common.courses" as const, icon: BookOpen, segments: ["admin", "courses"] },
+      { label: "common.learningMaterials" as const, icon: FileText, segments: ["admin", "materials"] },
     ],
   },
   {
-    label: "Assessment",
+    label: "nav.assessment" as const,
     items: [
-      { label: "Assignments", icon: ClipboardList, segments: ["admin", "assignments"] },
-      { label: "Submissions", icon: Inbox, segments: ["admin", "submissions"] },
+      { label: "common.assignments" as const, icon: ClipboardList, segments: ["admin", "assignments"] },
+      { label: "common.submissions" as const, icon: Inbox, segments: ["admin", "submissions"] },
     ],
   },
   {
-    label: "Platform",
+    label: "nav.platform" as const,
     items: [
-      { label: "Subscription Plans", icon: CreditCard, segments: ["admin", "plans"] },
-      { label: "Certificates", icon: Award, segments: ["admin", "certificates"] },
-      { label: "Settings", icon: Settings, segments: ["admin", "settings"] },
+      { label: "common.subscriptionPlans" as const, icon: CreditCard, segments: ["admin", "plans"] },
+      { label: "common.certificateManagement" as const, icon: Award, segments: ["admin", "certificates"] },
+      { label: "nav.settings" as const, icon: Settings, segments: ["admin", "settings"] },
     ],
   },
 ];
 
 export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
+  const { t } = useI18n();
   const segments = useAppStore((s) => s.segments);
   const navigate = useAppStore((s) => s.navigate);
   const refreshUser = useAppStore((s) => s.refreshUser);
@@ -65,7 +67,7 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
           {NAV_SECTIONS.map((section) => (
             <div key={section.label} className="space-y-1">
               <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
-                {section.label}
+                {t(section.label)}
               </p>
               {section.items.map((item) => {
                 const active = current === item.segments[1];
@@ -89,7 +91,7 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
                         ? "text-primary"
                         : "text-muted-foreground/70 group-hover:text-foreground"
                     )} />
-                    <span>{item.label}</span>
+                    <span>{t(item.label)}</span>
                   </button>
                 );
               })}
@@ -105,7 +107,7 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
           className="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-destructive/5 hover:text-destructive"
         >
           <LogOut className="h-4 w-4 shrink-0 transition-colors duration-200 group-hover:text-destructive" />
-          Logout
+          {t("common.logout")}
         </button>
       </div>
     </aside>

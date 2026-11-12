@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch } from "@/hooks/use-api";
+import { useI18n } from "@/lib/i18n/store";
 import { formatDate, formatDateTime } from "@/types";
 import {
   Search, Users, BookOpen, Award, ClipboardList, Inbox, FileText,
@@ -125,6 +126,7 @@ interface StudentProfile {
 // ---- Component ------------------------------------------------------------
 
 export function UniversityStudents() {
+  const { t } = useI18n();
   const [search, setSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState<string>("ALL");
   const [viewId, setViewId] = useState<string | null>(null);
@@ -199,7 +201,7 @@ export function UniversityStudents() {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by student name or email…"
               className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label="Search students"
+              aria-label={t("common.search")}
             />
             {search && (
               <button
@@ -212,11 +214,11 @@ export function UniversityStudents() {
             )}
           </div>
           <Select value={courseFilter} onValueChange={setCourseFilter}>
-            <SelectTrigger className="h-9 w-full rounded-lg md:w-[220px]" aria-label="Filter by course">
+            <SelectTrigger className="h-9 w-full rounded-lg md:w-[220px]" aria-label={t("common.course")}>
               <SelectValue placeholder="All courses" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">All courses</SelectItem>
+              <SelectItem value="ALL">{t("common.all")}</SelectItem>
               {(coursesData?.courses || []).map((c) => (
                 <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
               ))}
@@ -237,7 +239,7 @@ export function UniversityStudents() {
           <EmptyState
             className="m-4"
             icon={<Users className="h-5 w-5" />}
-            title="Couldn't load students"
+            title={t("common.error")}
             description={error}
           />
         ) : students.length === 0 ? (

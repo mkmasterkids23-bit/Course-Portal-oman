@@ -28,6 +28,7 @@ import {
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
 import { formatDate } from "@/types";
 import {
@@ -55,6 +56,7 @@ interface AssignmentListRow {
 }
 
 export function UniversityAssignments() {
+  const { t } = useI18n();
   const query = useAppStore((s) => s.query);
   const navigate = useAppStore((s) => s.navigate);
   const [search, setSearch] = useState("");
@@ -103,17 +105,17 @@ export function UniversityAssignments() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search assignments…"
+                placeholder={t("common.search")}
                 className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Search assignments"
+                aria-label={t("common.search")}
               />
             </div>
             <Select value={courseFilter} onValueChange={setCourseFilter}>
-              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[200px]" aria-label="Filter by course">
+              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[200px]" aria-label={t("common.course")}>
                 <SelectValue placeholder="All courses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All courses</SelectItem>
+                <SelectItem value="ALL">{t("common.all")}</SelectItem>
                 {(coursesData?.courses || []).map((c) => (
                   <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
                 ))}
@@ -134,12 +136,12 @@ export function UniversityAssignments() {
             ))}
           </div>
         ) : error ? (
-          <EmptyState className="m-4" icon={<ClipboardList className="h-5 w-5" />} title="Couldn't load assignments" description={error} />
+          <EmptyState className="m-4" icon={<ClipboardList className="h-5 w-5" />} title={t("common.error")} description={error} />
         ) : assignments.length === 0 ? (
           <EmptyState
             className="m-4"
             icon={<ClipboardList className="h-5 w-5" />}
-            title="No assignments yet"
+            title={t("common.assignments")}
             description="Create assignments so students can submit work for your review."
             action={<Button onClick={openAdd} className="gap-2"><Plus className="h-4 w-4" /> Add Assignment</Button>}
           />
@@ -180,9 +182,9 @@ export function UniversityAssignments() {
                   </TableCell>
                   <TableCell>
                     {a.isPublished ? (
-                      <Badge className="bg-success/15 text-success">Published</Badge>
+                      <Badge className="bg-success/15 text-success">{t("common.published")}</Badge>
                     ) : (
-                      <Badge variant="outline" className="text-muted-foreground">Draft</Badge>
+                      <Badge variant="outline" className="text-muted-foreground">{t("common.draft")}</Badge>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
@@ -251,7 +253,7 @@ export function UniversityAssignments() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={async () => {
@@ -427,7 +429,7 @@ function AssignmentFormDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
           <Button disabled={saving} className="h-9" onClick={submit}>{saving ? "Saving…" : target ? "Save Changes" : "Add Assignment"}</Button>
         </DialogFooter>
       </DialogContent>

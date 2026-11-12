@@ -17,6 +17,7 @@ import { useApiFetch } from "@/hooks/use-api";
 import { BookOpen, Video, ShieldCheck, Search, Lock, SlidersHorizontal, X, Building2, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CoursePublic } from "@/types";
+import { useI18n } from "@/lib/i18n/store";
 
 interface CoursesResponse {
   courses: CoursePublic[];
@@ -24,6 +25,7 @@ interface CoursesResponse {
 }
 
 export function CoursesPage() {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const { data, loading } = useApiFetch<CoursesResponse>("/api/public/courses");
   const [q, setQ] = useState("");
@@ -71,13 +73,12 @@ export function CoursesPage() {
     <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-12 md:py-16">
       {/* Header */}
       <div className="mb-10 space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-accent">Course Catalog</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-accent">{t("courses.courseCatalog")}</p>
         <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[32px]">
-          Explore Courses
+          {t("common.exploreCourses")}
         </h1>
         <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
-          Browse our complete catalog across multiple universities. Register and pick a learning
-          plan to start learning.
+          {t("courses.browseCatalogDesc")}
         </p>
       </div>
 
@@ -90,7 +91,7 @@ export function CoursesPage() {
                 <Building2 className="h-4 w-4" />
               </span>
               <h2 className="font-heading text-base font-semibold tracking-tight text-foreground">
-                Explore by University
+                {t("courses.exploreByUniversity")}
               </h2>
             </div>
             {activeUniversity && (
@@ -100,7 +101,7 @@ export function CoursesPage() {
                 onClick={clearUniversityFilter}
                 className="h-8 gap-1 text-muted-foreground hover:bg-soft-sage/60"
               >
-                <X className="h-3.5 w-3.5" /> Clear
+                <X className="h-3.5 w-3.5" /> {t("courses.clear")}
               </Button>
             )}
           </div>
@@ -135,7 +136,7 @@ export function CoursesPage() {
                       {u.name}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {isActive ? "Filtering" : "View courses"}
+                      {isActive ? t("courses.filtering") : t("courses.viewCourses")}
                     </p>
                   </div>
                 </button>
@@ -155,10 +156,10 @@ export function CoursesPage() {
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-foreground">
-                  Filtered by: {activeUniversity.name}
+                  {t("courses.filteredBy")} {activeUniversity.name}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Showing {filtered.length} course{filtered.length === 1 ? "" : "s"} from this university.
+                  {t("common.showing")} {filtered.length} {t("courses.coursesFromUniversity")}
                 </p>
               </div>
             </div>
@@ -168,7 +169,7 @@ export function CoursesPage() {
               onClick={clearUniversityFilter}
               className="gap-1.5 shrink-0 border-border bg-card hover:bg-soft-sage"
             >
-              <X className="h-3.5 w-3.5" /> Remove filter
+              <X className="h-3.5 w-3.5" /> {t("courses.removeFilter")}
             </Button>
           </CardContent>
         </Card>
@@ -181,18 +182,18 @@ export function CoursesPage() {
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search courses by title or keyword..."
+            placeholder={t("courses.searchPlaceholder")}
             className="h-9 pl-9"
           />
         </div>
         {universities.length > 0 && (
           <Select value={universityFilter} onValueChange={setUniversityFilter}>
-            <SelectTrigger className="md:w-52 w-full h-9" aria-label="Filter by university">
+            <SelectTrigger className="md:w-52 w-full h-9" aria-label={t("courses.filterByUniversity")}>
               <Building2 className="h-3.5 w-3.5 text-muted-foreground mr-1.5" />
-              <SelectValue placeholder="All universities" />
+              <SelectValue placeholder={t("common.allUniversities")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All universities</SelectItem>
+              <SelectItem value="all">{t("common.allUniversities")}</SelectItem>
               {universities.map((u) => (
                 <SelectItem key={u.id} value={u.id}>
                   {u.name}
@@ -204,7 +205,7 @@ export function CoursesPage() {
         {categories.length > 0 && (
           <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
             <span className="hidden items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground md:inline-flex">
-              <SlidersHorizontal className="h-3.5 w-3.5" /> Filter
+              <SlidersHorizontal className="h-3.5 w-3.5" /> {t("courses.filter")}
             </span>
             <Button
               variant={category === "" ? "default" : "outline"}
@@ -215,7 +216,7 @@ export function CoursesPage() {
                 category === "" ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border-border bg-card hover:bg-soft-sage"
               )}
             >
-              All
+              {t("common.all")}
             </Button>
             {categories.map((cat) => (
               <Button
@@ -239,8 +240,8 @@ export function CoursesPage() {
       {!loading && (
         <div className="mb-4 flex items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground">
-            Showing <span className="font-medium text-foreground">{filtered.length}</span> of{" "}
-            <span className="font-medium text-foreground">{courses.length}</span> courses
+            {t("common.showing")} <span className="font-medium text-foreground">{filtered.length}</span> {t("common.of")}{" "}
+            <span className="font-medium text-foreground">{courses.length}</span> {t("common.courses")}
           </p>
           {hasActiveFilters && (
             <Button
@@ -249,7 +250,7 @@ export function CoursesPage() {
               onClick={clearAll}
               className="h-7 gap-1 text-muted-foreground hover:bg-soft-sage/60"
             >
-              <X className="h-3 w-3" /> Clear all filters
+              <X className="h-3 w-3" /> {t("common.clearFilters")}
             </Button>
           )}
         </div>
@@ -271,12 +272,12 @@ export function CoursesPage() {
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={<BookOpen className="h-5 w-5" />}
-          title="No courses found"
-          description="Try adjusting your search or filters."
+          title={t("courses.noCoursesFound")}
+          description={t("courses.tryAdjusting")}
           action={
             hasActiveFilters ? (
               <Button variant="outline" onClick={clearAll} className="gap-1 border-border bg-card hover:bg-soft-sage">
-                <X className="h-4 w-4" /> Clear filters
+                <X className="h-4 w-4" /> {t("courses.clearFilters")}
               </Button>
             ) : undefined
           }
@@ -307,7 +308,7 @@ export function CoursesPage() {
                         : "bg-primary text-primary-foreground"
                     )}
                   >
-                    {c.accessType === "FREE" ? "Free" : "Paid"}
+                    {c.accessType === "FREE" ? t("common.free") : t("common.paid")}
                   </Badge>
                   {c.category && (
                     <Badge variant="outline" className="border-border bg-background/85 backdrop-blur">
@@ -318,7 +319,7 @@ export function CoursesPage() {
                 {c.accessType === "PAID" && (
                   <div className="absolute top-3 right-3">
                     <div className="flex items-center gap-1 rounded-full bg-background/85 px-2 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
-                      <Lock className="h-3 w-3" /> Subscription
+                      <Lock className="h-3 w-3" /> {t("courses.subscription")}
                     </div>
                   </div>
                 )}
@@ -332,15 +333,15 @@ export function CoursesPage() {
                     <UniversityBadge university={c.university} size="xs" />
                   )}
                   <p className="min-h-[2.5rem] text-sm text-muted-foreground line-clamp-2">
-                    {c.description || "No description provided."}
+                    {c.description || t("courses.noDescription")}
                   </p>
                 </div>
                 <div className="flex items-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1.5">
-                    <BookOpen className="h-3.5 w-3.5" /> {c.topicsCount} topics
+                    <BookOpen className="h-3.5 w-3.5" /> {c.topicsCount} {t("courses.topics")}
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <Video className="h-3.5 w-3.5" /> {c.videosCount} lessons
+                    <Video className="h-3.5 w-3.5" /> {c.videosCount} {t("courses.lessons")}
                   </span>
                   {c.accessType === "PAID" && c.planNames.length > 0 && (
                     <span className="flex items-center gap-1.5 truncate text-accent">
@@ -358,13 +359,13 @@ export function CoursesPage() {
       {activeUniversity && filtered.length > 0 && (
         <div className="mt-10 flex flex-col items-center gap-3 rounded-lg border border-accent/20 bg-soft-sage/40 p-6 text-center">
           <p className="text-sm text-muted-foreground">
-            Ready to start learning at {activeUniversity.name}?
+            {t("courses.readyToStartAt").replace("{name}", activeUniversity.name)}
           </p>
           <Button
             onClick={() => navigate(["register"])}
             className="gap-2 shadow-sm bg-primary text-primary-foreground hover:bg-primary/90"
           >
-            Create an account
+            {t("courses.createAnAccount")}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>

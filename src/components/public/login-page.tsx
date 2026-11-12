@@ -11,8 +11,10 @@ import { BrandLogo } from "@/components/shared/brand-logo";
 import { Mail, Lock, ArrowLeft, LogIn, AlertCircle, Eye, EyeOff, ShieldCheck, Sparkles } from "lucide-react";
 import { apiPost } from "@/hooks/use-api";
 import { toast } from "@/hooks/use-toast";
+import { useI18n } from "@/lib/i18n/store";
 
 export function LoginPage() {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const refreshUser = useAppStore((s) => s.refreshUser);
   const [email, setEmail] = useState("");
@@ -27,7 +29,7 @@ export function LoginPage() {
     setLoading(true);
     try {
       const result = await apiPost<{ user: { role: string } }>("/api/auth/login", { email, password });
-      toast({ title: "Welcome back!", description: "You have been logged in." });
+      toast({ title: t("auth.welcomeBackToast"), description: t("auth.loggedInDesc") });
       // Refresh the user state in the store (fetches /api/auth/me with the new cookie)
       await refreshUser();
       // Explicitly navigate to the correct dashboard based on role.
@@ -66,7 +68,7 @@ export function LoginPage() {
           onClick={() => navigate([""])}
           className="gap-2 h-9 text-foreground hover:bg-soft-sage"
         >
-          <ArrowLeft className="h-4 w-4" /> Back to home
+          <ArrowLeft className="h-4 w-4" /> {t("auth.backToHome")}
         </Button>
         <LanguageSwitcher />
       </div>
@@ -80,16 +82,16 @@ export function LoginPage() {
             </div>
             <div className="space-y-1">
               <h1 className="font-heading text-xl font-semibold tracking-tight text-foreground md:text-2xl">
-                Welcome back
+                {t("auth.welcomeBack")}
               </h1>
-              <p className="text-sm text-muted-foreground">Sign in to access your dashboard</p>
+              <p className="text-sm text-muted-foreground">{t("auth.signInToAccess")}</p>
             </div>
           </div>
 
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="email" className="text-sm font-medium">
-                Email
+                {t("common.email")}
               </Label>
               <div className="relative">
                 <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -99,7 +101,7 @@ export function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder={t("auth.yourEmailAddress")}
                   className="h-9 pl-9"
                   autoComplete="email"
                 />
@@ -108,7 +110,7 @@ export function LoginPage() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password" className="text-sm font-medium">
-                  Password
+                  {t("common.password")}
                 </Label>
                 <button
                   type="button"
@@ -116,7 +118,7 @@ export function LoginPage() {
                   className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {show ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  {show ? "Hide" : "Show"}
+                  {show ? t("auth.hide") : t("auth.show")}
                 </button>
               </div>
               <div className="relative">
@@ -127,7 +129,7 @@ export function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder={t("auth.passwordPlaceholder")}
                   className="h-9 pl-9"
                   autoComplete="current-password"
                 />
@@ -149,12 +151,12 @@ export function LoginPage() {
               {loading ? (
                 <>
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
-                  Signing in...
+                  {t("auth.signingIn")}
                 </>
               ) : (
                 <>
                   <LogIn className="h-4 w-4" />
-                  Sign In
+                  {t("auth.signIn")}
                 </>
               )}
             </Button>
@@ -164,31 +166,31 @@ export function LoginPage() {
           <div className="mt-6 rounded-lg border border-border bg-soft-sage/40 p-4">
             <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <ShieldCheck className="h-3.5 w-3.5 text-accent" />
-              Demo admin credentials
+              {t("auth.demoCredentials")}
             </div>
             <dl className="space-y-1 text-xs">
               <div className="flex items-center justify-between">
-                <dt className="text-muted-foreground">Email</dt>
+                <dt className="text-muted-foreground">{t("common.email")}</dt>
                 <dd className="font-mono font-medium text-foreground">admin@courselearn.dev</dd>
               </div>
               <div className="flex items-center justify-between">
-                <dt className="text-muted-foreground">Password</dt>
+                <dt className="text-muted-foreground">{t("common.password")}</dt>
                 <dd className="font-mono font-medium text-foreground">admin123</dd>
               </div>
             </dl>
             <p className="mt-3 flex items-center gap-1.5 text-[11px] text-muted-foreground/80">
               <Sparkles className="h-3 w-3 text-accent" />
-              Created automatically on first visit. Please change after login.
+              {t("auth.createdAutomatically")}
             </p>
           </div>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
+            {t("auth.dontHaveAccount")}{" "}
             <button
               onClick={() => navigate(["register"])}
               className="font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
             >
-              Register here
+              {t("auth.registerHere")}
             </button>
           </p>
         </Card>

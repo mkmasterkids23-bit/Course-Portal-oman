@@ -46,6 +46,7 @@ import {
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatDate, formatDateTime, type SubscriptionPlanPublic } from "@/types";
@@ -150,6 +151,7 @@ export function UniversityCourseEditor({
   courseId: string;
   onBack: () => void;
 }) {
+  const { t } = useI18n();
   const query = useAppStore((s) => s.query);
   const navigate = useAppStore((s) => s.navigate);
   const [activeTab, setActiveTab] = useState<string>("topics");
@@ -178,7 +180,7 @@ export function UniversityCourseEditor({
             size="icon"
             className="h-9 w-9 shrink-0"
             onClick={onBack}
-            aria-label="Back to courses list"
+            aria-label={t("common.back")}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -200,9 +202,9 @@ export function UniversityCourseEditor({
                     </Badge>
                   )}
                   {course?.accessType === "FREE" ? (
-                    <Badge className="bg-success/15 text-success">Free</Badge>
+                    <Badge className="bg-success/15 text-success">{t("common.free")}</Badge>
                   ) : (
-                    <Badge className="bg-primary text-primary-foreground">Paid</Badge>
+                    <Badge className="bg-primary text-primary-foreground">{t("common.paid")}</Badge>
                   )}
                   {course?.isPublished ? (
                     <Badge className="bg-success/15 text-success gap-1">
@@ -489,7 +491,7 @@ function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () 
                               </Badge>
                             )}
                             {v.isPublished ? (
-                              <Badge className="bg-success/15 text-success text-[10px]">Published</Badge>
+                              <Badge className="bg-success/15 text-success text-[10px]">{t("common.published")}</Badge>
                             ) : (
                               <Badge variant="outline" className="text-muted-foreground text-[10px]">
                                 Draft
@@ -586,7 +588,7 @@ function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () 
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={async () => {
@@ -646,7 +648,7 @@ function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () 
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={async () => {
@@ -1072,7 +1074,7 @@ function MaterialsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: 
       {course.materials.length === 0 ? (
         <EmptyState
           icon={<FileText className="h-5 w-5" />}
-          title="No materials yet"
+          title={t("common.learningMaterials")}
           description="Add downloadable PDFs, docs, slide decks or external links to support the video lessons."
           action={
             <Button onClick={() => setAddOpen(true)} className="gap-2">
@@ -1173,7 +1175,7 @@ function MaterialsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: 
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={async () => {
@@ -1439,7 +1441,7 @@ function AssignmentsTab({ course, onRefresh }: { course: CourseDetail; onRefresh
       {course.assignments.length === 0 ? (
         <EmptyState
           icon={<ClipboardList className="h-5 w-5" />}
-          title="No assignments yet"
+          title={t("common.assignments")}
           description="Add assignments to test student understanding and award completion certificates."
           action={
             <Button onClick={() => setAddOpen(true)} className="gap-2">
@@ -1462,7 +1464,7 @@ function AssignmentsTab({ course, onRefresh }: { course: CourseDetail; onRefresh
                   )}
                 </div>
                 {a.isPublished ? (
-                  <Badge className="bg-success/15 text-success shrink-0">Published</Badge>
+                  <Badge className="bg-success/15 text-success shrink-0">{t("common.published")}</Badge>
                 ) : (
                   <Badge variant="outline" className="text-muted-foreground shrink-0">
                     Draft
@@ -1560,7 +1562,7 @@ function AssignmentsTab({ course, onRefresh }: { course: CourseDetail; onRefresh
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={async () => {
@@ -2295,7 +2297,7 @@ function SettingsTab({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={doDelete}
@@ -2554,7 +2556,7 @@ function VideoQuestionsPanel({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={handleDelete}

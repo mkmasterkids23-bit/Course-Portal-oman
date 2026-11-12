@@ -20,6 +20,7 @@ import {
   ArrowRight, ShieldCheck, X, Building2, SlidersHorizontal, Signal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/store";
 
 interface CourseItem {
   id: string;
@@ -54,11 +55,11 @@ interface CoursesData {
   universities?: UniversityRef[];
 }
 
-const LEVEL_LABELS: Record<NonNullable<CourseItem["level"]>, string> = {
-  BEGINNER: "Beginner",
-  INTERMEDIATE: "Intermediate",
-  ADVANCED: "Advanced",
-};
+const LEVEL_LABELS = (t: (k: any) => string): Record<NonNullable<CourseItem["level"]>, string> => ({
+  BEGINNER: t("common.beginner"),
+  INTERMEDIATE: t("common.intermediate"),
+  ADVANCED: t("common.advanced"),
+});
 
 const LEVEL_BADGE_CLASS: Record<NonNullable<CourseItem["level"]>, string> = {
   BEGINNER: "bg-success/15 text-success border-transparent",
@@ -82,6 +83,7 @@ function durationBucket(topicsCount: number): "short" | "medium" | "long" {
 }
 
 export function StudentMyCourses() {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const routeQuery = useAppStore((s) => s.query);
   const { data, loading, error } = useApiFetch<CoursesData>("/api/student/courses");
@@ -191,9 +193,9 @@ export function StudentMyCourses() {
     return (
       <EmptyState
         icon={<BookOpen className="h-5 w-5" />}
-        title="Couldn't load courses"
+        title={t("myCourses.couldntLoadCourses")}
         description={error}
-        action={<Button onClick={() => window.location.reload()}>Reload</Button>}
+        action={<Button onClick={() => window.location.reload()}>{t("common.reload")}</Button>}
       />
     );
   }
@@ -221,14 +223,14 @@ export function StudentMyCourses() {
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <div>
-                <p className="font-semibold text-foreground">Your subscription has expired</p>
+                <p className="font-semibold text-foreground">{t("myCourses.subscriptionExpired")}</p>
                 <p className="text-sm text-muted-foreground mt-0.5">
-                  Paid courses are locked. Renew your subscription to restore full access.
+                  {t("myCourses.paidCoursesLocked")}
                 </p>
               </div>
             </div>
             <Button onClick={() => navigate(["student", "subscription"])} className="gap-2 shrink-0 shadow-sm">
-              <ShieldCheck className="h-4 w-4" /> Renew Subscription
+              <ShieldCheck className="h-4 w-4" /> {t("myCourses.renewSubscription")}
             </Button>
           </CardContent>
         </Card>
@@ -244,10 +246,10 @@ export function StudentMyCourses() {
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-foreground">
-                  Showing courses from {activeUniversity.name}
+                  {t("myCourses.showingCoursesFrom")} {activeUniversity.name}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Filtered to {filtered.length} course{filtered.length === 1 ? "" : "s"} from this university.
+                  {t("myCourses.filteredTo").replace("{count}", String(filtered.length))}
                 </p>
               </div>
             </div>
@@ -257,7 +259,7 @@ export function StudentMyCourses() {
               onClick={clearUniversityFilter}
               className="gap-1.5 shrink-0"
             >
-              <X className="h-3.5 w-3.5" /> Clear university filter
+              <X className="h-3.5 w-3.5" /> {t("myCourses.clearUniversityFilter")}
             </Button>
           </CardContent>
         </Card>
@@ -272,20 +274,20 @@ export function StudentMyCourses() {
             <Input
               value={querySearch}
               onChange={(e) => setQuerySearch(e.target.value)}
-              placeholder="Search courses..."
+              placeholder={t("myCourses.searchCourses")}
               className="pl-9 h-10"
-              aria-label="Search courses"
+              aria-label={t("myCourses.searchCourses")}
             />
           </div>
           <Select value={sort} onValueChange={setSort}>
-            <SelectTrigger className="md:w-48 w-full h-10" aria-label="Sort courses">
+            <SelectTrigger className="md:w-48 w-full h-10" aria-label={t("myCourses.sortCourses")}>
               <SlidersHorizontal className="h-4 w-4 text-muted-foreground mr-1.5" />
-              <SelectValue placeholder="Sort by" />
+              <SelectValue placeholder={t("myCourses.sortBy")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="newest">Newest</SelectItem>
-              <SelectItem value="popular">Most popular</SelectItem>
-              <SelectItem value="alphabetical">A → Z</SelectItem>
+              <SelectItem value="newest">{t("myCourses.newest")}</SelectItem>
+              <SelectItem value="popular">{t("myCourses.mostPopular")}</SelectItem>
+              <SelectItem value="alphabetical">{t("myCourses.aToZ")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -293,12 +295,12 @@ export function StudentMyCourses() {
         {/* Row 2 — faceted filter dropdowns */}
         <div className="mt-3 grid gap-3 md:grid-cols-2 lg:grid-cols-[repeat(6,minmax(0,1fr))] md:items-center">
           <Select value={universityFilter} onValueChange={setUniversityFilter}>
-            <SelectTrigger className="w-full h-10" aria-label="Filter by university">
+            <SelectTrigger className="w-full h-10" aria-label={t("courses.filterByUniversity")}>
               <Building2 className="h-4 w-4 text-muted-foreground mr-1.5 shrink-0" />
-              <SelectValue placeholder="All universities" />
+              <SelectValue placeholder={t("common.allUniversities")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All universities</SelectItem>
+              <SelectItem value="all">{t("common.allUniversities")}</SelectItem>
               {universities.map((u) => (
                 <SelectItem key={u.id} value={u.id}>
                   {u.name}
@@ -307,58 +309,58 @@ export function StudentMyCourses() {
             </SelectContent>
           </Select>
           <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="w-full h-10" aria-label="Filter by category">
-              <SelectValue placeholder="All categories" />
+            <SelectTrigger className="w-full h-10" aria-label={t("myCourses.filterByCategory")}>
+              <SelectValue placeholder={t("common.allCategories")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All categories</SelectItem>
+              <SelectItem value="all">{t("common.allCategories")}</SelectItem>
               {categories.map((c) => (
                 <SelectItem key={c} value={c}>{c}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select value={levelFilter} onValueChange={setLevelFilter}>
-            <SelectTrigger className="w-full h-10" aria-label="Filter by level">
+            <SelectTrigger className="w-full h-10" aria-label={t("myCourses.filterByLevel")}>
               <Signal className="h-4 w-4 text-muted-foreground mr-1.5 shrink-0" />
-              <SelectValue placeholder="All levels" />
+              <SelectValue placeholder={t("common.allLevels")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All levels</SelectItem>
-              <SelectItem value="BEGINNER">Beginner</SelectItem>
-              <SelectItem value="INTERMEDIATE">Intermediate</SelectItem>
-              <SelectItem value="ADVANCED">Advanced</SelectItem>
+              <SelectItem value="all">{t("common.allLevels")}</SelectItem>
+              <SelectItem value="BEGINNER">{t("common.beginner")}</SelectItem>
+              <SelectItem value="INTERMEDIATE">{t("common.intermediate")}</SelectItem>
+              <SelectItem value="ADVANCED">{t("common.advanced")}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-full h-10" aria-label="Filter by type">
-              <SelectValue placeholder="All types" />
+            <SelectTrigger className="w-full h-10" aria-label={t("myCourses.filterByType")}>
+              <SelectValue placeholder={t("common.allTypes")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All types</SelectItem>
-              <SelectItem value="FREE">Free</SelectItem>
-              <SelectItem value="PAID">Paid</SelectItem>
+              <SelectItem value="all">{t("common.allTypes")}</SelectItem>
+              <SelectItem value="FREE">{t("common.free")}</SelectItem>
+              <SelectItem value="PAID">{t("common.paid")}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={durationFilter} onValueChange={setDurationFilter}>
-            <SelectTrigger className="w-full h-10" aria-label="Filter by duration">
-              <SelectValue placeholder="All durations" />
+            <SelectTrigger className="w-full h-10" aria-label={t("myCourses.filterByDuration")}>
+              <SelectValue placeholder={t("myCourses.allDurations")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All durations</SelectItem>
-              <SelectItem value="short">Short (1–3 topics)</SelectItem>
-              <SelectItem value="medium">Medium (4–7 topics)</SelectItem>
-              <SelectItem value="long">Long (8+ topics)</SelectItem>
+              <SelectItem value="all">{t("myCourses.allDurations")}</SelectItem>
+              <SelectItem value="short">{t("myCourses.shortDuration")}</SelectItem>
+              <SelectItem value="medium">{t("myCourses.mediumDuration")}</SelectItem>
+              <SelectItem value="long">{t("myCourses.longDuration")}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full h-10" aria-label="Filter by status">
-              <SelectValue placeholder="All status" />
+            <SelectTrigger className="w-full h-10" aria-label={t("myCourses.filterByStatus")}>
+              <SelectValue placeholder={t("myCourses.allStatus")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All status</SelectItem>
-              <SelectItem value="not-started">Not started</SelectItem>
-              <SelectItem value="in-progress">In progress</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="all">{t("myCourses.allStatus")}</SelectItem>
+              <SelectItem value="not-started">{t("myCourses.notStarted")}</SelectItem>
+              <SelectItem value="in-progress">{t("myCourses.inProgress")}</SelectItem>
+              <SelectItem value="completed">{t("common.completed")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -366,24 +368,24 @@ export function StudentMyCourses() {
         {hasActiveFilters && (
           <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-t border-border pt-3">
             <p className="text-xs text-muted-foreground">
-              Active filters:{" "}
+              {t("myCourses.activeFilters")}{" "}
               <span className="font-medium text-foreground">
                 {[
-                  universityFilter !== "all" ? "university" : null,
-                  category !== "all" ? "category" : null,
-                  levelFilter !== "all" ? "level" : null,
-                  typeFilter !== "all" ? "type" : null,
-                  durationFilter !== "all" ? "duration" : null,
-                  statusFilter !== "all" ? "status" : null,
-                  sort !== "newest" ? "sort" : null,
-                  querySearch !== "" ? "search" : null,
+                  universityFilter !== "all" ? t("common.university") : null,
+                  category !== "all" ? t("common.category") : null,
+                  levelFilter !== "all" ? t("common.level") : null,
+                  typeFilter !== "all" ? t("common.type") : null,
+                  durationFilter !== "all" ? t("common.duration") : null,
+                  statusFilter !== "all" ? t("common.status") : null,
+                  sort !== "newest" ? t("common.sortBy") : null,
+                  querySearch !== "" ? t("common.search") : null,
                 ]
                   .filter(Boolean)
                   .join(", ")}
               </span>
             </p>
             <Button variant="ghost" size="sm" onClick={clearAllFilters} className="h-7 gap-1 text-muted-foreground self-start sm:self-auto">
-              <X className="h-3 w-3" /> Clear all
+              <X className="h-3 w-3" /> {t("myCourses.clearAll")}
             </Button>
           </div>
         )}
@@ -391,27 +393,27 @@ export function StudentMyCourses() {
 
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          Showing <span className="font-semibold text-foreground">{filtered.length}</span> of {totalCourses} accessible courses
+          {t("myCourses.showingOfAccessible").replace("{count}", String(filtered.length)).replace("{total}", String(totalCourses))}
         </p>
       </div>
 
       {filtered.length === 0 ? (
         <EmptyState
           icon={<BookOpen className="h-5 w-5" />}
-          title={totalCourses === 0 ? "No courses available" : "No courses match your filters"}
+          title={totalCourses === 0 ? t("myCourses.noCoursesAvailable") : t("myCourses.noCoursesMatchFilters")}
           description={
             totalCourses === 0
-              ? "Explore the public catalog or activate a subscription to unlock paid courses."
-              : "Try adjusting your search or filters."
+              ? t("myCourses.exploreCatalog")
+              : t("courses.tryAdjusting")
           }
           action={
             totalCourses === 0 ? (
               <Button onClick={() => navigate(["courses"])} className="gap-2 shadow-sm">
-                Browse Public Catalog <ArrowRight className="h-4 w-4" />
+                {t("myCourses.browsePublicCatalog")} <ArrowRight className="h-4 w-4" />
               </Button>
             ) : (
               <Button variant="outline" onClick={clearAllFilters}>
-                Clear filters
+                {t("myCourses.clearFilters")}
               </Button>
             )
           }
@@ -432,6 +434,7 @@ export function StudentMyCourses() {
 }
 
 function CourseCard({ course, onOpen }: { course: CourseItem; onOpen: () => void }) {
+  const { t } = useI18n();
   const started = course.completedVideos > 0;
   const completed = course.videosCount > 0 && course.percent === 100;
 
@@ -460,11 +463,11 @@ function CourseCard({ course, onOpen }: { course: CourseItem; onOpen: () => void
                 : "bg-primary text-primary-foreground border-transparent shadow-sm"
             }
           >
-            {course.accessType === "FREE" ? "Free" : "Paid"}
+            {course.accessType === "FREE" ? t("common.free") : t("common.paid")}
           </Badge>
           {course.level && (
             <Badge className={cn("backdrop-blur-sm", LEVEL_BADGE_CLASS[course.level])}>
-              {LEVEL_LABELS[course.level]}
+              {LEVEL_LABELS(t)[course.level]}
             </Badge>
           )}
           {course.category && (
@@ -476,7 +479,7 @@ function CourseCard({ course, onOpen }: { course: CourseItem; onOpen: () => void
         {completed && (
           <div className="absolute top-3 right-3">
             <Badge className="bg-success text-success-foreground border-transparent shadow-sm">
-              <CheckCircle2 className="h-3 w-3" /> Completed
+              <CheckCircle2 className="h-3 w-3" /> {t("common.completed")}
             </Badge>
           </div>
         )}
@@ -497,22 +500,22 @@ function CourseCard({ course, onOpen }: { course: CourseItem; onOpen: () => void
             <UniversityBadge university={course.university} size="xs" />
           )}
           <p className="text-sm text-muted-foreground line-clamp-2 mt-1 min-h-[2.5rem]">
-            {course.description || "No description provided."}
+            {course.description || t("courses.noDescription")}
           </p>
         </div>
 
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
-            <BookOpen className="h-3 w-3 text-accent" /> {course.topicsCount} topics
+            <BookOpen className="h-3 w-3 text-accent" /> {course.topicsCount} {t("courses.topics")}
           </span>
           <span className="flex items-center gap-1.5">
-            <Video className="h-3 w-3 text-accent" /> {course.videosCount} lessons
+            <Video className="h-3 w-3 text-accent" /> {course.videosCount} {t("courses.lessons")}
           </span>
         </div>
 
         <div>
           <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-            <span className={started ? "" : "font-medium"}>{started ? "Progress" : "Not started"}</span>
+            <span className={started ? "" : "font-medium"}>{started ? t("student.progress") : t("common.notStarted")}</span>
             <span className="font-medium text-foreground">{course.percent}%</span>
           </div>
           <Progress
@@ -528,11 +531,11 @@ function CourseCard({ course, onOpen }: { course: CourseItem; onOpen: () => void
         >
           {started ? (
             <>
-              <PlayCircle className="h-4 w-4" /> Continue Learning
+              <PlayCircle className="h-4 w-4" /> {t("common.continueLearning")}
             </>
           ) : (
             <>
-              <PlayCircle className="h-4 w-4" /> Start Learning
+              <PlayCircle className="h-4 w-4" /> {t("common.startLearning")}
             </>
           )}
         </Button>

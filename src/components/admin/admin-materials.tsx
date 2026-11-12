@@ -26,6 +26,7 @@ import {
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
 import { fileExtIcon, formatDate } from "@/types";
 import {
@@ -58,6 +59,7 @@ interface CourseDetailForForm {
 }
 
 export function AdminMaterials() {
+  const { t } = useI18n();
   const query = useAppStore((s) => s.query);
   const [search, setSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState<string>("ALL");
@@ -122,37 +124,37 @@ export function AdminMaterials() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search materials…"
+                placeholder={t("common.search")}
                 className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Search materials"
+                aria-label={t("common.search")}
               />
             </div>
             <Select value={courseFilter} onValueChange={setCourseFilter}>
-              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[180px]" aria-label="Filter by course">
-                <SelectValue placeholder="All courses" />
+              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[180px]" aria-label={t("common.course")}>
+                <SelectValue placeholder={t("common.all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All courses</SelectItem>
+                <SelectItem value="ALL">{t("common.all")}</SelectItem>
                 {(coursesData?.courses || []).map((c) => (
                   <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[140px]" aria-label="Filter by type">
-                <SelectValue placeholder="All types" />
+              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[140px]" aria-label={t("common.type")}>
+                <SelectValue placeholder={t("common.allTypes")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All types</SelectItem>
+                <SelectItem value="ALL">{t("common.allTypes")}</SelectItem>
                 <SelectItem value="PDF">PDF</SelectItem>
-                <SelectItem value="DOC">Document</SelectItem>
-                <SelectItem value="PRESENTATION">Presentation</SelectItem>
-                <SelectItem value="LINK">External Link</SelectItem>
+                <SelectItem value="DOC">{t("common.description")}</SelectItem>
+                <SelectItem value="PRESENTATION">{t("courses.materialTitle")}</SelectItem>
+                <SelectItem value="LINK">{t("courses.directUrl")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <Button className="h-9 gap-2" onClick={openAdd}>
-            <Plus className="h-4 w-4" /> Add Material
+            <Plus className="h-4 w-4" /> {t("courses.addMaterial")}
           </Button>
         </div>
       </Card>
@@ -165,26 +167,26 @@ export function AdminMaterials() {
             ))}
           </div>
         ) : error ? (
-          <EmptyState className="m-4" icon={<FileText className="h-5 w-5" />} title="Couldn't load materials" description={error} />
+          <EmptyState className="m-4" icon={<FileText className="h-5 w-5" />} title={t("common.error")} description={error} />
         ) : materials.length === 0 ? (
           <EmptyState
             className="m-4"
             icon={<FileText className="h-5 w-5" />}
-            title="No materials yet"
-            description="Add PDFs, documents, slide decks or external links to support your courses."
-            action={<Button onClick={openAdd} className="gap-2"><Plus className="h-4 w-4" /> Add Material</Button>}
+            title={t("common.learningMaterials")}
+            description={t("common.learningMaterials")}
+            action={<Button onClick={openAdd} className="gap-2"><Plus className="h-4 w-4" /> {t("courses.addMaterial")}</Button>}
           />
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Material</TableHead>
-                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Course</TableHead>
-                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:table-cell">Topic</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</TableHead>
-                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Added</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
-                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("common.material")}</TableHead>
+                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">{t("table.course")}</TableHead>
+                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:table-cell">{t("common.topic")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("common.type")}</TableHead>
+                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">{t("common.date")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("common.status")}</TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("table.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -213,9 +215,9 @@ export function AdminMaterials() {
                   </TableCell>
                   <TableCell>
                     {m.isPublished ? (
-                      <Badge className="bg-success/15 text-success">Published</Badge>
+                      <Badge className="bg-success/15 text-success">{t("common.published")}</Badge>
                     ) : (
-                      <Badge variant="outline" className="text-muted-foreground">Draft</Badge>
+                      <Badge variant="outline" className="text-muted-foreground">{t("common.draft")}</Badge>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
@@ -225,7 +227,7 @@ export function AdminMaterials() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-accent"
-                        aria-label="Open material"
+                        aria-label={t("common.view")}
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
                       </a>
@@ -237,10 +239,10 @@ export function AdminMaterials() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
                           <DropdownMenuItem onClick={() => openEdit(m)} className="gap-2">
-                            <Pencil className="h-4 w-4 text-muted-foreground" /> Edit
+                            <Pencil className="h-4 w-4 text-muted-foreground" /> {t("common.edit")}
                           </DropdownMenuItem>
                           <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(m)} className="gap-2">
-                            <Trash2 className="h-4 w-4" /> Delete
+                            <Trash2 className="h-4 w-4" /> {t("common.delete")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -282,26 +284,26 @@ export function AdminMaterials() {
       <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete material?</AlertDialogTitle>
+            <AlertDialogTitle>{t("common.delete")}</AlertDialogTitle>
             <AlertDialogDescription>
-              <strong>{deleteTarget?.title}</strong> will be permanently removed.
+              {t("courses.deleteCourseConfirm")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={async () => {
                 if (!deleteTarget) return;
                 try {
                   await apiPost(`/api/admin/materials/${deleteTarget.id}`, null, { method: "DELETE" });
-                  toast({ title: "Material deleted" });
+                  toast({ title: t("common.success") });
                   setDeleteTarget(null);
                   refetch();
                 } catch { /* toast */ }
               }}
             >
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -321,6 +323,7 @@ function GlobalMaterialFormDialog({
   onCourseChange: (id: string) => void;
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [courseId, setCourseId] = useState<string>("");
@@ -361,19 +364,19 @@ function GlobalMaterialFormDialog({
 
   async function submit() {
     if (!title.trim()) {
-      toast({ title: "Title required", variant: "destructive" });
+      toast({ title: t("common.title") + " " + t("common.required"), variant: "destructive" });
       return;
     }
     if (!courseId) {
-      toast({ title: "Select a course", variant: "destructive" });
+      toast({ title: t("common.course") + " " + t("common.required"), variant: "destructive" });
       return;
     }
     if (type === "LINK" && !fileUrl.trim() && !target) {
-      toast({ title: "Link URL required", variant: "destructive" });
+      toast({ title: t("courses.directUrl") + " " + t("common.required"), variant: "destructive" });
       return;
     }
     if (type !== "LINK" && !file && !target) {
-      toast({ title: "File required", variant: "destructive" });
+      toast({ title: t("courses.videoFile") + " " + t("common.required"), variant: "destructive" });
       return;
     }
 
@@ -396,15 +399,15 @@ function GlobalMaterialFormDialog({
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || "Failed");
-        toast({ title: "Material updated" });
+        toast({ title: t("common.success") });
       } else {
         await apiUpload(`/api/admin/courses/${courseId}/materials`, fd);
-        toast({ title: "Material added" });
+        toast({ title: t("common.success") });
       }
       onSaved();
     } catch (e) {
       if (e instanceof Error) {
-        toast({ title: "Error", description: e.message, variant: "destructive" });
+        toast({ title: t("common.error"), description: e.message, variant: "destructive" });
       }
     } finally {
       setSaving(false);
@@ -415,23 +418,23 @@ function GlobalMaterialFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-heading text-lg font-semibold">{target ? "Edit Material" : "Add Learning Material"}</DialogTitle>
-          <DialogDescription>Attach a downloadable file or external link to a course.</DialogDescription>
+          <DialogTitle className="font-heading text-lg font-semibold">{target ? t("common.edit") : t("courses.addMaterial")}</DialogTitle>
+          <DialogDescription>{t("courses.materialTitle")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
           <div className="space-y-1.5">
-            <Label htmlFor="gm-title" className="text-xs font-medium text-muted-foreground">Title</Label>
+            <Label htmlFor="gm-title" className="text-xs font-medium text-muted-foreground">{t("common.title")}</Label>
             <Input id="gm-title" value={title} onChange={(e) => setTitle(e.target.value)} className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="gm-desc" className="text-xs font-medium text-muted-foreground">Description (optional)</Label>
+            <Label htmlFor="gm-desc" className="text-xs font-medium text-muted-foreground">{t("common.description")} ({t("common.optional")})</Label>
             <Input id="gm-desc" value={description} onChange={(e) => setDescription(e.target.value)} className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">Course</Label>
+            <Label className="text-xs font-medium text-muted-foreground">{t("common.course")}</Label>
             <Select value={courseId} onValueChange={onCourseChange2}>
               <SelectTrigger className="w-full h-9 rounded-lg">
-                <SelectValue placeholder="Select course" />
+                <SelectValue placeholder={t("common.course")} />
               </SelectTrigger>
               <SelectContent>
                 {courses.map((c) => (
@@ -442,15 +445,15 @@ function GlobalMaterialFormDialog({
           </div>
           {courseDetail && (
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground">Topic (optional)</Label>
+              <Label className="text-xs font-medium text-muted-foreground">{t("common.topic")} ({t("common.optional")})</Label>
               <Select value={topicId} onValueChange={setTopicId}>
                 <SelectTrigger className="w-full h-9 rounded-lg">
-                  <SelectValue placeholder="No topic" />
+                  <SelectValue placeholder={t("common.topic")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No topic</SelectItem>
-                  {courseDetail.topics.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>
+                  <SelectItem value="none">{t("common.topic")}</SelectItem>
+                  {courseDetail.topics.map((tp) => (
+                    <SelectItem key={tp.id} value={tp.id}>{tp.title}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -458,42 +461,42 @@ function GlobalMaterialFormDialog({
           )}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground">Type</Label>
+              <Label className="text-xs font-medium text-muted-foreground">{t("courses.materialType")}</Label>
               <Select value={type} onValueChange={(v) => setType(v as "PDF" | "DOC" | "PRESENTATION" | "LINK")}>
                 <SelectTrigger className="w-full h-9 rounded-lg">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="PDF">PDF</SelectItem>
-                  <SelectItem value="DOC">Document</SelectItem>
-                  <SelectItem value="PRESENTATION">Presentation</SelectItem>
-                  <SelectItem value="LINK">External Link</SelectItem>
+                  <SelectItem value="DOC">{t("common.description")}</SelectItem>
+                  <SelectItem value="PRESENTATION">{t("courses.materialTitle")}</SelectItem>
+                  <SelectItem value="LINK">{t("courses.directUrl")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border px-3">
-              <Label htmlFor="gm-pub" className="text-sm font-medium">Published</Label>
+              <Label htmlFor="gm-pub" className="text-sm font-medium">{t("common.published")}</Label>
               <Switch id="gm-pub" checked={isPublished} onCheckedChange={setIsPublished} />
             </div>
           </div>
           {type === "LINK" ? (
             <div className="space-y-1.5">
-              <Label htmlFor="gm-url" className="text-xs font-medium text-muted-foreground">Link URL</Label>
+              <Label htmlFor="gm-url" className="text-xs font-medium text-muted-foreground">{t("courses.directUrl")}</Label>
               <Input id="gm-url" value={fileUrl} onChange={(e) => setFileUrl(e.target.value)} placeholder="https://…" className="h-9 rounded-lg" />
             </div>
           ) : (
             <div className="space-y-1.5">
-              <Label htmlFor="gm-file" className="text-xs font-medium text-muted-foreground">File</Label>
+              <Label htmlFor="gm-file" className="text-xs font-medium text-muted-foreground">{t("courses.videoFile")}</Label>
               <Input id="gm-file" type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" />
               {target && !file && (
-                <p className="text-xs text-muted-foreground">Leave empty to keep existing file.</p>
+                <p className="text-xs text-muted-foreground">{t("courses.videoFile")}</p>
               )}
             </div>
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button disabled={saving} className="h-9" onClick={submit}>{saving ? "Saving…" : target ? "Save Changes" : "Add Material"}</Button>
+          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
+          <Button disabled={saving} className="h-9" onClick={submit}>{saving ? t("common.saving") : target ? t("profile.saveChanges") : t("courses.addMaterial")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

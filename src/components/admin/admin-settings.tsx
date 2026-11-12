@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { useApiFetch, apiPost } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
 import {
   Shield, Mail, Lock, BookOpen, Users, Award, CreditCard, ClipboardList,
@@ -31,6 +32,7 @@ interface OverviewData {
 }
 
 export function AdminSettings() {
+  const { t } = useI18n();
   const user = useAppStore((s) => s.user);
   const { data, loading } = useApiFetch<OverviewData>("/api/admin/overview");
 
@@ -41,15 +43,15 @@ export function AdminSettings() {
 
   async function changePassword() {
     if (!currentPassword || !newPassword) {
-      toast({ title: "Fill all fields", variant: "destructive" });
+      toast({ title: t("common.required"), variant: "destructive" });
       return;
     }
     if (newPassword.length < 6) {
-      toast({ title: "Password too short", description: "Minimum 6 characters.", variant: "destructive" });
+      toast({ title: t("common.password"), description: t("common.required"), variant: "destructive" });
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast({ title: "Passwords don't match", variant: "destructive" });
+      toast({ title: t("common.password"), variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -58,7 +60,7 @@ export function AdminSettings() {
         currentPassword,
         newPassword,
       });
-      toast({ title: "Password updated", description: "Use your new password next time you sign in." });
+      toast({ title: t("profile.passwordChanged") });
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -81,8 +83,8 @@ export function AdminSettings() {
       {/* Platform Information */}
       <Card className="border-border bg-card p-5 shadow-sm">
         <CardHeader className="p-0">
-          <CardTitle className="font-heading text-base font-semibold">Platform Overview</CardTitle>
-          <CardDescription className="mt-1">Aggregate counts across the platform.</CardDescription>
+          <CardTitle className="font-heading text-base font-semibold">{t("admin.platformInfo")}</CardTitle>
+          <CardDescription className="mt-1">{t("admin.platformInfo")}</CardDescription>
         </CardHeader>
         <CardContent className="p-0 mt-4">
           {loading ? (
@@ -93,14 +95,14 @@ export function AdminSettings() {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              <StatBox icon={<Users className="h-4 w-4" />} label="Students" value={data?.totalStudents ?? 0} />
-              <StatBox icon={<BookOpen className="h-4 w-4" />} label="Courses" value={data?.totalCourses ?? 0} />
-              <StatBox icon={<Layers className="h-4 w-4" />} label="Free Courses" value={data?.totalFreeCourses ?? 0} />
-              <StatBox icon={<Layers className="h-4 w-4" />} label="Paid Courses" value={data?.totalPaidCourses ?? 0} />
-              <StatBox icon={<CreditCard className="h-4 w-4" />} label="Active Subs" value={data?.totalActiveSubscriptions ?? 0} />
-              <StatBox icon={<CreditCard className="h-4 w-4" />} label="Expired Subs" value={data?.totalExpiredSubscriptions ?? 0} />
-              <StatBox icon={<ClipboardList className="h-4 w-4" />} label="Assignments" value={data?.totalAssignments ?? 0} />
-              <StatBox icon={<Award className="h-4 w-4" />} label="Certificates" value={data?.totalCertificatesIssued ?? 0} />
+              <StatBox icon={<Users className="h-4 w-4" />} label={t("common.students")} value={data?.totalStudents ?? 0} />
+              <StatBox icon={<BookOpen className="h-4 w-4" />} label={t("common.courses")} value={data?.totalCourses ?? 0} />
+              <StatBox icon={<Layers className="h-4 w-4" />} label={t("common.free")} value={data?.totalFreeCourses ?? 0} />
+              <StatBox icon={<Layers className="h-4 w-4" />} label={t("common.paid")} value={data?.totalPaidCourses ?? 0} />
+              <StatBox icon={<CreditCard className="h-4 w-4" />} label={t("common.active")} value={data?.totalActiveSubscriptions ?? 0} />
+              <StatBox icon={<CreditCard className="h-4 w-4" />} label={t("common.expired")} value={data?.totalExpiredSubscriptions ?? 0} />
+              <StatBox icon={<ClipboardList className="h-4 w-4" />} label={t("common.assignments")} value={data?.totalAssignments ?? 0} />
+              <StatBox icon={<Award className="h-4 w-4" />} label={t("common.certificateManagement")} value={data?.totalCertificatesIssued ?? 0} />
             </div>
           )}
         </CardContent>
@@ -109,8 +111,8 @@ export function AdminSettings() {
       {/* Admin Profile */}
       <Card className="border-border bg-card p-5 shadow-sm">
         <CardHeader className="p-0">
-          <CardTitle className="font-heading text-base font-semibold">Administrator Profile</CardTitle>
-          <CardDescription className="mt-1">Your signed-in account.</CardDescription>
+          <CardTitle className="font-heading text-base font-semibold">{t("dashboard.adminConsole")}</CardTitle>
+          <CardDescription className="mt-1">{t("common.profile")}</CardDescription>
         </CardHeader>
         <CardContent className="p-0 mt-4">
           <div className="flex items-center gap-4 rounded-xl border border-border bg-gradient-to-br from-primary/5 to-accent/5 p-4">
@@ -124,7 +126,7 @@ export function AdminSettings() {
               </p>
             </div>
             <Badge className="bg-accent/15 text-accent gap-1">
-              <Shield className="h-3 w-3" /> Administrator
+              <Shield className="h-3 w-3" /> {t("dashboard.adminConsole")}
             </Badge>
           </div>
         </CardContent>
@@ -134,13 +136,13 @@ export function AdminSettings() {
       <Card className="border-border bg-card p-5 shadow-sm">
         <CardHeader className="p-0">
           <CardTitle className="font-heading text-base font-semibold flex items-center gap-2">
-            <Lock className="h-4 w-4 text-accent" /> Change Password
+            <Lock className="h-4 w-4 text-accent" /> {t("profile.changePassword")}
           </CardTitle>
-          <CardDescription className="mt-1">Update your admin account password.</CardDescription>
+          <CardDescription className="mt-1">{t("profile.changePassword")}</CardDescription>
         </CardHeader>
         <CardContent className="p-0 mt-4 space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="cur-pass" className="text-xs font-medium text-muted-foreground">Current Password</Label>
+            <Label htmlFor="cur-pass" className="text-xs font-medium text-muted-foreground">{t("profile.currentPassword")}</Label>
             <Input
               id="cur-pass"
               type="password"
@@ -152,7 +154,7 @@ export function AdminSettings() {
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="new-pass" className="text-xs font-medium text-muted-foreground">New Password</Label>
+              <Label htmlFor="new-pass" className="text-xs font-medium text-muted-foreground">{t("profile.newPassword")}</Label>
               <Input
                 id="new-pass"
                 type="password"
@@ -163,7 +165,7 @@ export function AdminSettings() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="conf-pass" className="text-xs font-medium text-muted-foreground">Confirm New Password</Label>
+              <Label htmlFor="conf-pass" className="text-xs font-medium text-muted-foreground">{t("profile.newPassword")}</Label>
               <Input
                 id="conf-pass"
                 type="password"
@@ -176,7 +178,7 @@ export function AdminSettings() {
           </div>
           <div className="flex justify-end">
             <Button disabled={saving} onClick={changePassword} className="h-9 gap-2">
-              <Save className="h-4 w-4" /> {saving ? "Saving…" : "Update Password"}
+              <Save className="h-4 w-4" /> {saving ? t("common.saving") : t("profile.saveChanges")}
             </Button>
           </div>
         </CardContent>
@@ -185,8 +187,8 @@ export function AdminSettings() {
       {/* Platform Information */}
       <Card className="border-border bg-card p-5 shadow-sm">
         <CardHeader className="p-0">
-          <CardTitle className="font-heading text-base font-semibold">Platform Information</CardTitle>
-          <CardDescription className="mt-1">Technical details about this deployment.</CardDescription>
+          <CardTitle className="font-heading text-base font-semibold">{t("admin.platformInfo")}</CardTitle>
+          <CardDescription className="mt-1">{t("admin.platformInfo")}</CardDescription>
         </CardHeader>
         <CardContent className="p-0 mt-4">
           <ul className="space-y-2.5 text-sm">

@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { formatDate } from "@/types";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 
 interface BookmarkItem {
   id: string;
@@ -58,6 +59,7 @@ interface BookmarksResponse {
  * button.
  */
 export function StudentBookmarks() {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const { data, loading, error, refetch, setData } = useApiFetch<BookmarksResponse>(
     "/api/student/bookmarks"
@@ -94,7 +96,7 @@ export function StudentBookmarks() {
           bookmarks: data.bookmarks.filter((b) => b.id !== deleting.id),
         });
       }
-      toast({ title: "Bookmark removed" });
+      toast({ title: t("bookmarks.removedToast") });
     } catch {
     } finally {
       setDeleting(null);
@@ -115,9 +117,9 @@ export function StudentBookmarks() {
     return (
       <EmptyState
         icon={<BookmarkIcon className="h-5 w-5" />}
-        title="Couldn't load bookmarks"
+        title={t("bookmarks.couldntLoad")}
         description={error}
-        action={<Button onClick={() => refetch()}>Try again</Button>}
+        action={<Button onClick={() => refetch()}>{t("bookmarks.tryAgain")}</Button>}
       />
     );
   }
@@ -132,12 +134,12 @@ export function StudentBookmarks() {
           </div>
           <div>
             <h1 className="font-heading text-lg font-semibold text-foreground">
-              My Bookmarks
+              {t("bookmarks.myBookmarks")}
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">
               {totalCount === 0
-                ? "Save key moments from your lessons."
-                : `${totalCount} bookmark${totalCount > 1 ? "s" : ""} in ${grouped.length} course${grouped.length > 1 ? "s" : ""}`}
+                ? t("bookmarks.saveKeyMoments")
+                : t("bookmarks.bookmarksInCourses").replace("{count}", String(totalCount)).replace("{courses}", String(grouped.length))}
             </p>
           </div>
         </div>
@@ -147,11 +149,11 @@ export function StudentBookmarks() {
       {grouped.length === 0 ? (
         <EmptyState
           icon={<BookmarkIcon className="h-5 w-5" />}
-          title="No bookmarks yet"
-          description="While watching a lesson, use the bookmark button to save important moments. They'll be collected here, grouped by course."
+          title={t("bookmarks.noBookmarks")}
+          description={t("bookmarks.noBookmarksDesc")}
           action={
             <Button onClick={() => navigate(["student", "courses"])} className="gap-2">
-              Browse courses <ChevronRight className="h-4 w-4" />
+              {t("bookmarks.browseCourses")} <ChevronRight className="h-4 w-4" />
             </Button>
           }
         />
@@ -173,18 +175,18 @@ export function StudentBookmarks() {
       <AlertDialog open={deleting !== null} onOpenChange={(o) => !o && setDeleting(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove this bookmark?</AlertDialogTitle>
+            <AlertDialogTitle>{t("bookmarks.removeThisBookmark")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. The bookmark will be permanently removed.
+              {t("bookmarks.removeCannotUndo")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Remove
+              {t("bookmarks.remove")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -206,6 +208,7 @@ function BookmarkGroup({
   onDelete: (b: BookmarkItem) => void;
   onSeekVideo: (courseId: string) => void;
 }) {
+  const { t } = useI18n();
   return (
     <Collapsible defaultOpen={defaultOpen}>
       <Card className="shadow-sm border-border overflow-hidden">
@@ -221,7 +224,7 @@ function BookmarkGroup({
                     {group.title}
                   </CardTitle>
                   <CardDescription className="mt-0.5">
-                    {group.items.length} bookmark{group.items.length > 1 ? "s" : ""}
+                    {t("bookmarks.bookmarkCount").replace("{count}", String(group.items.length))}
                   </CardDescription>
                 </div>
               </div>
@@ -264,6 +267,7 @@ function BookmarkRow({
   onDelete: () => void;
   onSeekVideo: () => void;
 }) {
+  const { t } = useI18n();
   const hasVideo = bookmark.videoId && bookmark.video;
   const hasTimestamp = hasVideo && bookmark.videoTimestamp !== null;
 
@@ -275,7 +279,7 @@ function BookmarkRow({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 mb-0.5">
           <p className="text-sm font-medium text-foreground truncate">
-            {bookmark.label || (hasVideo ? bookmark.video!.title : "Bookmark")}
+            {bookmark.label || (hasVideo ? bookmark.video!.title : t("bookmarks.bookmarkDefault"))}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
@@ -297,7 +301,7 @@ function BookmarkRow({
             <button
               onClick={onSeekVideo}
               className="inline-flex items-center gap-1 rounded-md border border-accent/30 bg-accent/5 px-2 py-0.5 text-[11px] font-medium text-accent hover:bg-accent/10 transition-colors"
-              title="Open video at this moment"
+              title={t("bookmarks.openVideoAtMoment")}
             >
               <PlayCircle className="h-3 w-3" />
               {formatTimestamp(bookmark.videoTimestamp!)}
@@ -313,7 +317,7 @@ function BookmarkRow({
         size="icon"
         className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive opacity-60 group-hover:opacity-100 transition-opacity"
         onClick={onDelete}
-        aria-label="Remove bookmark"
+        aria-label={t("bookmarks.removeAria")}
       >
         <Trash2 className="h-3.5 w-3.5" />
       </Button>

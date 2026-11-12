@@ -2,6 +2,7 @@
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
 
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -14,27 +15,30 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Menu, LogOut, ChevronDown, Shield } from "lucide-react";
 import { apiPost } from "@/hooks/use-api";
+import type { TranslationKey } from "@/lib/i18n/translations";
 
-const TITLES: Record<string, string> = {
-  overview: "Dashboard Overview",
-  students: "Student Management",
-  courses: "Course Management",
-  materials: "Learning Materials",
-  assignments: "Assignment Management",
-  submissions: "Assignment Submissions",
-  plans: "Subscription Plans",
-  certificates: "Certificate Management",
-  settings: "Settings",
+const TITLES: Record<string, TranslationKey> = {
+  overview: "dashboard.overview",
+  students: "common.students",
+  courses: "courses.courseManagement",
+  materials: "common.learningMaterials",
+  assignments: "common.assignments",
+  submissions: "common.submissions",
+  plans: "common.subscriptionPlans",
+  certificates: "common.certificateManagement",
+  settings: "nav.settings",
 };
 
 export function AdminTopbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
+  const { t } = useI18n();
   const segments = useAppStore((s) => s.segments);
   const navigate = useAppStore((s) => s.navigate);
   const user = useAppStore((s) => s.user);
   const refreshUser = useAppStore((s) => s.refreshUser);
 
   const current = segments[1] || "overview";
-  const title = segments[2] && current === "courses" ? "Edit Course" : TITLES[current] || "Dashboard";
+  const titleKey: TranslationKey | undefined = TITLES[current];
+  const title = segments[2] && current === "courses" ? t("courses.editCourse") : (titleKey ? t(titleKey) : t("dashboard.overview"));
 
   async function logout() {
     await apiPost("/api/auth/logout", null, { method: "POST" });
@@ -63,7 +67,7 @@ export function AdminTopbar({ onToggleSidebar }: { onToggleSidebar: () => void }
         </Button>
         <div className="flex flex-col gap-0.5">
           <h1 className="font-heading text-xl font-semibold leading-tight tracking-tight text-foreground">{title}</h1>
-          <p className="text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground/80">CourseLearn · Admin</p>
+          <p className="text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground/80">CourseLearn · {t("nav.dashboard")}</p>
         </div>
       </div>
 
@@ -71,7 +75,7 @@ export function AdminTopbar({ onToggleSidebar }: { onToggleSidebar: () => void }
         <LanguageSwitcher />
         <div className="hidden items-center gap-1.5 rounded-full border border-accent/25 bg-soft-sage px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary shadow-sm transition-colors duration-200 sm:flex">
           <Shield className="h-3 w-3" />
-          <span>Administrator</span>
+          <span>{t("dashboard.adminConsole")}</span>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -88,13 +92,13 @@ export function AdminTopbar({ onToggleSidebar }: { onToggleSidebar: () => void }
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel className="font-normal text-xs text-muted-foreground">
-              Signed in as
+              {t("auth.yourDetails")}
               <p className="mt-0.5 text-sm font-semibold text-foreground">{user?.email}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout} className="text-destructive gap-2 focus:bg-destructive/5">
               <LogOut className="h-4 w-4" />
-              Logout
+              {t("common.logout")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

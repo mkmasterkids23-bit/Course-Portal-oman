@@ -17,8 +17,10 @@ import { toast } from "@/hooks/use-toast";
 import {
   User, Mail, Phone, ShieldCheck, Camera, Save, Lock, KeyRound,
 } from "lucide-react";
+import { useI18n } from "@/lib/i18n/store";
 
 export function StudentProfile() {
+  const { t } = useI18n();
   const user = useAppStore((s) => s.user);
   const refreshUser = useAppStore((s) => s.refreshUser);
 
@@ -46,8 +48,8 @@ export function StudentProfile() {
     return (
       <EmptyState
         icon={<User className="h-5 w-5" />}
-        title="Loading profile..."
-        description="Fetching your account details."
+        title={t("profile.loadingProfile")}
+        description={t("profile.fetchingDetails")}
       />
     );
   }
@@ -61,7 +63,7 @@ export function StudentProfile() {
 
   async function saveProfile() {
     if (!name || name.trim().length < 2) {
-      toast({ title: "Name too short", description: "Please enter your full name (min 2 characters).", variant: "destructive" });
+      toast({ title: t("profile.nameTooShort"), description: t("profile.nameTooShortDesc"), variant: "destructive" });
       return;
     }
     setSavingProfile(true);
@@ -74,7 +76,7 @@ export function StudentProfile() {
       await apiUpload("/api/auth/profile", fd);
       await refreshUser();
       setPhotoFile(null);
-      toast({ title: "Profile saved", description: "Your profile has been updated." });
+      toast({ title: t("profile.profileSaved"), description: t("profile.profileSavedDesc") });
     } catch {
     } finally {
       setSavingProfile(false);
@@ -83,15 +85,15 @@ export function StudentProfile() {
 
   async function changePassword() {
     if (!currentPassword || !newPassword) {
-      toast({ title: "Missing fields", description: "Please fill in all password fields.", variant: "destructive" });
+      toast({ title: t("profile.missingFields"), description: t("profile.missingFieldsDesc"), variant: "destructive" });
       return;
     }
     if (newPassword.length < 6) {
-      toast({ title: "Password too short", description: "New password must be at least 6 characters.", variant: "destructive" });
+      toast({ title: t("profile.passwordTooShort"), description: t("profile.passwordTooShortDesc"), variant: "destructive" });
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast({ title: "Passwords don't match", description: "New password and confirmation must match.", variant: "destructive" });
+      toast({ title: t("profile.passwordsDontMatch"), description: t("profile.passwordsDontMatchDesc"), variant: "destructive" });
       return;
     }
     setSavingPassword(true);
@@ -100,7 +102,7 @@ export function StudentProfile() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      toast({ title: "Password changed", description: "Your password has been updated successfully." });
+      toast({ title: t("profile.passwordChangedToast"), description: t("profile.passwordChangedToastDesc") });
     } catch {
     } finally {
       setSavingPassword(false);
@@ -131,7 +133,7 @@ export function StudentProfile() {
                 <label
                   htmlFor="photo-upload"
                   className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg cursor-pointer hover:bg-primary/90 transition-colors ring-2 ring-card"
-                  aria-label="Change profile photo"
+                  aria-label={t("profile.changeProfilePhoto")}
                 >
                   <Camera className="h-4 w-4" />
                 </label>
@@ -148,11 +150,11 @@ export function StudentProfile() {
                 <Mail className="h-3.5 w-3.5 text-accent" /> {user.email}
               </p>
               <Badge className="mt-3 bg-accent/10 text-accent border-transparent">
-                <ShieldCheck className="h-3 w-3" /> {user.role === "STUDENT" ? "Student" : user.role}
+                <ShieldCheck className="h-3 w-3" /> {user.role === "STUDENT" ? t("profile.student") : user.role}
               </Badge>
               {photoFile && (
                 <p className="mt-3 text-xs text-accent flex items-center gap-1.5">
-                  <Camera className="h-3 w-3" /> New photo selected: {photoFile.name}
+                  <Camera className="h-3 w-3" /> {t("profile.newPhotoSelected")} {photoFile.name}
                 </p>
               )}
             </div>
@@ -166,14 +168,14 @@ export function StudentProfile() {
               <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10 text-accent">
                 <User className="h-4 w-4" />
               </span>
-              Account information
+              {t("profile.accountInfo")}
             </CardTitle>
-            <CardDescription>Quick reference</CardDescription>
+            <CardDescription>{t("profile.quickReference")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <InfoRow icon={<Mail className="h-4 w-4" />} label="Email" value={user.email} />
-            <InfoRow icon={<Phone className="h-4 w-4" />} label="Phone" value={user.phone || "—"} />
-            <InfoRow icon={<User className="h-4 w-4" />} label="Role" value={user.role === "STUDENT" ? "Student" : user.role} />
+            <InfoRow icon={<Mail className="h-4 w-4" />} label={t("common.email")} value={user.email} />
+            <InfoRow icon={<Phone className="h-4 w-4" />} label={t("profile.phone")} value={user.phone || "—"} />
+            <InfoRow icon={<User className="h-4 w-4" />} label={t("profile.role")} value={user.role === "STUDENT" ? t("profile.student") : user.role} />
           </CardContent>
         </Card>
       </div>
@@ -186,44 +188,44 @@ export function StudentProfile() {
               <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10 text-accent">
                 <User className="h-4 w-4" />
               </span>
-              Edit Profile
+              {t("profile.editProfile")}
             </CardTitle>
-            <CardDescription>Update your personal information</CardDescription>
+            <CardDescription>{t("profile.updatePersonalInfo")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm font-medium">Full Name</Label>
+              <Label htmlFor="name" className="text-sm font-medium">{t("auth.fullName")}</Label>
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Your full name"
+                placeholder={t("auth.yourFullNamePlaceholder")}
                 className="h-10"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
+              <Label htmlFor="phone" className="text-sm font-medium">{t("profile.phoneNumber")}</Label>
               <Input
                 id="phone"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="+968 1234 5678"
+                placeholder={t("profile.phonePlaceholder")}
                 className="h-10"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="bio" className="text-sm font-medium">Bio</Label>
+              <Label htmlFor="bio" className="text-sm font-medium">{t("profile.bio")}</Label>
               <Textarea
                 id="bio"
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                placeholder="Tell us a little about yourself..."
+                placeholder={t("profile.bioPlaceholder")}
                 rows={4}
                 className="resize-none"
               />
             </div>
             <Button onClick={saveProfile} disabled={savingProfile} className="gap-2 shadow-sm">
-              <Save className="h-4 w-4" /> {savingProfile ? "Saving..." : "Save Changes"}
+              <Save className="h-4 w-4" /> {savingProfile ? t("common.saving") : t("profile.saveChanges")}
             </Button>
           </CardContent>
         </Card>
@@ -234,13 +236,13 @@ export function StudentProfile() {
               <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10 text-accent">
                 <KeyRound className="h-4 w-4" />
               </span>
-              Change Password
+              {t("profile.changePassword")}
             </CardTitle>
-            <CardDescription>Keep your account secure</CardDescription>
+            <CardDescription>{t("profile.keepAccountSecure")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="currentPassword" className="text-sm font-medium">Current Password</Label>
+              <Label htmlFor="currentPassword" className="text-sm font-medium">{t("profile.currentPassword")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -249,14 +251,14 @@ export function StudentProfile() {
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   className="pl-9 h-10"
-                  placeholder="••••••••"
+                  placeholder={t("auth.passwordPlaceholder")}
                   autoComplete="current-password"
                 />
               </div>
             </div>
             <Separator />
             <div className="space-y-2">
-              <Label htmlFor="newPassword" className="text-sm font-medium">New Password</Label>
+              <Label htmlFor="newPassword" className="text-sm font-medium">{t("profile.newPassword")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -265,13 +267,13 @@ export function StudentProfile() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="pl-9 h-10"
-                  placeholder="At least 6 characters"
+                  placeholder={t("auth.atLeast6Chars")}
                   autoComplete="new-password"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm New Password</Label>
+              <Label htmlFor="confirmPassword" className="text-sm font-medium">{t("profile.confirmNewPassword")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -280,13 +282,13 @@ export function StudentProfile() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="pl-9 h-10"
-                  placeholder="Re-enter new password"
+                  placeholder={t("profile.reenterNewPassword")}
                   autoComplete="new-password"
                 />
               </div>
             </div>
             <Button onClick={changePassword} disabled={savingPassword} variant="outline" className="gap-2 shadow-sm">
-              <KeyRound className="h-4 w-4" /> {savingPassword ? "Updating..." : "Update Password"}
+              <KeyRound className="h-4 w-4" /> {savingPassword ? t("profile.updating") : t("profile.updatePassword")}
             </Button>
           </CardContent>
         </Card>

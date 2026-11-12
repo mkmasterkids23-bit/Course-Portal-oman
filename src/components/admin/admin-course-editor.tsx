@@ -26,6 +26,7 @@ import {
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
 import { formatDate, formatDateTime, type SubscriptionPlanPublic } from "@/types";
 import {
@@ -107,6 +108,7 @@ interface CertTemplate {
 interface PlansResponse { plans: SubscriptionPlanPublic[] }
 
 export function AdminCourseEditor({ courseId, onBack }: { courseId: string; onBack: () => void }) {
+  const { t } = useI18n();
   const query = useAppStore((s) => s.query);
   const navigate = useAppStore((s) => s.navigate);
   const [activeTab, setActiveTab] = useState<string>("topics");
@@ -130,7 +132,7 @@ export function AdminCourseEditor({ courseId, onBack }: { courseId: string; onBa
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={onBack} aria-label="Back to courses list">
+          <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={onBack} aria-label={t("common.back")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="min-w-0">
@@ -142,21 +144,21 @@ export function AdminCourseEditor({ courseId, onBack }: { courseId: string; onBa
             ) : (
               <>
                 <h2 className="font-heading text-xl font-bold text-foreground truncate">
-                  {course?.title || "Course"}
+                  {course?.title || t("common.course")}
                 </h2>
                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-1">
                   {course?.category && <Badge variant="outline" className="text-[10px] uppercase tracking-wider">{course.category}</Badge>}
                   {course?.accessType === "FREE" ? (
-                    <Badge className="bg-success/15 text-success">Free</Badge>
+                    <Badge className="bg-success/15 text-success">{t("common.free")}</Badge>
                   ) : (
-                    <Badge className="bg-primary text-primary-foreground">Paid</Badge>
+                    <Badge className="bg-primary text-primary-foreground">{t("common.paid")}</Badge>
                   )}
                   {course?.isPublished ? (
-                    <Badge className="bg-success/15 text-success gap-1"><span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" /> Published</Badge>
+                    <Badge className="bg-success/15 text-success gap-1"><span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" /> {t("common.published")}</Badge>
                   ) : (
-                    <Badge variant="outline" className="text-muted-foreground">Draft</Badge>
+                    <Badge variant="outline" className="text-muted-foreground">{t("common.draft")}</Badge>
                   )}
-                  <span className="text-muted-foreground">Updated {course ? formatDate(course.updatedAt) : ""}</span>
+                  <span className="text-muted-foreground">{course ? formatDate(course.updatedAt) : ""}</span>
                 </div>
               </>
             )}
@@ -167,18 +169,18 @@ export function AdminCourseEditor({ courseId, onBack }: { courseId: string; onBa
           size="sm"
           disabled
           className="h-9 text-muted-foreground"
-          title="Student preview is not available in admin view"
+          title={t("common.view")}
         >
-          <Eye className="h-4 w-4" /> Open in student view
+          <Eye className="h-4 w-4" /> {t("common.view")}
         </Button>
       </div>
 
       {error ? (
         <EmptyState
           icon={<BookOpen className="h-5 w-5" />}
-          title="Couldn't load course"
+          title={t("common.error")}
           description={error}
-          action={<Button variant="outline" onClick={onBack}>Back to courses</Button>}
+          action={<Button variant="outline" onClick={onBack}>{t("common.back")}</Button>}
         />
       ) : loading || !course ? (
         <Skeleton className="h-96 w-full" />
@@ -186,11 +188,11 @@ export function AdminCourseEditor({ courseId, onBack }: { courseId: string; onBa
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="rounded-xl border border-border bg-card p-1 shadow-sm overflow-x-auto scrollbar-thin">
             <TabsList className="w-full justify-start h-auto flex-wrap bg-transparent gap-1">
-              <TabsTrigger value="topics" className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:shadow-sm"><VideoIcon className="h-3.5 w-3.5" /> Topics &amp; Videos</TabsTrigger>
-              <TabsTrigger value="materials" className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:shadow-sm"><FileText className="h-3.5 w-3.5" /> Materials</TabsTrigger>
-              <TabsTrigger value="assignments" className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:shadow-sm"><ClipboardList className="h-3.5 w-3.5" /> Assignments</TabsTrigger>
-              <TabsTrigger value="certificate" className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:shadow-sm"><Award className="h-3.5 w-3.5" /> Certificate</TabsTrigger>
-              <TabsTrigger value="settings" className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:shadow-sm"><Settings className="h-3.5 w-3.5" /> Settings</TabsTrigger>
+              <TabsTrigger value="topics" className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:shadow-sm"><VideoIcon className="h-3.5 w-3.5" /> {t("courses.topicsVideos")}</TabsTrigger>
+              <TabsTrigger value="materials" className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:shadow-sm"><FileText className="h-3.5 w-3.5" /> {t("common.materials")}</TabsTrigger>
+              <TabsTrigger value="assignments" className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:shadow-sm"><ClipboardList className="h-3.5 w-3.5" /> {t("common.assignments")}</TabsTrigger>
+              <TabsTrigger value="certificate" className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:shadow-sm"><Award className="h-3.5 w-3.5" /> {t("common.certificate")}</TabsTrigger>
+              <TabsTrigger value="settings" className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:shadow-sm"><Settings className="h-3.5 w-3.5" /> {t("nav.settings")}</TabsTrigger>
             </TabsList>
           </div>
 
@@ -222,6 +224,7 @@ export function AdminCourseEditor({ courseId, onBack }: { courseId: string; onBa
 
 // ============= TOPICS & VIDEOS TAB =============
 function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () => void }) {
+  const { t } = useI18n();
   const [expandedId, setExpandedId] = useState<string | null>(course.topics[0]?.id || null);
   const [addTopicOpen, setAddTopicOpen] = useState(false);
   const [editTopic, setEditTopic] = useState<TopicRow | null>(null);
@@ -249,22 +252,22 @@ function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () 
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-heading text-base font-semibold text-foreground">Course Topics</h3>
+          <h3 className="font-heading text-base font-semibold text-foreground">{t("courses.courseContent")}</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {course.topics.length} topic{course.topics.length === 1 ? "" : "s"} · {course.topics.reduce((a, t) => a + t.videos.length, 0)} videos
+            {course.topics.length} {t("common.topics")} · {course.topics.reduce((a, t) => a + t.videos.length, 0)} {t("common.videos")}
           </p>
         </div>
         <Button className="h-9 gap-2" onClick={() => setAddTopicOpen(true)}>
-          <Plus className="h-4 w-4" /> Add Topic
+          <Plus className="h-4 w-4" /> {t("courses.addTopic")}
         </Button>
       </div>
 
       {course.topics.length === 0 ? (
         <EmptyState
           icon={<VideoIcon className="h-5 w-5" />}
-          title="No topics yet"
-          description="Topics are containers for video lessons. Add your first topic to get started."
-          action={<Button onClick={() => setAddTopicOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> Add Topic</Button>}
+          title={t("courses.noTopicsYet")}
+          description={t("courses.noTopicsDesc")}
+          action={<Button onClick={() => setAddTopicOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> {t("courses.addTopic")}</Button>}
         />
       ) : (
         <div className="space-y-2">
@@ -300,19 +303,19 @@ function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () 
                   <div className="min-w-0">
                     <p className="font-medium text-foreground truncate">{topic.title}</p>
                     <p className="text-xs text-muted-foreground truncate">
-                      {topic.videos.length} video{topic.videos.length === 1 ? "" : "s"}
-                      {topic.materials.length > 0 && ` · ${topic.materials.length} material${topic.materials.length === 1 ? "" : "s"}`}
+                      {topic.videos.length} {t("common.videos")}
+                      {topic.materials.length > 0 && ` · ${topic.materials.length} ${t("common.materials")}`}
                     </p>
                   </div>
                 </button>
                 <div className="flex items-center gap-1">
                   <Button variant="ghost" size="sm" className="h-8 gap-1 text-muted-foreground hover:text-accent" onClick={() => setAddVideoFor(topic)}>
-                    <Plus className="h-3.5 w-3.5" /> Add Video
+                    <Plus className="h-3.5 w-3.5" /> {t("courses.addVideo")}
                   </Button>
-                  <Button variant="ghost" size="icon" aria-label="Edit topic" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setEditTopic(topic)}>
+                  <Button variant="ghost" size="icon" aria-label={t("common.edit")} className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setEditTopic(topic)}>
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
-                  <Button variant="ghost" size="icon" aria-label="Delete topic" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTopic(topic)}>
+                  <Button variant="ghost" size="icon" aria-label={t("common.delete")} className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTopic(topic)}>
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
@@ -325,9 +328,9 @@ function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () 
                   )}
                   {topic.videos.length === 0 ? (
                     <div className="text-center py-6">
-                      <p className="text-sm text-muted-foreground mb-2">No videos in this topic yet.</p>
+                      <p className="text-sm text-muted-foreground mb-2">{t("courses.noVideosYet")}</p>
                       <Button variant="outline" size="sm" className="h-8 gap-1" onClick={() => setAddVideoFor(topic)}>
-                        <Plus className="h-3.5 w-3.5" /> Add first video
+                        <Plus className="h-3.5 w-3.5" /> {t("courses.addVideo")}
                       </Button>
                     </div>
                   ) : (
@@ -349,16 +352,16 @@ function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () 
                             <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                               <Badge variant="outline" className="text-[10px] py-0 h-4">{v.source}</Badge>
                               {v.isPublished ? (
-                                <span className="text-success">Published</span>
+                                <span className="text-success">{t("common.published")}</span>
                               ) : (
-                                <span>Draft</span>
+                                <span>{t("common.draft")}</span>
                               )}
                             </div>
                           </div>
-                          <Button variant="ghost" size="icon" aria-label="Edit video" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setEditVideo(v)}>
+                          <Button variant="ghost" size="icon" aria-label={t("common.edit")} className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setEditVideo(v)}>
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
-                          <Button variant="ghost" size="icon" aria-label="Delete video" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteVideo(v)}>
+                          <Button variant="ghost" size="icon" aria-label={t("common.delete")} className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteVideo(v)}>
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </li>
@@ -388,26 +391,26 @@ function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () 
       <AlertDialog open={!!deleteTopic} onOpenChange={(v) => !v && setDeleteTopic(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete topic?</AlertDialogTitle>
+            <AlertDialogTitle>{t("common.delete")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will delete <strong>{deleteTopic?.title}</strong> and all its videos. This cannot be undone.
+              {t("courses.deleteCourseConfirm")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={async () => {
                 if (!deleteTopic) return;
                 try {
                   await apiPost(`/api/admin/topics/${deleteTopic.id}`, null, { method: "DELETE" });
-                  toast({ title: "Topic deleted" });
+                  toast({ title: t("common.success") });
                   setDeleteTopic(null);
                   onRefresh();
                 } catch { /* toast */ }
               }}
             >
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -433,26 +436,26 @@ function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () 
       <AlertDialog open={!!deleteVideo} onOpenChange={(v) => !v && setDeleteVideo(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete video?</AlertDialogTitle>
+            <AlertDialogTitle>{t("common.delete")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete <strong>{deleteVideo?.title}</strong>.
+              {t("courses.deleteCourseConfirm")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={async () => {
                 if (!deleteVideo) return;
                 try {
                   await apiPost(`/api/admin/videos/${deleteVideo.id}`, null, { method: "DELETE" });
-                  toast({ title: "Video deleted" });
+                  toast({ title: t("common.success") });
                   setDeleteVideo(null);
                   onRefresh();
                 } catch { /* toast */ }
               }}
             >
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -470,6 +473,7 @@ function TopicFormDialog({
   target?: TopicRow | null;
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
@@ -486,7 +490,7 @@ function TopicFormDialog({
 
   async function submit() {
     if (!title.trim()) {
-      toast({ title: "Title required", variant: "destructive" });
+      toast({ title: t("common.title") + " " + t("common.required"), variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -496,13 +500,13 @@ function TopicFormDialog({
           title: title.trim(),
           description: description.trim() || null,
         }, { method: "PUT" });
-        toast({ title: "Topic updated" });
+        toast({ title: t("common.success") });
       } else {
         await apiPost(`/api/admin/courses/${courseId}/topics`, {
           title: title.trim(),
           description: description.trim() || null,
         });
-        toast({ title: "Topic created" });
+        toast({ title: t("common.success") });
       }
       onSaved();
     } catch { /* toast */ } finally {
@@ -514,22 +518,22 @@ function TopicFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-heading text-lg font-semibold">{target ? "Edit Topic" : "Add Topic"}</DialogTitle>
-          <DialogDescription>Group related video lessons under a topic.</DialogDescription>
+          <DialogTitle className="font-heading text-lg font-semibold">{target ? t("common.edit") : t("courses.addTopic")}</DialogTitle>
+          <DialogDescription>{t("courses.topicDescription")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="t-title" className="text-xs font-medium text-muted-foreground">Title</Label>
-            <Input id="t-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Introduction to Design Principles" className="h-9 rounded-lg" />
+            <Label htmlFor="t-title" className="text-xs font-medium text-muted-foreground">{t("common.title")}</Label>
+            <Input id="t-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("courses.topicTitle")} className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="t-desc" className="text-xs font-medium text-muted-foreground">Description (optional)</Label>
+            <Label htmlFor="t-desc" className="text-xs font-medium text-muted-foreground">{t("courses.topicDescription")}</Label>
             <Textarea id="t-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="rounded-lg" />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button disabled={saving} className="h-9" onClick={submit}>{saving ? "Saving…" : target ? "Save" : "Add Topic"}</Button>
+          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
+          <Button disabled={saving} className="h-9" onClick={submit}>{saving ? t("common.saving") : target ? t("common.save") : t("courses.addTopic")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -546,6 +550,7 @@ function VideoFormDialog({
   target?: VideoRow | null;
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [topicId, setTopicId] = useState<string>(fixedTopicId || "");
@@ -581,19 +586,19 @@ function VideoFormDialog({
 
   async function submit() {
     if (!title.trim()) {
-      toast({ title: "Title required", variant: "destructive" });
+      toast({ title: t("common.title") + " " + t("common.required"), variant: "destructive" });
       return;
     }
     if (!topicId) {
-      toast({ title: "Select a topic", variant: "destructive" });
+      toast({ title: t("common.topic") + " " + t("common.required"), variant: "destructive" });
       return;
     }
     if (source !== "UPLOAD" && !videoUrl.trim() && !target) {
-      toast({ title: "Video URL required", variant: "destructive" });
+      toast({ title: t("courses.videoSource") + " " + t("common.required"), variant: "destructive" });
       return;
     }
     if (source === "UPLOAD" && !file && !target) {
-      toast({ title: "Video file required", variant: "destructive" });
+      toast({ title: t("courses.videoFile") + " " + t("common.required"), variant: "destructive" });
       return;
     }
 
@@ -619,15 +624,15 @@ function VideoFormDialog({
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || "Failed to update video");
-        toast({ title: "Video updated" });
+        toast({ title: t("common.success") });
       } else {
         await apiUpload(`/api/admin/courses/${course.id}/videos`, fd);
-        toast({ title: "Video added" });
+        toast({ title: t("common.success") });
       }
       onSaved();
     } catch (e) {
       if (target && e instanceof Error) {
-        toast({ title: "Error", description: e.message, variant: "destructive" });
+        toast({ title: t("common.error"), description: e.message, variant: "destructive" });
       }
     } finally {
       setSaving(false);
@@ -638,24 +643,24 @@ function VideoFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-heading text-lg font-semibold">{target ? "Edit Video" : "Add Video Lesson"}</DialogTitle>
-          <DialogDescription>Upload a video file, embed a YouTube link, or stream from a direct URL.</DialogDescription>
+          <DialogTitle className="font-heading text-lg font-semibold">{target ? t("common.edit") : t("courses.addVideo")}</DialogTitle>
+          <DialogDescription>{t("courses.videoSource")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
           <div className="space-y-1.5">
-            <Label htmlFor="v-title" className="text-xs font-medium text-muted-foreground">Title</Label>
-            <Input id="v-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Lesson 1: Design fundamentals" className="h-9 rounded-lg" />
+            <Label htmlFor="v-title" className="text-xs font-medium text-muted-foreground">{t("courses.videoTitle")}</Label>
+            <Input id="v-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("courses.videoTitle")} className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="v-desc" className="text-xs font-medium text-muted-foreground">Description (optional)</Label>
+            <Label htmlFor="v-desc" className="text-xs font-medium text-muted-foreground">{t("courses.videoDescription")}</Label>
             <Textarea id="v-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="rounded-lg" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground">Topic</Label>
+              <Label className="text-xs font-medium text-muted-foreground">{t("common.topic")}</Label>
               <Select value={topicId} onValueChange={setTopicId} disabled={!!fixedTopicId}>
                 <SelectTrigger className="w-full h-9 rounded-lg">
-                  <SelectValue placeholder="Select topic" />
+                  <SelectValue placeholder={t("common.topic")} />
                 </SelectTrigger>
                 <SelectContent>
                   {course.topics.map((t) => (
@@ -665,15 +670,15 @@ function VideoFormDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground">Source</Label>
+              <Label className="text-xs font-medium text-muted-foreground">{t("courses.videoSource")}</Label>
               <Select value={source} onValueChange={(v) => setSource(v as "UPLOAD" | "YOUTUBE" | "URL")}>
                 <SelectTrigger className="w-full h-9 rounded-lg">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="UPLOAD">Upload File</SelectItem>
-                  <SelectItem value="YOUTUBE">YouTube</SelectItem>
-                  <SelectItem value="URL">Direct URL</SelectItem>
+                  <SelectItem value="UPLOAD">{t("courses.uploadFile")}</SelectItem>
+                  <SelectItem value="YOUTUBE">{t("courses.youtube")}</SelectItem>
+                  <SelectItem value="URL">{t("courses.directUrl")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -681,7 +686,7 @@ function VideoFormDialog({
 
           {source === "UPLOAD" ? (
             <div className="space-y-1.5">
-              <Label htmlFor="v-file" className="text-xs font-medium text-muted-foreground">Video File (.mp4, .webm, .mov, .mkv)</Label>
+              <Label htmlFor="v-file" className="text-xs font-medium text-muted-foreground">{t("courses.videoFile")}</Label>
               <Input
                 id="v-file"
                 type="file"
@@ -689,13 +694,13 @@ function VideoFormDialog({
                 onChange={(e) => setFile(e.target.files?.[0] || null)}
               />
               {target && !file && (
-                <p className="text-xs text-muted-foreground">Leave empty to keep current video file.</p>
+                <p className="text-xs text-muted-foreground">{t("courses.videoFile")}</p>
               )}
             </div>
           ) : (
             <div className="space-y-1.5">
               <Label htmlFor="v-url" className="text-xs font-medium text-muted-foreground">
-                {source === "YOUTUBE" ? "YouTube URL" : "Video URL (.mp4 etc.)"}
+                {source === "YOUTUBE" ? t("courses.youtubeUrl") : t("courses.videoSource")}
               </Label>
               <Input
                 id="v-url"
@@ -705,13 +710,13 @@ function VideoFormDialog({
                 className="h-9 rounded-lg"
               />
               {source === "YOUTUBE" && (
-                <p className="text-xs text-muted-foreground">Accepts watch URLs, youtu.be links and embed URLs.</p>
+                <p className="text-xs text-muted-foreground">{t("courses.youtubeUrl")}</p>
               )}
             </div>
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="v-thumb" className="text-xs font-medium text-muted-foreground">Thumbnail (optional)</Label>
+            <Label htmlFor="v-thumb" className="text-xs font-medium text-muted-foreground">{t("courses.courseThumbnail")} ({t("common.optional")})</Label>
             <Input
               id="v-thumb"
               type="file"
@@ -722,18 +727,18 @@ function VideoFormDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="v-order" className="text-xs font-medium text-muted-foreground">Display Order (optional)</Label>
-              <Input id="v-order" type="number" value={displayOrder} onChange={(e) => setDisplayOrder(e.target.value)} placeholder="auto" className="h-9 rounded-lg" />
+              <Label htmlFor="v-order" className="text-xs font-medium text-muted-foreground">{t("courses.displayOrder")}</Label>
+              <Input id="v-order" type="number" value={displayOrder} onChange={(e) => setDisplayOrder(e.target.value)} placeholder={t("courses.displayOrder")} className="h-9 rounded-lg" />
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border px-3">
-              <Label htmlFor="v-pub" className="text-sm font-medium">Published</Label>
+              <Label htmlFor="v-pub" className="text-sm font-medium">{t("common.published")}</Label>
               <Switch id="v-pub" checked={isPublished} onCheckedChange={setIsPublished} />
             </div>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button disabled={saving} className="h-9" onClick={submit}>{saving ? "Saving…" : target ? "Save Changes" : "Add Video"}</Button>
+          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
+          <Button disabled={saving} className="h-9" onClick={submit}>{saving ? t("common.saving") : target ? t("profile.saveChanges") : t("courses.addVideo")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -742,6 +747,7 @@ function VideoFormDialog({
 
 // ============= MATERIALS TAB =============
 function MaterialsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () => void }) {
+  const { t } = useI18n();
   const [addOpen, setAddOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<MaterialRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<MaterialRow | null>(null);
@@ -762,20 +768,20 @@ function MaterialsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: 
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-heading text-base font-semibold text-foreground">Learning Materials</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">{course.materials.length} materials across this course</p>
+          <h3 className="font-heading text-base font-semibold text-foreground">{t("common.learningMaterials")}</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">{course.materials.length} {t("common.materials")}</p>
         </div>
         <Button className="h-9 gap-2" onClick={() => setAddOpen(true)}>
-          <Plus className="h-4 w-4" /> Add Material
+          <Plus className="h-4 w-4" /> {t("courses.addMaterial")}
         </Button>
       </div>
 
       {course.materials.length === 0 ? (
         <EmptyState
           icon={<FileText className="h-5 w-5" />}
-          title="No materials yet"
-          description="Add downloadable PDFs, docs, slide decks or external links to support the video lessons."
-          action={<Button onClick={() => setAddOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> Add Material</Button>}
+          title={t("common.noData")}
+          description={t("common.learningMaterials")}
+          action={<Button onClick={() => setAddOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> {t("courses.addMaterial")}</Button>}
         />
       ) : (
         <div className="space-y-3">
@@ -783,7 +789,7 @@ function MaterialsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: 
             <Card key={g.topicId} className="overflow-hidden border-border bg-card p-0 shadow-sm">
               <div className="border-b border-border bg-muted/30 px-4 py-2.5">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {g.topicTitle || "Unassigned materials"}
+                  {g.topicTitle || t("common.materials")}
                 </p>
               </div>
               <ul className="divide-y divide-border">
@@ -801,14 +807,14 @@ function MaterialsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: 
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-muted-foreground transition-colors hover:text-accent"
-                      aria-label="Open material"
+                      aria-label={t("common.view")}
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
                     </a>
-                    <Button variant="ghost" size="icon" aria-label="Edit material" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setEditTarget(m)}>
+                    <Button variant="ghost" size="icon" aria-label={t("common.edit")} className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setEditTarget(m)}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" aria-label="Delete material" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(m)}>
+                    <Button variant="ghost" size="icon" aria-label={t("common.delete")} className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(m)}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </li>
@@ -835,26 +841,26 @@ function MaterialsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: 
       <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete material?</AlertDialogTitle>
+            <AlertDialogTitle>{t("common.delete")}</AlertDialogTitle>
             <AlertDialogDescription>
-              <strong>{deleteTarget?.title}</strong> will be permanently removed.
+              {t("courses.deleteCourseConfirm")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={async () => {
                 if (!deleteTarget) return;
                 try {
                   await apiPost(`/api/admin/materials/${deleteTarget.id}`, null, { method: "DELETE" });
-                  toast({ title: "Material deleted" });
+                  toast({ title: t("common.success") });
                   setDeleteTarget(null);
                   onRefresh();
                 } catch { /* toast */ }
               }}
             >
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -872,6 +878,7 @@ function MaterialFormDialog({
   target?: MaterialRow | null;
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [topicId, setTopicId] = useState<string>("none");
@@ -902,15 +909,15 @@ function MaterialFormDialog({
 
   async function submit() {
     if (!title.trim()) {
-      toast({ title: "Title required", variant: "destructive" });
+      toast({ title: t("common.title") + " " + t("common.required"), variant: "destructive" });
       return;
     }
     if (type === "LINK" && !fileUrl.trim() && !target) {
-      toast({ title: "Link URL required", variant: "destructive" });
+      toast({ title: t("courses.videoSource") + " " + t("common.required"), variant: "destructive" });
       return;
     }
     if (type !== "LINK" && !file && !target) {
-      toast({ title: "File required", variant: "destructive" });
+      toast({ title: t("courses.videoFile") + " " + t("common.required"), variant: "destructive" });
       return;
     }
 
@@ -934,15 +941,15 @@ function MaterialFormDialog({
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || "Failed");
-        toast({ title: "Material updated" });
+        toast({ title: t("common.success") });
       } else {
         await apiUpload(`/api/admin/courses/${course.id}/materials`, fd);
-        toast({ title: "Material added" });
+        toast({ title: t("common.success") });
       }
       onSaved();
     } catch (e) {
       if (e instanceof Error) {
-        toast({ title: "Error", description: e.message, variant: "destructive" });
+        toast({ title: t("common.error"), description: e.message, variant: "destructive" });
       }
     } finally {
       setSaving(false);
@@ -953,44 +960,44 @@ function MaterialFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-heading text-lg font-semibold">{target ? "Edit Material" : "Add Learning Material"}</DialogTitle>
-          <DialogDescription>Upload a downloadable file or attach an external link.</DialogDescription>
+          <DialogTitle className="font-heading text-lg font-semibold">{target ? t("common.edit") : t("courses.addMaterial")}</DialogTitle>
+          <DialogDescription>{t("courses.materialTitle")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
           <div className="space-y-1.5">
-            <Label htmlFor="m-title" className="text-xs font-medium text-muted-foreground">Title</Label>
-            <Input id="m-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Lesson 1 — Reference Slides" className="h-9 rounded-lg" />
+            <Label htmlFor="m-title" className="text-xs font-medium text-muted-foreground">{t("courses.materialTitle")}</Label>
+            <Input id="m-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("courses.materialTitle")} className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="m-desc" className="text-xs font-medium text-muted-foreground">Description (optional)</Label>
+            <Label htmlFor="m-desc" className="text-xs font-medium text-muted-foreground">{t("courses.videoDescription")}</Label>
             <Textarea id="m-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="rounded-lg" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground">Topic (optional)</Label>
+              <Label className="text-xs font-medium text-muted-foreground">{t("common.topic")} ({t("common.optional")})</Label>
               <Select value={topicId} onValueChange={setTopicId}>
                 <SelectTrigger className="w-full h-9 rounded-lg">
-                  <SelectValue placeholder="No topic" />
+                  <SelectValue placeholder={t("common.topic")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No topic</SelectItem>
-                  {course.topics.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>
+                  <SelectItem value="none">{t("common.topic")}</SelectItem>
+                  {course.topics.map((tp) => (
+                    <SelectItem key={tp.id} value={tp.id}>{tp.title}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground">Type</Label>
+              <Label className="text-xs font-medium text-muted-foreground">{t("courses.materialType")}</Label>
               <Select value={type} onValueChange={(v) => setType(v as "PDF" | "DOC" | "PRESENTATION" | "LINK")}>
                 <SelectTrigger className="w-full h-9 rounded-lg">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="PDF">PDF</SelectItem>
-                  <SelectItem value="DOC">Document</SelectItem>
-                  <SelectItem value="PRESENTATION">Presentation</SelectItem>
-                  <SelectItem value="LINK">External Link</SelectItem>
+                  <SelectItem value="DOC">{t("common.description")}</SelectItem>
+                  <SelectItem value="PRESENTATION">{t("courses.materialTitle")}</SelectItem>
+                  <SelectItem value="LINK">{t("courses.directUrl")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -998,12 +1005,12 @@ function MaterialFormDialog({
 
           {type === "LINK" ? (
             <div className="space-y-1.5">
-              <Label htmlFor="m-url" className="text-xs font-medium text-muted-foreground">Link URL</Label>
+              <Label htmlFor="m-url" className="text-xs font-medium text-muted-foreground">{t("courses.directUrl")}</Label>
               <Input id="m-url" value={fileUrl} onChange={(e) => setFileUrl(e.target.value)} placeholder="https://…" className="h-9 rounded-lg" />
             </div>
           ) : (
             <div className="space-y-1.5">
-              <Label htmlFor="m-file" className="text-xs font-medium text-muted-foreground">File (.pdf, .doc, .docx, .ppt, .pptx, .txt)</Label>
+              <Label htmlFor="m-file" className="text-xs font-medium text-muted-foreground">{t("courses.videoFile")}</Label>
               <Input
                 id="m-file"
                 type="file"
@@ -1011,19 +1018,19 @@ function MaterialFormDialog({
                 accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
               />
               {target && !file && (
-                <p className="text-xs text-muted-foreground">Leave empty to keep existing file.</p>
+                <p className="text-xs text-muted-foreground">{t("courses.videoFile")}</p>
               )}
             </div>
           )}
 
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
-            <Label htmlFor="m-pub" className="text-sm font-medium">Published</Label>
+            <Label htmlFor="m-pub" className="text-sm font-medium">{t("common.published")}</Label>
             <Switch id="m-pub" checked={isPublished} onCheckedChange={setIsPublished} />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button disabled={saving} className="h-9" onClick={submit}>{saving ? "Saving…" : target ? "Save Changes" : "Add Material"}</Button>
+          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
+          <Button disabled={saving} className="h-9" onClick={submit}>{saving ? t("common.saving") : target ? t("profile.saveChanges") : t("courses.addMaterial")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -1032,6 +1039,7 @@ function MaterialFormDialog({
 
 // ============= ASSIGNMENTS TAB =============
 function AssignmentsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () => void }) {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const [addOpen, setAddOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<AssignmentRow | null>(null);
@@ -1041,23 +1049,23 @@ function AssignmentsTab({ course, onRefresh }: { course: CourseDetail; onRefresh
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-heading text-base font-semibold text-foreground">Course Assignments</h3>
+          <h3 className="font-heading text-base font-semibold text-foreground">{t("common.assignments")}</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {course.assignments.length} assignment{course.assignments.length === 1 ? "" : "s"} ·{" "}
-            {course.assignments.reduce((a, x) => a + x.submissionsCount, 0)} total submissions
+            {course.assignments.length} {t("common.assignments")} · {" "}
+            {course.assignments.reduce((a, x) => a + x.submissionsCount, 0)} {t("common.submissions")}
           </p>
         </div>
         <Button className="h-9 gap-2" onClick={() => setAddOpen(true)}>
-          <Plus className="h-4 w-4" /> Add Assignment
+          <Plus className="h-4 w-4" /> {t("courses.addAssignment")}
         </Button>
       </div>
 
       {course.assignments.length === 0 ? (
         <EmptyState
           icon={<ClipboardList className="h-5 w-5" />}
-          title="No assignments yet"
-          description="Add assignments to test student understanding and award completion certificates."
-          action={<Button onClick={() => setAddOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> Add Assignment</Button>}
+          title={t("common.noData")}
+          description={t("courses.assignmentInstructions")}
+          action={<Button onClick={() => setAddOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> {t("courses.addAssignment")}</Button>}
         />
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
@@ -1071,9 +1079,9 @@ function AssignmentsTab({ course, onRefresh }: { course: CourseDetail; onRefresh
                   )}
                 </div>
                 {a.isPublished ? (
-                  <Badge className="bg-success/15 text-success shrink-0">Published</Badge>
+                  <Badge className="bg-success/15 text-success shrink-0">{t("common.published")}</Badge>
                 ) : (
-                  <Badge variant="outline" className="text-muted-foreground shrink-0">Draft</Badge>
+                  <Badge variant="outline" className="text-muted-foreground shrink-0">{t("common.draft")}</Badge>
                 )}
               </div>
               {a.description && (
@@ -1081,10 +1089,10 @@ function AssignmentsTab({ course, onRefresh }: { course: CourseDetail; onRefresh
               )}
               <div className="flex flex-wrap gap-2 text-xs">
                 <Badge variant="outline" className="bg-accent/10 text-accent">
-                  {a.submissionsCount} submission{a.submissionsCount === 1 ? "" : "s"}
+                  {a.submissionsCount} {t("common.submissions")}
                 </Badge>
                 {a.allowResubmission && (
-                  <Badge variant="outline" className="text-muted-foreground">Resubmission allowed</Badge>
+                  <Badge variant="outline" className="text-muted-foreground">{t("courses.allowResubmission")}</Badge>
                 )}
                 {a.fileUrl && (
                   <a
@@ -1093,7 +1101,7 @@ function AssignmentsTab({ course, onRefresh }: { course: CourseDetail; onRefresh
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-accent hover:underline"
                   >
-                    <ExternalLink className="h-3 w-3" /> Brief
+                    <ExternalLink className="h-3 w-3" /> {t("courses.assignmentFile")}
                   </a>
                 )}
               </div>
@@ -1105,13 +1113,13 @@ function AssignmentsTab({ course, onRefresh }: { course: CourseDetail; onRefresh
                   className="h-8 gap-1"
                   onClick={() => navigate(["admin", "submissions"], { assignmentId: a.id })}
                 >
-                  <ClipboardList className="h-3.5 w-3.5" /> View Submissions
+                  <ClipboardList className="h-3.5 w-3.5" /> {t("common.submissions")}
                 </Button>
                 <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" aria-label="Edit assignment" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setEditTarget(a)}>
+                  <Button variant="ghost" size="icon" aria-label={t("common.edit")} className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setEditTarget(a)}>
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
-                  <Button variant="ghost" size="icon" aria-label="Delete assignment" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(a)}>
+                  <Button variant="ghost" size="icon" aria-label={t("common.delete")} className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(a)}>
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
@@ -1137,26 +1145,26 @@ function AssignmentsTab({ course, onRefresh }: { course: CourseDetail; onRefresh
       <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete assignment?</AlertDialogTitle>
+            <AlertDialogTitle>{t("common.delete")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete <strong>{deleteTarget?.title}</strong> and all its submissions.
+              {t("courses.deleteCourseConfirm")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={async () => {
                 if (!deleteTarget) return;
                 try {
                   await apiPost(`/api/admin/assignments/${deleteTarget.id}`, null, { method: "DELETE" });
-                  toast({ title: "Assignment deleted" });
+                  toast({ title: t("common.success") });
                   setDeleteTarget(null);
                   onRefresh();
                 } catch { /* toast */ }
               }}
             >
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1174,6 +1182,7 @@ function AssignmentFormDialog({
   target?: AssignmentRow | null;
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [instructions, setInstructions] = useState("");
@@ -1206,7 +1215,7 @@ function AssignmentFormDialog({
 
   async function submit() {
     if (!title.trim()) {
-      toast({ title: "Title required", variant: "destructive" });
+      toast({ title: t("common.title") + " " + t("common.required"), variant: "destructive" });
       return;
     }
     const fd = new FormData();
@@ -1229,15 +1238,15 @@ function AssignmentFormDialog({
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || "Failed");
-        toast({ title: "Assignment updated" });
+        toast({ title: t("common.success") });
       } else {
         await apiUpload(`/api/admin/courses/${courseId}/assignments`, fd);
-        toast({ title: "Assignment added" });
+        toast({ title: t("common.success") });
       }
       onSaved();
     } catch (e) {
       if (e instanceof Error) {
-        toast({ title: "Error", description: e.message, variant: "destructive" });
+        toast({ title: t("common.error"), description: e.message, variant: "destructive" });
       }
     } finally {
       setSaving(false);
@@ -1248,55 +1257,55 @@ function AssignmentFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-heading text-lg font-semibold">{target ? "Edit Assignment" : "Add Assignment"}</DialogTitle>
-          <DialogDescription>Create a task for students to complete and submit.</DialogDescription>
+          <DialogTitle className="font-heading text-lg font-semibold">{target ? t("common.edit") : t("courses.addAssignment")}</DialogTitle>
+          <DialogDescription>{t("courses.assignmentInstructions")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
           <div className="space-y-1.5">
-            <Label htmlFor="a-title" className="text-xs font-medium text-muted-foreground">Title</Label>
-            <Input id="a-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Final Project — Brand Identity" className="h-9 rounded-lg" />
+            <Label htmlFor="a-title" className="text-xs font-medium text-muted-foreground">{t("courses.assignmentTitle")}</Label>
+            <Input id="a-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("courses.assignmentTitle")} className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="a-desc" className="text-xs font-medium text-muted-foreground">Short Description</Label>
+            <Label htmlFor="a-desc" className="text-xs font-medium text-muted-foreground">{t("courses.assignmentDescription")}</Label>
             <Textarea id="a-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="a-ins" className="text-xs font-medium text-muted-foreground">Detailed Instructions</Label>
-            <Textarea id="a-ins" value={instructions} onChange={(e) => setInstructions(e.target.value)} rows={4} placeholder="Step-by-step instructions students will see…" className="rounded-lg" />
+            <Label htmlFor="a-ins" className="text-xs font-medium text-muted-foreground">{t("courses.assignmentInstructions")}</Label>
+            <Textarea id="a-ins" value={instructions} onChange={(e) => setInstructions(e.target.value)} rows={4} placeholder={t("courses.assignmentInstructions")} className="rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="a-due" className="text-xs font-medium text-muted-foreground">Due Date (optional)</Label>
+            <Label htmlFor="a-due" className="text-xs font-medium text-muted-foreground">{t("courses.dueDate")}</Label>
             <Input id="a-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="a-file" className="text-xs font-medium text-muted-foreground">Attachment File (optional)</Label>
+            <Label htmlFor="a-file" className="text-xs font-medium text-muted-foreground">{t("courses.assignmentFile")}</Label>
             <Input id="a-file" type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" />
             {target?.fileUrl && (
               <div className="flex items-center gap-2 text-xs">
                 <a href={target.fileUrl} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline inline-flex items-center gap-1">
-                  <ExternalLink className="h-3 w-3" /> Current file
+                  <ExternalLink className="h-3 w-3" /> {t("courses.assignmentFile")}
                 </a>
                 <label className="flex items-center gap-1 text-muted-foreground">
                   <Checkbox checked={clearFile} onCheckedChange={(v) => setClearFile(!!v)} />
-                  Remove existing file
+                  {t("common.delete")}
                 </label>
               </div>
             )}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
-              <Label htmlFor="a-pub" className="text-sm font-medium">Published</Label>
+              <Label htmlFor="a-pub" className="text-sm font-medium">{t("common.published")}</Label>
               <Switch id="a-pub" checked={isPublished} onCheckedChange={setIsPublished} />
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
-              <Label htmlFor="a-resub" className="text-sm font-medium">Allow resubmission</Label>
+              <Label htmlFor="a-resub" className="text-sm font-medium">{t("courses.allowResubmission")}</Label>
               <Switch id="a-resub" checked={allowResubmission} onCheckedChange={setAllowResubmission} />
             </div>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button disabled={saving} className="h-9" onClick={submit}>{saving ? "Saving…" : target ? "Save Changes" : "Add Assignment"}</Button>
+          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
+          <Button disabled={saving} className="h-9" onClick={submit}>{saving ? t("common.saving") : target ? t("profile.saveChanges") : t("courses.addAssignment")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -1305,6 +1314,7 @@ function AssignmentFormDialog({
 
 // ============= CERTIFICATE TAB =============
 function CertificateTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () => void }) {
+  const { t } = useI18n();
   const template = course.certificateTemplate;
   const [isEnabled, setIsEnabled] = useState(template?.isEnabled ?? true);
   const [title, setTitle] = useState(template?.title || "Certificate of Completion");
@@ -1336,7 +1346,7 @@ function CertificateTab({ course, onRefresh }: { course: CourseDetail; onRefresh
         organizationName,
         layout,
       }, { method: "PUT" });
-      toast({ title: "Certificate template saved" });
+      toast({ title: t("common.success") });
       onRefresh();
     } catch { /* toast */ } finally {
       setSaving(false);
@@ -1355,21 +1365,21 @@ function CertificateTab({ course, onRefresh }: { course: CourseDetail; onRefresh
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-heading text-base font-semibold text-foreground">Completion Certificate</h3>
+          <h3 className="font-heading text-base font-semibold text-foreground">{t("common.certificate")}</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Configure the template issued to students who complete this course.
+            {t("courses.certificateDesc")}
           </p>
         </div>
         <Button className="h-9 gap-2" disabled={saving} onClick={save}>
-          <Save className="h-4 w-4" /> {saving ? "Saving…" : "Save Template"}
+          <Save className="h-4 w-4" /> {saving ? t("common.saving") : t("courses.saveTemplate")}
         </Button>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-5 space-y-3 border-border bg-card shadow-sm">
           <CardHeader className="p-0">
-            <CardTitle className="text-sm font-heading font-semibold">Template Settings</CardTitle>
-            <CardDescription className="mt-1">Use placeholders for dynamic content.</CardDescription>
+            <CardTitle className="text-sm font-heading font-semibold">{t("courses.certificateSettings")}</CardTitle>
+            <CardDescription className="mt-1">{t("courses.certificateDesc")}</CardDescription>
           </CardHeader>
           <CardContent className="p-0 space-y-3">
             {/* Info banner explaining the three certificate modes */}
@@ -1379,52 +1389,40 @@ function CertificateTab({ course, onRefresh }: { course: CourseDetail; onRefresh
                   <Info className="h-3.5 w-3.5" />
                 </div>
                 <div className="text-xs space-y-1.5">
-                  <p className="font-semibold text-foreground">How certificates work</p>
+                  <p className="font-semibold text-foreground">{t("courses.certificateInfo")}</p>
                   <p className="text-muted-foreground">
-                    Certificates are <strong>automatically issued</strong> to students when they complete all video lessons in this course. You have three options:
+                    {t("courses.certificateDesc")}
                   </p>
-                  <ul className="space-y-1 text-muted-foreground pl-3 list-disc">
-                    <li><strong>Save a template (enabled)</strong> → Your custom design is used.</li>
-                    <li><strong>Save a template (disabled)</strong> → No certificate is issued.</li>
-                    <li><strong>Don&apos;t save a template</strong> → A default certificate with the student&apos;s name is auto-generated.</li>
-                  </ul>
                 </div>
               </div>
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
-              <Label htmlFor="c-enabled" className="text-sm font-medium">Enable certificates for this course</Label>
+              <Label htmlFor="c-enabled" className="text-sm font-medium">{t("courses.enableCertificates")}</Label>
               <Switch id="c-enabled" checked={isEnabled} onCheckedChange={setIsEnabled} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="c-title" className="text-xs font-medium text-muted-foreground">Certificate Title</Label>
+              <Label htmlFor="c-title" className="text-xs font-medium text-muted-foreground">{t("courses.certificateTitle")}</Label>
               <Input id="c-title" value={title} onChange={(e) => setTitle(e.target.value)} className="h-9 rounded-lg" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="c-body" className="text-xs font-medium text-muted-foreground">Body Text</Label>
+              <Label htmlFor="c-body" className="text-xs font-medium text-muted-foreground">{t("courses.bodyText")}</Label>
               <Textarea id="c-body" value={bodyText} onChange={(e) => setBodyText(e.target.value)} rows={4} className="rounded-lg" />
-              <p className="text-xs text-muted-foreground">
-                Placeholders: <code className="bg-muted px-1 py-0.5 rounded">{"{{studentName}}"}</code>{" "}
-                <code className="bg-muted px-1 py-0.5 rounded">{"{{courseName}}"}</code>{" "}
-                <code className="bg-muted px-1 py-0.5 rounded">{"{{issueDate}}"}</code>{" "}
-                <code className="bg-muted px-1 py-0.5 rounded">{"{{certificateNumber}}"}</code>{" "}
-                <code className="bg-muted px-1 py-0.5 rounded">{"{{organizationName}}"}</code>
-              </p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="c-org" className="text-xs font-medium text-muted-foreground">Organization Name</Label>
+                <Label htmlFor="c-org" className="text-xs font-medium text-muted-foreground">{t("courses.organizationName")}</Label>
                 <Input id="c-org" value={organizationName} onChange={(e) => setOrganizationName(e.target.value)} className="h-9 rounded-lg" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">Layout</Label>
+                <Label className="text-xs font-medium text-muted-foreground">{t("courses.layout")}</Label>
                 <Select value={layout} onValueChange={(v) => setLayout(v as "CLASSIC" | "MODERN" | "MINIMAL")}>
                   <SelectTrigger className="w-full h-9 rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="CLASSIC">Classic</SelectItem>
-                    <SelectItem value="MODERN">Modern</SelectItem>
-                    <SelectItem value="MINIMAL">Minimal</SelectItem>
+                    <SelectItem value="CLASSIC">{t("courses.layout")}</SelectItem>
+                    <SelectItem value="MODERN">{t("courses.layout")}</SelectItem>
+                    <SelectItem value="MINIMAL">{t("courses.layout")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1434,8 +1432,8 @@ function CertificateTab({ course, onRefresh }: { course: CourseDetail; onRefresh
 
         <Card className="p-5 space-y-3 border-border bg-card shadow-sm">
           <CardHeader className="p-0">
-            <CardTitle className="text-sm font-heading font-semibold">Live Preview</CardTitle>
-            <CardDescription className="mt-1">How the certificate will look.</CardDescription>
+            <CardTitle className="text-sm font-heading font-semibold">{t("courses.livePreview")}</CardTitle>
+            <CardDescription className="mt-1">{t("courses.livePreview")}</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             <CertificatePreview
@@ -1527,6 +1525,7 @@ function SettingsTab({
   onRefresh: () => void;
   onDeleted: () => void;
 }) {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const [title, setTitle] = useState(course.title);
   const [description, setDescription] = useState(course.description || "");
@@ -1554,11 +1553,11 @@ function SettingsTab({
 
   async function save() {
     if (!title.trim()) {
-      toast({ title: "Title required", variant: "destructive" });
+      toast({ title: t("common.title") + " " + t("common.required"), variant: "destructive" });
       return;
     }
     if (accessType === "PAID" && planIds.length === 0) {
-      toast({ title: "Select at least one plan", variant: "destructive" });
+      toast({ title: t("courses.requiredPlans"), variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -1571,7 +1570,7 @@ function SettingsTab({
         isPublished,
         planIds,
       }, { method: "PUT" });
-      toast({ title: "Course updated" });
+      toast({ title: t("common.success") });
       onRefresh();
     } catch { /* toast */ } finally {
       setSaving(false);
@@ -1581,7 +1580,7 @@ function SettingsTab({
   async function doDelete() {
     try {
       await apiPost(`/api/admin/courses/${course.id}`, null, { method: "DELETE" });
-      toast({ title: "Course deleted", description: course.title });
+      toast({ title: t("common.success"), description: course.title });
       onDeleted();
     } catch { /* toast */ }
   }
@@ -1590,32 +1589,32 @@ function SettingsTab({
     <div className="space-y-4">
       <Card className="p-5 space-y-3 border-border bg-card shadow-sm">
         <CardHeader className="p-0">
-          <CardTitle className="font-heading text-base font-semibold">Course Details</CardTitle>
-          <CardDescription className="mt-1">Update the basic information about this course.</CardDescription>
+          <CardTitle className="font-heading text-base font-semibold">{t("courses.courseDescription")}</CardTitle>
+          <CardDescription className="mt-1">{t("courses.courseDescription")}</CardDescription>
         </CardHeader>
         <CardContent className="p-0 space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="s-title" className="text-xs font-medium text-muted-foreground">Title</Label>
+            <Label htmlFor="s-title" className="text-xs font-medium text-muted-foreground">{t("common.title")}</Label>
             <Input id="s-title" value={title} onChange={(e) => setTitle(e.target.value)} className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="s-desc" className="text-xs font-medium text-muted-foreground">Description</Label>
+            <Label htmlFor="s-desc" className="text-xs font-medium text-muted-foreground">{t("common.description")}</Label>
             <Textarea id="s-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="rounded-lg" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="s-cat" className="text-xs font-medium text-muted-foreground">Category</Label>
+              <Label htmlFor="s-cat" className="text-xs font-medium text-muted-foreground">{t("common.category")}</Label>
               <Input id="s-cat" value={category} onChange={(e) => setCategory(e.target.value)} className="h-9 rounded-lg" />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground">Access Type</Label>
+              <Label className="text-xs font-medium text-muted-foreground">{t("courses.accessType")}</Label>
               <Select value={accessType} onValueChange={(v) => setAccessType(v as "FREE" | "PAID")}>
                 <SelectTrigger className="w-full h-9 rounded-lg">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="FREE">Free</SelectItem>
-                  <SelectItem value="PAID">Paid</SelectItem>
+                  <SelectItem value="FREE">{t("common.free")}</SelectItem>
+                  <SelectItem value="PAID">{t("common.paid")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1623,9 +1622,9 @@ function SettingsTab({
 
           {accessType === "PAID" && (
             <div className="space-y-2 rounded-lg border border-border p-3 bg-muted/30">
-              <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Required Plans</Label>
+              <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">{t("courses.requiredPlans")}</Label>
               {plans.length === 0 ? (
-                <p className="text-xs text-destructive">No subscription plans exist. Create one in the Plans section first.</p>
+                <p className="text-xs text-destructive">{t("common.subscriptionPlans")}</p>
               ) : (
                 <div className="space-y-2 max-h-32 overflow-y-auto scrollbar-thin">
                   {plans.map((p) => (
@@ -1644,15 +1643,15 @@ function SettingsTab({
 
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <div>
-              <Label htmlFor="s-pub" className="text-sm font-medium">Published</Label>
-              <p className="text-xs text-muted-foreground mt-0.5">Make this course visible to students.</p>
+              <Label htmlFor="s-pub" className="text-sm font-medium">{t("common.published")}</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("courses.published")}</p>
             </div>
             <Switch id="s-pub" checked={isPublished} onCheckedChange={setIsPublished} />
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
             <Button disabled={saving} onClick={save} className="h-9 gap-2">
-              <Save className="h-4 w-4" /> {saving ? "Saving…" : "Save Changes"}
+              <Save className="h-4 w-4" /> {saving ? t("common.saving") : t("profile.saveChanges")}
             </Button>
           </div>
         </CardContent>
@@ -1661,15 +1660,15 @@ function SettingsTab({
       {/* Danger zone */}
       <Card className="border-destructive/30 p-5 shadow-sm">
         <CardHeader className="p-0">
-          <CardTitle className="font-heading text-base font-semibold text-destructive">Danger Zone</CardTitle>
-          <CardDescription className="mt-1">Permanent actions that cannot be undone.</CardDescription>
+          <CardTitle className="font-heading text-base font-semibold text-destructive">{t("courses.dangerZone")}</CardTitle>
+          <CardDescription className="mt-1">{t("courses.deleteCourseConfirm")}</CardDescription>
         </CardHeader>
         <CardContent className="p-0 mt-4">
           <div className="flex items-center justify-between rounded-xl border border-destructive/30 bg-destructive/5 p-4">
             <div>
-              <p className="text-sm font-medium text-foreground">Delete this course</p>
+              <p className="text-sm font-medium text-foreground">{t("courses.deleteCourse")}</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Permanently removes the course and all related content.
+                {t("courses.deleteCourseConfirm")}
               </p>
             </div>
             <Button
@@ -1678,7 +1677,7 @@ function SettingsTab({
               className="h-9 gap-2"
               onClick={() => setDeleteOpen(true)}
             >
-              <Trash2 className="h-4 w-4" /> Delete Course
+              <Trash2 className="h-4 w-4" /> {t("courses.deleteCourse")}
             </Button>
           </div>
         </CardContent>
@@ -1687,30 +1686,30 @@ function SettingsTab({
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete course permanently?</AlertDialogTitle>
+            <AlertDialogTitle>{t("courses.deleteCourse")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will delete <strong>{course.title}</strong> and all topics, videos, materials, assignments and submissions. This cannot be undone.
+              {t("courses.deleteCourseConfirm")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={doDelete}
             >
-              Delete Permanently
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       <div className="flex items-center justify-between text-xs text-muted-foreground pt-2">
-        <span>Created {formatDateTime(course.createdAt)}</span>
+        <span>{formatDateTime(course.createdAt)}</span>
         <button
           className="text-accent hover:underline"
           onClick={() => navigate(["admin", "courses"])}
         >
-          Back to courses list
+          {t("common.back")}
         </button>
       </div>
     </div>

@@ -20,6 +20,7 @@ import {
   CheckCircle2, CreditCard, Clock, ShieldCheck, AlertTriangle, Sparkles,
   ArrowRight, History, CalendarDays,
 } from "lucide-react";
+import { useI18n } from "@/lib/i18n/store";
 
 interface SubscriptionInfo {
   subscriptionId: string;
@@ -37,6 +38,7 @@ interface SubscriptionInfo {
 }
 
 export function StudentSubscription() {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const refreshUser = useAppStore((s) => s.refreshUser);
   const [renewOpen, setRenewOpen] = useState(false);
@@ -59,8 +61,8 @@ export function StudentSubscription() {
     try {
       await apiPost("/api/student/subscription/renew", { planId });
       toast({
-        title: "Subscription activated",
-        description: "Your new plan is now active. Enjoy your learning!",
+        title: t("subscription.activated"),
+        description: t("subscription.activatedDesc"),
       });
       setRenewOpen(false);
       await refetch();
@@ -84,9 +86,9 @@ export function StudentSubscription() {
     return (
       <EmptyState
         icon={<CreditCard className="h-5 w-5" />}
-        title="Couldn't load subscription"
+        title={t("subscription.couldntLoad")}
         description={error}
-        action={<Button onClick={() => window.location.reload()}>Reload</Button>}
+        action={<Button onClick={() => window.location.reload()}>{t("common.reload")}</Button>}
       />
     );
   }
@@ -104,7 +106,7 @@ export function StudentSubscription() {
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10 text-accent">
                   <CreditCard className="h-4 w-4" />
                 </span>
-                Current Plan
+                {t("subscription.currentPlan")}
               </CardTitle>
               <CardDescription className="mt-1.5">
                 {sub.planName} · {formatPrice(sub.planPrice, sub.planCurrency)}
@@ -117,21 +119,21 @@ export function StudentSubscription() {
                   : "bg-success/15 text-success border-transparent"
               }
             >
-              {isExpired ? "Expired" : "Active"}
+              {isExpired ? t("common.expired") : t("common.active")}
             </Badge>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <MetaBox label="Plan duration" value={`${sub.planDuration} ${durationUnitLabel(sub.planDurationUnit).toLowerCase()}`} icon={<Clock className="h-3.5 w-3.5" />} />
-              <MetaBox label="Started" value={formatDate(sub.startDate)} icon={<CalendarDays className="h-3.5 w-3.5" />} />
-              <MetaBox label="Expires" value={formatDate(sub.expiryDate)} icon={<CalendarDays className="h-3.5 w-3.5" />} />
-              <MetaBox label="Days left" value={`${sub.remainingDays}`} icon={<Clock className="h-3.5 w-3.5" />} highlight={!isExpired} />
+              <MetaBox label={t("subscription.planDuration")} value={`${sub.planDuration} ${durationUnitLabel(sub.planDurationUnit).toLowerCase()}`} icon={<Clock className="h-3.5 w-3.5" />} />
+              <MetaBox label={t("subscription.started")} value={formatDate(sub.startDate)} icon={<CalendarDays className="h-3.5 w-3.5" />} />
+              <MetaBox label={t("subscription.expires")} value={formatDate(sub.expiryDate)} icon={<CalendarDays className="h-3.5 w-3.5" />} />
+              <MetaBox label={t("subscription.daysLeftShort")} value={`${sub.remainingDays}`} icon={<Clock className="h-3.5 w-3.5" />} highlight={!isExpired} />
             </div>
 
             <div>
               <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-                <span>Subscription progress</span>
-                <span className="font-medium text-foreground">{Math.round(sub.elapsedPercent)}% elapsed</span>
+                <span>{t("subscription.subscriptionProgress")}</span>
+                <span className="font-medium text-foreground">{Math.round(sub.elapsedPercent)}% {t("subscription.elapsed")}</span>
               </div>
               <Progress
                 value={sub.elapsedPercent}
@@ -147,13 +149,13 @@ export function StudentSubscription() {
               <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
                 <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <p className="font-semibold text-foreground">Your subscription has expired</p>
+                  <p className="font-semibold text-foreground">{t("subscription.yourSubscriptionExpired")}</p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Renew now to restore access to paid courses, assignments and certificates.
+                    {t("subscription.renewNowDesc")}
                   </p>
                 </div>
                 <Button onClick={() => setRenewOpen(true)} className="shrink-0 gap-2 shadow-sm">
-                  <ArrowRight className="h-4 w-4" /> Renew Now
+                  <ArrowRight className="h-4 w-4" /> {t("subscription.renewNow")}
                 </Button>
               </div>
             ) : (
@@ -161,14 +163,14 @@ export function StudentSubscription() {
                 <div className="flex items-start gap-3">
                   <Clock className="h-5 w-5 text-accent shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium text-foreground">Want to extend your access?</p>
+                    <p className="font-medium text-foreground">{t("subscription.wantToExtend")}</p>
                     <p className="text-sm text-muted-foreground mt-0.5">
-                      Renew early — your new plan starts immediately and stacks on top of your current expiry.
+                      {t("subscription.renewEarlyDesc")}
                     </p>
                   </div>
                 </div>
                 <Button variant="outline" onClick={() => setRenewOpen(true)} className="shrink-0 gap-2 shadow-sm">
-                  <Sparkles className="h-4 w-4" /> Renew Early
+                  <Sparkles className="h-4 w-4" /> {t("subscription.renewEarly")}
                 </Button>
               </div>
             )}
@@ -176,8 +178,7 @@ export function StudentSubscription() {
             <div className="flex items-start gap-3 rounded-lg border border-border bg-card p-3.5 text-sm text-muted-foreground">
               <History className="h-4 w-4 text-accent shrink-0 mt-0.5" />
               <span>
-                Your previous subscription records and learning history are preserved.
-                All completed lessons, submissions and certificates remain accessible after renewal.
+                {t("subscription.historyPreserved")}
               </span>
             </div>
           </CardContent>
@@ -187,10 +188,10 @@ export function StudentSubscription() {
           <CardContent className="p-6">
             <EmptyState
               icon={<CreditCard className="h-5 w-5" />}
-              title="No active subscription"
-              description="Choose a learning plan below to unlock paid courses, assignments and certificates."
+              title={t("subscription.noActiveSubscription")}
+              description={t("subscription.choosePlanDesc")}
               action={<Button onClick={() => navigate(["student", "subscription"])} className="gap-2 shadow-sm">
-                View Plans <ArrowRight className="h-4 w-4" />
+                {t("subscription.viewPlans")} <ArrowRight className="h-4 w-4" />
               </Button>}
             />
           </CardContent>
@@ -202,10 +203,10 @@ export function StudentSubscription() {
         <div>
           <div className="mb-4">
             <h2 className="font-heading text-xl font-semibold text-foreground">
-              {isExpired ? "Choose a new plan" : "Available plans"}
+              {isExpired ? t("subscription.chooseNewPlanShort") : t("subscription.availablePlans")}
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              All plans grant immediate access to paid courses in your catalog.
+              {t("subscription.allPlansGrantAccess")}
             </p>
           </div>
           {plansLoading ? (
@@ -227,8 +228,8 @@ export function StudentSubscription() {
           ) : plans.length === 0 ? (
             <EmptyState
               icon={<Sparkles className="h-5 w-5" />}
-              title="No plans available"
-              description="Please check back soon for new subscription plans."
+              title={t("subscription.noPlansAvailableShort")}
+              description={t("subscription.checkBackSoon")}
             />
           ) : (
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -249,9 +250,9 @@ export function StudentSubscription() {
       <Dialog open={renewOpen && !isExpired && !!sub} onOpenChange={(o) => !isExpired && setRenewOpen(o)}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Renew your subscription</DialogTitle>
+            <DialogTitle>{t("subscription.renewYourSubscription")}</DialogTitle>
             <DialogDescription>
-              Pick a plan to extend your access. Your new subscription starts immediately.
+              {t("subscription.pickPlanExtend")}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 md:grid-cols-2 max-h-[60vh] overflow-y-auto scrollbar-thin pr-1">
@@ -266,7 +267,7 @@ export function StudentSubscription() {
             ))}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRenewOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setRenewOpen(false)}>{t("common.cancel")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -294,6 +295,7 @@ function PlanCard({
   subscribing: string | null;
   compact?: boolean;
 }) {
+  const { t } = useI18n();
   const busy = subscribing !== null;
   const isCurrent = subscribing === plan.id;
   return (
@@ -304,7 +306,7 @@ function PlanCard({
     >
       {plan.isPopular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <Badge className="bg-accent text-accent-foreground shadow-sm">★ Most Popular</Badge>
+          <Badge className="bg-accent text-accent-foreground shadow-sm">{t("subscription.mostPopularShort")}</Badge>
         </div>
       )}
       <div className="mb-4">
@@ -332,7 +334,7 @@ function PlanCard({
           </li>
         ))}
         {!compact && plan.features.length > 6 && (
-          <li className="text-xs text-muted-foreground">+ {plan.features.length - 6} more</li>
+          <li className="text-xs text-muted-foreground">{t("subscription.more").replace("{count}", String(plan.features.length - 6))}</li>
         )}
       </ul>
       <Button
@@ -341,7 +343,7 @@ function PlanCard({
         variant={plan.isPopular ? "default" : "outline"}
         className="w-full gap-2 shadow-sm"
       >
-        {isCurrent ? "Activating..." : "Subscribe"}
+        {isCurrent ? t("subscription.activating") : t("subscription.subscribe")}
         {!isCurrent && <ArrowRight className="h-4 w-4" />}
       </Button>
     </Card>

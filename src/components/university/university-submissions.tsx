@@ -24,6 +24,7 @@ import {
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch, apiPost } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
 import { formatDateTime } from "@/types";
 import {
@@ -79,6 +80,7 @@ interface SubmissionDetail {
 }
 
 export function UniversitySubmissions() {
+  const { t } = useI18n();
   const query = useAppStore((s) => s.query);
   const navigate = useAppStore((s) => s.navigate);
   const [search, setSearch] = useState("");
@@ -133,28 +135,28 @@ export function UniversitySubmissions() {
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by student, assignment or course…"
                 className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Search submissions"
+                aria-label={t("common.search")}
               />
             </div>
             <Select
               value={statusFilter}
               onValueChange={(v) => setStatusFilter(v as "ALL" | "SUBMITTED" | "REVIEWED")}
             >
-              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[140px]" aria-label="Filter by status">
+              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[140px]" aria-label={t("common.status")}>
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All statuses</SelectItem>
+                <SelectItem value="ALL">{t("common.allStatuses")}</SelectItem>
                 <SelectItem value="SUBMITTED">Submitted</SelectItem>
                 <SelectItem value="REVIEWED">Reviewed</SelectItem>
               </SelectContent>
             </Select>
             <Select value={courseFilter} onValueChange={setCourseFilter}>
-              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[180px]" aria-label="Filter by course">
+              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[180px]" aria-label={t("common.course")}>
                 <SelectValue placeholder="All courses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All courses</SelectItem>
+                <SelectItem value="ALL">{t("common.all")}</SelectItem>
                 {(coursesData?.courses || []).map((c) => (
                   <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
                 ))}
@@ -182,12 +184,12 @@ export function UniversitySubmissions() {
             ))}
           </div>
         ) : error ? (
-          <EmptyState className="m-4" icon={<Inbox className="h-5 w-5" />} title="Couldn't load submissions" description={error} />
+          <EmptyState className="m-4" icon={<Inbox className="h-5 w-5" />} title={t("common.error")} description={error} />
         ) : submissions.length === 0 ? (
           <EmptyState
             className="m-4"
             icon={<Inbox className="h-5 w-5" />}
-            title="No submissions yet"
+            title={t("empty.noData")}
             description="Student assignment submissions for your courses will appear here once they start submitting."
           />
         ) : (

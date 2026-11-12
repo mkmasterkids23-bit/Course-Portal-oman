@@ -1,0 +1,813 @@
+     1→"use client";
+     2→
+     3→import { useAppStore } from "@/stores/app-store";
+     4→import { Button } from "@/components/ui/button";
+     5→import { Card, CardContent } from "@/components/ui/card";
+     6→import { Badge } from "@/components/ui/badge";
+     7→import { Skeleton } from "@/components/ui/skeleton";
+     8→import { EmptyState } from "@/components/shared/empty-state";
+     9→import { CourseThumbnail } from "@/components/shared/course-thumbnail";
+    10→import { UniversityBadge } from "@/components/shared/university-badge";
+    11→import { useApiFetch } from "@/hooks/use-api";
+    12→import {
+    13→  ArrowRight, BookOpen, Award, Users, Clock, CheckCircle2,
+    14→  Sparkles, GraduationCap, Video, FileText, ShieldCheck, Star, TrendingUp,
+    15→  Building2, PlayCircle, Timer, Trophy, ChevronDown, Handshake
+    16→} from "lucide-react";
+    17→import { formatPrice, durationUnitLabel, type CoursePublic, type SubscriptionPlanPublic } from "@/types";
+    18→
+    19→export function HomePage() {
+    20→  const navigate = useAppStore((s) => s.navigate);
+    21→
+    22→  const { data: coursesData, loading: coursesLoading } = useApiFetch<{ courses: CoursePublic[] }>(
+    23→    "/api/public/courses"
+    24→  );
+    25→  const { data: plansData, loading: plansLoading } = useApiFetch<{ plans: SubscriptionPlanPublic[] }>(
+    26→    "/api/public/plans"
+    27→  );
+    28→
+    29→  const courses = coursesData?.courses || [];
+    30→  const featured = courses.slice(0, 6);
+    31→  const plans = plansData?.plans || [];
+    32→
+    33→  // Derive universities from course data (no extra API call)
+    34→  const universities = (() => {
+    35→    const map = new Map<string, { id: string; name: string; logo?: string | null; courseCount: number }>();
+    36→    for (const c of courses) {
+    37→      if (!c.university) continue;
+    38→      const existing = map.get(c.university.id);
+    39→      if (existing) existing.courseCount += 1;
+    40→      else map.set(c.university.id, { id: c.university.id, name: c.university.name, logo: c.university.logo ?? null, courseCount: 1 });
+    41→    }
+    42→    return Array.from(map.values()).sort((a, b) => b.courseCount - a.courseCount).slice(0, 6);
+    43→  })();
+    44→
+    45→  const stats = [
+    46→    { icon: Building2, label: "Universities", value: universities.length > 0 ? String(universities.length) : "6+" },
+    47→    { icon: BookOpen, label: "Courses", value: courses.length > 0 ? String(courses.length) : "48" },
+    48→    { icon: Users, label: "Active Learners", value: "2,000+" },
+    49→    { icon: Award, label: "Certificates Issued", value: "5,400+" },
+    50→  ];
+    51→
+    52→  return (
+    53→    <div>
+    54→      {/* ─────────── Hero ─────────── */}
+    55→      <section className="relative overflow-hidden border-b border-border bg-soft-sage/40">
+    56→        <div
+    57→          className="pointer-events-none absolute inset-0 -z-10 opacity-90"
+    58→          style={{
+    59→            background:
+    60→              "radial-gradient(circle at 80% 20%, rgba(120,151,134,0.18), transparent 55%), radial-gradient(circle at 10% 80%, rgba(52,79,66,0.06), transparent 55%)",
+    61→          }}
+    62→        />
+    63→        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-16 md:py-20 lg:py-24">
+    64→          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+    65→            {/* Left column */}
+    66→            <div className="space-y-6 animate-fade-in-up">
+    67→              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm">
+    68→                <Sparkles className="h-3.5 w-3.5 text-accent" />
+    69→                <span>A New Way to Learn</span>
+    70→              </div>
+    71→              <h1 className="font-heading text-3xl font-semibold leading-[1.1] tracking-tight text-foreground md:text-4xl lg:text-[44px]">
+    72→                Professional learning,
+    73→                <span className="block text-primary">verifiable certificates.</span>
+    74→              </h1>
+    75→              <p className="text-base text-muted-foreground max-w-xl leading-relaxed md:text-lg">
+    76→                CourseLearn brings universities and learners together on one platform.
+    77→                Structured video lessons, real assessments and certificates that actually mean
+    78→                something — built for serious outcomes.
+    79→              </p>
+    80→              <div className="flex flex-wrap items-center gap-3 pt-1">
+    81→                <Button
+    82→                  size="lg"
+    83→                  onClick={() => navigate(["courses"])}
+    84→                  className="gap-2 h-11 px-6 bg-primary text-primary-foreground hover:bg-primary/90"
+    85→                >
+    86→                  Explore Courses
+    87→                  <ArrowRight className="h-4 w-4" />
+    88→                </Button>
+    89→                <Button
+    90→                  size="lg"
+    91→                  variant="outline"
+    92→                  onClick={() => navigate(["courses"])}
+    93→                  className="gap-2 h-11 px-6 border-border bg-card hover:bg-soft-sage"
+    94→                >
+    95→                  <Building2 className="h-4 w-4" />
+    96→                  Discover Universities
+    97→                </Button>
+    98→              </div>
+    99→              <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-3 text-sm text-muted-foreground">
+   100→                <span className="flex items-center gap-1.5">
+   101→                  <Video className="h-4 w-4 text-accent" /> Recorded video lessons
+   102→                </span>
+   103→                <span className="flex items-center gap-1.5">
+   104→                  <Award className="h-4 w-4 text-accent" /> Verifiable certificates
+   105→                </span>
+   106→                <span className="flex items-center gap-1.5">
+   107→                  <ShieldCheck className="h-4 w-4 text-accent" /> Structured learning paths
+   108→                </span>
+   109→              </div>
+   110→            </div>
+   111→
+   112→            {/* Right column — visual composition */}
+   113→            <div className="relative hidden lg:block animate-fade-in-up">
+   114→              <div className="relative space-y-4">
+   115→                {/* Top: university identity strip */}
+   116→                <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+   117→                  <div className="flex items-center justify-between">
+   118→                    <div className="flex items-center gap-3">
+   119→                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+   120→                        <GraduationCap className="h-5 w-5" />
+   121→                      </div>
+   122→                      <div>
+   123→                        <p className="font-heading text-sm font-semibold tracking-tight text-foreground">
+   124→                          Multi-University Catalog
+   125→                        </p>
+   126→                        <p className="text-xs text-muted-foreground">Browse courses across institutions</p>
+   127→                      </div>
+   128→                    </div>
+   129→                    <Badge className="bg-success/15 text-success hover:bg-success/15" variant="secondary">
+   130→                      Live
+   131→                    </Badge>
+   132→                  </div>
+   133→                  <div className="mt-3 flex flex-wrap items-center gap-2">
+   134→                    {universities.slice(0, 4).map((u, i) => (
+   135→                      <span
+   136→                        key={u.id}
+   137→                        className="inline-flex items-center gap-1.5 rounded-full border border-border bg-soft-sage px-2 py-0.5 text-xs font-medium text-foreground"
+   138→                      >
+   139→                        {u.logo ? (
+   140→                          <img src={u.logo} alt="" className="h-3.5 w-3.5 rounded-full object-cover" />
+   141→                        ) : (
+   142→                          <Building2 className="h-3 w-3 text-accent" />
+   143→                        )}
+   144→                        {u.name}
+   145→                      </span>
+   146→                    ))}
+   147→                    {universities.length === 0 && (
+   148→                      <>
+   149→                        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-soft-sage px-2 py-0.5 text-xs font-medium text-foreground">
+   150→                          <Building2 className="h-3 w-3 text-accent" /> Global Tech Institute
+   151→                        </span>
+   152→                        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-soft-sage px-2 py-0.5 text-xs font-medium text-foreground">
+   153→                          <Building2 className="h-3 w-3 text-accent" /> Design Academy
+   154→                        </span>
+   155→                        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-soft-sage px-2 py-0.5 text-xs font-medium text-foreground">
+   156→                          <Building2 className="h-3 w-3 text-accent" /> Business School
+   157→                        </span>
+   158→                      </>
+   159→                    )}
+   160→                  </div>
+   161→                </div>
+   162→
+   163→                {/* Middle: featured course card */}
+   164→                <div className="rounded-lg border border-border bg-card p-4 shadow-sm transition-all duration-200 hover:shadow-md">
+   165→                  <div className="flex items-start gap-3">
+   166→                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-soft-sage text-accent">
+   167→                      <PlayCircle className="h-6 w-6" />
+   168→                    </div>
+   169→                    <div className="min-w-0 flex-1">
+   170→                      <div className="mb-1 flex items-center gap-2">
+   171→                        <Badge className="bg-primary text-primary-foreground text-[10px]" variant="default">
+   172→                          Paid
+   173→                        </Badge>
+   174→                        <Badge variant="outline" className="border-border text-[10px]">Marketing</Badge>
+   175→                      </div>
+   176→                      <p className="font-heading text-sm font-semibold tracking-tight text-foreground line-clamp-1">
+   177→                        {featured[0]?.title || "Digital Marketing Foundations"}
+   178→                      </p>
+   179→                      <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
+   180→                        {featured[0]?.description || "A structured path from strategy to execution."}
+   181→                      </p>
+   182→                    </div>
+   183→                  </div>
+   184→                  <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-xs text-muted-foreground">
+   185→                    <span className="flex items-center gap-1.5">
+   186→                      <Video className="h-3.5 w-3.5 text-accent" /> 12 lessons
+   187→                    </span>
+   188→                    <span className="flex items-center gap-1.5">
+   189→                      <Clock className="h-3.5 w-3.5 text-accent" /> 4h 20m
+   190→                    </span>
+   191→                  </div>
+   192→                </div>
+   193→
+   194→                {/* Bottom: certificate preview */}
+   195→                <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+   196→                  <div className="flex items-center gap-3">
+   197→                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/15 text-success">
+   198→                      <Trophy className="h-5 w-5" />
+   199→                    </div>
+   200→                    <div className="flex-1">
+   201→                      <p className="font-heading text-sm font-semibold tracking-tight text-foreground">
+   202→                        Certificate Earned
+   203→                      </p>
+   204→                      <p className="text-xs text-muted-foreground">Verifiable ID · CL-2024-08AF31</p>
+   205→                    </div>
+   206→                    <ShieldCheck className="h-5 w-5 text-success" />
+   207→                  </div>
+   208→                </div>
+   209→              </div>
+   210→              <div className="absolute -bottom-4 -right-4 -z-10 h-full w-full rounded-lg border border-accent/20 bg-soft-sage/50" />
+   211→            </div>
+   212→          </div>
+   213→        </div>
+   214→      </section>
+   215→
+   216→      {/* ─────────── Stats bar ─────────── */}
+   217→      <section className="border-b border-border bg-card">
+   218→        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-10">
+   219→          <div className="grid grid-cols-2 gap-6 md:grid-cols-4 md:divide-x md:divide-border">
+   220→            {stats.map((s, idx) => (
+   221→              <div
+   222→                key={s.label}
+   223→                className={`flex items-center gap-3 ${idx > 0 ? "md:pl-6" : ""}`}
+   224→              >
+   225→                <div className="stat-icon bg-soft-sage text-accent">
+   226→                  <s.icon className="h-5 w-5" />
+   227→                </div>
+   228→                <div>
+   229→                  <p className="font-heading text-2xl font-bold tabular-nums leading-none text-foreground">
+   230→                    {s.value}
+   231→                  </p>
+   232→                  <p className="mt-1 text-xs text-muted-foreground">{s.label}</p>
+   233→                </div>
+   234→              </div>
+   235→            ))}
+   236→          </div>
+   237→        </div>
+   238→      </section>
+   239→
+   240→      {/* ─────────── Featured Universities ─────────── */}
+   241→      <section className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-16">
+   242→        <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
+   243→          <div className="space-y-2">
+   244→            <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+   245→              Featured Universities
+   246→            </p>
+   247→            <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
+   248→              Learn from trusted institutions
+   249→            </h2>
+   250→          </div>
+   251→          <Button
+   252→            variant="outline"
+   253→            onClick={() => navigate(["courses"])}
+   254→            className="gap-2 h-9 border-border bg-card hover:bg-soft-sage"
+   255→          >
+   256→            Browse all courses
+   257→            <ArrowRight className="h-4 w-4" />
+   258→          </Button>
+   259→        </div>
+   260→
+   261→        {universities.length === 0 ? (
+   262→          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+   263→            {[1, 2, 3].map((i) => (
+   264→              <Card key={i} className="p-5 shadow-sm">
+   265→                <div className="flex items-center gap-3">
+   266→                  <Skeleton className="h-12 w-12 rounded-lg" />
+   267→                  <div className="space-y-2">
+   268→                    <Skeleton className="h-4 w-32" />
+   269→                    <Skeleton className="h-3 w-20" />
+   270→                  </div>
+   271→                </div>
+   272→                <Skeleton className="mt-4 h-3 w-full" />
+   273→              </Card>
+   274→            ))}
+   275→          </div>
+   276→        ) : (
+   277→          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+   278→            {universities.map((u) => (
+   279→              <Card
+   280→                key={u.id}
+   281→                className="group cursor-pointer p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:border-accent/40"
+   282→                onClick={() => navigate(["courses"])}
+   283→              >
+   284→                <div className="flex items-center gap-4">
+   285→                  {u.logo ? (
+   286→                    <img
+   287→                      src={u.logo}
+   288→                      alt={`${u.name} logo`}
+   289→                      className="h-12 w-12 rounded-lg object-cover bg-white ring-1 ring-border"
+   290→                    />
+   291→                  ) : (
+   292→                    <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground ring-1 ring-primary/30">
+   293→                      <Building2 className="h-5 w-5" />
+   294→                    </span>
+   295→                  )}
+   296→                  <div className="min-w-0 flex-1">
+   297→                    <h3 className="font-heading text-base font-semibold tracking-tight text-foreground line-clamp-1 transition-colors group-hover:text-primary">
+   298→                      {u.name}
+   299→                    </h3>
+   300→                    <p className="mt-0.5 text-xs text-muted-foreground">
+   301→                      {u.courseCount} course{u.courseCount === 1 ? "" : "s"} published
+   302→                    </p>
+   303→                  </div>
+   304→                </div>
+   305→                <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
+   306→                  <span className="text-xs text-muted-foreground">Explore catalog</span>
+   307→                  <ArrowRight className="h-4 w-4 text-accent transition-transform group-hover:translate-x-0.5" />
+   308→                </div>
+   309→              </Card>
+   310→            ))}
+   311→          </div>
+   312→        )}
+   313→      </section>
+   314→
+   315→      {/* ─────────── Explore Courses ─────────── */}
+   316→      <section id="courses" className="border-y border-border bg-muted/40">
+   317→        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-16">
+   318→          <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
+   319→            <div className="space-y-2">
+   320→              <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+   321→                Explore Courses
+   322→              </p>
+   323→              <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
+   324→                Start learning from our most popular courses
+   325→              </h2>
+   326→            </div>
+   327→            <Button
+   328→              variant="outline"
+   329→              onClick={() => navigate(["courses"])}
+   330→              className="gap-2 h-9 border-border bg-card hover:bg-soft-sage"
+   331→            >
+   332→              View all courses
+   333→              <ArrowRight className="h-4 w-4" />
+   334→            </Button>
+   335→          </div>
+   336→
+   337→          {coursesLoading ? (
+   338→            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+   339→              {[1, 2, 3].map((i) => (
+   340→                <Card key={i} className="overflow-hidden p-0">
+   341→                  <Skeleton className="h-44 w-full rounded-none" />
+   342→                  <div className="space-y-3 p-5">
+   343→                    <Skeleton className="h-4 w-1/3" />
+   344→                    <Skeleton className="h-6 w-3/4" />
+   345→                    <Skeleton className="h-4 w-full" />
+   346→                    <Skeleton className="h-4 w-2/3" />
+   347→                  </div>
+   348→                </Card>
+   349→              ))}
+   350→            </div>
+   351→          ) : featured.length === 0 ? (
+   352→            <EmptyState
+   353→              icon={<BookOpen className="h-5 w-5" />}
+   354→              title="No courses published yet"
+   355→              description="Our team is preparing new courses. Please check back soon."
+   356→            />
+   357→          ) : (
+   358→            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+   359→              {featured.map((c) => (
+   360→                <CourseCardMini key={c.id} course={c} onOpen={() => navigate(["courses"])} />
+   361→              ))}
+   362→            </div>
+   363→          )}
+   364→        </div>
+   365→      </section>
+   366→
+   367→      {/* ─────────── How It Works ─────────── */}
+   368→      <section className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-20">
+   369→        <div className="mb-12 space-y-2 text-center">
+   370→          <p className="text-xs font-semibold uppercase tracking-wider text-accent">How It Works</p>
+   371→          <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
+   372→            Three steps to a verifiable certificate
+   373→          </h2>
+   374→          <p className="mx-auto max-w-2xl text-sm text-muted-foreground md:text-base">
+   375→            A clear, accountable path from discovery to certification — designed for genuine learning.
+   376→          </p>
+   377→        </div>
+   378→        <div className="grid gap-5 md:grid-cols-3">
+   379→          {[
+   380→            { icon: BookOpen, step: "01", title: "Discover", desc: "Browse courses across multiple universities and find the right path for your goals." },
+   381→            { icon: ShieldCheck, step: "02", title: "Choose", desc: "Pick a learning plan, enroll and unlock structured video lessons and materials." },
+   382→            { icon: Award, step: "03", title: "Learn & Earn", desc: "Watch lessons, complete assignments and receive a verifiable certificate." },
+   383→          ].map((s) => (
+   384→            <Card key={s.step} className="relative p-6 shadow-sm transition-all duration-200 hover:shadow-md">
+   385→              <div className="absolute right-5 top-5 font-heading text-3xl font-bold tabular-nums text-soft-sage">
+   386→                {s.step}
+   387→              </div>
+   388→              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-soft-sage text-accent">
+   389→                <s.icon className="h-5 w-5" />
+   390→              </div>
+   391→              <h3 className="font-heading text-base font-semibold tracking-tight text-foreground">
+   392→                {s.title}
+   393→              </h3>
+   394→              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.desc}</p>
+   395→            </Card>
+   396→          ))}
+   397→        </div>
+   398→      </section>
+   399→
+   400→      {/* ─────────── Interactive Learning ─────────── */}
+   401→      <section className="border-y border-border bg-muted/40">
+   402→        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-20">
+   403→          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+   404→            <div className="space-y-5">
+   405→              <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+   406→                Interactive Learning
+   407→              </p>
+   408→              <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
+   409→                Built for active, accountable learning
+   410→              </h2>
+   411→              <p className="text-sm leading-relaxed text-muted-foreground md:text-base">
+   412→                Every lesson is designed to keep you engaged and on track. Watch video lessons,
+   413→                answer timed questions, complete real assessments, and earn certificates that
+   414→                represent genuine work.
+   415→              </p>
+   416→              <div className="space-y-3 pt-2">
+   417→                {[
+   418→                  { icon: Video, title: "Video-based learning", desc: "Recorded lessons with progress tracking that only completes when genuinely watched." },
+   419→                  { icon: Timer, title: "Timed questions & assessments", desc: "Embedded questions verify understanding as you go, not just at the end." },
+   420→                  { icon: FileText, title: "Hands-on assignments", desc: "Apply knowledge with downloadable assignments reviewed by instructors." },
+   421→                  { icon: Trophy, title: "Verifiable certificates", desc: "Each certificate carries a unique ID learners can share with employers." },
+   422→                ].map((f) => (
+   423→                  <div
+   424→                    key={f.title}
+   425→                    className="flex items-start gap-3 rounded-lg border border-border bg-card p-4 transition-all duration-200 hover:border-accent/40 hover:shadow-sm"
+   426→                  >
+   427→                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-soft-sage text-accent">
+   428→                      <f.icon className="h-4 w-4" />
+   429→                    </div>
+   430→                    <div>
+   431→                      <p className="font-heading text-sm font-semibold tracking-tight text-foreground">
+   432→                        {f.title}
+   433→                      </p>
+   434→                      <p className="mt-0.5 text-xs text-muted-foreground">{f.desc}</p>
+   435→                    </div>
+   436→                  </div>
+   437→                ))}
+   438→              </div>
+   439→            </div>
+   440→
+   441→            {/* Visual: assessment mockup */}
+   442→            <div className="relative">
+   443→              <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+   444→                <div className="mb-4 flex items-center justify-between border-b border-border pb-4">
+   445→                  <div className="flex items-center gap-3">
+   446→                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+   447→                      <Timer className="h-5 w-5" />
+   448→                    </div>
+   449→                    <div>
+   450→                      <p className="font-heading text-sm font-semibold tracking-tight text-foreground">
+   451→                        Topic 3 · Assessment
+   452→                      </p>
+   453→                      <p className="text-xs text-muted-foreground">Question 2 of 5</p>
+   454→                    </div>
+   455→                  </div>
+   456→                  <div className="flex items-center gap-1.5 rounded-full bg-warning/15 px-2.5 py-1 text-xs font-medium text-warning">
+   457→                    <Clock className="h-3 w-3" /> 00:47
+   458→                  </div>
+   459→                </div>
+   460→                <p className="text-sm font-medium text-foreground">
+   461→                  What is the primary goal of a content marketing funnel?
+   462→                </p>
+   463→                <div className="mt-4 space-y-2">
+   464→                  {[
+   465→                    { label: "Increase social media followers", selected: false },
+   466→                    { label: "Guide prospects toward a conversion", selected: true },
+   467→                    { label: "Reduce advertising spend", selected: false },
+   468→                    { label: "Improve email deliverability", selected: false },
+   469→                  ].map((opt) => (
+   470→                    <div
+   471→                      key={opt.label}
+   472→                      className={`flex items-center gap-3 rounded-lg border p-3 text-sm transition-all duration-200 ${
+   473→                        opt.selected
+   474→                          ? "border-primary bg-soft-sage text-foreground"
+   475→                          : "border-border bg-card text-muted-foreground"
+   476→                      }`}
+   477→                    >
+   478→                      <span
+   479→                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
+   480→                          opt.selected ? "border-primary bg-primary text-primary-foreground" : "border-border"
+   481→                        }`}
+   482→                      >
+   483→                        {opt.selected && <CheckCircle2 className="h-3 w-3" />}
+   484→                      </span>
+   485→                      {opt.label}
+   486→                    </div>
+   487→                  ))}
+   488→                </div>
+   489→                <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
+   490→                  <span className="text-xs text-muted-foreground">Auto-graded on submit</span>
+   491→                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success">
+   492→                    <ShieldCheck className="h-3.5 w-3.5" /> Verified progress
+   493→                  </span>
+   494→                </div>
+   495→              </div>
+   496→              <div className="absolute -bottom-3 -right-3 -z-10 h-full w-full rounded-lg border border-accent/20 bg-soft-sage/40" />
+   497→            </div>
+   498→          </div>
+   499→        </div>
+   500→      </section>
+   501→
+   502→      {/* ─────────── Learning Plans ─────────── */}
+   503→      <section id="plans" className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-20">
+   504→        <div className="mb-10 space-y-3 text-center">
+   505→          <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+   506→            Learning Plans
+   507→          </p>
+   508→          <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
+   509→            Choose the plan that fits your goals
+   510→          </h2>
+   511→          <p className="mx-auto max-w-2xl text-sm text-muted-foreground">
+   512→            Transparent pricing. No hidden fees. Cancel anytime by letting your plan expire.
+   513→          </p>
+   514→        </div>
+   515→
+   516→        {plansLoading ? (
+   517→          <div className="grid gap-5 md:grid-cols-3">
+   518→            {[1, 2, 3].map((i) => (
+   519→              <Card key={i} className="p-6">
+   520→                <Skeleton className="mb-4 h-6 w-1/3" />
+   521→                <Skeleton className="mb-2 h-10 w-2/3" />
+   522→                <Skeleton className="mb-6 h-4 w-1/2" />
+   523→                <div className="space-y-3">
+   524→                  {[1, 2, 3, 4].map((j) => (
+   525→                    <Skeleton key={j} className="h-4 w-full" />
+   526→                  ))}
+   527→                </div>
+   528→                <Skeleton className="mt-6 h-10 w-full" />
+   529→              </Card>
+   530→            ))}
+   531→          </div>
+   532→        ) : plans.length === 0 ? (
+   533→          <EmptyState
+   534→            icon={<TrendingUp className="h-5 w-5" />}
+   535→            title="No subscription plans available yet"
+   536→            description="Our team is preparing learning plans. Please check back soon."
+   537→          />
+   538→        ) : (
+   539→          <div className="mx-auto grid max-w-5xl gap-5 md:grid-cols-3 md:items-start">
+   540→            {plans.map((p) => (
+   541→              <PlanCard
+   542→                key={p.id}
+   543→                plan={p}
+   544→                onSelect={() => navigate(["register"], { planId: p.id })}
+   545→              />
+   546→            ))}
+   547→          </div>
+   548→        )}
+   549→      </section>
+   550→
+   551→      {/* ─────────── University Partnership ─────────── */}
+   552→      <section className="border-y border-border bg-soft-sage/40">
+   553→        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-20">
+   554→          <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+   555→            <div className="space-y-5">
+   556→              <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+   557→                University Partnership
+   558→              </p>
+   559→              <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
+   560→                Bring your institution to CourseLearn
+   561→              </h2>
+   562→              <p className="text-sm leading-relaxed text-muted-foreground md:text-base">
+   563→                Universities join CourseLearn to publish structured courses, deliver video lessons
+   564→                and issue verifiable certificates — all from a single, professional platform.
+   565→                Reach motivated learners worldwide with built-in progress tracking and assessments.
+   566→              </p>
+   567→              <div className="flex flex-wrap items-center gap-3 pt-2">
+   568→                <Button
+   569→                  size="lg"
+   570→                  onClick={() => navigate(["register"])}
+   571→                  className="gap-2 h-11 px-6 bg-primary text-primary-foreground hover:bg-primary/90"
+   572→                >
+   573→                  <Handshake className="h-4 w-4" />
+   574→                  Become a partner
+   575→                </Button>
+   576→                <Button
+   577→                  size="lg"
+   578→                  variant="outline"
+   579→                  onClick={() => navigate(["about"])}
+   580→                  className="h-11 px-6 border-border bg-card hover:bg-soft-sage"
+   581→                >
+   582→                  Learn more
+   583→                </Button>
+   584→              </div>
+   585→            </div>
+   586→
+   587→            <div className="grid grid-cols-2 gap-4">
+   588→              {[
+   589→                { icon: Building2, title: "Publish courses", desc: "Structured topics, videos and materials." },
+   590→                { icon: Video, title: "Deliver lessons", desc: "Recorded videos with progress tracking." },
+   591→                { icon: FileText, title: "Assess learners", desc: "Assignments reviewed by your faculty." },
+   592→                { icon: Award, title: "Issue certificates", desc: "Unique, verifiable certificate IDs." },
+   593→              ].map((f) => (
+   594→                <Card key={f.title} className="p-5 shadow-sm transition-all duration-200 hover:shadow-md">
+   595→                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-soft-sage text-accent">
+   596→                    <f.icon className="h-5 w-5" />
+   597→                  </div>
+   598→                  <h3 className="font-heading text-sm font-semibold tracking-tight text-foreground">
+   599→                    {f.title}
+   600→                  </h3>
+   601→                  <p className="mt-1 text-xs text-muted-foreground">{f.desc}</p>
+   602→                </Card>
+   603→              ))}
+   604→            </div>
+   605→          </div>
+   606→        </div>
+   607→      </section>
+   608→
+   609→      {/* ─────────── FAQ ─────────── */}
+   610→      <section className="mx-auto max-w-3xl px-4 md:px-6 lg:px-8 py-20">
+   611→        <div className="mb-10 space-y-2 text-center">
+   612→          <p className="text-xs font-semibold uppercase tracking-wider text-accent">FAQ</p>
+   613→          <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
+   614→            Frequently asked questions
+   615→          </h2>
+   616→        </div>
+   617→        <div className="space-y-3">
+   618→          {[
+   619→            {
+   620→              q: "How do I get started with CourseLearn?",
+   621→              a: "Create a free account, choose a learning plan that fits your goals, and you'll immediately unlock access to your enrolled courses with video lessons, materials and assignments.",
+   622→            },
+   623→            {
+   624→              q: "Are certificates verifiable?",
+   625→              a: "Yes. Every certificate carries a unique ID. Learners receive a verifiable link and PDF copy they can share with employers or include on professional profiles.",
+   626→            },
+   627→            {
+   628→              q: "How does progress tracking work?",
+   629→              a: "Lessons are only marked complete when genuinely watched. Assignments unlock after the prerequisite video lessons are completed, ensuring real engagement with the material.",
+   630→            },
+   631→            {
+   632→              q: "Can I learn from multiple universities?",
+   633→              a: "Absolutely. CourseLearn brings multiple universities onto one platform. Browse the full catalog and enroll in courses from any partner institution with a single account.",
+   634→            },
+   635→            {
+   636→              q: "What if I let my plan expire?",
+   637→              a: "You retain access to your earned certificates and completed coursework. To enroll in new courses or resume in-progress ones, simply renew your subscription plan.",
+   638→            },
+   639→          ].map((item) => (
+   640→            <details
+   641→              key={item.q}
+   642→              className="group rounded-lg border border-border bg-card p-0 shadow-sm transition-all duration-200 hover:border-accent/40 [&[open]]:shadow-md"
+   643→            >
+   644→              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4">
+   645→                <span className="font-heading text-sm font-semibold tracking-tight text-foreground">
+   646→                  {item.q}
+   647→                </span>
+   648→                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180" />
+   649→              </summary>
+   650→              <div className="px-5 pb-5 text-sm leading-relaxed text-muted-foreground">
+   651→                {item.a}
+   652→              </div>
+   653→            </details>
+   654→          ))}
+   655→        </div>
+   656→      </section>
+   657→
+   658→      {/* ─────────── CTA ─────────── */}
+   659→      <section className="bg-primary text-primary-foreground">
+   660→        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-16 text-center md:py-20">
+   661→          <h2 className="font-heading text-2xl font-semibold tracking-tight md:text-[32px]">
+   662→            Ready to start your learning journey?
+   663→          </h2>
+   664→          <p className="mx-auto mt-3 max-w-xl text-sm text-primary-foreground/80 md:text-base">
+   665→            Create your account, pick a learning plan and unlock structured courses today.
+   666→          </p>
+   667→          <div className="mt-7 flex flex-wrap justify-center gap-3">
+   668→            <Button
+   669→              size="lg"
+   670→              variant="secondary"
+   671→              onClick={() => navigate(["register"])}
+   672→              className="gap-2 h-11 px-6 bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+   673→            >
+   674→              Get Started
+   675→              <ArrowRight className="h-4 w-4" />
+   676→            </Button>
+   677→            <Button
+   678→              size="lg"
+   679→              variant="outline"
+   680→              onClick={() => navigate(["courses"])}
+   681→              className="h-11 border-primary-foreground/30 bg-transparent px-6 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+   682→            >
+   683→              Browse Courses
+   684→            </Button>
+   685→          </div>
+   686→        </div>
+   687→      </section>
+   688→    </div>
+   689→  );
+   690→}
+   691→
+   692→function CourseCardMini({ course, onOpen }: { course: CoursePublic; onOpen: () => void }) {
+   693→  return (
+   694→    <Card
+   695→      className="group cursor-pointer overflow-hidden p-0 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-accent/40"
+   696→      onClick={onOpen}
+   697→    >
+   698→      <div className="relative h-44 overflow-hidden bg-muted">
+   699→        <CourseThumbnail
+   700→          thumbnail={course.thumbnail}
+   701→          firstVideoUrl={(course as any).firstVideoUrl}
+   702→          firstVideoSource={(course as any).firstVideoSource}
+   703→          alt={course.title}
+   704→          className="h-full w-full"
+   705→          showPlayOverlay
+   706→        />
+   707→        <div className="absolute top-3 left-3 flex gap-1.5">
+   708→          <Badge
+   709→            variant={course.accessType === "FREE" ? "secondary" : "default"}
+   710→            className={
+   711→              course.accessType === "FREE"
+   712→                ? "bg-success/15 text-success hover:bg-success/20"
+   713→                : "bg-primary text-primary-foreground"
+   714→            }
+   715→          >
+   716→            {course.accessType === "FREE" ? "Free" : "Paid"}
+   717→          </Badge>
+   718→          {course.category && (
+   719→            <Badge variant="outline" className="border-border bg-background/85 backdrop-blur">
+   720→              {course.category}
+   721→            </Badge>
+   722→          )}
+   723→        </div>
+   724→      </div>
+   725→      <CardContent className="space-y-2.5 p-5">
+   726→        <h3 className="font-heading text-[15px] font-semibold tracking-tight text-foreground line-clamp-1 transition-colors group-hover:text-primary">
+   727→          {course.title}
+   728→        </h3>
+   729→        {course.university && (
+   730→          <UniversityBadge university={course.university} size="xs" />
+   731→        )}
+   732→        <p className="min-h-[2.5rem] text-sm text-muted-foreground line-clamp-2">
+   733→          {course.description || "No description provided."}
+   734→        </p>
+   735→        <div className="flex items-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
+   736→          <span className="flex items-center gap-1.5">
+   737→            <BookOpen className="h-3.5 w-3.5" /> {course.topicsCount} topics
+   738→          </span>
+   739→          <span className="flex items-center gap-1.5">
+   740→            <Video className="h-3.5 w-3.5" /> {course.videosCount} lessons
+   741→          </span>
+   742→          {course.accessType === "PAID" && course.planNames.length > 0 && (
+   743→            <span className="flex items-center gap-1.5 text-accent">
+   744→              <ShieldCheck className="h-3.5 w-3.5" /> {course.planNames.join(", ")}
+   745→            </span>
+   746→          )}
+   747→        </div>
+   748→      </CardContent>
+   749→    </Card>
+   750→  );
+   751→}
+   752→
+   753→function PlanCard({ plan, onSelect }: { plan: SubscriptionPlanPublic; onSelect: () => void }) {
+   754→  return (
+   755→    <Card
+   756→      className={`relative flex flex-col p-6 shadow-sm transition-all duration-200 hover:shadow-md ${
+   757→        plan.isPopular
+   758→          ? "border-accent/60 ring-1 ring-accent/25 shadow-md"
+   759→          : "hover:border-accent/40"
+   760→      }`}
+   761→    >
+   762→      {plan.isPopular && (
+   763→        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+   764→          <Badge className="bg-primary text-primary-foreground shadow-sm">
+   765→            <Star className="h-3 w-3 fill-current" /> Most Popular
+   766→          </Badge>
+   767→        </div>
+   768→      )}
+   769→      <div className="mb-4">
+   770→        <h3 className="font-heading text-lg font-semibold tracking-tight text-foreground">
+   771→          {plan.name}
+   772→        </h3>
+   773→        {plan.description && (
+   774→          <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{plan.description}</p>
+   775→        )}
+   776→      </div>
+   777→      <div className="mb-5">
+   778→        <span className="font-heading text-3xl font-bold tracking-tight text-foreground">
+   779→          {formatPrice(plan.price, plan.currency)}
+   780→        </span>
+   781→        <span className="ml-1 text-sm text-muted-foreground">
+   782→          / {plan.duration}{" "}
+   783→          {durationUnitLabel(plan.durationUnit).toLowerCase().replace(/s$/, "")}
+   784→          {plan.duration > 1 ? "s" : ""}
+   785→        </span>
+   786→      </div>
+   787→      <ul className="mb-6 flex-1 space-y-2.5">
+   788→        {plan.features.slice(0, 6).map((f, i) => (
+   789→          <li key={i} className="flex items-start gap-2 text-sm text-foreground">
+   790→            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+   791→            <span>{f}</span>
+   792→          </li>
+   793→        ))}
+   794→        {plan.features.length > 6 && (
+   795→          <li className="text-xs text-muted-foreground">+ {plan.features.length - 6} more</li>
+   796→        )}
+   797→      </ul>
+   798→      <Button
+   799→        onClick={onSelect}
+   800→        variant={plan.isPopular ? "default" : "outline"}
+   801→        className={`h-10 w-full gap-2 ${
+   802→          plan.isPopular
+   803→            ? "bg-primary text-primary-foreground hover:bg-primary/90"
+   804→            : "border-border bg-card hover:bg-soft-sage"
+   805→        }`}
+   806→      >
+   807→        Select Plan
+   808→        <ArrowRight className="h-4 w-4" />
+   809→      </Button>
+   810→    </Card>
+   811→  );
+   812→}
+   813→

@@ -9,14 +9,16 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch } from "@/hooks/use-api";
 import { CheckCircle2, ArrowRight, TrendingUp, Clock, Star, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { formatPrice, durationUnitLabel, type SubscriptionPlanPublic } from "@/types";
+import { useI18n } from "@/lib/i18n/store";
 
 const TRUST_POINTS = [
-  { icon: ShieldCheck, label: "No hidden fees" },
-  { icon: Clock, label: "Flexible duration" },
-  { icon: Users, label: "Trusted by 2,000+" },
+  { icon: ShieldCheck, labelKey: "public.noHiddenFees" },
+  { icon: Clock, labelKey: "public.flexibleDuration" },
+  { icon: Users, labelKey: "public.trustedBy2000" },
 ];
 
 export function PlansPage() {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const { data, loading } = useApiFetch<{ plans: SubscriptionPlanPublic[] }>("/api/public/plans");
   const plans = data?.plans || [];
@@ -34,18 +36,17 @@ export function PlansPage() {
         />
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-14 md:py-20">
           <div className="space-y-3 text-center">
-            <p className="text-xs font-semibold uppercase tracking-wider text-accent">Learning Plans</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-accent">{t("nav.learningPlans")}</p>
             <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[40px] md:leading-[1.1]">
-              Choose the plan that fits your goals
+              {t("public.choosePlanFitsGoals")}
             </h1>
             <p className="mx-auto max-w-2xl text-sm text-muted-foreground md:text-base">
-              Transparent pricing. No hidden fees. All plans include video lessons, learning materials,
-              assignments and verifiable certificates.
+              {t("plans.transparentPricingDesc")}
             </p>
             <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-3 text-xs text-muted-foreground">
-              {TRUST_POINTS.map((t) => (
-                <span key={t.label} className="flex items-center gap-1.5">
-                  <t.icon className="h-3.5 w-3.5 text-accent" /> {t.label}
+              {TRUST_POINTS.map((tp) => (
+                <span key={tp.labelKey} className="flex items-center gap-1.5">
+                  <tp.icon className="h-3.5 w-3.5 text-accent" /> {t(tp.labelKey as any)}
                 </span>
               ))}
             </div>
@@ -73,8 +74,8 @@ export function PlansPage() {
         ) : plans.length === 0 ? (
           <EmptyState
             icon={<TrendingUp className="h-5 w-5" />}
-            title="No subscription plans available yet"
-            description="Our team is preparing learning plans. Please check back soon."
+            title={t("public.noSubscriptionPlansYet")}
+            description={t("public.noPlansDesc")}
           />
         ) : (
           <div className="mx-auto grid max-w-5xl gap-5 md:grid-cols-3 md:items-start">
@@ -90,7 +91,7 @@ export function PlansPage() {
                 {p.isPopular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <Badge className="bg-primary text-primary-foreground shadow-sm">
-                      <Star className="h-3 w-3 fill-current" /> Most Popular
+                      <Star className="h-3 w-3 fill-current" /> {t("common.popularPlan")}
                     </Badge>
                   </div>
                 )}
@@ -109,7 +110,7 @@ export function PlansPage() {
                 </div>
                 <p className="mb-6 flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Clock className="h-3.5 w-3.5" />
-                  Duration: {p.duration} {durationUnitLabel(p.durationUnit).toLowerCase()}
+                  {t("plans.duration")} {p.duration} {durationUnitLabel(p.durationUnit).toLowerCase()}
                 </p>
                 <ul className="mb-6 flex-1 space-y-2.5">
                   {p.features.map((f, i) => (
@@ -122,7 +123,7 @@ export function PlansPage() {
                 {p.benefits.length > 0 && (
                   <div className="mb-6 rounded-lg bg-soft-sage/60 p-3.5">
                     <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-accent">
-                      <Sparkles className="h-3 w-3" /> Benefits
+                      <Sparkles className="h-3 w-3" /> {t("common.benefits")}
                     </p>
                     <ul className="space-y-1.5">
                       {p.benefits.map((b, i) => (
@@ -143,7 +144,7 @@ export function PlansPage() {
                       : "border-border bg-card hover:bg-soft-sage"
                   }`}
                 >
-                  Select Plan
+                  {t("common.selectPlan")}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Card>
@@ -154,12 +155,12 @@ export function PlansPage() {
         {/* Info strip */}
         <div className="mx-auto mt-12 max-w-3xl rounded-lg border border-border bg-card p-5 text-center shadow-sm">
           <p className="text-sm text-muted-foreground">
-            Need help choosing the right plan?{" "}
+            {t("plans.needHelpChoosing")}{" "}
             <button
               onClick={() => navigate(["about"])}
               className="font-medium text-primary transition-colors hover:text-primary/80"
             >
-              Learn more about how CourseLearn works
+              {t("plans.learnMoreAbout")}
             </button>
           </p>
         </div>

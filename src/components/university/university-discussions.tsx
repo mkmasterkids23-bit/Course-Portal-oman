@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch, apiPost } from "@/hooks/use-api";
+import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
 import { formatDateTime } from "@/types";
 import {
@@ -84,6 +85,7 @@ interface DiscussionDetail {
 }
 
 export function UniversityDiscussions() {
+  const { t } = useI18n();
   const [search, setSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState("ALL");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -119,18 +121,18 @@ export function UniversityDiscussions() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search discussions…"
+              placeholder={t("discussions.searchDiscussions")}
               className="h-9 rounded-lg pl-9"
-              aria-label="Search discussions"
+              aria-label={t("discussions.searchDiscussions")}
             />
           </div>
           {courses.length > 0 && (
             <Select value={courseFilter} onValueChange={setCourseFilter}>
-              <SelectTrigger className="w-full md:w-[200px] h-9 rounded-lg" aria-label="Filter by course">
-                <SelectValue placeholder="All courses" />
+              <SelectTrigger className="w-full md:w-[200px] h-9 rounded-lg" aria-label={t("common.course")}>
+                <SelectValue placeholder={t("discussions.allCourses")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All courses</SelectItem>
+                <SelectItem value="ALL">{t("discussions.allCourses")}</SelectItem>
                 {courses.map((c) => (
                   <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
                 ))}
@@ -143,7 +145,7 @@ export function UniversityDiscussions() {
       {/* Count */}
       {!loading && !error && discussions.length > 0 && (
         <p className="text-sm text-muted-foreground">
-          Showing <span className="font-medium text-foreground">{discussions.length}</span> discussion{discussions.length !== 1 ? "s" : ""}
+          {t("common.showing")} <span className="font-medium text-foreground">{discussions.length}</span> {t("common.discussions")}
         </p>
       )}
 
@@ -161,14 +163,14 @@ export function UniversityDiscussions() {
       ) : error ? (
         <EmptyState
           icon={<MessageSquare className="h-5 w-5" />}
-          title="Couldn't load discussions"
+          title={t("common.error")}
           description={error}
         />
       ) : discussions.length === 0 ? (
         <EmptyState
           icon={<MessageSquare className="h-5 w-5" />}
-          title="No discussions yet"
-          description="Student discussions will appear here when students start asking questions about your courses."
+          title={t("discussions.noDiscussions")}
+          description={t("discussions.beFirst")}
         />
       ) : (
         <div className="space-y-3">

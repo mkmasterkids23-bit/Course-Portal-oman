@@ -10,22 +10,24 @@ import {
   StickyNote, Bookmark, MessagesSquare, Bell,
 } from "lucide-react";
 import { apiPost } from "@/hooks/use-api";
+import { useI18n } from "@/lib/i18n/store";
 
 const NAV = [
-  { label: "Dashboard", icon: LayoutDashboard, segments: ["student", "overview"] },
-  { label: "Explore Universities", icon: Building2, segments: ["student", "universities"] },
-  { label: "Explore Courses", icon: BookOpen, segments: ["student", "courses"] },
-  { label: "Assignments", icon: ClipboardList, segments: ["student", "assignments"] },
-  { label: "My Notes", icon: StickyNote, segments: ["student", "notes"] },
-  { label: "My Bookmarks", icon: Bookmark, segments: ["student", "bookmarks"] },
-  { label: "Discussions", icon: MessagesSquare, segments: ["student", "discussions"] },
-  { label: "Notifications", icon: Bell, segments: ["student", "notifications"] },
-  { label: "My Subscription", icon: CreditCard, segments: ["student", "subscription"] },
-  { label: "Certificates", icon: Award, segments: ["student", "certificates"] },
-  { label: "Profile", icon: User, segments: ["student", "profile"] },
+  { labelKey: "nav.dashboard", icon: LayoutDashboard, segments: ["student", "overview"] },
+  { labelKey: "nav.exploreUniversities", icon: Building2, segments: ["student", "universities"] },
+  { labelKey: "nav.exploreCourses", icon: BookOpen, segments: ["student", "courses"] },
+  { labelKey: "nav.myAssignments", icon: ClipboardList, segments: ["student", "assignments"] },
+  { labelKey: "nav.myNotes", icon: StickyNote, segments: ["student", "notes"] },
+  { labelKey: "nav.myBookmarks", icon: Bookmark, segments: ["student", "bookmarks"] },
+  { labelKey: "nav.discussions", icon: MessagesSquare, segments: ["student", "discussions"] },
+  { labelKey: "nav.notifications", icon: Bell, segments: ["student", "notifications"] },
+  { labelKey: "nav.mySubscription", icon: CreditCard, segments: ["student", "subscription"] },
+  { labelKey: "nav.myCertificates", icon: Award, segments: ["student", "certificates"] },
+  { labelKey: "nav.myProfile", icon: User, segments: ["student", "profile"] },
 ];
 
 export function StudentSidebar({ onNavigate }: { onNavigate?: () => void }) {
+  const { t } = useI18n();
   const segments = useAppStore((s) => s.segments);
   const navigate = useAppStore((s) => s.navigate);
   const refreshUser = useAppStore((s) => s.refreshUser);
@@ -53,7 +55,7 @@ export function StudentSidebar({ onNavigate }: { onNavigate?: () => void }) {
           {/* Elegant section label */}
           <div className="flex items-center gap-2 px-3 pb-2.5">
             <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
-              Learning Hub
+              {t("nav.learningHub")}
             </span>
             <span className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
           </div>
@@ -61,7 +63,7 @@ export function StudentSidebar({ onNavigate }: { onNavigate?: () => void }) {
             const active = current === item.segments[1];
             return (
               <button
-                key={item.label}
+                key={item.labelKey}
                 onClick={() => { navigate(item.segments); onNavigate?.(); }}
                 className={cn(
                   "group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200",
@@ -79,7 +81,7 @@ export function StudentSidebar({ onNavigate }: { onNavigate?: () => void }) {
                     ? "text-primary"
                     : "text-muted-foreground/70 group-hover:text-foreground"
                 )} />
-                <span className="flex-1 text-left">{item.label}</span>
+                <span className="flex-1 text-left">{t(item.labelKey as any)}</span>
                 {active && (
                   <span className="h-1.5 w-1.5 rounded-full bg-primary ring-2 ring-primary/20" />
                 )}
@@ -95,8 +97,8 @@ export function StudentSidebar({ onNavigate }: { onNavigate?: () => void }) {
               <GraduationCap className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-xs font-semibold text-foreground">Keep learning</p>
-              <p className="text-[11px] text-muted-foreground">Stay consistent, every day.</p>
+              <p className="text-xs font-semibold text-foreground">{t("student.keepLearning")}</p>
+              <p className="text-[11px] text-muted-foreground">{t("student.stayConsistent")}</p>
             </div>
           </div>
         </div>
@@ -109,7 +111,7 @@ export function StudentSidebar({ onNavigate }: { onNavigate?: () => void }) {
           className="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-destructive/5 hover:text-destructive"
         >
           <LogOut className="h-4 w-4 shrink-0 transition-colors duration-200 group-hover:text-destructive" />
-          <span>Logout</span>
+          <span>{t("common.logout")}</span>
         </button>
       </div>
     </aside>

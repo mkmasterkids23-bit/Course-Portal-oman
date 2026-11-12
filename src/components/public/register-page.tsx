@@ -19,8 +19,10 @@ import { useApiFetch } from "@/hooks/use-api";
 import { toast } from "@/hooks/use-toast";
 import { formatPrice, durationUnitLabel, type SubscriptionPlanPublic } from "@/types";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/store";
 
 export function RegisterPage() {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const query = useAppStore((s) => s.query);
   const refreshUser = useAppStore((s) => s.refreshUser);
@@ -50,7 +52,7 @@ export function RegisterPage() {
     e.preventDefault();
     setError(null);
     if (!selectedPlanId) {
-      setError("Please select a subscription plan");
+      setError(t("auth.pleaseSelectPlan"));
       setStep(2);
       return;
     }
@@ -58,8 +60,8 @@ export function RegisterPage() {
     try {
       await apiPost("/api/auth/register", { name, email, password, planId: selectedPlanId });
       toast({
-        title: "Account created!",
-        description: `Welcome to CourseLearn. Your subscription is now active.`,
+        title: t("auth.accountCreated"),
+        description: t("auth.accountCreatedDesc"),
       });
       await refreshUser();
     } catch (e: any) {
@@ -90,7 +92,7 @@ export function RegisterPage() {
             onClick={() => navigate([""])}
             className="gap-2 h-9 text-foreground hover:bg-soft-sage"
           >
-            <ArrowLeft className="h-4 w-4" /> Back to home
+            <ArrowLeft className="h-4 w-4" /> {t("auth.backToHome")}
           </Button>
         </div>
       </div>
@@ -104,10 +106,10 @@ export function RegisterPage() {
             </div>
             <div className="space-y-1">
               <h1 className="font-heading text-xl font-semibold tracking-tight text-foreground md:text-2xl">
-                Create your account
+                {t("auth.createAccount")}
               </h1>
               <p className="text-sm text-muted-foreground">
-                Join CourseLearn and start your professional learning journey
+                {t("auth.joinPlatform")}
               </p>
             </div>
           </div>
@@ -132,7 +134,7 @@ export function RegisterPage() {
               >
                 {step > 1 ? <CheckCircle2 className="h-4 w-4" /> : "1"}
               </span>
-              <span className="text-xs font-medium">Your details</span>
+              <span className="text-xs font-medium">{t("auth.yourDetails")}</span>
             </div>
             <span className="h-px w-10 bg-border" />
             <div
@@ -151,7 +153,7 @@ export function RegisterPage() {
               >
                 2
               </span>
-              <span className="text-xs font-medium">Select plan</span>
+              <span className="text-xs font-medium">{t("auth.selectPlan")}</span>
             </div>
           </div>
 
@@ -160,7 +162,7 @@ export function RegisterPage() {
               <>
                 <div className="space-y-1.5">
                   <Label htmlFor="name" className="text-sm font-medium">
-                    Full Name
+                    {t("auth.fullName")}
                   </Label>
                   <div className="relative">
                     <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -169,7 +171,7 @@ export function RegisterPage() {
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="Your full name"
+                      placeholder={t("auth.yourFullNamePlaceholder")}
                       className="h-9 pl-9"
                       autoComplete="name"
                     />
@@ -177,7 +179,7 @@ export function RegisterPage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="email" className="text-sm font-medium">
-                    Email
+                    {t("common.email")}
                   </Label>
                   <div className="relative">
                     <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -187,7 +189,7 @@ export function RegisterPage() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
+                      placeholder={t("auth.yourEmailAddress")}
                       className="h-9 pl-9"
                       autoComplete="email"
                     />
@@ -196,7 +198,7 @@ export function RegisterPage() {
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password" className="text-sm font-medium">
-                      Password
+                      {t("common.password")}
                     </Label>
                     <button
                       type="button"
@@ -204,7 +206,7 @@ export function RegisterPage() {
                       className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
                     >
                       {show ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                      {show ? "Hide" : "Show"}
+                      {show ? t("auth.hide") : t("auth.show")}
                     </button>
                   </div>
                   <div className="relative">
@@ -216,7 +218,7 @@ export function RegisterPage() {
                       minLength={6}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="At least 6 characters"
+                      placeholder={t("auth.atLeast6Chars")}
                       className="h-9 pl-9"
                       autoComplete="new-password"
                     />
@@ -234,7 +236,7 @@ export function RegisterPage() {
                   type="button"
                   onClick={() => {
                     if (!name || !email || password.length < 6) {
-                      setError("Please complete all fields. Password must be at least 6 characters.");
+                      setError(t("auth.pleaseCompleteFields"));
                       return;
                     }
                     setError(null);
@@ -242,18 +244,18 @@ export function RegisterPage() {
                   }}
                   className="h-10 w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
                 >
-                  Continue to plan selection
+                  {t("auth.continueToPlan")}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
 
                 <p className="text-center text-sm text-muted-foreground">
-                  Already have an account?{" "}
+                  {t("auth.alreadyHaveAccount")}{" "}
                   <button
                     type="button"
                     onClick={() => navigate(["login"])}
                     className="font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
                   >
-                    Sign in
+                    {t("auth.signIn")}
                   </button>
                 </p>
               </>
@@ -263,7 +265,7 @@ export function RegisterPage() {
               <>
                 <div>
                   <p className="mb-3 text-sm font-medium text-foreground">
-                    Choose a subscription plan
+                    {t("auth.choosePlan")}
                   </p>
                   {loading ? (
                     <div className="space-y-3">
@@ -273,7 +275,7 @@ export function RegisterPage() {
                     </div>
                   ) : plans.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
-                      No plans are currently available. Please contact the administrator.
+                      {t("auth.noPlansAvailable")}
                     </p>
                   ) : (
                     <div className="max-h-[400px] space-y-3 overflow-y-auto scrollbar-thin pr-1">
@@ -299,7 +301,7 @@ export function RegisterPage() {
                                   </span>
                                   {p.isPopular && (
                                     <Badge className="bg-primary text-primary-foreground text-[10px]">
-                                      <Sparkles className="h-2.5 w-2.5" /> Popular
+                                      <Sparkles className="h-2.5 w-2.5" /> {t("auth.popular")}
                                     </Badge>
                                   )}
                                   {selected && (
@@ -340,11 +342,11 @@ export function RegisterPage() {
                 {selectedPlan && (
                   <div className="rounded-lg border border-border bg-soft-sage/40 p-4 text-sm">
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Selected plan</span>
+                      <span className="text-muted-foreground">{t("auth.selectedPlan")}</span>
                       <span className="font-medium text-foreground">{selectedPlan.name}</span>
                     </div>
                     <div className="mt-1 flex items-center justify-between">
-                      <span className="text-muted-foreground">Total</span>
+                      <span className="text-muted-foreground">{t("auth.total")}</span>
                       <span className="font-heading font-bold tracking-tight text-foreground">
                         {formatPrice(selectedPlan.price, selectedPlan.currency)}
                       </span>
@@ -366,7 +368,7 @@ export function RegisterPage() {
                     onClick={() => setStep(1)}
                     className="h-10 gap-2 border-border bg-card hover:bg-soft-sage"
                   >
-                    <ArrowLeftIcon className="h-4 w-4" /> Back
+                    <ArrowLeftIcon className="h-4 w-4" /> {t("common.back")}
                   </Button>
                   <Button
                     type="submit"
@@ -376,12 +378,12 @@ export function RegisterPage() {
                     {submitting ? (
                       <>
                         <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
-                        Creating account...
+                        {t("auth.creatingAccount")}
                       </>
                     ) : (
                       <>
                         <UserPlus className="h-4 w-4" />
-                        Create account &amp; start learning
+                        {t("auth.createAccountStart")}
                       </>
                     )}
                   </Button>
@@ -389,7 +391,7 @@ export function RegisterPage() {
 
                 <p className="flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground">
                   <ShieldCheck className="h-3.5 w-3.5 text-accent" />
-                  No payment is processed at registration. You are simply selecting your plan.
+                  {t("auth.noPaymentProcessed")}
                 </p>
               </>
             )}

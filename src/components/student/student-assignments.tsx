@@ -18,6 +18,7 @@ import {
   Clock, AlertTriangle, Award, FileText, BookOpen,
 } from "lucide-react";
 import { formatDateTime, formatDate } from "@/types";
+import { useI18n } from "@/lib/i18n/store";
 
 interface AssignmentItem {
   id: string;
@@ -57,6 +58,7 @@ interface AssignmentsData {
 }
 
 export function StudentAssignments() {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const { data, loading, error, refetch } = useApiFetch<AssignmentsData>(
     "/api/student/assignments"
@@ -76,9 +78,9 @@ export function StudentAssignments() {
     return (
       <EmptyState
         icon={<ClipboardList className="h-5 w-5" />}
-        title="Couldn't load assignments"
+        title={t("assignments.couldntLoad")}
         description={error}
-        action={<Button onClick={() => window.location.reload()}>Reload</Button>}
+        action={<Button onClick={() => window.location.reload()}>{t("common.reload")}</Button>}
       />
     );
   }
@@ -90,10 +92,10 @@ export function StudentAssignments() {
     return (
       <EmptyState
         icon={<ClipboardList className="h-5 w-5" />}
-        title="No assignments yet"
-        description="Assignments will appear here once you have access to a course with a published assignment."
+        title={t("assignments.noAssignmentsYet")}
+        description={t("assignments.appearHere")}
         action={<Button onClick={() => navigate(["student", "courses"])} className="gap-2 shadow-sm">
-          Browse Courses <BookOpen className="h-4 w-4" />
+          {t("student.browseCoursesShort")} <BookOpen className="h-4 w-4" />
         </Button>}
       />
     );
@@ -109,14 +111,14 @@ export function StudentAssignments() {
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <div>
-                <p className="font-semibold text-foreground">Subscription expired</p>
+                <p className="font-semibold text-foreground">{t("assignments.subscriptionExpiredShort")}</p>
                 <p className="text-sm text-muted-foreground mt-0.5">
-                  All assignments are locked until you renew your subscription.
+                  {t("assignments.allLocked")}
                 </p>
               </div>
             </div>
             <Button onClick={() => navigate(["student", "subscription"])} className="shrink-0 shadow-sm">
-              Renew Subscription
+              {t("assignments.renewSubscriptionShort")}
             </Button>
           </CardContent>
         </Card>
@@ -136,6 +138,7 @@ function AssignmentCard({
   assignment: AssignmentItem;
   onSubmitted: () => void;
 }) {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -144,27 +147,27 @@ function AssignmentCard({
 
   const status = assignment.submission
     ? assignment.submission.status === "REVIEWED"
-      ? "Reviewed"
-      : "Submitted"
+      ? t("assignments.reviewed")
+      : t("assignments.submitted")
     : assignment.unlocked
-      ? "Available"
-      : "Locked";
+      ? t("assignments.available")
+      : t("assignments.locked");
 
   const statusBadge = (() => {
     if (assignment.submission) {
       return assignment.submission.status === "REVIEWED"
-        ? <Badge className="bg-accent/10 text-accent border-transparent"><CheckCircle2 className="h-3 w-3" /> Reviewed</Badge>
-        : <Badge className="bg-success/15 text-success border-transparent"><CheckCircle2 className="h-3 w-3" /> Submitted</Badge>;
+        ? <Badge className="bg-accent/10 text-accent border-transparent"><CheckCircle2 className="h-3 w-3" /> {t("assignments.reviewed")}</Badge>
+        : <Badge className="bg-success/15 text-success border-transparent"><CheckCircle2 className="h-3 w-3" /> {t("assignments.submitted")}</Badge>;
     }
     if (assignment.unlocked) {
-      return <Badge className="bg-primary text-primary-foreground">Available</Badge>;
+      return <Badge className="bg-primary text-primary-foreground">{t("assignments.available")}</Badge>;
     }
-    return <Badge variant="outline" className="text-muted-foreground bg-muted"><Lock className="h-3 w-3" /> Locked</Badge>;
+    return <Badge variant="outline" className="text-muted-foreground bg-muted"><Lock className="h-3 w-3" /> {t("assignments.locked")}</Badge>;
   })();
 
   async function handleSubmit() {
     if (!selectedFile) {
-      toast({ title: "Select a file", description: "Please choose a file to upload.", variant: "destructive" });
+      toast({ title: t("assignments.selectAFile"), description: t("assignments.selectAFileDesc"), variant: "destructive" });
       return;
     }
     setUploading(true);
@@ -180,11 +183,11 @@ function AssignmentCard({
       onSubmitted();
       if (res.certificateIssued) {
         toast({
-          title: "Submitted & certificate issued!",
-          description: "Your submission was received and a certificate was automatically issued.",
+          title: t("assignments.submittedAndCertIssued"),
+          description: t("assignments.submissionReceivedCert"),
         });
       } else {
-        toast({ title: "Submission received", description: "Your assignment has been submitted for review." });
+        toast({ title: t("assignments.submissionReceived"), description: t("assignments.submissionForReview") });
       }
     } catch {
     } finally {
@@ -220,7 +223,7 @@ function AssignmentCard({
             {statusBadge}
             {assignment.dueDate && (
               <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <Clock className="h-3 w-3 text-accent" /> Due {formatDate(assignment.dueDate)}
+                <Clock className="h-3 w-3 text-accent" /> {t("assignments.due")} {formatDate(assignment.dueDate)}
               </span>
             )}
           </div>
@@ -234,12 +237,12 @@ function AssignmentCard({
             <div className="flex items-center gap-2">
               <Lock className="h-4 w-4 text-muted-foreground" />
               <p className="text-sm font-medium text-foreground">
-                {assignment.lockedReason || "Complete the course first"}
+                {assignment.lockedReason || t("assignments.completeCourseFirst")}
               </p>
             </div>
             <div>
               <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-                <span>{assignment.courseCompletion.completedVideos}/{assignment.courseCompletion.totalVideos} lessons completed</span>
+                <span>{t("assignments.lessonsCompletedCount").replace("{completed}", String(assignment.courseCompletion.completedVideos)).replace("{total}", String(assignment.courseCompletion.totalVideos))}</span>
                 <span className="font-semibold text-foreground">{assignment.courseCompletion.percent}%</span>
               </div>
               <Progress value={assignment.courseCompletion.percent} className="h-1.5 bg-muted [&_[data-slot=progress-indicator]]:bg-accent" />
@@ -250,7 +253,7 @@ function AssignmentCard({
               onClick={() => navigate(["student", "learn", assignment.courseId])}
               className="gap-2 shadow-sm"
             >
-              <BookOpen className="h-4 w-4" /> Continue Course
+              <BookOpen className="h-4 w-4" /> {t("assignments.continueCourse")}
             </Button>
           </div>
         )}
@@ -261,7 +264,7 @@ function AssignmentCard({
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-success" />
               <p className="text-sm font-medium text-foreground">
-                Submitted on {formatDateTime(assignment.submission.submittedAt)}
+                {t("assignments.submittedOn")} {formatDateTime(assignment.submission.submittedAt)}
               </p>
             </div>
             <a
@@ -270,11 +273,11 @@ function AssignmentCard({
               rel="noreferrer"
               className="inline-flex items-center gap-2 text-sm text-accent hover:underline"
             >
-              <Download className="h-3.5 w-3.5" /> View your submission
+              <Download className="h-3.5 w-3.5" /> {t("assignments.viewYourSubmission")}
             </a>
             {assignment.submission.reviewNotes && (
               <div className="rounded-lg border border-border bg-card p-3 mt-2">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Reviewer notes</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("assignments.reviewerNotes")}</p>
                 <p className="text-sm text-foreground whitespace-pre-wrap">
                   {assignment.submission.reviewNotes}
                 </p>
@@ -283,7 +286,7 @@ function AssignmentCard({
             {assignment.allowResubmission && (
               <p className="text-xs text-muted-foreground flex items-start gap-1.5">
                 <FileText className="h-3.5 w-3.5 text-accent shrink-0 mt-0.5" />
-                Resubmission is enabled — expand below to upload a new file.
+                {t("assignments.resubmissionEnabled")}
               </p>
             )}
           </div>
@@ -301,14 +304,14 @@ function AssignmentCard({
                   className="inline-flex"
                 >
                   <Button variant="outline" size="sm" className="gap-2 shadow-sm">
-                    <Download className="h-4 w-4" /> Download Brief
+                    <Download className="h-4 w-4" /> {t("assignments.downloadBrief")}
                   </Button>
                 </a>
               )}
               <CollapsibleTrigger asChild>
                 <Button size="sm" className="gap-2 shadow-sm">
                   <Upload className="h-4 w-4" />
-                  {assignment.submission ? "Resubmit" : "Submit Assignment"}
+                  {assignment.submission ? t("assignments.resubmit") : t("assignments.submitAssignment")}
                   <ChevronDown className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`} />
                 </Button>
               </CollapsibleTrigger>
@@ -316,14 +319,14 @@ function AssignmentCard({
             <CollapsibleContent className="mt-3 space-y-3">
               {assignment.instructions && (
                 <div className="rounded-lg border border-border bg-muted/40 p-3.5">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Instructions</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("assignments.instructions")}</p>
                   <p className="text-sm text-foreground whitespace-pre-wrap">{assignment.instructions}</p>
                 </div>
               )}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground flex items-center gap-2">
                   <FileText className="h-4 w-4 text-accent" />
-                  Upload your submission (PDF, DOC, DOCX, PPT, PPTX, TXT — max 25MB)
+                  {t("assignments.uploadSubmissionFormats")}
                 </label>
                 <input
                   ref={fileInputRef}
@@ -334,12 +337,12 @@ function AssignmentCard({
                 />
                 {selectedFile && (
                   <p className="text-xs text-muted-foreground">
-                    Selected: {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
+                    {t("assignments.selected")} {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
                   </p>
                 )}
                 <Button onClick={handleSubmit} disabled={!selectedFile || uploading} size="sm" className="gap-2 shadow-sm">
                   <Upload className="h-4 w-4" />
-                  {uploading ? "Uploading..." : "Confirm Submission"}
+                  {uploading ? t("assignments.uploading") : t("assignments.confirmSubmission")}
                 </Button>
               </div>
             </CollapsibleContent>
@@ -350,7 +353,7 @@ function AssignmentCard({
         {assignment.submission && (
           <div className="pt-2 border-t border-border">
             <Button variant="link" size="sm" onClick={() => navigate(["student", "certificates"])} className="gap-2 p-0 h-auto text-accent">
-              <Award className="h-4 w-4" /> View my certificates
+              <Award className="h-4 w-4" /> {t("assignments.viewMyCertificates")}
             </Button>
           </div>
         )}

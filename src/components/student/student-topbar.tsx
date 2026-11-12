@@ -14,29 +14,32 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Menu, LogOut, ChevronDown, GraduationCap, User as UserIcon, CreditCard } from "lucide-react";
 import { apiPost } from "@/hooks/use-api";
+import { useI18n } from "@/lib/i18n/store";
 
 const TITLES: Record<string, string> = {
-  overview: "Dashboard",
-  courses: "Explore Courses",
-  assignments: "Assignments",
-  subscription: "My Subscription",
-  certificates: "Certificates",
-  profile: "Profile",
-  universities: "Explore Universities",
-  notes: "My Notes",
-  bookmarks: "My Bookmarks",
-  discussions: "Discussions",
-  notifications: "Notifications",
+  overview: "nav.dashboard",
+  courses: "nav.exploreCourses",
+  assignments: "nav.myAssignments",
+  subscription: "nav.mySubscription",
+  certificates: "nav.myCertificates",
+  profile: "nav.myProfile",
+  universities: "nav.exploreUniversities",
+  notes: "nav.myNotes",
+  bookmarks: "nav.myBookmarks",
+  discussions: "nav.discussions",
+  notifications: "nav.notifications",
 };
 
 export function StudentTopbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
+  const { t } = useI18n();
   const segments = useAppStore((s) => s.segments);
   const navigate = useAppStore((s) => s.navigate);
   const user = useAppStore((s) => s.user);
   const refreshUser = useAppStore((s) => s.refreshUser);
 
   const current = segments[1] || "overview";
-  const title = segments[2] && current === "learn" ? "Course Learning" : TITLES[current] || "Dashboard";
+  const titleKey = segments[2] && current === "learn" ? "nav.dashboard" : TITLES[current] || "nav.dashboard";
+  const title = t(titleKey as any);
 
   async function logout() {
     await apiPost("/api/auth/logout", null, { method: "POST" });
@@ -62,13 +65,13 @@ export function StudentTopbar({ onToggleSidebar }: { onToggleSidebar: () => void
           size="icon"
           className="lg:hidden"
           onClick={onToggleSidebar}
-          aria-label="Toggle sidebar"
+          aria-label={t("student.toggleSidebar")}
         >
           <Menu className="h-5 w-5" />
         </Button>
         <div className="flex flex-col gap-0.5">
           <h1 className="font-heading text-xl font-semibold leading-tight tracking-tight text-foreground">{title}</h1>
-          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground/80">Student Dashboard</p>
+          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground/80">{t("student.studentDashboard")}</p>
         </div>
       </div>
 
@@ -77,7 +80,7 @@ export function StudentTopbar({ onToggleSidebar }: { onToggleSidebar: () => void
         {/* Accent "Student" badge */}
         <div className="hidden items-center gap-1.5 rounded-full border border-accent/20 bg-gradient-to-r from-accent/10 to-accent/5 px-3 py-1 text-xs font-semibold text-accent shadow-sm transition-colors duration-200 sm:flex">
           <GraduationCap className="h-3.5 w-3.5" />
-          <span>Student</span>
+          <span>{t("student.student")}</span>
         </div>
 
         <DropdownMenu>
@@ -97,19 +100,19 @@ export function StudentTopbar({ onToggleSidebar }: { onToggleSidebar: () => void
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Account
+              {t("nav.account")}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate(["student", "profile"])} className="gap-2">
-              <UserIcon className="h-4 w-4" /> My Profile
+              <UserIcon className="h-4 w-4" /> {t("nav.myProfile")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate(["student", "subscription"])} className="gap-2">
-              <CreditCard className="h-4 w-4" /> My Subscription
+              <CreditCard className="h-4 w-4" /> {t("nav.mySubscription")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout} className="text-destructive gap-2 focus:text-destructive">
               <LogOut className="h-4 w-4" />
-              Logout
+              {t("common.logout")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

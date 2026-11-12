@@ -45,6 +45,7 @@ import {
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
 import { formatDate, type SubscriptionPlanPublic } from "@/types";
 import { CourseThumbnail } from "@/components/shared/course-thumbnail";
@@ -82,6 +83,7 @@ interface PlansResponse {
 }
 
 export function UniversityCourses() {
+  const { t } = useI18n();
   const query = useAppStore((s) => s.query);
   const navigate = useAppStore((s) => s.navigate);
   const [search, setSearch] = useState("");
@@ -152,7 +154,7 @@ export function UniversityCourses() {
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search your courses…"
                 className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Search courses"
+                aria-label={t("common.search")}
               />
             </div>
             <Select
@@ -161,12 +163,12 @@ export function UniversityCourses() {
             >
               <SelectTrigger
                 className="h-9 w-full rounded-lg sm:w-[160px]"
-                aria-label="Filter by category"
+                aria-label={t("common.category")}
               >
                 <SelectValue placeholder="All categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All categories</SelectItem>
+                <SelectItem value="ALL">{t("common.allCategories")}</SelectItem>
                 {categories.map((c) => (
                   <SelectItem key={c} value={c}>
                     {c}
@@ -180,13 +182,13 @@ export function UniversityCourses() {
             >
               <SelectTrigger
                 className="h-9 w-full rounded-lg sm:w-[140px]"
-                aria-label="Filter by published state"
+                aria-label={t("common.status")}
               >
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All statuses</SelectItem>
-                <SelectItem value="true">Published</SelectItem>
+                <SelectItem value="ALL">{t("common.allStatuses")}</SelectItem>
+                <SelectItem value="true">{t("common.published")}</SelectItem>
                 <SelectItem value="false">Drafts</SelectItem>
               </SelectContent>
             </Select>
@@ -228,14 +230,14 @@ export function UniversityCourses() {
         <EmptyState
           className="m-4"
           icon={<BookOpen className="h-5 w-5" />}
-          title="Couldn't load courses"
+          title={t("common.error")}
           description={error}
         />
       ) : courses.length === 0 ? (
         <EmptyState
           className="m-4"
           icon={<BookOpen className="h-5 w-5" />}
-          title="No courses yet"
+          title={t("empty.noCourses")}
           description="Create your first course to start adding videos, materials and assignments for your university."
           action={
             <Button onClick={() => setAddOpen(true)} className="gap-2">
@@ -301,7 +303,7 @@ export function UniversityCourses() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={async () => {
@@ -881,7 +883,7 @@ function CourseCard({
             size="sm"
             className="h-9 gap-1.5"
             onClick={onEdit}
-            aria-label="Edit"
+            aria-label={t("common.edit")}
           >
             <Pencil className="h-3.5 w-3.5" />
             <span className="sr-only">Edit</span>

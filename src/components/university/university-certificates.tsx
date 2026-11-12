@@ -15,6 +15,7 @@ import {
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
 import { formatDateTime } from "@/types";
 import { Award, Search, Download, Settings2 } from "lucide-react";
@@ -36,6 +37,7 @@ interface IssuedCertificate {
 }
 
 export function UniversityCertificates() {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const [search, setSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState<string>("ALL");
@@ -80,15 +82,15 @@ export function UniversityCertificates() {
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by student, course or certificate number…"
                 className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Search certificates"
+                aria-label={t("common.search")}
               />
             </div>
             <Select value={courseFilter} onValueChange={setCourseFilter}>
-              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[200px]" aria-label="Filter by course">
+              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[200px]" aria-label={t("common.course")}>
                 <SelectValue placeholder="All courses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All courses</SelectItem>
+                <SelectItem value="ALL">{t("common.all")}</SelectItem>
                 {(coursesData?.courses || []).map((c) => (
                   <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
                 ))}
@@ -124,7 +126,7 @@ export function UniversityCertificates() {
             ))}
           </div>
         ) : error ? (
-          <EmptyState className="m-4" icon={<Award className="h-5 w-5" />} title="Couldn't load certificates" description={error} />
+          <EmptyState className="m-4" icon={<Award className="h-5 w-5" />} title={t("common.error")} description={error} />
         ) : filtered.length === 0 ? (
           <EmptyState
             className="m-4"

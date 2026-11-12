@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useApiFetch } from "@/hooks/use-api";
+import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
 import {
   Building2,
@@ -78,6 +79,7 @@ const DEFAULT_FORM: FormValues = {
 };
 
 export function UniversityBranding() {
+  const { t } = useI18n();
   const { data, loading, error, refetch } = useApiFetch<BrandingResponse>(
     "/api/university/branding"
   );

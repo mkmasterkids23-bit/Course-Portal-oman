@@ -2,6 +2,8 @@
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
 
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
+import type { TranslationKey } from "@/lib/i18n/translations";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -15,25 +17,26 @@ import {
 import { Menu, LogOut, ChevronDown, Building2 } from "lucide-react";
 import { apiPost } from "@/hooks/use-api";
 
-const TITLES: Record<string, string> = {
-  overview: "Dashboard Overview",
-  courses: "Course Management",
-  materials: "Learning Materials",
-  assignments: "Assignment Management",
-  submissions: "Assignment Submissions",
-  certificates: "Certificate Management",
-  settings: "Settings",
+const TITLES: Record<string, TranslationKey> = {
+  overview: "dashboard.overview",
+  courses: "courses.courseManagement",
+  materials: "common.learningMaterials",
+  assignments: "common.assignments",
+  submissions: "common.submissions",
+  certificates: "common.certificateManagement",
+  settings: "nav.settings",
 };
 
 export function UniversityTopbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
+  const { t } = useI18n();
   const segments = useAppStore((s) => s.segments);
   const navigate = useAppStore((s) => s.navigate);
   const user = useAppStore((s) => s.user);
   const refreshUser = useAppStore((s) => s.refreshUser);
 
   const current = segments[1] || "overview";
-  const title =
-    segments[2] && current === "courses" ? "Edit Course" : TITLES[current] || "Dashboard";
+  const titleKey: TranslationKey | undefined = TITLES[current];
+  const title = segments[2] && current === "courses" ? t("courses.editCourse") : (titleKey ? t(titleKey) : t("dashboard.overview"));
 
   async function logout() {
     await apiPost("/api/auth/logout", null, { method: "POST" });
@@ -67,7 +70,7 @@ export function UniversityTopbar({ onToggleSidebar }: { onToggleSidebar: () => v
             {title}
           </h1>
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground/80">
-            University Dashboard
+            {t("nav.dashboard")}
           </p>
         </div>
       </div>
@@ -97,7 +100,7 @@ export function UniversityTopbar({ onToggleSidebar }: { onToggleSidebar: () => v
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel className="font-normal text-xs text-muted-foreground">
-              Signed in as
+              {t("auth.yourDetails")}
               <p className="mt-0.5 text-sm font-semibold text-foreground">{user?.email}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
@@ -105,7 +108,7 @@ export function UniversityTopbar({ onToggleSidebar }: { onToggleSidebar: () => v
               onClick={() => navigate(["university", "settings"])}
               className="gap-2 focus:bg-muted"
             >
-              <Building2 className="h-4 w-4 text-muted-foreground" /> University settings
+              <Building2 className="h-4 w-4 text-muted-foreground" /> {t("nav.settings")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -113,7 +116,7 @@ export function UniversityTopbar({ onToggleSidebar }: { onToggleSidebar: () => v
               className="text-destructive gap-2 focus:bg-destructive/5"
             >
               <LogOut className="h-4 w-4" />
-              Logout
+              {t("common.logout")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

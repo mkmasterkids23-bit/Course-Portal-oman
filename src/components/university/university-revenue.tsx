@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch } from "@/hooks/use-api";
+import { useI18n } from "@/lib/i18n/store";
 import { formatPrice } from "@/types";
 import {
   Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -41,6 +42,7 @@ interface RevenueData {
 }
 
 export function UniversityRevenue() {
+  const { t } = useI18n();
   const { data, loading, error } = useApiFetch<RevenueData>("/api/university/revenue");
 
   return (

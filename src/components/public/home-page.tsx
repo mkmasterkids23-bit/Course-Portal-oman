@@ -15,8 +15,10 @@ import {
   Building2, PlayCircle, Timer, Trophy, ChevronDown, Handshake
 } from "lucide-react";
 import { formatPrice, durationUnitLabel, type CoursePublic, type SubscriptionPlanPublic } from "@/types";
+import { useI18n } from "@/lib/i18n/store";
 
 export function HomePage() {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
 
   const { data: coursesData, loading: coursesLoading } = useApiFetch<{ courses: CoursePublic[] }>(
@@ -43,10 +45,10 @@ export function HomePage() {
   })();
 
   const stats = [
-    { icon: Building2, label: "Universities", value: universities.length > 0 ? String(universities.length) : "6+" },
-    { icon: BookOpen, label: "Courses", value: courses.length > 0 ? String(courses.length) : "48" },
-    { icon: Users, label: "Active Learners", value: "2,000+" },
-    { icon: Award, label: "Certificates Issued", value: "5,400+" },
+    { icon: Building2, label: t("common.universities"), value: universities.length > 0 ? String(universities.length) : "6+" },
+    { icon: BookOpen, label: t("common.courses"), value: courses.length > 0 ? String(courses.length) : "48" },
+    { icon: Users, label: t("public.enrolledStudents"), value: "2,000+" },
+    { icon: Award, label: t("public.certificatesIssued"), value: "5,400+" },
   ];
 
   return (
@@ -66,16 +68,13 @@ export function HomePage() {
             <div className="space-y-6 animate-fade-in-up">
               <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm">
                 <Sparkles className="h-3.5 w-3.5 text-accent" />
-                <span>A New Way to Learn</span>
+                <span>{t("public.heroLabel")}</span>
               </div>
               <h1 className="font-heading text-3xl font-semibold leading-[1.1] tracking-tight text-foreground md:text-4xl lg:text-[44px]">
-                Professional learning,
-                <span className="block text-primary">verifiable certificates.</span>
+                {t("public.heroTitleAlt")}
               </h1>
               <p className="text-base text-muted-foreground max-w-xl leading-relaxed md:text-lg">
-                CourseLearn brings universities and learners together on one platform.
-                Structured video lessons, real assessments and certificates that actually mean
-                something — built for serious outcomes.
+                {t("public.heroDescAlt")}
               </p>
               <div className="flex flex-wrap items-center gap-3 pt-1">
                 <Button
@@ -83,7 +82,7 @@ export function HomePage() {
                   onClick={() => navigate(["courses"])}
                   className="gap-2 h-11 px-6 bg-primary text-primary-foreground hover:bg-primary/90"
                 >
-                  Explore Courses
+                  {t("common.exploreCourses")}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
                 <Button
@@ -93,18 +92,18 @@ export function HomePage() {
                   className="gap-2 h-11 px-6 border-border bg-card hover:bg-soft-sage"
                 >
                   <Building2 className="h-4 w-4" />
-                  Discover Universities
+                  {t("public.discoverUniversities")}
                 </Button>
               </div>
               <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-3 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1.5">
-                  <Video className="h-4 w-4 text-accent" /> Recorded video lessons
+                  <Video className="h-4 w-4 text-accent" /> {t("public.recordedVideoLessons")}
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <Award className="h-4 w-4 text-accent" /> Verifiable certificates
+                  <Award className="h-4 w-4 text-accent" /> {t("public.verifiableCertificatesShort")}
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <ShieldCheck className="h-4 w-4 text-accent" /> Structured learning paths
+                  <ShieldCheck className="h-4 w-4 text-accent" /> {t("public.structuredLearningPaths")}
                 </span>
               </div>
             </div>
@@ -121,13 +120,13 @@ export function HomePage() {
                       </div>
                       <div>
                         <p className="font-heading text-sm font-semibold tracking-tight text-foreground">
-                          Multi-University Catalog
+                          {t("public.multiUniversityCatalog")}
                         </p>
-                        <p className="text-xs text-muted-foreground">Browse courses across institutions</p>
+                        <p className="text-xs text-muted-foreground">{t("public.browseCoursesAcrossInstitutions")}</p>
                       </div>
                     </div>
                     <Badge className="bg-success/15 text-success hover:bg-success/15" variant="secondary">
-                      Live
+                      {t("public.live")}
                     </Badge>
                   </div>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -169,7 +168,7 @@ export function HomePage() {
                     <div className="min-w-0 flex-1">
                       <div className="mb-1 flex items-center gap-2">
                         <Badge className="bg-primary text-primary-foreground text-[10px]" variant="default">
-                          Paid
+                          {t("common.paid")}
                         </Badge>
                         <Badge variant="outline" className="border-border text-[10px]">Marketing</Badge>
                       </div>
@@ -199,9 +198,9 @@ export function HomePage() {
                     </div>
                     <div className="flex-1">
                       <p className="font-heading text-sm font-semibold tracking-tight text-foreground">
-                        Certificate Earned
+                        {t("public.certificateEarnedShort")}
                       </p>
-                      <p className="text-xs text-muted-foreground">Verifiable ID · CL-2024-08AF31</p>
+                      <p className="text-xs text-muted-foreground">{t("public.verifiableId")} · CL-2024-08AF31</p>
                     </div>
                     <ShieldCheck className="h-5 w-5 text-success" />
                   </div>
@@ -242,10 +241,10 @@ export function HomePage() {
         <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wider text-accent">
-              Featured Universities
+              {t("public.featuredUniversities")}
             </p>
             <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
-              Learn from trusted institutions
+              {t("public.learnFromTrustedInstitutions")}
             </h2>
           </div>
           <Button
@@ -253,7 +252,7 @@ export function HomePage() {
             onClick={() => navigate(["courses"])}
             className="gap-2 h-9 border-border bg-card hover:bg-soft-sage"
           >
-            Browse all courses
+            {t("public.browseAllCourses")}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
@@ -298,12 +297,12 @@ export function HomePage() {
                       {u.name}
                     </h3>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      {u.courseCount} course{u.courseCount === 1 ? "" : "s"} published
+                      {u.courseCount} {t("public.coursesPublished")}
                     </p>
                   </div>
                 </div>
                 <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
-                  <span className="text-xs text-muted-foreground">Explore catalog</span>
+                  <span className="text-xs text-muted-foreground">{t("public.exploreCatalog")}</span>
                   <ArrowRight className="h-4 w-4 text-accent transition-transform group-hover:translate-x-0.5" />
                 </div>
               </Card>
@@ -318,10 +317,10 @@ export function HomePage() {
           <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-wider text-accent">
-                Explore Courses
+                {t("common.exploreCourses")}
               </p>
               <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
-                Start learning from our most popular courses
+                {t("public.startLearningPopular")}
               </h2>
             </div>
             <Button
@@ -329,7 +328,7 @@ export function HomePage() {
               onClick={() => navigate(["courses"])}
               className="gap-2 h-9 border-border bg-card hover:bg-soft-sage"
             >
-              View all courses
+              {t("public.viewAllCourses")}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
@@ -351,8 +350,8 @@ export function HomePage() {
           ) : featured.length === 0 ? (
             <EmptyState
               icon={<BookOpen className="h-5 w-5" />}
-              title="No courses published yet"
-              description="Our team is preparing new courses. Please check back soon."
+              title={t("public.noCoursesPublishedYet")}
+              description={t("public.noCoursesPublishedDesc")}
             />
           ) : (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -367,19 +366,19 @@ export function HomePage() {
       {/* ─────────── How It Works ─────────── */}
       <section className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-20">
         <div className="mb-12 space-y-2 text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-accent">How It Works</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-accent">{t("public.howItWorks")}</p>
           <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
-            Three steps to a verifiable certificate
+            {t("public.threeStepsToCertificate")}
           </h2>
           <p className="mx-auto max-w-2xl text-sm text-muted-foreground md:text-base">
-            A clear, accountable path from discovery to certification — designed for genuine learning.
+            {t("public.howItWorksDesc")}
           </p>
         </div>
         <div className="grid gap-5 md:grid-cols-3">
           {[
-            { icon: BookOpen, step: "01", title: "Discover", desc: "Browse courses across multiple universities and find the right path for your goals." },
-            { icon: ShieldCheck, step: "02", title: "Choose", desc: "Pick a learning plan, enroll and unlock structured video lessons and materials." },
-            { icon: Award, step: "03", title: "Learn & Earn", desc: "Watch lessons, complete assignments and receive a verifiable certificate." },
+            { icon: BookOpen, step: "01", title: t("public.stepDiscover"), desc: t("public.stepDiscoverDesc") },
+            { icon: ShieldCheck, step: "02", title: t("public.stepChoose"), desc: t("public.stepChooseDesc") },
+            { icon: Award, step: "03", title: t("public.stepLearnEarn"), desc: t("public.stepLearnEarnDesc") },
           ].map((s) => (
             <Card key={s.step} className="relative p-6 shadow-sm transition-all duration-200 hover:shadow-md">
               <div className="absolute right-5 top-5 font-heading text-3xl font-bold tabular-nums text-soft-sage">
@@ -403,22 +402,20 @@ export function HomePage() {
           <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
             <div className="space-y-5">
               <p className="text-xs font-semibold uppercase tracking-wider text-accent">
-                Interactive Learning
+                {t("public.interactiveLearning")}
               </p>
               <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
-                Built for active, accountable learning
+                {t("public.builtForActiveLearning")}
               </h2>
               <p className="text-sm leading-relaxed text-muted-foreground md:text-base">
-                Every lesson is designed to keep you engaged and on track. Watch video lessons,
-                answer timed questions, complete real assessments, and earn certificates that
-                represent genuine work.
+                {t("public.interactiveLearningDesc")}
               </p>
               <div className="space-y-3 pt-2">
                 {[
-                  { icon: Video, title: "Video-based learning", desc: "Recorded lessons with progress tracking that only completes when genuinely watched." },
-                  { icon: Timer, title: "Timed questions & assessments", desc: "Embedded questions verify understanding as you go, not just at the end." },
-                  { icon: FileText, title: "Hands-on assignments", desc: "Apply knowledge with downloadable assignments reviewed by instructors." },
-                  { icon: Trophy, title: "Verifiable certificates", desc: "Each certificate carries a unique ID learners can share with employers." },
+                  { icon: Video, title: t("public.feature.videoBased"), desc: t("public.feature.videoBasedDesc") },
+                  { icon: Timer, title: t("public.feature.timedQuestions"), desc: t("public.feature.timedQuestionsDesc") },
+                  { icon: FileText, title: t("public.feature.assignments"), desc: t("public.feature.assignmentsDesc") },
+                  { icon: Trophy, title: t("public.feature.certificates"), desc: t("public.feature.certificatesDesc") },
                 ].map((f) => (
                   <div
                     key={f.title}
@@ -448,9 +445,9 @@ export function HomePage() {
                     </div>
                     <div>
                       <p className="font-heading text-sm font-semibold tracking-tight text-foreground">
-                        Topic 3 · Assessment
+                        {t("public.assessmentMockup")}
                       </p>
-                      <p className="text-xs text-muted-foreground">Question 2 of 5</p>
+                      <p className="text-xs text-muted-foreground">{t("public.question2Of5")}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 rounded-full bg-warning/15 px-2.5 py-1 text-xs font-medium text-warning">
@@ -458,14 +455,14 @@ export function HomePage() {
                   </div>
                 </div>
                 <p className="text-sm font-medium text-foreground">
-                  What is the primary goal of a content marketing funnel?
+                  {t("public.contentFunnelQuestion")}
                 </p>
                 <div className="mt-4 space-y-2">
                   {[
-                    { label: "Increase social media followers", selected: false },
-                    { label: "Guide prospects toward a conversion", selected: true },
-                    { label: "Reduce advertising spend", selected: false },
-                    { label: "Improve email deliverability", selected: false },
+                    { label: t("public.increaseSocialFollowers"), selected: false },
+                    { label: t("public.guideProspectsConversion"), selected: true },
+                    { label: t("public.reduceAdSpend"), selected: false },
+                    { label: t("public.improveEmailDeliverability"), selected: false },
                   ].map((opt) => (
                     <div
                       key={opt.label}
@@ -487,9 +484,9 @@ export function HomePage() {
                   ))}
                 </div>
                 <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
-                  <span className="text-xs text-muted-foreground">Auto-graded on submit</span>
+                  <span className="text-xs text-muted-foreground">{t("public.autoGradedOnSubmit")}</span>
                   <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success">
-                    <ShieldCheck className="h-3.5 w-3.5" /> Verified progress
+                    <ShieldCheck className="h-3.5 w-3.5" /> {t("public.verifiedProgress")}
                   </span>
                 </div>
               </div>
@@ -503,13 +500,13 @@ export function HomePage() {
       <section id="plans" className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-20">
         <div className="mb-10 space-y-3 text-center">
           <p className="text-xs font-semibold uppercase tracking-wider text-accent">
-            Learning Plans
+            {t("nav.learningPlans")}
           </p>
           <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
-            Choose the plan that fits your goals
+            {t("public.choosePlanFitsGoals")}
           </h2>
           <p className="mx-auto max-w-2xl text-sm text-muted-foreground">
-            Transparent pricing. No hidden fees. Cancel anytime by letting your plan expire.
+            {t("public.transparentPricing")}
           </p>
         </div>
 
@@ -532,8 +529,8 @@ export function HomePage() {
         ) : plans.length === 0 ? (
           <EmptyState
             icon={<TrendingUp className="h-5 w-5" />}
-            title="No subscription plans available yet"
-            description="Our team is preparing learning plans. Please check back soon."
+            title={t("public.noSubscriptionPlansYet")}
+            description={t("public.noPlansDesc")}
           />
         ) : (
           <div className="mx-auto grid max-w-5xl gap-5 md:grid-cols-3 md:items-start">
@@ -554,15 +551,13 @@ export function HomePage() {
           <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
             <div className="space-y-5">
               <p className="text-xs font-semibold uppercase tracking-wider text-accent">
-                University Partnership
+                {t("public.universityPartnership")}
               </p>
               <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
-                Bring your institution to CourseLearn
+                {t("public.bringInstitutionToCourseLearn")}
               </h2>
               <p className="text-sm leading-relaxed text-muted-foreground md:text-base">
-                Universities join CourseLearn to publish structured courses, deliver video lessons
-                and issue verifiable certificates — all from a single, professional platform.
-                Reach motivated learners worldwide with built-in progress tracking and assessments.
+                {t("public.partnershipDescAlt")}
               </p>
               <div className="flex flex-wrap items-center gap-3 pt-2">
                 <Button
@@ -571,7 +566,7 @@ export function HomePage() {
                   className="gap-2 h-11 px-6 bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   <Handshake className="h-4 w-4" />
-                  Become a partner
+                  {t("public.becomePartner")}
                 </Button>
                 <Button
                   size="lg"
@@ -579,17 +574,17 @@ export function HomePage() {
                   onClick={() => navigate(["about"])}
                   className="h-11 px-6 border-border bg-card hover:bg-soft-sage"
                 >
-                  Learn more
+                  {t("public.learnMore")}
                 </Button>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               {[
-                { icon: Building2, title: "Publish courses", desc: "Structured topics, videos and materials." },
-                { icon: Video, title: "Deliver lessons", desc: "Recorded videos with progress tracking." },
-                { icon: FileText, title: "Assess learners", desc: "Assignments reviewed by your faculty." },
-                { icon: Award, title: "Issue certificates", desc: "Unique, verifiable certificate IDs." },
+                { icon: Building2, title: t("public.publishCourses"), desc: t("public.publishCoursesDesc") },
+                { icon: Video, title: t("public.deliverLessons"), desc: t("public.deliverLessonsDesc") },
+                { icon: FileText, title: t("public.assessLearners"), desc: t("public.assessLearnersDesc") },
+                { icon: Award, title: t("public.issueCertificates"), desc: t("public.issueCertificatesDesc") },
               ].map((f) => (
                 <Card key={f.title} className="p-5 shadow-sm transition-all duration-200 hover:shadow-md">
                   <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-soft-sage text-accent">
@@ -609,32 +604,32 @@ export function HomePage() {
       {/* ─────────── FAQ ─────────── */}
       <section className="mx-auto max-w-3xl px-4 md:px-6 lg:px-8 py-20">
         <div className="mb-10 space-y-2 text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-accent">FAQ</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-accent">{t("public.faqAlt")}</p>
           <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
-            Frequently asked questions
+            {t("public.faq")}
           </h2>
         </div>
         <div className="space-y-3">
           {[
             {
-              q: "How do I get started with CourseLearn?",
-              a: "Create a free account, choose a learning plan that fits your goals, and you'll immediately unlock access to your enrolled courses with video lessons, materials and assignments.",
+              q: t("public.faqStarted"),
+              a: t("public.faqStartedAns"),
             },
             {
-              q: "Are certificates verifiable?",
-              a: "Yes. Every certificate carries a unique ID. Learners receive a verifiable link and PDF copy they can share with employers or include on professional profiles.",
+              q: t("public.faqCertificatesVerifiable"),
+              a: t("public.faqCertificatesVerifiableAns"),
             },
             {
-              q: "How does progress tracking work?",
-              a: "Lessons are only marked complete when genuinely watched. Assignments unlock after the prerequisite video lessons are completed, ensuring real engagement with the material.",
+              q: t("public.faqProgressTracking"),
+              a: t("public.faqProgressTrackingAns"),
             },
             {
-              q: "Can I learn from multiple universities?",
-              a: "Absolutely. CourseLearn brings multiple universities onto one platform. Browse the full catalog and enroll in courses from any partner institution with a single account.",
+              q: t("public.faqMultipleUniversities"),
+              a: t("public.faqMultipleUniversitiesAns"),
             },
             {
-              q: "What if I let my plan expire?",
-              a: "You retain access to your earned certificates and completed coursework. To enroll in new courses or resume in-progress ones, simply renew your subscription plan.",
+              q: t("public.faqPlanExpire"),
+              a: t("public.faqPlanExpireAns"),
             },
           ].map((item) => (
             <details
@@ -659,10 +654,10 @@ export function HomePage() {
       <section className="bg-primary text-primary-foreground">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-16 text-center md:py-20">
           <h2 className="font-heading text-2xl font-semibold tracking-tight md:text-[32px]">
-            Ready to start your learning journey?
+            {t("public.readyToStartJourney")}
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm text-primary-foreground/80 md:text-base">
-            Create your account, pick a learning plan and unlock structured courses today.
+            {t("public.ctaCreateAccount")}
           </p>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
             <Button
@@ -671,7 +666,7 @@ export function HomePage() {
               onClick={() => navigate(["register"])}
               className="gap-2 h-11 px-6 bg-primary-foreground text-primary hover:bg-primary-foreground/90"
             >
-              Get Started
+              {t("common.getStarted")}
               <ArrowRight className="h-4 w-4" />
             </Button>
             <Button
@@ -680,7 +675,7 @@ export function HomePage() {
               onClick={() => navigate(["courses"])}
               className="h-11 border-primary-foreground/30 bg-transparent px-6 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
             >
-              Browse Courses
+              {t("public.browseCoursesShort")}
             </Button>
           </div>
         </div>
@@ -690,6 +685,7 @@ export function HomePage() {
 }
 
 function CourseCardMini({ course, onOpen }: { course: CoursePublic; onOpen: () => void }) {
+  const { t } = useI18n();
   return (
     <Card
       className="group cursor-pointer overflow-hidden p-0 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-accent/40"
@@ -713,7 +709,7 @@ function CourseCardMini({ course, onOpen }: { course: CoursePublic; onOpen: () =
                 : "bg-primary text-primary-foreground"
             }
           >
-            {course.accessType === "FREE" ? "Free" : "Paid"}
+            {course.accessType === "FREE" ? t("common.free") : t("common.paid")}
           </Badge>
           {course.category && (
             <Badge variant="outline" className="border-border bg-background/85 backdrop-blur">
@@ -730,14 +726,14 @@ function CourseCardMini({ course, onOpen }: { course: CoursePublic; onOpen: () =
           <UniversityBadge university={course.university} size="xs" />
         )}
         <p className="min-h-[2.5rem] text-sm text-muted-foreground line-clamp-2">
-          {course.description || "No description provided."}
+          {course.description || t("courses.noDescription")}
         </p>
         <div className="flex items-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
-            <BookOpen className="h-3.5 w-3.5" /> {course.topicsCount} topics
+            <BookOpen className="h-3.5 w-3.5" /> {course.topicsCount} {t("courses.topics")}
           </span>
           <span className="flex items-center gap-1.5">
-            <Video className="h-3.5 w-3.5" /> {course.videosCount} lessons
+            <Video className="h-3.5 w-3.5" /> {course.videosCount} {t("courses.lessons")}
           </span>
           {course.accessType === "PAID" && course.planNames.length > 0 && (
             <span className="flex items-center gap-1.5 text-accent">
@@ -751,6 +747,7 @@ function CourseCardMini({ course, onOpen }: { course: CoursePublic; onOpen: () =
 }
 
 function PlanCard({ plan, onSelect }: { plan: SubscriptionPlanPublic; onSelect: () => void }) {
+  const { t } = useI18n();
   return (
     <Card
       className={`relative flex flex-col p-6 shadow-sm transition-all duration-200 hover:shadow-md ${
@@ -762,7 +759,7 @@ function PlanCard({ plan, onSelect }: { plan: SubscriptionPlanPublic; onSelect: 
       {plan.isPopular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <Badge className="bg-primary text-primary-foreground shadow-sm">
-            <Star className="h-3 w-3 fill-current" /> Most Popular
+            <Star className="h-3 w-3 fill-current" /> {t("common.popularPlan")}
           </Badge>
         </div>
       )}
@@ -792,7 +789,7 @@ function PlanCard({ plan, onSelect }: { plan: SubscriptionPlanPublic; onSelect: 
           </li>
         ))}
         {plan.features.length > 6 && (
-          <li className="text-xs text-muted-foreground">+ {plan.features.length - 6} more</li>
+          <li className="text-xs text-muted-foreground">+ {plan.features.length - 6} {t("common.more")}</li>
         )}
       </ul>
       <Button
@@ -804,7 +801,7 @@ function PlanCard({ plan, onSelect }: { plan: SubscriptionPlanPublic; onSelect: 
             : "border-border bg-card hover:bg-soft-sage"
         }`}
       >
-        Select Plan
+        {t("common.selectPlan")}
         <ArrowRight className="h-4 w-4" />
       </Button>
     </Card>

@@ -32,6 +32,7 @@ import {
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch, apiPost } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
 import { formatDate } from "@/types";
 import { CourseThumbnail } from "@/components/shared/course-thumbnail";
@@ -112,6 +113,7 @@ const LEVEL_LABEL: Record<string, string> = {
 };
 
 export function UniversityScheduling() {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const [search, setSearch] = useState("");
   const [modeFilter, setModeFilter] = useState<"ALL" | AvailabilityMode>("ALL");
@@ -254,7 +256,7 @@ export function UniversityScheduling() {
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search courses by title…"
                 className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Search courses"
+                aria-label={t("common.search")}
               />
             </div>
             <Select

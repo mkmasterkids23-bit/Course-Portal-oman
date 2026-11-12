@@ -24,6 +24,7 @@ import {
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch, apiPost } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
 import { formatDateTime } from "@/types";
 import {
@@ -75,6 +76,7 @@ interface SubmissionDetail {
 }
 
 export function AdminSubmissions() {
+  const { t } = useI18n();
   const query = useAppStore((s) => s.query);
   const navigate = useAppStore((s) => s.navigate);
   const [search, setSearch] = useState("");
@@ -124,27 +126,27 @@ export function AdminSubmissions() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by student, assignment or course…"
+                placeholder={t("common.search")}
                 className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Search submissions"
+                aria-label={t("common.search")}
               />
             </div>
             <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as "ALL" | "SUBMITTED" | "REVIEWED")}>
-              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[140px]" aria-label="Filter by status">
-                <SelectValue placeholder="All statuses" />
+              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[140px]" aria-label={t("common.status")}>
+                <SelectValue placeholder={t("common.allStatuses")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All statuses</SelectItem>
-                <SelectItem value="SUBMITTED">Submitted</SelectItem>
-                <SelectItem value="REVIEWED">Reviewed</SelectItem>
+                <SelectItem value="ALL">{t("common.allStatuses")}</SelectItem>
+                <SelectItem value="SUBMITTED">{t("common.submit")}</SelectItem>
+                <SelectItem value="REVIEWED">{t("common.completed")}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={courseFilter} onValueChange={setCourseFilter}>
-              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[180px]" aria-label="Filter by course">
-                <SelectValue placeholder="All courses" />
+              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[180px]" aria-label={t("common.course")}>
+                <SelectValue placeholder={t("common.all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All courses</SelectItem>
+                <SelectItem value="ALL">{t("common.all")}</SelectItem>
                 {(coursesData?.courses || []).map((c) => (
                   <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
                 ))}
@@ -154,9 +156,9 @@ export function AdminSubmissions() {
         </div>
         {assignmentFilter !== "ALL" && (
           <div className="mt-3 flex items-center gap-2 text-xs">
-            <Badge variant="outline" className="bg-warning/15 text-warning">Filtered by assignment</Badge>
+            <Badge variant="outline" className="bg-warning/15 text-warning">{t("common.assignment")}</Badge>
             <button className="text-accent hover:underline" onClick={clearAssignmentFilter}>
-              Clear filter
+              {t("common.clearFilters")}
             </button>
           </div>
         )}
@@ -170,24 +172,24 @@ export function AdminSubmissions() {
             ))}
           </div>
         ) : error ? (
-          <EmptyState className="m-4" icon={<Inbox className="h-5 w-5" />} title="Couldn't load submissions" description={error} />
+          <EmptyState className="m-4" icon={<Inbox className="h-5 w-5" />} title={t("common.error")} description={error} />
         ) : submissions.length === 0 ? (
           <EmptyState
             className="m-4"
             icon={<Inbox className="h-5 w-5" />}
-            title="No submissions yet"
-            description="Student assignment submissions will appear here once they start submitting."
+            title={t("empty.noData")}
+            description={t("common.submissions")}
           />
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Student</TableHead>
-                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Course</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Assignment</TableHead>
-                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Submitted</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
-                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("table.student")}</TableHead>
+                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">{t("table.course")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("common.assignment")}</TableHead>
+                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">{t("common.date")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("common.status")}</TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("table.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -211,9 +213,9 @@ export function AdminSubmissions() {
                   </TableCell>
                   <TableCell>
                     {s.status === "REVIEWED" ? (
-                      <Badge className="bg-accent/15 text-accent">Reviewed</Badge>
+                      <Badge className="bg-accent/15 text-accent">{t("common.completed")}</Badge>
                     ) : (
-                      <Badge className="bg-warning/15 text-warning">Submitted</Badge>
+                      <Badge className="bg-warning/15 text-warning">{t("common.submit")}</Badge>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
@@ -223,7 +225,7 @@ export function AdminSubmissions() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-accent"
-                        aria-label="Download submission"
+                        aria-label={t("common.download")}
                       >
                         <Download className="h-3.5 w-3.5" />
                       </a>
@@ -235,11 +237,11 @@ export function AdminSubmissions() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
                           <DropdownMenuItem onClick={() => setViewId(s.id)} className="gap-2">
-                            <Eye className="h-4 w-4 text-muted-foreground" /> View details
+                            <Eye className="h-4 w-4 text-muted-foreground" /> {t("admin.viewDetails")}
                           </DropdownMenuItem>
                           {s.status === "SUBMITTED" && (
                             <DropdownMenuItem onClick={() => setViewId(s.id)} className="gap-2">
-                              <CheckCircle2 className="h-4 w-4 text-muted-foreground" /> Mark as reviewed
+                              <CheckCircle2 className="h-4 w-4 text-muted-foreground" /> {t("common.completed")}
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>
@@ -269,6 +271,7 @@ function SubmissionDetailDialog({
   onOpenChange: (v: boolean) => void;
   onReviewed: () => void;
 }) {
+  const { t } = useI18n();
   const { data, loading, error } = useApiFetch<{ submission: SubmissionDetail }>(
     submissionId ? `/api/admin/submissions/${submissionId}` : null,
     { skip: !submissionId }
@@ -292,7 +295,7 @@ function SubmissionDetailDialog({
         status,
         reviewNotes: reviewNotes.trim() || null,
       }, { method: "PATCH" });
-      toast({ title: "Review saved", description: status === "REVIEWED" ? "Submission marked as reviewed." : "Submission updated." });
+      toast({ title: t("common.success"), description: status === "REVIEWED" ? t("common.completed") : t("common.success") });
       onReviewed();
       onOpenChange(false);
     } catch { /* toast */ } finally {
@@ -307,9 +310,9 @@ function SubmissionDetailDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="font-heading text-lg font-semibold">Submission Details</DialogTitle>
+          <DialogTitle className="font-heading text-lg font-semibold">{t("common.submissions")}</DialogTitle>
           <DialogDescription>
-            {s ? `${s.student.name} — ${s.assignment.title}` : "Loading…"}
+            {s ? `${s.student.name} — ${s.assignment.title}` : t("common.loading")}
           </DialogDescription>
         </DialogHeader>
 
@@ -319,33 +322,33 @@ function SubmissionDetailDialog({
             <Skeleton className="h-20 w-full" />
           </div>
         ) : error ? (
-          <EmptyState icon={<Inbox className="h-5 w-5" />} title="Couldn't load submission" description={error} />
+          <EmptyState icon={<Inbox className="h-5 w-5" />} title={t("common.error")} description={error} />
         ) : s ? (
           <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
             {/* Student info */}
             <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-              <h4 className="font-heading text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Student</h4>
+              <h4 className="font-heading text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">{t("table.student")}</h4>
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold shrink-0 ring-2 ring-soft-sage">
                   {s.student.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
                 </div>
                 <div className="grid flex-1 grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Name</p>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{t("common.name")}</p>
                     <p className="font-medium text-foreground mt-0.5">{s.student.name}</p>
                   </div>
                   <div>
-                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Email</p>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{t("common.email")}</p>
                     <p className="font-medium text-foreground mt-0.5 truncate">{s.student.email}</p>
                   </div>
                   {s.student.phone && (
                     <div>
-                      <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Phone</p>
+                      <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{t("profile.phone")}</p>
                       <p className="font-medium text-foreground mt-0.5">{s.student.phone}</p>
                     </div>
                   )}
                   <div>
-                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Joined</p>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{t("common.date")}</p>
                     <p className="font-medium text-foreground mt-0.5">{formatDateTime(s.student.createdAt)}</p>
                   </div>
                 </div>
@@ -354,12 +357,12 @@ function SubmissionDetailDialog({
 
             {/* Assignment info */}
             <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-              <h4 className="font-heading text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Assignment</h4>
+              <h4 className="font-heading text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">{t("common.assignment")}</h4>
               <div className="space-y-1.5 text-sm">
                 <p className="font-medium text-foreground">{s.assignment.title}</p>
-                <p className="text-xs text-muted-foreground">Course: {s.assignment.course.title}</p>
+                <p className="text-xs text-muted-foreground">{t("common.course")}: {s.assignment.course.title}</p>
                 {s.assignment.dueDate && (
-                  <p className="text-xs text-muted-foreground">Due: {formatDateTime(s.assignment.dueDate)}</p>
+                  <p className="text-xs text-muted-foreground">{t("courses.dueDate")}: {formatDateTime(s.assignment.dueDate)}</p>
                 )}
                 {s.assignment.description && (
                   <p className="text-foreground mt-2">{s.assignment.description}</p>
@@ -376,7 +379,7 @@ function SubmissionDetailDialog({
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-accent hover:underline mt-2 text-xs"
                   >
-                    <ExternalLink className="h-3 w-3" /> Assignment brief
+                    <ExternalLink className="h-3 w-3" /> {t("courses.assignmentFile")}
                   </a>
                 )}
               </div>
@@ -386,13 +389,13 @@ function SubmissionDetailDialog({
             <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-heading text-sm font-semibold text-foreground">Submitted Work</h4>
+                  <h4 className="font-heading text-sm font-semibold text-foreground">{t("common.submission")}</h4>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Submitted {formatDateTime(s.submittedAt)}
+                    {formatDateTime(s.submittedAt)}
                   </p>
                   {s.reviewedAt && (
                     <p className="text-xs text-muted-foreground">
-                      Reviewed {formatDateTime(s.reviewedAt)}
+                      {formatDateTime(s.reviewedAt)}
                     </p>
                   )}
                 </div>
@@ -411,40 +414,40 @@ function SubmissionDetailDialog({
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
               >
-                <Download className="h-4 w-4 text-accent" /> Download submission
+                <Download className="h-4 w-4 text-accent" /> {t("common.download")}
               </a>
             </div>
 
             {/* Review form */}
             <div className="rounded-xl border border-border bg-card p-4 shadow-sm space-y-3">
-              <h4 className="font-heading text-sm font-semibold text-foreground">Review</h4>
+              <h4 className="font-heading text-sm font-semibold text-foreground">{t("common.submission")}</h4>
               <div className="space-y-1.5">
-                <Label htmlFor="sub-status" className="text-xs font-medium text-muted-foreground">Status</Label>
+                <Label htmlFor="sub-status" className="text-xs font-medium text-muted-foreground">{t("common.status")}</Label>
                 <Select value={status} onValueChange={(v) => setStatus(v as "SUBMITTED" | "REVIEWED")}>
                   <SelectTrigger id="sub-status" className="w-full h-9 rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="SUBMITTED">Submitted — pending review</SelectItem>
-                    <SelectItem value="REVIEWED">Reviewed</SelectItem>
+                    <SelectItem value="SUBMITTED">{t("common.submit")}</SelectItem>
+                    <SelectItem value="REVIEWED">{t("common.completed")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="sub-notes" className="text-xs font-medium text-muted-foreground">Review Notes (visible to admin)</Label>
+                <Label htmlFor="sub-notes" className="text-xs font-medium text-muted-foreground">{t("common.description")}</Label>
                 <Textarea
                   id="sub-notes"
                   value={reviewNotes}
                   onChange={(e) => setReviewNotes(e.target.value)}
                   rows={4}
-                  placeholder="Internal notes about this submission…"
+                  placeholder={t("common.description")}
                   className="rounded-lg"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-1 border-t border-border">
-                <Button variant="outline" className="h-9 mt-3" onClick={() => onOpenChange(false)}>Cancel</Button>
+                <Button variant="outline" className="h-9 mt-3" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
                 <Button disabled={saving} className="h-9 mt-3" onClick={submitReview}>
-                  {saving ? "Saving…" : "Save Review"}
+                  {saving ? t("common.saving") : t("common.save")}
                 </Button>
               </div>
             </div>

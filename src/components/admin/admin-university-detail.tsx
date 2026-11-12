@@ -25,6 +25,7 @@ import {
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch, apiPost } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
 import { formatDate } from "@/types";
 import {
@@ -72,6 +73,7 @@ export function AdminUniversityDetail({
   universityId: string;
   onBack: () => void;
 }) {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
@@ -100,7 +102,7 @@ export function AdminUniversityDetail({
     if (!university) return;
     try {
       await apiPost(`/api/admin/universities/${university.id}`, null, { method: "DELETE" });
-      toast({ title: "University deleted", description: university.name });
+      toast({ title: t("common.success"), description: university.name });
       onBack();
     } catch {
       /* toast handled by apiPost */
@@ -129,15 +131,15 @@ export function AdminUniversityDetail({
     return (
       <div className="space-y-4">
         <Button variant="ghost" size="sm" onClick={onBack} className="gap-2">
-          <ArrowLeft className="h-4 w-4" /> Back to universities
+          <ArrowLeft className="h-4 w-4" /> {t("common.back")}
         </Button>
         <EmptyState
           icon={<Building2 className="h-5 w-5" />}
-          title="Couldn't load university"
+          title={t("common.error")}
           description={error}
           action={
             <Button onClick={onBack} className="gap-2">
-              <ArrowLeft className="h-4 w-4" /> Go back
+              <ArrowLeft className="h-4 w-4" /> {t("common.back")}
             </Button>
           }
         />
@@ -151,7 +153,7 @@ export function AdminUniversityDetail({
     <div className="space-y-6 animate-page-in">
       {/* Back button */}
       <Button variant="ghost" size="sm" onClick={onBack} className="gap-2 text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" /> Back to universities
+        <ArrowLeft className="h-4 w-4" /> {t("common.back")}
       </Button>
 
       {/* ─── University Header ─── */}
@@ -184,7 +186,7 @@ export function AdminUniversityDetail({
                 )}
                 <div className="pb-1">
                   <Badge className="gap-1 bg-soft-sage text-primary border-0 mb-2">
-                    <Building2 className="h-3 w-3" /> University Partner
+                    <Building2 className="h-3 w-3" /> {t("admin.universityPartner")}
                   </Badge>
                   <h1 className="font-heading text-2xl font-bold text-foreground">
                     {university.name}
@@ -204,7 +206,7 @@ export function AdminUniversityDetail({
                   className="gap-2"
                   onClick={() => navigate(["admin", "universities"], { action: "edit", id: university.id })}
                 >
-                  <Pencil className="h-4 w-4" /> Edit
+                  <Pencil className="h-4 w-4" /> {t("common.edit")}
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -214,7 +216,7 @@ export function AdminUniversityDetail({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => setDeleteOpen(true)} variant="destructive" className="gap-2">
-                      <Trash2 className="h-4 w-4" /> Delete university
+                      <Trash2 className="h-4 w-4" /> {t("common.delete")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -232,7 +234,7 @@ export function AdminUniversityDetail({
               <Mail className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Login Email</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("common.email")}</p>
               <p className="text-sm font-semibold text-foreground truncate">{university.email}</p>
             </div>
           </div>
@@ -243,7 +245,7 @@ export function AdminUniversityDetail({
               <Calendar className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Registered</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("common.date")}</p>
               <p className="text-sm font-semibold text-foreground">{formatDate(university.createdAt)}</p>
             </div>
           </div>
@@ -254,7 +256,7 @@ export function AdminUniversityDetail({
               <BookOpen className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Courses</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("admin.totalCourses")}</p>
               <p className="text-sm font-semibold text-foreground">{university.courseCount}</p>
             </div>
           </div>
@@ -265,25 +267,25 @@ export function AdminUniversityDetail({
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 stagger-children">
         <StatCard
           icon={<BookOpen className="h-5 w-5" />}
-          label="Published Courses"
+          label={t("dashboard.totalPublishedCourses")}
           value={publishedCourses}
           tone="forest"
         />
         <StatCard
           icon={<Layers className="h-5 w-5" />}
-          label="Total Topics"
+          label={t("common.topics")}
           value={totalTopics}
           tone="sage"
         />
         <StatCard
           icon={<Video className="h-5 w-5" />}
-          label="Video Lessons"
+          label={t("dashboard.totalVideoLessons")}
           value={totalVideos}
           tone="forest"
         />
         <StatCard
           icon={<ClipboardList className="h-5 w-5" />}
-          label="Assignments"
+          label={t("common.assignments")}
           value={totalAssignments}
           tone="sage"
         />
@@ -293,9 +295,9 @@ export function AdminUniversityDetail({
       <div>
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 className="font-heading text-xl font-semibold text-foreground">Courses</h2>
+            <h2 className="font-heading text-xl font-semibold text-foreground">{t("common.courses")}</h2>
             <p className="text-sm text-muted-foreground mt-0.5">
-              All courses created by {university.name}
+              {university.name}
             </p>
           </div>
           <Button
@@ -304,15 +306,15 @@ export function AdminUniversityDetail({
             className="gap-2"
             onClick={() => navigate(["admin", "courses"])}
           >
-            <BookOpen className="h-4 w-4" /> View in Courses
+            <BookOpen className="h-4 w-4" /> {t("courses.viewInCourses")}
           </Button>
         </div>
 
         {university.courses.length === 0 ? (
           <EmptyState
             icon={<BookOpen className="h-5 w-5" />}
-            title="No courses yet"
-            description={`This university hasn't created any courses yet. They can create courses from their university dashboard.`}
+            title={t("empty.noCourses")}
+            description={t("empty.noCoursesDesc")}
           />
         ) : (
           <Card className="overflow-hidden border-border p-0 shadow-sm">
@@ -320,13 +322,13 @@ export function AdminUniversityDetail({
               <table className="w-full text-sm">
                 <thead className="border-b border-border bg-muted/30">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Course</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Category</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden sm:table-cell">Topics</th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden sm:table-cell">Videos</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("table.course")}</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">{t("common.category")}</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("common.type")}</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden sm:table-cell">{t("common.topics")}</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden sm:table-cell">{t("common.videos")}</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("common.status")}</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("table.actions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -339,7 +341,7 @@ export function AdminUniversityDetail({
                         >
                           <p className="font-medium text-foreground hover:text-accent transition-colors">{c.title}</p>
                           <p className="text-xs text-muted-foreground line-clamp-1 max-w-[240px]">
-                            {c.description || "No description"}
+                            {c.description || t("common.description")}
                           </p>
                         </button>
                       </td>
@@ -348,9 +350,9 @@ export function AdminUniversityDetail({
                       </td>
                       <td className="px-4 py-3">
                         {c.accessType === "FREE" ? (
-                          <Badge className="bg-success/15 text-success border-0">Free</Badge>
+                          <Badge className="bg-success/15 text-success border-0">{t("common.free")}</Badge>
                         ) : (
-                          <Badge className="bg-primary text-primary-foreground border-0">Paid</Badge>
+                          <Badge className="bg-primary text-primary-foreground border-0">{t("common.paid")}</Badge>
                         )}
                       </td>
                       <td className="px-4 py-3 text-center text-sm text-foreground hidden sm:table-cell">{c.topicsCount}</td>
@@ -358,10 +360,10 @@ export function AdminUniversityDetail({
                       <td className="px-4 py-3">
                         {c.isPublished ? (
                           <Badge className="bg-success/15 text-success border-0 gap-1">
-                            <span className="h-1.5 w-1.5 rounded-full bg-success" /> Published
+                            <span className="h-1.5 w-1.5 rounded-full bg-success" /> {t("common.published")}
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-muted-foreground">Draft</Badge>
+                          <Badge variant="outline" className="text-muted-foreground">{t("common.draft")}</Badge>
                         )}
                       </td>
                       <td className="px-4 py-3 text-right">
@@ -371,7 +373,7 @@ export function AdminUniversityDetail({
                           className="gap-1.5 h-8"
                           onClick={() => navigate(["admin", "courses", c.id])}
                         >
-                          <Eye className="h-3.5 w-3.5" /> Manage
+                          <Eye className="h-3.5 w-3.5" /> {t("common.manage")}
                         </Button>
                       </td>
                     </tr>
@@ -387,20 +389,18 @@ export function AdminUniversityDetail({
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete university?</AlertDialogTitle>
+            <AlertDialogTitle>{t("common.delete")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete <strong>{university.name}</strong> along with its linked
-              login account. Courses authored by this university will be retained on the platform
-              with their university link removed. This cannot be undone.
+              {t("admin.universityDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={handleDelete}
             >
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

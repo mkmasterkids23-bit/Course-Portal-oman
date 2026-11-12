@@ -22,6 +22,7 @@ import {
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
 import { formatDate, formatDateTime } from "@/types";
 import {
@@ -57,6 +58,7 @@ interface IssuedCertificate {
 }
 
 export function AdminCertificates() {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const [search, setSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState<string>("ALL");
@@ -95,17 +97,17 @@ export function AdminCertificates() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by course or certificate title…"
+                placeholder={t("common.search")}
                 className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Search certificates"
+                aria-label={t("common.search")}
               />
             </div>
             <Select value={courseFilter} onValueChange={setCourseFilter}>
-              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[200px]" aria-label="Filter by course">
-                <SelectValue placeholder="All courses" />
+              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[200px]" aria-label={t("common.course")}>
+                <SelectValue placeholder={t("common.all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All courses</SelectItem>
+                <SelectItem value="ALL">{t("common.all")}</SelectItem>
                 {(coursesData?.courses || []).map((c) => (
                   <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
                 ))}
@@ -123,24 +125,24 @@ export function AdminCertificates() {
             ))}
           </div>
         ) : error ? (
-          <EmptyState className="m-4" icon={<Award className="h-5 w-5" />} title="Couldn't load certificates" description={error} />
+          <EmptyState className="m-4" icon={<Award className="h-5 w-5" />} title={t("common.error")} description={error} />
         ) : filtered.length === 0 ? (
           <EmptyState
             className="m-4"
             icon={<Award className="h-5 w-5" />}
-            title="No courses found"
-            description="Create a course first, then enable its certificate template here."
+            title={t("empty.noCourses")}
+            description={t("courses.certificateDesc")}
           />
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Course</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Certificate Title</TableHead>
-                <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Issued</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
-                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Created</TableHead>
-                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("table.course")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("common.title")}</TableHead>
+                <TableHead className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("certificates.issuedOn")}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("common.status")}</TableHead>
+                <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">{t("common.date")}</TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("table.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -164,11 +166,11 @@ export function AdminCertificates() {
                   </TableCell>
                   <TableCell>
                     {!row.template ? (
-                      <Badge variant="outline" className="text-muted-foreground">Not configured</Badge>
+                      <Badge variant="outline" className="text-muted-foreground">{t("courses.certificateSettings")}</Badge>
                     ) : row.template.isEnabled ? (
-                      <Badge className="bg-success/15 text-success">Enabled</Badge>
+                      <Badge className="bg-success/15 text-success">{t("common.active")}</Badge>
                     ) : (
-                      <Badge className="bg-warning/15 text-warning">Disabled</Badge>
+                      <Badge className="bg-warning/15 text-warning">{t("common.expired")}</Badge>
                     )}
                   </TableCell>
                   <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
@@ -186,14 +188,14 @@ export function AdminCertificates() {
                           onClick={() => navigate(["admin", "courses", row.courseId], { tab: "certificate" })}
                           className="gap-2"
                         >
-                          <Settings2 className="h-4 w-4 text-muted-foreground" /> Configure template
+                          <Settings2 className="h-4 w-4 text-muted-foreground" /> {t("courses.certificateSettings")}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => setIssuedFor(row)}
                           disabled={row.issuedCount === 0}
                           className="gap-2"
                         >
-                          <Eye className="h-4 w-4 text-muted-foreground" /> View issued list
+                          <Eye className="h-4 w-4 text-muted-foreground" /> {t("admin.viewDetails")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

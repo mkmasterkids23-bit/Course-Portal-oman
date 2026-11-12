@@ -6,16 +6,18 @@ import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
 import { BrandLogo } from "@/components/shared/brand-logo";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { label: "Home", segments: [""] },
-  { label: "Courses", segments: ["courses"] },
-  { label: "Learning Plans", segments: ["plans"] },
-  { label: "About", segments: ["about"] },
+  { labelKey: "nav.home", segments: [""] },
+  { labelKey: "nav.courses", segments: ["courses"] },
+  { labelKey: "nav.learningPlans", segments: ["plans"] },
+  { labelKey: "nav.about", segments: ["about"] },
 ];
 
 export function PublicNavbar() {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const navigate = useAppStore((s) => s.navigate);
@@ -46,7 +48,7 @@ export function PublicNavbar() {
             const active = current === item.segments[0];
             return (
               <button
-                key={item.label}
+                key={item.labelKey}
                 onClick={() => navigate(item.segments)}
                 className={cn(
                   "relative rounded-lg px-3.5 py-2 text-sm transition-all duration-200",
@@ -55,7 +57,7 @@ export function PublicNavbar() {
                     : "text-muted-foreground hover:text-foreground hover:bg-soft-sage/60"
                 )}
               >
-                {item.label}
+                {t(item.labelKey as any)}
                 {active && (
                   <span className="absolute inset-x-3 -bottom-[1px] h-0.5 rounded-full bg-primary" />
                 )}
@@ -66,7 +68,7 @@ export function PublicNavbar() {
             href="mailto:hello@courselearn.dev"
             className="relative rounded-lg px-3.5 py-2 text-sm text-muted-foreground transition-all duration-200 hover:text-foreground hover:bg-soft-sage/60"
           >
-            Contact
+            {t("nav.contact")}
           </a>
         </nav>
 
@@ -78,13 +80,13 @@ export function PublicNavbar() {
             className="gap-2 h-9 text-foreground hover:bg-soft-sage/60"
           >
             <LogIn className="h-4 w-4" />
-            Login
+            {t("common.login")}
           </Button>
           <Button
             onClick={() => navigate(["register"])}
             className="gap-2 h-9 bg-primary text-primary-foreground hover:bg-primary/90"
           >
-            Get Started
+            {t("common.getStarted")}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
@@ -92,7 +94,7 @@ export function PublicNavbar() {
         <button
           className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-soft-sage hover:text-foreground"
           onClick={() => setOpen((v) => !v)}
-          aria-label="Toggle menu"
+          aria-label={t("footer.toggleMenu")}
           aria-expanded={open}
         >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -111,7 +113,7 @@ export function PublicNavbar() {
             const active = current === item.segments[0];
             return (
               <button
-                key={item.label}
+                key={item.labelKey}
                 onClick={() => {
                   navigate(item.segments);
                   setOpen(false);
@@ -123,7 +125,7 @@ export function PublicNavbar() {
                     : "text-muted-foreground hover:text-foreground hover:bg-soft-sage/60"
                 )}
               >
-                {item.label}
+                {t(item.labelKey as any)}
               </button>
             );
           })}
@@ -132,7 +134,7 @@ export function PublicNavbar() {
             className="rounded-lg px-3.5 py-2.5 text-left text-sm text-muted-foreground transition-all duration-200 hover:text-foreground hover:bg-soft-sage/60"
             onClick={() => setOpen(false)}
           >
-            Contact
+            {t("nav.contact")}
           </a>
           <div className="mt-3 grid grid-cols-2 gap-2 border-t border-border pt-4">
             <Button
@@ -140,13 +142,13 @@ export function PublicNavbar() {
               onClick={() => { navigate(["login"]); setOpen(false); }}
               className="gap-2 h-10 border-border bg-card"
             >
-              <LogIn className="h-4 w-4" /> Login
+              <LogIn className="h-4 w-4" /> {t("common.login")}
             </Button>
             <Button
               onClick={() => { navigate(["register"]); setOpen(false); }}
               className="gap-2 h-10 bg-primary text-primary-foreground"
             >
-              Get Started
+              {t("common.getStarted")}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>

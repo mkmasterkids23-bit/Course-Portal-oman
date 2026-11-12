@@ -43,6 +43,7 @@ import {
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
 import { formatDate } from "@/types";
 import {
@@ -92,6 +93,7 @@ interface UniversityDetailResponse {
 
 // ─── Main Component ─────────────────────────────────────────────────────
 export function AdminUniversities() {
+  const { t } = useI18n();
   const query = useAppStore((s) => s.query);
   const navigate = useAppStore((s) => s.navigate);
   const [search, setSearch] = useState("");
@@ -128,14 +130,14 @@ export function AdminUniversities() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search universities…"
+                placeholder={t("common.search")}
                 className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Search universities"
+                aria-label={t("common.search")}
               />
             </div>
           </div>
           <Button className="h-9 gap-2" onClick={() => setAddOpen(true)}>
-            <Plus className="h-4 w-4" /> Add University
+            <Plus className="h-4 w-4" /> {t("admin.addUniversity")}
           </Button>
         </div>
       </Card>
@@ -144,8 +146,8 @@ export function AdminUniversities() {
       {!loading && !error && universities.length > 0 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing <span className="font-medium text-foreground">{universities.length}</span>{" "}
-            universit{universities.length !== 1 ? "ies" : "y"}
+            {t("common.showing")} <span className="font-medium text-foreground">{universities.length}</span>{" "}
+            {t("common.universities")}
           </p>
         </div>
       )}
@@ -172,23 +174,23 @@ export function AdminUniversities() {
         <EmptyState
           className="m-4"
           icon={<Building2 className="h-5 w-5" />}
-          title="Couldn't load universities"
+          title={t("common.error")}
           description={error}
         />
       ) : universities.length === 0 ? (
         <EmptyState
           className="m-4"
           icon={<Building2 className="h-5 w-5" />}
-          title={search.trim() ? "No matches found" : "No universities yet"}
+          title={search.trim() ? t("empty.noResults") : t("empty.noData")}
           description={
             search.trim()
-              ? "Try a different search term."
-              : "Add your first university partner to start managing their courses."
+              ? t("empty.tryDifferent")
+              : t("admin.addUniversity")
           }
           action={
             !search.trim() ? (
               <Button onClick={() => setAddOpen(true)} className="gap-2">
-                <Plus className="h-4 w-4" /> Add University
+                <Plus className="h-4 w-4" /> {t("admin.addUniversity")}
               </Button>
             ) : undefined
           }
@@ -214,7 +216,7 @@ export function AdminUniversities() {
         onSaved={() => {
           refetch();
           setAddOpen(false);
-          toast({ title: "University created" });
+          toast({ title: t("common.success") });
         }}
       />
 
@@ -226,7 +228,7 @@ export function AdminUniversities() {
         onSaved={() => {
           refetch();
           setEditTarget(null);
-          toast({ title: "University updated" });
+          toast({ title: t("common.success") });
         }}
       />
 
@@ -237,17 +239,13 @@ export function AdminUniversities() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete university?</AlertDialogTitle>
+            <AlertDialogTitle>{t("common.delete")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete{" "}
-              <strong>{deleteTarget?.name}</strong> along with its linked login
-              account. Courses authored by this university will be retained on
-              the platform with their university link removed. This cannot be
-              undone.
+              {t("admin.universityDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={async () => {
@@ -259,7 +257,7 @@ export function AdminUniversities() {
                     { method: "DELETE" },
                   );
                   toast({
-                    title: "University deleted",
+                    title: t("common.success"),
                     description: deleteTarget.name,
                   });
                   setDeleteTarget(null);
@@ -269,7 +267,7 @@ export function AdminUniversities() {
                 }
               }}
             >
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -290,6 +288,7 @@ function UniversityCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useI18n();
   const initials = useMemo(
     () =>
       university.name
@@ -331,7 +330,7 @@ function UniversityCard({
           )}
           <div className="min-w-0 flex-1">
             <Badge className="border-0 bg-primary-foreground/15 text-primary-foreground backdrop-blur">
-              <Building2 className="h-3 w-3 mr-1" /> University
+              <Building2 className="h-3 w-3 mr-1" /> {t("common.university")}
             </Badge>
           </div>
         </div>
@@ -344,7 +343,7 @@ function UniversityCard({
             {university.name}
           </h3>
           <p className="mt-1 text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
-            {university.description || "No description provided."}
+            {university.description || t("admin.universityDesc")}
           </p>
         </button>
 
@@ -359,7 +358,7 @@ function UniversityCard({
           <span className="flex items-center gap-1 text-muted-foreground">
             <BookOpen className="h-3.5 w-3.5 text-accent" />
             <span className="font-semibold text-foreground">{university.courseCount}</span>{" "}
-            {university.courseCount === 1 ? "course" : "courses"}
+            {t("common.courses")}
           </span>
           <span className="flex items-center gap-1 text-muted-foreground ml-auto">
             <Calendar className="h-3.5 w-3.5 text-accent" />
@@ -370,17 +369,17 @@ function UniversityCard({
         {/* Actions */}
         <div className="mt-4 flex items-center gap-2">
           <Button size="sm" className="h-9 flex-1 gap-1.5" onClick={onView}>
-            <Eye className="h-3.5 w-3.5" /> View Details
+            <Eye className="h-3.5 w-3.5" /> {t("admin.viewDetails")}
           </Button>
           <Button
             variant="outline"
             size="sm"
             className="h-9 gap-1.5"
             onClick={onEdit}
-            aria-label="Edit"
+            aria-label={t("common.edit")}
           >
             <Pencil className="h-3.5 w-3.5" />
-            <span className="sr-only">Edit</span>
+            <span className="sr-only">{t("common.edit")}</span>
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -395,10 +394,10 @@ function UniversityCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={onView} className="gap-2">
-                <Eye className="h-4 w-4 text-muted-foreground" /> View details
+                <Eye className="h-4 w-4 text-muted-foreground" /> {t("admin.viewDetails")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onEdit} className="gap-2">
-                <Pencil className="h-4 w-4 text-muted-foreground" /> Edit details
+                <Pencil className="h-4 w-4 text-muted-foreground" /> {t("common.edit")}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -406,7 +405,7 @@ function UniversityCard({
                 onClick={onDelete}
                 className="gap-2"
               >
-                <Trash2 className="h-4 w-4" /> Delete
+                <Trash2 className="h-4 w-4" /> {t("common.delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -437,6 +436,7 @@ function UniversityFormDialog({
   target?: UniversityRow | null;
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const isEdit = !!target;
   const [values, setValues] = useState<FormValues>({
     name: "",
@@ -481,21 +481,21 @@ function UniversityFormDialog({
 
   async function submit() {
     if (!values.name.trim()) {
-      toast({ title: "Name required", variant: "destructive" });
+      toast({ title: t("common.name") + " " + t("common.required"), variant: "destructive" });
       return;
     }
     if (!values.email.trim()) {
-      toast({ title: "Email required", variant: "destructive" });
+      toast({ title: t("common.email") + " " + t("common.required"), variant: "destructive" });
       return;
     }
     if (!isEdit && !values.password) {
-      toast({ title: "Password required", variant: "destructive" });
+      toast({ title: t("common.password") + " " + t("common.required"), variant: "destructive" });
       return;
     }
     if (values.password && values.password.length < 6) {
       toast({
-        title: "Password too short",
-        description: "Must be at least 6 characters.",
+        title: t("common.password"),
+        description: t("common.required"),
         variant: "destructive",
       });
       return;
@@ -524,7 +524,7 @@ function UniversityFormDialog({
         const json = await res.json();
         if (!res.ok) {
           const msg = json.error || `Request failed (${res.status})`;
-          toast({ title: "Error", description: msg, variant: "destructive" });
+          toast({ title: t("common.error"), description: msg, variant: "destructive" });
           throw new Error(msg);
         }
       } else {
@@ -551,18 +551,18 @@ function UniversityFormDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">
-            {isEdit ? "Edit University" : "Add New University"}
+            {isEdit ? t("courses.editCourse") : t("admin.addUniversity")}
           </DialogTitle>
           <DialogDescription>
             {isEdit
-              ? "Update the university profile and its linked login account."
-              : "Create a university profile and a login account with role UNIVERSITY."}
+              ? t("admin.universityDesc")
+              : t("admin.universityDesc")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
           {/* Logo preview + upload */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">Logo</Label>
+            <Label className="text-xs font-medium text-muted-foreground">{t("admin.universityLogo")}</Label>
             <div className="flex items-center gap-3">
               <div className="h-16 w-16 overflow-hidden rounded-lg bg-muted flex items-center justify-center shrink-0 ring-1 ring-border">
                 {values.logoPreview ? (
@@ -582,7 +582,7 @@ function UniversityFormDialog({
               <div className="flex-1 space-y-1.5">
                 <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs text-accent hover:underline">
                   <Upload className="h-3.5 w-3.5" />
-                  {values.logoFile ? "Change image" : "Upload logo"}
+                  {values.logoFile ? t("common.edit") : t("common.upload")}
                   <input
                     type="file"
                     accept="image/*"
@@ -594,7 +594,7 @@ function UniversityFormDialog({
                   />
                 </label>
                 <p className="text-xs text-muted-foreground">
-                  PNG, JPG, WebP — square format recommended.
+                  {t("admin.universityLogo")}
                 </p>
               </div>
             </div>
@@ -602,54 +602,54 @@ function UniversityFormDialog({
 
           <div className="space-y-1.5">
             <Label htmlFor="uf-name" className="text-xs font-medium text-muted-foreground">
-              University Name
+              {t("admin.universityName")}
             </Label>
             <Input
               id="uf-name"
               value={values.name}
               onChange={(e) => setValues({ ...values, name: e.target.value })}
-              placeholder="e.g. Sultan Qaboos University"
+              placeholder={t("admin.universityName")}
               className="h-9 rounded-lg"
             />
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="uf-email" className="text-xs font-medium text-muted-foreground">
-              Login Email
+              {t("common.email")}
             </Label>
             <Input
               id="uf-email"
               type="email"
               value={values.email}
               onChange={(e) => setValues({ ...values, email: e.target.value })}
-              placeholder="university@example.com"
+              placeholder={t("common.email")}
               className="h-9 rounded-lg"
             />
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="uf-pass" className="text-xs font-medium text-muted-foreground">
-              Password {isEdit && <span className="text-muted-foreground/70">(leave blank to keep current)</span>}
+              {t("common.password")} {isEdit && <span className="text-muted-foreground/70">({t("common.optional")})</span>}
             </Label>
             <Input
               id="uf-pass"
               type="password"
               value={values.password}
               onChange={(e) => setValues({ ...values, password: e.target.value })}
-              placeholder="Minimum 6 characters"
+              placeholder={t("common.password")}
               className="h-9 rounded-lg"
             />
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="uf-desc" className="text-xs font-medium text-muted-foreground">
-              Description <span className="text-muted-foreground/70">(optional)</span>
+              {t("common.description")} <span className="text-muted-foreground/70">({t("common.optional")})</span>
             </Label>
             <Textarea
               id="uf-desc"
               value={values.description}
               onChange={(e) => setValues({ ...values, description: e.target.value })}
-              placeholder="Short summary shown on the university card"
+              placeholder={t("admin.universityDesc")}
               rows={3}
               className="rounded-lg"
             />
@@ -657,10 +657,10 @@ function UniversityFormDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button disabled={saving} className="h-9" onClick={submit}>
-            {saving ? "Saving…" : isEdit ? "Save Changes" : "Create University"}
+            {saving ? t("common.saving") : isEdit ? t("profile.saveChanges") : t("common.create")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -676,6 +676,7 @@ function UniversityDetailDrawer({
   target: UniversityRow | null;
   onOpenChange: (v: boolean) => void;
 }) {
+  const { t } = useI18n();
   const open = !!target;
   const { data, loading, error } = useApiFetch<UniversityDetailResponse>(
     target ? `/api/admin/universities/${target.id}` : null,
@@ -703,7 +704,7 @@ function UniversityDetailDrawer({
               {university?.name}
             </DrawerTitle>
             <DrawerDescription>
-              {university?.description || "No description provided."}
+              {university?.description || t("admin.universityDesc")}
             </DrawerDescription>
           </DrawerHeader>
 
@@ -717,7 +718,7 @@ function UniversityDetailDrawer({
             ) : error ? (
               <EmptyState
                 icon={<Building2 className="h-5 w-5" />}
-                title="Couldn't load details"
+                title={t("common.error")}
                 description={error}
               />
             ) : university ? (
@@ -749,7 +750,7 @@ function UniversityDetailDrawer({
                         )}
                         <div className="pb-1">
                           <Badge className="gap-1">
-                            <Building2 className="h-3 w-3" /> University Partner
+                            <Building2 className="h-3 w-3" /> {t("admin.universityPartner")}
                           </Badge>
                         </div>
                       </div>
@@ -761,25 +762,25 @@ function UniversityDetailDrawer({
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   <DetailStat
                     icon={<BookOpen className="h-4 w-4" />}
-                    label="Courses"
+                    label={t("common.courses")}
                     value={university.courseCount}
                   />
                   <DetailStat
                     icon={<Mail className="h-4 w-4" />}
-                    label="Email"
+                    label={t("common.email")}
                     value={university.email}
                     isText
                   />
                   <DetailStat
                     icon={<Calendar className="h-4 w-4" />}
-                    label="Joined"
+                    label={t("common.date")}
                     value={formatDate(university.createdAt)}
                     isText
                   />
                   <DetailStat
                     icon={<GraduationCap className="h-4 w-4" />}
-                    label="Status"
-                    value="Active"
+                    label={t("common.status")}
+                    value={t("common.active")}
                     isText
                   />
                 </div>
@@ -788,7 +789,7 @@ function UniversityDetailDrawer({
                 {university.description && (
                   <Card className="border-border p-5">
                     <h4 className="font-heading text-sm font-semibold text-foreground mb-2">
-                      About
+                      {t("public.about")}
                     </h4>
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       {university.description}
@@ -800,18 +801,18 @@ function UniversityDetailDrawer({
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h4 className="font-heading text-sm font-semibold text-foreground">
-                      Courses by this University
+                      {t("common.courses")}
                     </h4>
                     <Badge variant="outline">
-                      {university.courseCount} total
+                      {university.courseCount} {t("common.all")}
                     </Badge>
                   </div>
 
                   {university.courses?.length === 0 ? (
                     <EmptyState
                       icon={<BookOpen className="h-5 w-5" />}
-                      title="No courses yet"
-                      description="This university hasn't authored any courses."
+                      title={t("empty.noCourses")}
+                      description={t("admin.universityDesc")}
                     />
                   ) : (
                     <div className="space-y-2">
@@ -868,6 +869,7 @@ function DetailStat({
 }
 
 function CourseRowItem({ course }: { course: UniversityCourseRow }) {
+  const { t } = useI18n();
   return (
     <Card className="border-border p-3 transition-colors duration-200 hover:bg-muted/30">
       <div className="flex items-start gap-3">
@@ -892,17 +894,17 @@ function CourseRowItem({ course }: { course: UniversityCourseRow }) {
             <div className="flex gap-1 shrink-0">
               {course.accessType === "FREE" ? (
                 <Badge variant="outline" className="text-success border-success/30">
-                  Free
+                  {t("common.free")}
                 </Badge>
               ) : (
                 <Badge variant="outline" className="text-primary border-primary/30">
-                  Paid
+                  {t("common.paid")}
                 </Badge>
               )}
               {course.isPublished ? (
-                <Badge className="bg-success/95 text-success-foreground">Published</Badge>
+                <Badge className="bg-success/95 text-success-foreground">{t("common.published")}</Badge>
               ) : (
-                <Badge variant="outline">Draft</Badge>
+                <Badge variant="outline">{t("common.draft")}</Badge>
               )}
             </div>
           </div>
@@ -914,15 +916,15 @@ function CourseRowItem({ course }: { course: UniversityCourseRow }) {
           <div className="mt-1.5 flex items-center gap-3 text-[11px] text-muted-foreground">
             <span className="flex items-center gap-1">
               <Layers className="h-3 w-3 text-accent" />
-              {course.topicsCount} topics
+              {course.topicsCount} {t("common.topics")}
             </span>
             <span className="flex items-center gap-1">
               <Video className="h-3 w-3 text-accent" />
-              {course.videosCount} lessons
+              {course.videosCount} {t("common.lessons")}
             </span>
             <span className="flex items-center gap-1">
               <ClipboardList className="h-3 w-3 text-accent" />
-              {course.assignmentsCount} assignments
+              {course.assignmentsCount} {t("common.assignments")}
             </span>
           </div>
         </div>

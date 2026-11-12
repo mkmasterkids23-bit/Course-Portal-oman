@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch, apiPost } from "@/hooks/use-api";
+import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
 import { formatDateTime } from "@/types";
 import {
@@ -110,6 +111,7 @@ const DEFAULT_FORM: FormValues = {
 };
 
 export function UniversityAnnouncements() {
+  const { t } = useI18n();
   const [search, setSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "true" | "false">(
@@ -167,9 +169,9 @@ export function UniversityAnnouncements() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search announcements…"
+                placeholder={t("common.search")}
                 className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Search announcements"
+                aria-label={t("common.search")}
               />
             </div>
             <Select
@@ -200,13 +202,13 @@ export function UniversityAnnouncements() {
             >
               <SelectTrigger
                 className="h-9 w-full rounded-lg sm:w-[140px]"
-                aria-label="Filter by status"
+                aria-label={t("common.status")}
               >
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All statuses</SelectItem>
-                <SelectItem value="true">Published</SelectItem>
+                <SelectItem value="ALL">{t("common.allStatuses")}</SelectItem>
+                <SelectItem value="true">{t("common.published")}</SelectItem>
                 <SelectItem value="false">Drafts</SelectItem>
               </SelectContent>
             </Select>
@@ -250,14 +252,14 @@ export function UniversityAnnouncements() {
         <EmptyState
           className="m-4"
           icon={<Megaphone className="h-5 w-5" />}
-          title="Couldn't load announcements"
+          title={t("common.error")}
           description={error}
         />
       ) : announcements.length === 0 ? (
         <EmptyState
           className="m-4"
           icon={<Megaphone className="h-5 w-5" />}
-          title="No announcements yet"
+          title={t("common.announcements")}
           description="Share updates with all your students or target a specific course. Schedule announcements for later or publish them instantly."
           action={
             <Button
@@ -319,7 +321,7 @@ export function UniversityAnnouncements() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={async () => {

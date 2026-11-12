@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 import { formatDateTime } from "@/types";
 import {
   BookOpen, Award, ClipboardList, Video, FileText, Inbox,
@@ -40,6 +41,7 @@ interface OverviewData {
 }
 
 export function UniversityOverview() {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const user = useAppStore((s) => s.user);
   const { data, loading, error } = useApiFetch<OverviewData>("/api/university/overview");
@@ -58,14 +60,13 @@ export function UniversityOverview() {
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary-foreground/70">
-              University Console
+              {t("dashboard.adminConsole")}
             </p>
             <h2 className="font-heading mt-1 text-2xl font-bold tracking-tight sm:text-[28px]">
-              Welcome back, {user?.universityName || "University"}
+              {t("dashboard.welcome")}, {user?.universityName || t("common.university")}
             </h2>
             <p className="mt-1.5 text-sm text-primary-foreground/75 max-w-md">
-              Here&apos;s a snapshot of your university&apos;s teaching activity today. Manage your
-              courses, learners and engagement at a glance.
+              {t("dashboard.snapshot")}
             </p>
           </div>
           <Badge className="self-start gap-1.5 border-primary-foreground/20 bg-primary-foreground/10 px-3 py-1.5 text-xs font-medium text-primary-foreground backdrop-blur">
@@ -85,7 +86,7 @@ export function UniversityOverview() {
       ) : error ? (
         <EmptyState
           icon={<TrendingUp className="h-5 w-5" />}
-          title="Couldn't load dashboard"
+          title={t("common.error")}
           description={error}
         />
       ) : data ? (
@@ -94,31 +95,31 @@ export function UniversityOverview() {
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 stagger-children">
             <PremiumStatCard
               icon={<BookOpen className="h-5 w-5" />}
-              label="Total Courses"
+              label={t("dashboard.totalCourses")}
               value={data.totalCourses}
-              hint={`${data.totalPublishedCourses} published`}
+              hint={`${data.totalPublishedCourses} ${t("common.published")}`}
               tone="navy"
             />
             <PremiumStatCard
               icon={<Video className="h-5 w-5" />}
-              label="Video Lessons"
+              label={t("dashboard.totalVideoLessons")}
               value={data.totalVideoLessons}
-              hint="published lessons"
+              hint={t("courses.publishedLessons")}
               tone="teal"
             />
             <PremiumStatCard
               icon={<ClipboardList className="h-5 w-5" />}
-              label="Pending Reviews"
+              label={t("dashboard.pendingReviews")}
               value={data.pendingReviews}
-              hint={`${data.totalSubmittedAssignments} total submissions`}
+              hint={`${data.totalSubmittedAssignments} ${t("common.submissions")}`}
               tone="amber"
               urgent={data.pendingReviews > 0}
             />
             <PremiumStatCard
               icon={<Award className="h-5 w-5" />}
-              label="Certificates Issued"
+              label={t("dashboard.certificatesIssued")}
               value={data.totalCertificatesIssued}
-              hint={`${data.totalStudents} active learners`}
+              hint={`${data.totalStudents} ${t("dashboard.activeLearners")}`}
               tone="green"
             />
           </div>
@@ -134,9 +135,9 @@ export function UniversityOverview() {
                   </div>
                   <div>
                     <h3 className="font-heading text-sm font-semibold text-foreground">
-                      Recent Assignment Submissions
+                      {t("dashboard.recentSubmissions")}
                     </h3>
-                    <p className="text-xs text-muted-foreground">Latest student submissions</p>
+                    <p className="text-xs text-muted-foreground">{t("common.submissions")}</p>
                   </div>
                 </div>
                 <Button
@@ -145,13 +146,13 @@ export function UniversityOverview() {
                   className="gap-1 text-xs text-muted-foreground hover:text-accent"
                   onClick={() => navigate(["university", "submissions"])}
                 >
-                  View all <ArrowRight className="h-3 w-3" />
+                  {t("common.viewAll")} <ArrowRight className="h-3 w-3" />
                 </Button>
               </div>
               <div className="p-2">
                 {data.recentSubmissions.length === 0 ? (
                   <p className="text-sm text-muted-foreground py-8 text-center">
-                    No submissions yet
+                    {t("empty.noData")}
                   </p>
                 ) : (
                   <ul className="divide-y divide-border max-h-80 overflow-y-auto scrollbar-thin">
@@ -186,37 +187,37 @@ export function UniversityOverview() {
               <CardContent className="p-5">
                 <div className="flex items-center gap-2">
                   <h3 className="font-heading text-sm font-semibold text-foreground">
-                    Quick Actions
+                    {t("dashboard.quickActions")}
                   </h3>
                   <Badge
                     variant="outline"
                     className="text-[10px] uppercase tracking-wider text-muted-foreground"
                   >
-                    Shortcuts
+                    {t("dashboard.quickActions")}
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5 mb-4">
-                  Jump straight into common tasks
+                  {t("dashboard.snapshot")}
                 </p>
                 <div className="flex flex-col gap-2">
                   <QuickActionButton
                     icon={<PlusCircle className="h-4 w-4" />}
-                    label="Create Course"
+                    label={t("dashboard.createCourse")}
                     onClick={() => navigate(["university", "courses"], { action: "new" })}
                   />
                   <QuickActionButton
                     icon={<FileText className="h-4 w-4" />}
-                    label="Add Material"
+                    label={t("dashboard.addMaterial")}
                     onClick={() => navigate(["university", "materials"], { action: "new" })}
                   />
                   <QuickActionButton
                     icon={<ClipboardList className="h-4 w-4" />}
-                    label="Create Assignment"
+                    label={t("dashboard.createAssignment")}
                     onClick={() => navigate(["university", "assignments"], { action: "new" })}
                   />
                   <QuickActionButton
                     icon={<Inbox className="h-4 w-4" />}
-                    label="Review Submissions"
+                    label={t("common.submissions")}
                     onClick={() => navigate(["university", "submissions"])}
                   />
                 </div>
@@ -233,9 +234,9 @@ export function UniversityOverview() {
                 </div>
                 <div>
                   <h3 className="font-heading text-sm font-semibold text-foreground">
-                    Your Latest Courses
+                    {t("dashboard.recentCourses")}
                   </h3>
-                  <p className="text-xs text-muted-foreground">Recently created courses</p>
+                  <p className="text-xs text-muted-foreground">{t("dashboard.recentCourses")}</p>
                 </div>
               </div>
               <Button
@@ -244,7 +245,7 @@ export function UniversityOverview() {
                 className="gap-1 text-xs text-muted-foreground hover:text-accent"
                 onClick={() => navigate(["university", "courses"])}
               >
-                View all <ArrowRight className="h-3 w-3" />
+                {t("common.viewAll")} <ArrowRight className="h-3 w-3" />
               </Button>
             </div>
             <div className="p-2">
@@ -252,14 +253,14 @@ export function UniversityOverview() {
                 <EmptyState
                   className="m-4"
                   icon={<BookOpen className="h-5 w-5" />}
-                  title="No courses yet"
-                  description="Create your first course to start adding videos and materials."
+                  title={t("empty.noCourses")}
+                  description={t("empty.noCoursesDesc")}
                   action={
                     <Button
                       onClick={() => navigate(["university", "courses"], { action: "new" })}
                       className="gap-2"
                     >
-                      <PlusCircle className="h-4 w-4" /> Create Course
+                      <PlusCircle className="h-4 w-4" /> {t("dashboard.createCourse")}
                     </Button>
                   }
                 />
@@ -276,14 +277,14 @@ export function UniversityOverview() {
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-foreground truncate">{c.title}</p>
                         <p className="text-xs text-muted-foreground">
-                          Created {formatDateTime(c.createdAt)}
+                          {formatDateTime(c.createdAt)}
                         </p>
                       </div>
                       {c.isPublished ? (
-                        <Badge className="bg-success/15 text-success">Published</Badge>
+                        <Badge className="bg-success/15 text-success">{t("common.published")}</Badge>
                       ) : (
                         <Badge variant="outline" className="text-muted-foreground">
-                          Draft
+                          {t("common.draft")}
                         </Badge>
                       )}
                       <Button
@@ -292,7 +293,7 @@ export function UniversityOverview() {
                         className="h-8 gap-1 text-xs"
                         onClick={() => navigate(["university", "courses", c.id])}
                       >
-                        Manage <ArrowRight className="h-3 w-3" />
+                        {t("common.manage")} <ArrowRight className="h-3 w-3" />
                       </Button>
                     </li>
                   ))}

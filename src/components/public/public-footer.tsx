@@ -3,8 +3,10 @@
 import { Mail, Phone, MapPin, GraduationCap, Facebook, Twitter, Linkedin, Youtube } from "lucide-react";
 import { BrandLogo } from "@/components/shared/brand-logo";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 
 export function PublicFooter() {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
 
   return (
@@ -15,8 +17,7 @@ export function PublicFooter() {
           <div className="space-y-5 lg:col-span-1">
             <BrandLogo onClick={() => navigate([""])} />
             <p className="text-sm leading-relaxed text-muted-foreground max-w-xs">
-              A professional online training platform delivering structured courses,
-              recorded video lessons and verifiable completion certificates.
+              {t("footer.platformDesc")}
             </p>
             <div className="flex items-center gap-2">
               {[
@@ -40,22 +41,22 @@ export function PublicFooter() {
           {/* Navigation */}
           <div className="space-y-4">
             <h4 className="font-heading text-sm font-semibold tracking-tight text-foreground">
-              Navigation
+              {t("footer.navigation")}
             </h4>
             <ul className="space-y-3 text-sm">
               {[
-                { label: "Home", segments: [""] },
-                { label: "Courses", segments: ["courses"] },
-                { label: "Learning Plans", segments: ["plans"] },
-                { label: "About", segments: ["about"] },
-                { label: "Login", segments: ["login"] },
+                { labelKey: "nav.home", segments: [""] },
+                { labelKey: "nav.courses", segments: ["courses"] },
+                { labelKey: "nav.learningPlans", segments: ["plans"] },
+                { labelKey: "nav.about", segments: ["about"] },
+                { labelKey: "common.login", segments: ["login"] },
               ].map((item) => (
-                <li key={item.label}>
+                <li key={item.labelKey}>
                   <button
                     onClick={() => navigate(item.segments)}
                     className="text-muted-foreground transition-colors duration-200 hover:text-primary"
                   >
-                    {item.label}
+                    {t(item.labelKey as any)}
                   </button>
                 </li>
               ))}
@@ -65,7 +66,7 @@ export function PublicFooter() {
           {/* Popular courses */}
           <div className="space-y-4">
             <h4 className="font-heading text-sm font-semibold tracking-tight text-foreground">
-              Popular Courses
+              {t("public.popularCourses")}
             </h4>
             <ul className="space-y-3 text-sm">
               {["Graphic Designing", "Digital Marketing", "Web Development", "Business Analytics"].map(
@@ -86,7 +87,7 @@ export function PublicFooter() {
           {/* Contact */}
           <div className="space-y-4">
             <h4 className="font-heading text-sm font-semibold tracking-tight text-foreground">
-              Get in touch
+              {t("footer.getInTouch")}
             </h4>
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-3">
@@ -113,10 +114,10 @@ export function PublicFooter() {
 
         {/* Copyright bar */}
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row">
-          <p>© {new Date().getFullYear()} CourseLearn. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} CourseLearn. {t("public.allRightsReserved")}.</p>
           <div className="flex items-center gap-1.5">
             <GraduationCap className="h-3.5 w-3.5 text-accent" />
-            <span>Professional online training &amp; certification</span>
+            <span>{t("footer.professionalTraining")}</span>
           </div>
         </div>
       </div>

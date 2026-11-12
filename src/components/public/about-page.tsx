@@ -6,8 +6,10 @@ import { Card } from "@/components/ui/card";
 import {
   Award, Video, FileText, ShieldCheck, Users, Target, Sparkles, ArrowRight, GraduationCap, BookOpen
 } from "lucide-react";
+import { useI18n } from "@/lib/i18n/store";
 
 export function AboutPage() {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
 
   return (
@@ -24,15 +26,13 @@ export function AboutPage() {
         <div className="mx-auto max-w-4xl px-4 md:px-6 lg:px-8 py-16 text-center md:py-20">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm">
             <Sparkles className="h-3.5 w-3.5 text-accent" />
-            <span>Professional online training since 2021</span>
+            <span>{t("about.sinceLabel")}</span>
           </div>
           <h1 className="font-heading text-3xl font-semibold tracking-tight text-foreground md:text-[40px] md:leading-[1.1]">
-            About CourseLearn
+            {t("public.aboutTitle")}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground leading-relaxed md:text-lg">
-            We build learning experiences designed for serious outcomes. Structured courses,
-            recorded video lessons, hands-on assignments and verifiable certificates — all in one
-            professional platform.
+            {t("public.aboutDesc")}
           </p>
         </div>
       </section>
@@ -41,28 +41,23 @@ export function AboutPage() {
       <section className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-20">
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 lg:items-center">
           <div className="space-y-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-accent">Our Mission</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-accent">{t("about.mission")}</p>
             <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
-              Make professional learning accountable
+              {t("about.missionTitle")}
             </h2>
             <p className="text-sm leading-relaxed text-muted-foreground md:text-base">
-              Too many online courses reward attendance instead of mastery. CourseLearn was
-              founded on a different idea: every lesson should be genuinely completed before it
-              counts. Every assignment should be a real application of knowledge. Every certificate
-              should represent actual work.
+              {t("about.missionDesc1")}
             </p>
             <p className="text-sm leading-relaxed text-muted-foreground md:text-base">
-              Our platform organizes courses into clear topics, tracks real video-watch progress,
-              unlocks assignments only after genuine completion, and issues unique certificate
-              numbers that learners can be proud of.
+              {t("about.missionDesc2")}
             </p>
           </div>
           <div className="grid grid-cols-2 gap-4">
             {[
-              { icon: Users, value: "2,000+", label: "Active learners" },
-              { icon: BookOpen, value: "48", label: "Published courses" },
-              { icon: Video, value: "1,200+", label: "Video lessons" },
-              { icon: Award, value: "5,400+", label: "Certificates issued" },
+              { icon: Users, value: "2,000+", label: t("about.activeLearners") },
+              { icon: BookOpen, value: "48", label: t("about.publishedCourses") },
+              { icon: Video, value: "1,200+", label: t("about.videoLessons") },
+              { icon: Award, value: "5,400+", label: t("about.certificatesIssuedShort") },
             ].map((s) => (
               <Card key={s.label} className="p-5 text-center shadow-sm transition-all duration-200 hover:shadow-md">
                 <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-soft-sage text-accent">
@@ -82,17 +77,17 @@ export function AboutPage() {
       <section className="border-y border-border bg-muted/40">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-20">
           <div className="mb-12 space-y-2 text-center">
-            <p className="text-xs font-semibold uppercase tracking-wider text-accent">Our Approach</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-accent">{t("about.approach")}</p>
             <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
-              A complete learning journey
+              {t("about.completeJourney")}
             </h2>
           </div>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { icon: GraduationCap, title: "Register & choose a plan", desc: "Pick a learning plan that suits your goals and timeline." },
-              { icon: Video, title: "Watch & track progress", desc: "Lessons are only marked complete when genuinely watched." },
-              { icon: FileText, title: "Apply with assignments", desc: "Assignments unlock after you complete every video lesson." },
-              { icon: Award, title: "Earn verifiable certificates", desc: "Receive a unique certificate ID after successful submission." },
+              { icon: GraduationCap, title: t("about.registerPlan"), desc: t("about.registerPlanDesc") },
+              { icon: Video, title: t("about.watchTrack"), desc: t("about.watchTrackDesc") },
+              { icon: FileText, title: t("about.applyAssignments"), desc: t("about.applyAssignmentsDesc") },
+              { icon: Award, title: t("about.earnCertificates"), desc: t("about.earnCertificatesDesc") },
             ].map((step, i) => (
               <Card
                 key={step.title}
@@ -117,16 +112,16 @@ export function AboutPage() {
       {/* ─────────── Values ─────────── */}
       <section className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-20">
         <div className="mb-12 space-y-2 text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-accent">What We Stand For</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-accent">{t("about.whatWeStandFor")}</p>
           <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
-            Principles behind every course
+            {t("about.principlesBehind")}
           </h2>
         </div>
         <div className="grid gap-5 md:grid-cols-3">
           {[
-            { icon: Target, title: "Outcome-focused", desc: "We design courses around real skills and verifiable completion, not vanity metrics." },
-            { icon: ShieldCheck, title: "Accountability", desc: "Lessons track real watch progress. Assignments unlock only after genuine completion." },
-            { icon: Sparkles, title: "Quality first", desc: "Every course is structured into topics with clear video lessons and supporting materials." },
+            { icon: Target, title: t("about.outcomeFocused"), desc: t("about.outcomeFocusedDesc") },
+            { icon: ShieldCheck, title: t("about.accountability"), desc: t("about.accountabilityDesc") },
+            { icon: Sparkles, title: t("about.qualityFirst"), desc: t("about.qualityFirstDesc") },
           ].map((v) => (
             <Card
               key={v.title}
@@ -148,10 +143,10 @@ export function AboutPage() {
       <section className="bg-primary text-primary-foreground">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-16 text-center md:py-20">
           <h2 className="font-heading text-2xl font-semibold tracking-tight md:text-[32px]">
-            Start learning today
+            {t("about.startLearningToday")}
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm text-primary-foreground/80 md:text-base">
-            Join thousands of learners building real skills with CourseLearn.
+            {t("about.joinThousands")}
           </p>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
             <Button
@@ -160,7 +155,7 @@ export function AboutPage() {
               onClick={() => navigate(["register"])}
               className="gap-2 h-11 px-6 bg-primary-foreground text-primary hover:bg-primary-foreground/90"
             >
-              Get Started
+              {t("common.getStarted")}
               <ArrowRight className="h-4 w-4" />
             </Button>
             <Button
@@ -169,7 +164,7 @@ export function AboutPage() {
               onClick={() => navigate(["courses"])}
               className="h-11 border-primary-foreground/30 bg-transparent px-6 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
             >
-              Browse Courses
+              {t("public.browseCoursesShort")}
             </Button>
           </div>
         </div>

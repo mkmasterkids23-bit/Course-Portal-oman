@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
 import { formatDate } from "@/types";
 import {
@@ -44,6 +45,7 @@ interface OverviewData {
 }
 
 export function UniversitySettings() {
+  const { t } = useI18n();
   const user = useAppStore((s) => s.user);
   const refreshUser = useAppStore((s) => s.refreshUser);
   const { data: profileData, loading: profileLoading, refetch: refetchProfile } =

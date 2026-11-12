@@ -15,8 +15,10 @@ import {
   AlertTriangle, CheckCircle2, ArrowRight, Lock, ShieldCheck, LogOut, Sparkles,
   CalendarDays,
 } from "lucide-react";
+import { useI18n } from "@/lib/i18n/store";
 
 export function ExpiredScreen() {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const refreshUser = useAppStore((s) => s.refreshUser);
   const [subscribingPlanId, setSubscribingPlanId] = useState<string | null>(null);
@@ -49,8 +51,8 @@ export function ExpiredScreen() {
     try {
       await apiPost("/api/student/subscription/renew", { planId });
       toast({
-        title: "Subscription activated",
-        description: "Welcome back! Your learning access has been restored.",
+        title: t("subscription.activated"),
+        description: t("expired.welcomeBackRestoredDesc"),
       });
       // Force a hard re-fetch of subscription state in the parent shell by
       // toggling route — the dashboard refetches on segment change.
@@ -70,7 +72,7 @@ export function ExpiredScreen() {
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <BrandLogo onClick={() => navigate([""])} />
           <Button variant="ghost" size="sm" onClick={logout} className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/5">
-            <LogOut className="h-4 w-4" /> Logout
+            <LogOut className="h-4 w-4" /> {t("common.logout")}
           </Button>
         </div>
       </header>
@@ -82,14 +84,13 @@ export function ExpiredScreen() {
             <AlertTriangle className="h-8 w-8" />
           </div>
           <Badge className="bg-destructive/10 text-destructive border-transparent mb-3">
-            Subscription Expired
+            {t("subscription.subscriptionExpired")}
           </Badge>
           <h1 className="font-heading text-3xl md:text-4xl font-bold text-foreground">
-            Let&apos;s get you back to learning
+            {t("expired.letsGetBack")}
           </h1>
           <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
-            Your learning plan has expired. Choose a new plan below to restore
-            access to paid courses, assignments and certificates.
+            {t("expired.planExpiredDesc")}
           </p>
         </div>
 
@@ -107,25 +108,24 @@ export function ExpiredScreen() {
                   </div>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Previous plan
+                      {t("subscription.previousPlan")}
                     </p>
                     <p className="font-heading text-xl font-semibold text-foreground mt-1">
                       {sub.planName}
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Expired on {formatDate(sub.expiryDate)} · {formatPrice(sub.planPrice, sub.planCurrency)}
+                      {t("expired.expiredOn")} {formatDate(sub.expiryDate)} · {formatPrice(sub.planPrice, sub.planCurrency)}
                     </p>
                   </div>
                 </div>
                 <Badge className="bg-destructive/10 text-destructive border-transparent">
-                  Expired
+                  {t("common.expired")}
                 </Badge>
               </div>
               <div className="mt-4 flex items-start gap-2.5 rounded-lg border border-accent/20 bg-soft-sage/40 p-3.5 text-xs text-muted-foreground">
                 <ShieldCheck className="h-4 w-4 text-accent shrink-0 mt-0.5" />
                 <span>
-                  Your account, learning history, assignment submissions and certificates remain preserved.
-                  Renew anytime to continue where you left off.
+                  {t("expired.preservedDesc")}
                 </span>
               </div>
             </CardContent>
@@ -135,10 +135,10 @@ export function ExpiredScreen() {
         {/* Plans */}
         <div className="mb-6">
           <h2 className="font-heading text-xl font-semibold text-foreground mb-1">
-            Choose a new plan
+            {t("expired.chooseNewPlanShort")}
           </h2>
           <p className="text-sm text-muted-foreground">
-            All plans restore your access immediately upon subscription.
+            {t("expired.allPlansRestore")}
           </p>
         </div>
 
@@ -161,8 +161,8 @@ export function ExpiredScreen() {
         ) : plans.length === 0 ? (
           <EmptyState
             icon={<Sparkles className="h-5 w-5" />}
-            title="No plans available"
-            description="Please check back soon for new subscription plans."
+            title={t("subscription.noPlansAvailableShort")}
+            description={t("subscription.checkBackSoon")}
           />
         ) : (
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -175,7 +175,7 @@ export function ExpiredScreen() {
               >
                 {p.isPopular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-accent text-accent-foreground shadow-sm">★ Most Popular</Badge>
+                    <Badge className="bg-accent text-accent-foreground shadow-sm">{t("expired.mostPopularShort")}</Badge>
                   </div>
                 )}
                 <div className="mb-4">
@@ -201,7 +201,7 @@ export function ExpiredScreen() {
                     </li>
                   ))}
                   {p.features.length > 6 && (
-                    <li className="text-xs text-muted-foreground">+ {p.features.length - 6} more</li>
+                    <li className="text-xs text-muted-foreground">{t("expired.more").replace("{count}", String(p.features.length - 6))}</li>
                   )}
                 </ul>
                 <Button
@@ -210,7 +210,7 @@ export function ExpiredScreen() {
                   variant={p.isPopular ? "default" : "outline"}
                   className="w-full gap-2 shadow-sm"
                 >
-                  {subscribingPlanId === p.id ? "Activating..." : "Subscribe"}
+                  {subscribingPlanId === p.id ? t("expired.activating") : t("expired.subscribe")}
                   {subscribingPlanId !== p.id && <ArrowRight className="h-4 w-4" />}
                 </Button>
               </Card>
@@ -221,17 +221,17 @@ export function ExpiredScreen() {
         <div className="mt-10 flex flex-col items-center gap-3 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground shadow-sm">
             <Lock className="h-3.5 w-3.5 text-accent" />
-            <span>Secure subscription · Cancel anytime by letting your plan expire</span>
+            <span>{t("expired.secureSubscription")}</span>
           </div>
           <Button variant="link" onClick={logout} className="text-muted-foreground">
-            Sign out instead
+            {t("expired.signOutInstead")}
           </Button>
         </div>
       </main>
 
       <footer className="border-t border-border bg-card/60">
         <div className="mx-auto max-w-6xl px-4 py-6 text-center text-xs text-muted-foreground">
-          CourseLearn — Professional online training platform.
+          {t("expired.platformFooter")}
         </div>
       </footer>
     </div>

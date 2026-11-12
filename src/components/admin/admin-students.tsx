@@ -59,6 +59,7 @@ import {
 import { EmptyState } from "@/components/shared/empty-state";
 import { useApiFetch, apiPost } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
+import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
 import { formatDate, formatDateTime, type SubscriptionPlanPublic } from "@/types";
 import {
@@ -144,6 +145,7 @@ interface StudentProfile {
 const PAGE_SIZE = 10;
 
 export function AdminStudents() {
+  const { t } = useI18n();
   const query = useAppStore((s) => s.query);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "EXPIRED">("ALL");
@@ -200,9 +202,9 @@ export function AdminStudents() {
                   setSearch(e.target.value);
                   setPage(1);
                 }}
-                placeholder="Search by name, email or phone…"
+                placeholder={t("common.search")}
                 className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Search students"
+                aria-label={t("common.search")}
               />
             </div>
             <Select
@@ -212,13 +214,13 @@ export function AdminStudents() {
                 setPage(1);
               }}
             >
-              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[140px]" aria-label="Filter by status">
-                <SelectValue placeholder="All statuses" />
+              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[140px]" aria-label={t("common.status")}>
+                <SelectValue placeholder={t("common.allStatuses")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All statuses</SelectItem>
-                <SelectItem value="ACTIVE">Active</SelectItem>
-                <SelectItem value="EXPIRED">Expired</SelectItem>
+                <SelectItem value="ALL">{t("common.allStatuses")}</SelectItem>
+                <SelectItem value="ACTIVE">{t("common.active")}</SelectItem>
+                <SelectItem value="EXPIRED">{t("common.expired")}</SelectItem>
               </SelectContent>
             </Select>
             <Select
@@ -228,11 +230,11 @@ export function AdminStudents() {
                 setPage(1);
               }}
             >
-              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[180px]" aria-label="Filter by plan">
-                <SelectValue placeholder="All plans" />
+              <SelectTrigger className="h-9 w-full rounded-lg sm:w-[180px]" aria-label={t("table.plan")}>
+                <SelectValue placeholder={t("common.subscriptionPlans")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All plans</SelectItem>
+                <SelectItem value="ALL">{t("common.subscriptionPlans")}</SelectItem>
                 {(plansData?.plans || []).map((p) => (
                   <SelectItem key={p.id} value={p.id}>
                     {p.name}
@@ -242,7 +244,7 @@ export function AdminStudents() {
             </Select>
           </div>
           <Button className="h-9 gap-2" onClick={() => setAddOpen(true)}>
-            <Plus className="h-4 w-4" /> Add Student
+            <Plus className="h-4 w-4" /> {t("dashboard.addStudent")}
           </Button>
         </div>
       </Card>
@@ -259,28 +261,28 @@ export function AdminStudents() {
           <EmptyState
             className="m-4"
             icon={<Users className="h-5 w-5" />}
-            title="Couldn't load students"
+            title={t("common.error")}
             description={error}
           />
         ) : students.length === 0 ? (
           <EmptyState
             className="m-4"
             icon={<Users className="h-5 w-5" />}
-            title="No students yet"
-            description="When students register, they will appear here."
-            action={<Button onClick={() => setAddOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> Add Student</Button>}
+            title={t("empty.noStudents")}
+            description={t("empty.noStudentsDesc")}
+            action={<Button onClick={() => setAddOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> {t("dashboard.addStudent")}</Button>}
           />
         ) : (
           <>
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Student</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Plan</TableHead>
-                  <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">Start</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Expiry</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
-                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("table.student")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("table.plan")}</TableHead>
+                  <TableHead className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground md:table-cell">{t("table.start")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("table.expiry")}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("common.status")}</TableHead>
+                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("table.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -310,7 +312,7 @@ export function AdminStudents() {
                       {s.subscription ? (
                         <span className="text-sm font-medium text-foreground">{s.subscription.planName}</span>
                       ) : (
-                        <Badge variant="outline" className="text-muted-foreground">No plan</Badge>
+                        <Badge variant="outline" className="text-muted-foreground">{t("common.subscriptionPlans")}</Badge>
                       )}
                     </TableCell>
                     <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
@@ -321,11 +323,11 @@ export function AdminStudents() {
                     </TableCell>
                     <TableCell>
                       {!s.subscription ? (
-                        <Badge variant="outline" className="text-muted-foreground">No plan</Badge>
+                        <Badge variant="outline" className="text-muted-foreground">{t("common.subscriptionPlans")}</Badge>
                       ) : s.subscription.status === "ACTIVE" ? (
-                        <Badge className="bg-success/15 text-success hover:bg-success/20">Active</Badge>
+                        <Badge className="bg-success/15 text-success hover:bg-success/20">{t("common.active")}</Badge>
                       ) : (
-                        <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/15">Expired</Badge>
+                        <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/15">{t("common.expired")}</Badge>
                       )}
                     </TableCell>
                     <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
@@ -336,9 +338,9 @@ export function AdminStudents() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</DropdownMenuLabel>
+                          <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("common.actions")}</DropdownMenuLabel>
                           <DropdownMenuItem onClick={() => setProfileId(s.id)} className="gap-2">
-                            <Eye className="h-4 w-4 text-muted-foreground" /> View profile
+                            <Eye className="h-4 w-4 text-muted-foreground" /> {t("common.profile")}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => {
@@ -347,7 +349,7 @@ export function AdminStudents() {
                             }}
                             className="gap-2"
                           >
-                            <Pencil className="h-4 w-4 text-muted-foreground" /> Edit
+                            <Pencil className="h-4 w-4 text-muted-foreground" /> {t("common.edit")}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
@@ -355,7 +357,7 @@ export function AdminStudents() {
                             onClick={() => setDeleteTarget(s)}
                             className="gap-2"
                           >
-                            <Trash2 className="h-4 w-4" /> Delete
+                            <Trash2 className="h-4 w-4" /> {t("common.delete")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -368,8 +370,8 @@ export function AdminStudents() {
             {/* Pagination */}
             <div className="flex items-center justify-between gap-2 border-t border-border bg-muted/20 px-4 py-3">
               <p className="text-xs text-muted-foreground">
-                Showing <span className="font-medium text-foreground">{(currentPage - 1) * PAGE_SIZE + 1}</span>–
-                <span className="font-medium text-foreground">{Math.min(currentPage * PAGE_SIZE, students.length)}</span> of <span className="font-medium text-foreground">{students.length}</span>
+                {t("common.showing")} <span className="font-medium text-foreground">{(currentPage - 1) * PAGE_SIZE + 1}</span>–
+                <span className="font-medium text-foreground">{Math.min(currentPage * PAGE_SIZE, students.length)}</span> {t("common.of")} <span className="font-medium text-foreground">{students.length}</span>
               </p>
               <div className="flex gap-1.5">
                 <Button
@@ -379,10 +381,10 @@ export function AdminStudents() {
                   disabled={currentPage === 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                 >
-                  Previous
+                  {t("common.previous")}
                 </Button>
                 <span className="px-3 py-1 text-xs font-medium text-muted-foreground self-center">
-                  Page <span className="text-foreground">{currentPage}</span> / {totalPages}
+                  {t("common.page")} <span className="text-foreground">{currentPage}</span> / {totalPages}
                 </span>
                 <Button
                   variant="outline"
@@ -391,7 +393,7 @@ export function AdminStudents() {
                   disabled={currentPage >= totalPages}
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 >
-                  Next
+                  {t("common.next")}
                 </Button>
               </div>
             </div>
@@ -406,7 +408,7 @@ export function AdminStudents() {
         plans={plansData?.plans || []}
         onCreated={() => {
           refetch();
-          toast({ title: "Student created", description: "The student account has been created." });
+          toast({ title: t("common.success") });
         }}
       />
 
@@ -418,7 +420,7 @@ export function AdminStudents() {
         plans={plansData?.plans || []}
         onSaved={() => {
           refetch();
-          toast({ title: "Student updated", description: "Changes have been saved." });
+          toast({ title: t("common.success") });
         }}
       />
 
@@ -436,14 +438,13 @@ export function AdminStudents() {
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete student?</AlertDialogTitle>
+            <AlertDialogTitle>{t("common.delete")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete <strong>{deleteTarget?.name}</strong> and all related
-              subscriptions, submissions, certificates and progress records. This action cannot be undone.
+              {t("courses.deleteCourseConfirm")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={async () => {
@@ -452,7 +453,7 @@ export function AdminStudents() {
                   await apiPost(`/api/admin/students/${deleteTarget.id}`, null, {
                     method: "DELETE",
                   });
-                  toast({ title: "Student deleted", description: `${deleteTarget.name}'s account has been removed.` });
+                  toast({ title: t("common.success") });
                   setDeleteTarget(null);
                   refetch();
                 } catch {
@@ -460,7 +461,7 @@ export function AdminStudents() {
                 }
               }}
             >
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -481,6 +482,7 @@ function AddStudentDialog({
   plans: SubscriptionPlanPublic[];
   onCreated: () => void;
 }) {
+  const { t } = useI18n();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -498,7 +500,7 @@ function AddStudentDialog({
 
   async function submit() {
     if (!name.trim() || !email.trim() || !password) {
-      toast({ title: "Missing fields", description: "Name, email and password are required.", variant: "destructive" });
+      toast({ title: t("common.required"), description: t("common.required"), variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -522,30 +524,30 @@ function AddStudentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-heading text-lg font-semibold">Add New Student</DialogTitle>
-          <DialogDescription>Create a student account. You can optionally assign a plan now.</DialogDescription>
+          <DialogTitle className="font-heading text-lg font-semibold">{t("dashboard.addStudent")}</DialogTitle>
+          <DialogDescription>{t("dashboard.addStudent")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="as-name" className="text-xs font-medium text-muted-foreground">Full Name</Label>
-            <Input id="as-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Aisha Khalid" className="h-9 rounded-lg" />
+            <Label htmlFor="as-name" className="text-xs font-medium text-muted-foreground">{t("auth.fullName")}</Label>
+            <Input id="as-name" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("auth.fullName")} className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="as-email" className="text-xs font-medium text-muted-foreground">Email</Label>
-            <Input id="as-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="aisha@example.com" className="h-9 rounded-lg" />
+            <Label htmlFor="as-email" className="text-xs font-medium text-muted-foreground">{t("common.email")}</Label>
+            <Input id="as-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("common.email")} className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="as-pass" className="text-xs font-medium text-muted-foreground">Password</Label>
-            <Input id="as-pass" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Minimum 6 characters" className="h-9 rounded-lg" />
+            <Label htmlFor="as-pass" className="text-xs font-medium text-muted-foreground">{t("common.password")}</Label>
+            <Input id="as-pass" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("common.password")} className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="as-plan" className="text-xs font-medium text-muted-foreground">Subscription Plan (optional)</Label>
+            <Label htmlFor="as-plan" className="text-xs font-medium text-muted-foreground">{t("common.subscriptionPlans")} ({t("common.optional")})</Label>
             <Select value={planId} onValueChange={setPlanId}>
               <SelectTrigger id="as-plan" className="w-full h-9 rounded-lg">
-                <SelectValue placeholder="No plan — student only" />
+                <SelectValue placeholder={t("common.optional")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="NONE">No plan — student only</SelectItem>
+                <SelectItem value="NONE">{t("common.optional")}</SelectItem>
                 {plans.map((p) => (
                   <SelectItem key={p.id} value={p.id}>
                     {p.name}
@@ -556,9 +558,9 @@ function AddStudentDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
           <Button disabled={saving} className="h-9" onClick={submit}>
-            {saving ? "Creating…" : "Create Student"}
+            {saving ? t("common.saving") : t("common.create")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -579,6 +581,7 @@ function EditStudentDialog({
   plans: SubscriptionPlanPublic[];
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [bio, setBio] = useState("");
@@ -595,7 +598,7 @@ function EditStudentDialog({
   async function submit() {
     if (!target) return;
     if (!name.trim()) {
-      toast({ title: "Name required", variant: "destructive" });
+      toast({ title: t("common.name") + " " + t("common.required"), variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -618,27 +621,27 @@ function EditStudentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-heading text-lg font-semibold">Edit Student</DialogTitle>
-          <DialogDescription>Update profile details for {target?.email}</DialogDescription>
+          <DialogTitle className="font-heading text-lg font-semibold">{t("profile.editProfile")}</DialogTitle>
+          <DialogDescription>{target?.email}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="es-name" className="text-xs font-medium text-muted-foreground">Full Name</Label>
+            <Label htmlFor="es-name" className="text-xs font-medium text-muted-foreground">{t("auth.fullName")}</Label>
             <Input id="es-name" value={name} onChange={(e) => setName(e.target.value)} className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="es-phone" className="text-xs font-medium text-muted-foreground">Phone</Label>
-            <Input id="es-phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+968 9XXX XXXX" className="h-9 rounded-lg" />
+            <Label htmlFor="es-phone" className="text-xs font-medium text-muted-foreground">{t("profile.phone")}</Label>
+            <Input id="es-phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t("profile.phone")} className="h-9 rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="es-bio" className="text-xs font-medium text-muted-foreground">Bio</Label>
-            <Textarea id="es-bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Short bio (optional)" rows={3} className="rounded-lg" />
+            <Label htmlFor="es-bio" className="text-xs font-medium text-muted-foreground">{t("profile.bio")}</Label>
+            <Textarea id="es-bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder={t("profile.bio")} rows={3} className="rounded-lg" />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
           <Button disabled={saving} className="h-9" onClick={submit}>
-            {saving ? "Saving…" : "Save Changes"}
+            {saving ? t("common.saving") : t("profile.saveChanges")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -658,6 +661,7 @@ function StudentProfileSheet({
   plans: SubscriptionPlanPublic[];
   onAssigned: () => void;
 }) {
+  const { t } = useI18n();
   const { data, loading, error, refetch } = useApiFetch<StudentProfile>(
     studentId ? `/api/admin/students/${studentId}` : null,
     { skip: !studentId }
@@ -675,8 +679,8 @@ function StudentProfileSheet({
     try {
       await apiPost(`/api/admin/students/${studentId}`, { planId: assignPlanId }, { method: "PUT" });
       toast({
-        title: "Plan assigned",
-        description: `New active subscription created for ${data.student.name}.`,
+        title: t("common.success"),
+        description: data.student.name,
       });
       setAssignPlanId("NONE");
       refetch();
@@ -694,8 +698,8 @@ function StudentProfileSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
         <SheetHeader>
-          <SheetTitle className="font-heading text-lg font-semibold">Student Profile</SheetTitle>
-          <SheetDescription>Detailed view of the student&apos;s account and activity.</SheetDescription>
+          <SheetTitle className="font-heading text-lg font-semibold">{t("common.profile")}</SheetTitle>
+          <SheetDescription>{t("common.profile")}</SheetDescription>
         </SheetHeader>
 
         {loading ? (
@@ -706,7 +710,7 @@ function StudentProfileSheet({
           </div>
         ) : error ? (
           <div className="px-4 pb-6">
-            <EmptyState icon={<UserIcon className="h-5 w-5" />} title="Couldn't load profile" description={error} />
+            <EmptyState icon={<UserIcon className="h-5 w-5" />} title={t("common.error")} description={error} />
           </div>
         ) : data ? (
           <div className="space-y-4 px-4 pb-6">
@@ -731,7 +735,7 @@ function StudentProfileSheet({
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
-                  <Calendar className="h-3.5 w-3.5 shrink-0" /> Joined {formatDate(data.student.createdAt)}
+                  <Calendar className="h-3.5 w-3.5 shrink-0" /> {formatDate(data.student.createdAt)}
                 </p>
               </div>
             </div>
@@ -740,53 +744,53 @@ function StudentProfileSheet({
             <div className="rounded-xl border border-border bg-card p-4 space-y-3 shadow-sm">
               <div className="flex items-center justify-between">
                 <h4 className="font-heading text-sm font-semibold text-foreground flex items-center gap-1.5">
-                  <Shield className="h-4 w-4 text-accent" /> Subscription
+                  <Shield className="h-4 w-4 text-accent" /> {t("subscription.mySubscription")}
                 </h4>
                 {data.subscription && (
                   data.subscription.status === "ACTIVE" ? (
-                    <Badge className="bg-success/15 text-success">Active</Badge>
+                    <Badge className="bg-success/15 text-success">{t("common.active")}</Badge>
                   ) : (
-                    <Badge className="bg-destructive/10 text-destructive">Expired</Badge>
+                    <Badge className="bg-destructive/10 text-destructive">{t("common.expired")}</Badge>
                   )
                 )}
               </div>
               {data.subscription ? (
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Plan</p>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{t("table.plan")}</p>
                     <p className="font-medium text-foreground mt-0.5">{data.subscription.planName}</p>
                   </div>
                   <div>
-                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Price</p>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{t("common.price")}</p>
                     <p className="font-medium text-foreground mt-0.5">
                       {data.subscription.planPrice.toLocaleString()} {data.subscription.planCurrency} /{" "}
                       {data.subscription.planDuration} {data.subscription.planDurationUnit.toLowerCase()}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Start</p>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{t("table.start")}</p>
                     <p className="font-medium text-foreground mt-0.5">{formatDate(data.subscription.startDate)}</p>
                   </div>
                   <div>
-                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Expiry</p>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{t("table.expiry")}</p>
                     <p className="font-medium text-foreground mt-0.5">{formatDate(data.subscription.expiryDate)}</p>
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">No subscription assigned.</p>
+                <p className="text-sm text-muted-foreground">{t("subscription.accessExpired")}</p>
               )}
 
               <div className="border-t border-border pt-3 space-y-2">
                 <Label htmlFor="assign-plan" className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                  Assign / Replace Plan
+                  {t("subscription.chooseNewPlan")}
                 </Label>
                 <div className="flex gap-2">
                   <Select value={assignPlanId} onValueChange={setAssignPlanId}>
                     <SelectTrigger id="assign-plan" className="h-9 rounded-lg flex-1">
-                      <SelectValue placeholder="Select a plan…" />
+                      <SelectValue placeholder={t("subscription.chooseNewPlan")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="NONE">No selection</SelectItem>
+                      <SelectItem value="NONE">{t("common.optional")}</SelectItem>
                       {plans.map((p) => (
                         <SelectItem key={p.id} value={p.id}>
                           {p.name}
@@ -800,11 +804,11 @@ function StudentProfileSheet({
                     disabled={assigning || assignPlanId === "NONE"}
                     onClick={assignPlan}
                   >
-                    {assigning ? "Assigning…" : "Assign"}
+                    {assigning ? t("common.saving") : t("common.create")}
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Assigning a plan creates a new active subscription starting today.
+                  {t("subscription.chooseNewPlan")}
                 </p>
               </div>
             </div>
@@ -818,7 +822,7 @@ function StudentProfileSheet({
                 <p className="font-heading text-lg font-bold text-foreground">
                   {data.stats.accessibleCourseCount}
                 </p>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Courses</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("common.courses")}</p>
               </div>
               <div className="rounded-xl border border-border bg-card p-3 text-center shadow-sm">
                 <div className="mx-auto flex h-7 w-7 items-center justify-center rounded-md bg-warning/15 text-warning mb-1">
@@ -827,7 +831,7 @@ function StudentProfileSheet({
                 <p className="font-heading text-lg font-bold text-foreground">
                   {data.stats.submissionsCount}
                 </p>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Submissions</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("common.submissions")}</p>
               </div>
               <div className="rounded-xl border border-border bg-card p-3 text-center shadow-sm">
                 <div className="mx-auto flex h-7 w-7 items-center justify-center rounded-md bg-success/15 text-success mb-1">
@@ -836,27 +840,27 @@ function StudentProfileSheet({
                 <p className="font-heading text-lg font-bold text-foreground">
                   {data.stats.certificatesCount}
                 </p>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Certificates</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("common.certificateManagement")}</p>
               </div>
             </div>
 
             {/* Accessible courses */}
             <div className="rounded-xl border border-border bg-card p-4 space-y-2 shadow-sm">
               <h4 className="font-heading text-sm font-semibold text-foreground flex items-center justify-between">
-                <span>Courses Access</span>
-                <span className="text-xs font-normal text-muted-foreground">{data.availableCourses.length} total</span>
+                <span>{t("common.courses")}</span>
+                <span className="text-xs font-normal text-muted-foreground">{data.availableCourses.length} {t("common.all")}</span>
               </h4>
               {data.availableCourses.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No published courses available.</p>
+                <p className="text-sm text-muted-foreground">{t("empty.noCourses")}</p>
               ) : (
                 <ul className="space-y-1 max-h-48 overflow-y-auto scrollbar-thin">
                   {data.availableCourses.slice(0, 8).map((c) => (
                     <li key={c.id} className="flex items-center justify-between gap-2 text-sm py-1">
                       <span className="text-foreground truncate">{c.title}</span>
                       {c.accessible ? (
-                        <Badge variant="outline" className="bg-success/15 text-success">Accessible</Badge>
+                        <Badge variant="outline" className="bg-success/15 text-success">{t("common.unlocked")}</Badge>
                       ) : (
-                        <Badge variant="outline" className="text-muted-foreground">Locked</Badge>
+                        <Badge variant="outline" className="text-muted-foreground">{t("common.locked")}</Badge>
                       )}
                     </li>
                   ))}
@@ -866,9 +870,9 @@ function StudentProfileSheet({
 
             {/* Submissions */}
             <div className="rounded-xl border border-border bg-card p-4 space-y-2 shadow-sm">
-              <h4 className="font-heading text-sm font-semibold text-foreground">Recent Submissions</h4>
+              <h4 className="font-heading text-sm font-semibold text-foreground">{t("dashboard.recentSubmissions")}</h4>
               {data.submissions.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No submissions yet.</p>
+                <p className="text-sm text-muted-foreground">{t("empty.noData")}</p>
               ) : (
                 <ul className="space-y-1">
                   {data.submissions.slice(0, 5).map((s) => (
@@ -892,9 +896,9 @@ function StudentProfileSheet({
 
             {/* Certificates */}
             <div className="rounded-xl border border-border bg-card p-4 space-y-2 shadow-sm">
-              <h4 className="font-heading text-sm font-semibold text-foreground">Certificates</h4>
+              <h4 className="font-heading text-sm font-semibold text-foreground">{t("common.certificateManagement")}</h4>
               {data.certificates.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No certificates issued yet.</p>
+                <p className="text-sm text-muted-foreground">{t("certificates.noCertificates")}</p>
               ) : (
                 <ul className="space-y-1">
                   {data.certificates.map((c) => (

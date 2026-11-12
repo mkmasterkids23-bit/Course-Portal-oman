@@ -14,6 +14,7 @@ import {
   Award, Download, Eye, FileText, Calendar, ShieldCheck,
 } from "lucide-react";
 import { formatDate } from "@/types";
+import { useI18n } from "@/lib/i18n/store";
 
 interface CertificateItem {
   id: string;
@@ -27,6 +28,7 @@ interface CertificateItem {
 }
 
 export function StudentCertificates() {
+  const { t } = useI18n();
   const { data, loading, error } = useApiFetch<{
     certificates: CertificateItem[];
   }>("/api/student/certificates");
@@ -47,9 +49,9 @@ export function StudentCertificates() {
     return (
       <EmptyState
         icon={<Award className="h-5 w-5" />}
-        title="Couldn't load certificates"
+        title={t("certificates.couldntLoad")}
         description={error}
-        action={<Button onClick={() => window.location.reload()}>Reload</Button>}
+        action={<Button onClick={() => window.location.reload()}>{t("common.reload")}</Button>}
       />
     );
   }
@@ -60,8 +62,8 @@ export function StudentCertificates() {
     return (
       <EmptyState
         icon={<Award className="h-5 w-5" />}
-        title="No certificates yet"
-        description="Complete a course and submit its assignment to earn your first certificate."
+        title={t("certificates.noCertificates")}
+        description={t("certificates.earnFirstDesc")}
       />
     );
   }
@@ -81,11 +83,10 @@ export function StudentCertificates() {
             </div>
             <div>
               <p className="font-heading font-semibold text-foreground">
-                {certs.length} certificate{certs.length > 1 ? "s" : ""} earned
+                {certs.length} {t("certificates.certificateEarned")}
               </p>
               <p className="text-sm text-muted-foreground mt-0.5 max-w-2xl">
-                Each certificate has a unique ID and can be verified by reference. Click
-                &quot;View&quot; to preview or &quot;Download PDF&quot; to save or print.
+                {t("certificates.eachCertificateDesc")}
               </p>
             </div>
           </CardContent>
@@ -104,7 +105,7 @@ export function StudentCertificates() {
               <div className="pointer-events-none absolute inset-0 opacity-20" style={{ backgroundImage: "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(255,255,255,0.05) 10px, rgba(255,255,255,0.05) 20px)" }} />
               <Award className="relative h-12 w-12 text-primary-foreground drop-shadow-lg transition-transform duration-300 group-hover:scale-110" />
               <Badge className="absolute top-3 right-3 bg-white/15 backdrop-blur text-primary-foreground border border-white/20">
-                <ShieldCheck className="h-3 w-3" /> Verified
+                <ShieldCheck className="h-3 w-3" /> {t("common.verified")}
               </Badge>
               {/* Certificate icon accent */}
               <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex h-12 w-12 items-center justify-center rounded-full bg-card ring-4 ring-card shadow-md">
@@ -120,13 +121,13 @@ export function StudentCertificates() {
               </div>
               <div className="space-y-1.5 text-xs text-muted-foreground">
                 <p className="flex items-center gap-1.5">
-                  <Calendar className="h-3 w-3 text-accent" /> Issued {formatDate(c.issuedAt)}
+                  <Calendar className="h-3 w-3 text-accent" /> {t("certificates.issuedOn")} {formatDate(c.issuedAt)}
                 </p>
                 <p className="flex items-center gap-1.5">
-                  <FileText className="h-3 w-3 text-accent" /> {c.certificateNumber}
+                  <FileText className="h-3 w-3 text-accent" /> {t("certificates.certificateId")}: {c.certificateNumber}
                 </p>
                 <p className="flex items-center gap-1.5">
-                  <ShieldCheck className="h-3 w-3 text-accent" /> {c.organizationName}
+                  <ShieldCheck className="h-3 w-3 text-accent" /> {t("certificates.issuedBy")} {c.organizationName}
                 </p>
               </div>
               <div className="flex gap-2 pt-3 border-t border-border">
@@ -136,7 +137,7 @@ export function StudentCertificates() {
                   className="flex-1 gap-2 shadow-sm"
                   onClick={() => setPreviewCert(c)}
                 >
-                  <Eye className="h-4 w-4" /> View
+                  <Eye className="h-4 w-4" /> {t("certificates.view")}
                 </Button>
                 <Button
                   size="sm"
@@ -148,7 +149,7 @@ export function StudentCertificates() {
                     download
                     rel="noreferrer"
                   >
-                    <Download className="h-4 w-4" /> PDF
+                    <Download className="h-4 w-4" /> {t("certificates.pdf")}
                   </a>
                 </Button>
               </div>
@@ -172,7 +173,7 @@ export function StudentCertificates() {
                   download
                   rel="noreferrer"
                 >
-                  <Download className="h-4 w-4" /> Download PDF
+                  <Download className="h-4 w-4" /> {t("certificates.downloadPdf")}
                 </a>
               </Button>
             )}

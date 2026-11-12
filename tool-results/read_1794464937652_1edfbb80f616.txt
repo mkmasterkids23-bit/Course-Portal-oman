@@ -1,0 +1,702 @@
+  1019→          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+  1020→            <Label htmlFor="m-pub" className="text-sm font-medium">Published</Label>
+  1021→            <Switch id="m-pub" checked={isPublished} onCheckedChange={setIsPublished} />
+  1022→          </div>
+  1023→        </div>
+  1024→        <DialogFooter>
+  1025→          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>Cancel</Button>
+  1026→          <Button disabled={saving} className="h-9" onClick={submit}>{saving ? "Saving…" : target ? "Save Changes" : "Add Material"}</Button>
+  1027→        </DialogFooter>
+  1028→      </DialogContent>
+  1029→    </Dialog>
+  1030→  );
+  1031→}
+  1032→
+  1033→// ============= ASSIGNMENTS TAB =============
+  1034→function AssignmentsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () => void }) {
+  1035→  const navigate = useAppStore((s) => s.navigate);
+  1036→  const [addOpen, setAddOpen] = useState(false);
+  1037→  const [editTarget, setEditTarget] = useState<AssignmentRow | null>(null);
+  1038→  const [deleteTarget, setDeleteTarget] = useState<AssignmentRow | null>(null);
+  1039→
+  1040→  return (
+  1041→    <div className="space-y-4">
+  1042→      <div className="flex items-center justify-between">
+  1043→        <div>
+  1044→          <h3 className="font-heading text-base font-semibold text-foreground">Course Assignments</h3>
+  1045→          <p className="text-xs text-muted-foreground mt-0.5">
+  1046→            {course.assignments.length} assignment{course.assignments.length === 1 ? "" : "s"} ·{" "}
+  1047→            {course.assignments.reduce((a, x) => a + x.submissionsCount, 0)} total submissions
+  1048→          </p>
+  1049→        </div>
+  1050→        <Button className="h-9 gap-2" onClick={() => setAddOpen(true)}>
+  1051→          <Plus className="h-4 w-4" /> Add Assignment
+  1052→        </Button>
+  1053→      </div>
+  1054→
+  1055→      {course.assignments.length === 0 ? (
+  1056→        <EmptyState
+  1057→          icon={<ClipboardList className="h-5 w-5" />}
+  1058→          title="No assignments yet"
+  1059→          description="Add assignments to test student understanding and award completion certificates."
+  1060→          action={<Button onClick={() => setAddOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> Add Assignment</Button>}
+  1061→        />
+  1062→      ) : (
+  1063→        <div className="grid gap-3 md:grid-cols-2">
+  1064→          {course.assignments.map((a) => (
+  1065→            <Card key={a.id} className="p-4 space-y-3 border-border bg-card shadow-sm transition-shadow hover:shadow-md">
+  1066→              <div className="flex items-start justify-between gap-2">
+  1067→                <div className="min-w-0">
+  1068→                  <p className="font-heading font-semibold text-foreground truncate">{a.title}</p>
+  1069→                  {a.dueDate && (
+  1070→                    <p className="text-xs text-muted-foreground mt-0.5">Due {formatDate(a.dueDate)}</p>
+  1071→                  )}
+  1072→                </div>
+  1073→                {a.isPublished ? (
+  1074→                  <Badge className="bg-success/15 text-success shrink-0">Published</Badge>
+  1075→                ) : (
+  1076→                  <Badge variant="outline" className="text-muted-foreground shrink-0">Draft</Badge>
+  1077→                )}
+  1078→              </div>
+  1079→              {a.description && (
+  1080→                <p className="text-sm text-muted-foreground line-clamp-2">{a.description}</p>
+  1081→              )}
+  1082→              <div className="flex flex-wrap gap-2 text-xs">
+  1083→                <Badge variant="outline" className="bg-accent/10 text-accent">
+  1084→                  {a.submissionsCount} submission{a.submissionsCount === 1 ? "" : "s"}
+  1085→                </Badge>
+  1086→                {a.allowResubmission && (
+  1087→                  <Badge variant="outline" className="text-muted-foreground">Resubmission allowed</Badge>
+  1088→                )}
+  1089→                {a.fileUrl && (
+  1090→                  <a
+  1091→                    href={a.fileUrl}
+  1092→                    target="_blank"
+  1093→                    rel="noopener noreferrer"
+  1094→                    className="inline-flex items-center gap-1 text-accent hover:underline"
+  1095→                  >
+  1096→                    <ExternalLink className="h-3 w-3" /> Brief
+  1097→                  </a>
+  1098→                )}
+  1099→              </div>
+  1100→              <Separator />
+  1101→              <div className="flex items-center justify-between">
+  1102→                <Button
+  1103→                  variant="outline"
+  1104→                  size="sm"
+  1105→                  className="h-8 gap-1"
+  1106→                  onClick={() => navigate(["admin", "submissions"], { assignmentId: a.id })}
+  1107→                >
+  1108→                  <ClipboardList className="h-3.5 w-3.5" /> View Submissions
+  1109→                </Button>
+  1110→                <div className="flex items-center gap-1">
+  1111→                  <Button variant="ghost" size="icon" aria-label="Edit assignment" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setEditTarget(a)}>
+  1112→                    <Pencil className="h-3.5 w-3.5" />
+  1113→                  </Button>
+  1114→                  <Button variant="ghost" size="icon" aria-label="Delete assignment" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(a)}>
+  1115→                    <Trash2 className="h-3.5 w-3.5" />
+  1116→                  </Button>
+  1117→                </div>
+  1118→              </div>
+  1119→            </Card>
+  1120→          ))}
+  1121→        </div>
+  1122→      )}
+  1123→
+  1124→      <AssignmentFormDialog
+  1125→        open={addOpen}
+  1126→        onOpenChange={setAddOpen}
+  1127→        courseId={course.id}
+  1128→        onSaved={() => { onRefresh(); setAddOpen(false); }}
+  1129→      />
+  1130→      <AssignmentFormDialog
+  1131→        open={!!editTarget}
+  1132→        onOpenChange={(v) => !v && setEditTarget(null)}
+  1133→        courseId={course.id}
+  1134→        target={editTarget}
+  1135→        onSaved={() => { onRefresh(); setEditTarget(null); }}
+  1136→      />
+  1137→      <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
+  1138→        <AlertDialogContent>
+  1139→          <AlertDialogHeader>
+  1140→            <AlertDialogTitle>Delete assignment?</AlertDialogTitle>
+  1141→            <AlertDialogDescription>
+  1142→              This will permanently delete <strong>{deleteTarget?.title}</strong> and all its submissions.
+  1143→            </AlertDialogDescription>
+  1144→          </AlertDialogHeader>
+  1145→          <AlertDialogFooter>
+  1146→            <AlertDialogCancel>Cancel</AlertDialogCancel>
+  1147→            <AlertDialogAction
+  1148→              className="bg-destructive text-white hover:bg-destructive/90"
+  1149→              onClick={async () => {
+  1150→                if (!deleteTarget) return;
+  1151→                try {
+  1152→                  await apiPost(`/api/admin/assignments/${deleteTarget.id}`, null, { method: "DELETE" });
+  1153→                  toast({ title: "Assignment deleted" });
+  1154→                  setDeleteTarget(null);
+  1155→                  onRefresh();
+  1156→                } catch { /* toast */ }
+  1157→              }}
+  1158→            >
+  1159→              Delete
+  1160→            </AlertDialogAction>
+  1161→          </AlertDialogFooter>
+  1162→        </AlertDialogContent>
+  1163→      </AlertDialog>
+  1164→    </div>
+  1165→  );
+  1166→}
+  1167→
+  1168→function AssignmentFormDialog({
+  1169→  open, onOpenChange, courseId, target, onSaved,
+  1170→}: {
+  1171→  open: boolean;
+  1172→  onOpenChange: (v: boolean) => void;
+  1173→  courseId: string;
+  1174→  target?: AssignmentRow | null;
+  1175→  onSaved: () => void;
+  1176→}) {
+  1177→  const [title, setTitle] = useState("");
+  1178→  const [description, setDescription] = useState("");
+  1179→  const [instructions, setInstructions] = useState("");
+  1180→  const [dueDate, setDueDate] = useState("");
+  1181→  const [isPublished, setIsPublished] = useState(true);
+  1182→  const [allowResubmission, setAllowResubmission] = useState(false);
+  1183→  const [file, setFile] = useState<File | null>(null);
+  1184→  const [clearFile, setClearFile] = useState(false);
+  1185→  const [saving, setSaving] = useState(false);
+  1186→
+  1187→  useEffect(() => {
+  1188→    if (target) {
+  1189→      setTitle(target.title);
+  1190→      setDescription(target.description || "");
+  1191→      setInstructions(target.instructions || "");
+  1192→      setDueDate(target.dueDate ? target.dueDate.slice(0, 10) : "");
+  1193→      setIsPublished(target.isPublished);
+  1194→      setAllowResubmission(target.allowResubmission);
+  1195→    } else if (open) {
+  1196→      setTitle("");
+  1197→      setDescription("");
+  1198→      setInstructions("");
+  1199→      setDueDate("");
+  1200→      setIsPublished(true);
+  1201→      setAllowResubmission(false);
+  1202→    }
+  1203→    setFile(null);
+  1204→    setClearFile(false);
+  1205→  }, [target, open]);
+  1206→
+  1207→  async function submit() {
+  1208→    if (!title.trim()) {
+  1209→      toast({ title: "Title required", variant: "destructive" });
+  1210→      return;
+  1211→    }
+  1212→    const fd = new FormData();
+  1213→    fd.append("title", title.trim());
+  1214→    fd.append("description", description.trim());
+  1215→    fd.append("instructions", instructions.trim());
+  1216→    if (dueDate) fd.append("dueDate", dueDate);
+  1217→    fd.append("isPublished", String(isPublished));
+  1218→    fd.append("allowResubmission", String(allowResubmission));
+  1219→    if (file) fd.append("file", file);
+  1220→    if (clearFile) fd.append("clearFile", "true");
+  1221→
+  1222→    setSaving(true);
+  1223→    try {
+  1224→      if (target) {
+  1225→        const res = await fetch(`/api/admin/assignments/${target.id}`, {
+  1226→          method: "PUT",
+  1227→          body: fd,
+  1228→          credentials: "include",
+  1229→        });
+  1230→        const json = await res.json();
+  1231→        if (!res.ok) throw new Error(json.error || "Failed");
+  1232→        toast({ title: "Assignment updated" });
+  1233→      } else {
+  1234→        await apiUpload(`/api/admin/courses/${courseId}/assignments`, fd);
+  1235→        toast({ title: "Assignment added" });
+  1236→      }
+  1237→      onSaved();
+  1238→    } catch (e) {
+  1239→      if (e instanceof Error) {
+  1240→        toast({ title: "Error", description: e.message, variant: "destructive" });
+  1241→      }
+  1242→    } finally {
+  1243→      setSaving(false);
+  1244→    }
+  1245→  }
+  1246→
+  1247→  return (
+  1248→    <Dialog open={open} onOpenChange={onOpenChange}>
+  1249→      <DialogContent className="sm:max-w-lg">
+  1250→        <DialogHeader>
+  1251→          <DialogTitle className="font-heading text-lg font-semibold">{target ? "Edit Assignment" : "Add Assignment"}</DialogTitle>
+  1252→          <DialogDescription>Create a task for students to complete and submit.</DialogDescription>
+  1253→        </DialogHeader>
+  1254→        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
+  1255→          <div className="space-y-1.5">
+  1256→            <Label htmlFor="a-title" className="text-xs font-medium text-muted-foreground">Title</Label>
+  1257→            <Input id="a-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Final Project — Brand Identity" className="h-9 rounded-lg" />
+  1258→          </div>
+  1259→          <div className="space-y-1.5">
+  1260→            <Label htmlFor="a-desc" className="text-xs font-medium text-muted-foreground">Short Description</Label>
+  1261→            <Textarea id="a-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="rounded-lg" />
+  1262→          </div>
+  1263→          <div className="space-y-1.5">
+  1264→            <Label htmlFor="a-ins" className="text-xs font-medium text-muted-foreground">Detailed Instructions</Label>
+  1265→            <Textarea id="a-ins" value={instructions} onChange={(e) => setInstructions(e.target.value)} rows={4} placeholder="Step-by-step instructions students will see…" className="rounded-lg" />
+  1266→          </div>
+  1267→          <div className="space-y-1.5">
+  1268→            <Label htmlFor="a-due" className="text-xs font-medium text-muted-foreground">Due Date (optional)</Label>
+  1269→            <Input id="a-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="h-9 rounded-lg" />
+  1270→          </div>
+  1271→          <div className="space-y-1.5">
+  1272→            <Label htmlFor="a-file" className="text-xs font-medium text-muted-foreground">Attachment File (optional)</Label>
+  1273→            <Input id="a-file" type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" />
+  1274→            {target?.fileUrl && (
+  1275→              <div className="flex items-center gap-2 text-xs">
+  1276→                <a href={target.fileUrl} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline inline-flex items-center gap-1">
+  1277→                  <ExternalLink className="h-3 w-3" /> Current file
+  1278→                </a>
+  1279→                <label className="flex items-center gap-1 text-muted-foreground">
+  1280→                  <Checkbox checked={clearFile} onCheckedChange={(v) => setClearFile(!!v)} />
+  1281→                  Remove existing file
+  1282→                </label>
+  1283→              </div>
+  1284→            )}
+  1285→          </div>
+  1286→          <div className="grid grid-cols-2 gap-3">
+  1287→            <div className="flex items-center justify-between rounded-lg border border-border p-3">
+  1288→              <Label htmlFor="a-pub" className="text-sm font-medium">Published</Label>
+  1289→              <Switch id="a-pub" checked={isPublished} onCheckedChange={setIsPublished} />
+  1290→            </div>
+  1291→            <div className="flex items-center justify-between rounded-lg border border-border p-3">
+  1292→              <Label htmlFor="a-resub" className="text-sm font-medium">Allow resubmission</Label>
+  1293→              <Switch id="a-resub" checked={allowResubmission} onCheckedChange={setAllowResubmission} />
+  1294→            </div>
+  1295→          </div>
+  1296→        </div>
+  1297→        <DialogFooter>
+  1298→          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>Cancel</Button>
+  1299→          <Button disabled={saving} className="h-9" onClick={submit}>{saving ? "Saving…" : target ? "Save Changes" : "Add Assignment"}</Button>
+  1300→        </DialogFooter>
+  1301→      </DialogContent>
+  1302→    </Dialog>
+  1303→  );
+  1304→}
+  1305→
+  1306→// ============= CERTIFICATE TAB =============
+  1307→function CertificateTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () => void }) {
+  1308→  const template = course.certificateTemplate;
+  1309→  const [isEnabled, setIsEnabled] = useState(template?.isEnabled ?? true);
+  1310→  const [title, setTitle] = useState(template?.title || "Certificate of Completion");
+  1311→  const [bodyText, setBodyText] = useState(
+  1312→    template?.bodyText ||
+  1313→      "This certificate is proudly presented to {{studentName}} for successfully completing the course {{courseName}}."
+  1314→  );
+  1315→  const [organizationName, setOrganizationName] = useState(template?.organizationName || "CourseLearn");
+  1316→  const [layout, setLayout] = useState<"CLASSIC" | "MODERN" | "MINIMAL">(template?.layout || "CLASSIC");
+  1317→  const [saving, setSaving] = useState(false);
+  1318→
+  1319→  useEffect(() => {
+  1320→    if (template) {
+  1321→      setIsEnabled(template.isEnabled);
+  1322→      setTitle(template.title);
+  1323→      setBodyText(template.bodyText);
+  1324→      setOrganizationName(template.organizationName);
+  1325→      setLayout(template.layout);
+  1326→    }
+  1327→  }, [template]);
+  1328→
+  1329→  async function save() {
+  1330→    setSaving(true);
+  1331→    try {
+  1332→      await apiPost(`/api/admin/courses/${course.id}/certificate`, {
+  1333→        isEnabled,
+  1334→        title,
+  1335→        bodyText,
+  1336→        organizationName,
+  1337→        layout,
+  1338→      }, { method: "PUT" });
+  1339→      toast({ title: "Certificate template saved" });
+  1340→      onRefresh();
+  1341→    } catch { /* toast */ } finally {
+  1342→      setSaving(false);
+  1343→    }
+  1344→  }
+  1345→
+  1346→  // Live preview with sample data
+  1347→  const previewText = bodyText
+  1348→    .replace(/\{\{studentName\}\}/g, "Aisha Khalid")
+  1349→    .replace(/\{\{courseName\}\}/g, course.title)
+  1350→    .replace(/\{\{issueDate\}\}/g, formatDate(new Date()))
+  1351→    .replace(/\{\{certificateNumber\}\}/g, "LL-SAMPLE-001")
+  1352→    .replace(/\{\{organizationName\}\}/g, organizationName);
+  1353→
+  1354→  return (
+  1355→    <div className="space-y-4">
+  1356→      <div className="flex items-center justify-between">
+  1357→        <div>
+  1358→          <h3 className="font-heading text-base font-semibold text-foreground">Completion Certificate</h3>
+  1359→          <p className="text-xs text-muted-foreground mt-0.5">
+  1360→            Configure the template issued to students who complete this course.
+  1361→          </p>
+  1362→        </div>
+  1363→        <Button className="h-9 gap-2" disabled={saving} onClick={save}>
+  1364→          <Save className="h-4 w-4" /> {saving ? "Saving…" : "Save Template"}
+  1365→        </Button>
+  1366→      </div>
+  1367→
+  1368→      <div className="grid gap-4 lg:grid-cols-2">
+  1369→        <Card className="p-5 space-y-3 border-border bg-card shadow-sm">
+  1370→          <CardHeader className="p-0">
+  1371→            <CardTitle className="text-sm font-heading font-semibold">Template Settings</CardTitle>
+  1372→            <CardDescription className="mt-1">Use placeholders for dynamic content.</CardDescription>
+  1373→          </CardHeader>
+  1374→          <CardContent className="p-0 space-y-3">
+  1375→            {/* Info banner explaining the three certificate modes */}
+  1376→            <div className="rounded-xl border border-accent/25 bg-soft-sage/60 p-3">
+  1377→              <div className="flex items-start gap-2">
+  1378→                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-accent/15 text-accent shrink-0 mt-0.5">
+  1379→                  <Info className="h-3.5 w-3.5" />
+  1380→                </div>
+  1381→                <div className="text-xs space-y-1.5">
+  1382→                  <p className="font-semibold text-foreground">How certificates work</p>
+  1383→                  <p className="text-muted-foreground">
+  1384→                    Certificates are <strong>automatically issued</strong> to students when they complete all video lessons in this course. You have three options:
+  1385→                  </p>
+  1386→                  <ul className="space-y-1 text-muted-foreground pl-3 list-disc">
+  1387→                    <li><strong>Save a template (enabled)</strong> → Your custom design is used.</li>
+  1388→                    <li><strong>Save a template (disabled)</strong> → No certificate is issued.</li>
+  1389→                    <li><strong>Don&apos;t save a template</strong> → A default certificate with the student&apos;s name is auto-generated.</li>
+  1390→                  </ul>
+  1391→                </div>
+  1392→              </div>
+  1393→            </div>
+  1394→            <div className="flex items-center justify-between rounded-lg border border-border p-3">
+  1395→              <Label htmlFor="c-enabled" className="text-sm font-medium">Enable certificates for this course</Label>
+  1396→              <Switch id="c-enabled" checked={isEnabled} onCheckedChange={setIsEnabled} />
+  1397→            </div>
+  1398→            <div className="space-y-1.5">
+  1399→              <Label htmlFor="c-title" className="text-xs font-medium text-muted-foreground">Certificate Title</Label>
+  1400→              <Input id="c-title" value={title} onChange={(e) => setTitle(e.target.value)} className="h-9 rounded-lg" />
+  1401→            </div>
+  1402→            <div className="space-y-1.5">
+  1403→              <Label htmlFor="c-body" className="text-xs font-medium text-muted-foreground">Body Text</Label>
+  1404→              <Textarea id="c-body" value={bodyText} onChange={(e) => setBodyText(e.target.value)} rows={4} className="rounded-lg" />
+  1405→              <p className="text-xs text-muted-foreground">
+  1406→                Placeholders: <code className="bg-muted px-1 py-0.5 rounded">{"{{studentName}}"}</code>{" "}
+  1407→                <code className="bg-muted px-1 py-0.5 rounded">{"{{courseName}}"}</code>{" "}
+  1408→                <code className="bg-muted px-1 py-0.5 rounded">{"{{issueDate}}"}</code>{" "}
+  1409→                <code className="bg-muted px-1 py-0.5 rounded">{"{{certificateNumber}}"}</code>{" "}
+  1410→                <code className="bg-muted px-1 py-0.5 rounded">{"{{organizationName}}"}</code>
+  1411→              </p>
+  1412→            </div>
+  1413→            <div className="grid grid-cols-2 gap-3">
+  1414→              <div className="space-y-1.5">
+  1415→                <Label htmlFor="c-org" className="text-xs font-medium text-muted-foreground">Organization Name</Label>
+  1416→                <Input id="c-org" value={organizationName} onChange={(e) => setOrganizationName(e.target.value)} className="h-9 rounded-lg" />
+  1417→              </div>
+  1418→              <div className="space-y-1.5">
+  1419→                <Label className="text-xs font-medium text-muted-foreground">Layout</Label>
+  1420→                <Select value={layout} onValueChange={(v) => setLayout(v as "CLASSIC" | "MODERN" | "MINIMAL")}>
+  1421→                  <SelectTrigger className="w-full h-9 rounded-lg">
+  1422→                    <SelectValue />
+  1423→                  </SelectTrigger>
+  1424→                  <SelectContent>
+  1425→                    <SelectItem value="CLASSIC">Classic</SelectItem>
+  1426→                    <SelectItem value="MODERN">Modern</SelectItem>
+  1427→                    <SelectItem value="MINIMAL">Minimal</SelectItem>
+  1428→                  </SelectContent>
+  1429→                </Select>
+  1430→              </div>
+  1431→            </div>
+  1432→          </CardContent>
+  1433→        </Card>
+  1434→
+  1435→        <Card className="p-5 space-y-3 border-border bg-card shadow-sm">
+  1436→          <CardHeader className="p-0">
+  1437→            <CardTitle className="text-sm font-heading font-semibold">Live Preview</CardTitle>
+  1438→            <CardDescription className="mt-1">How the certificate will look.</CardDescription>
+  1439→          </CardHeader>
+  1440→          <CardContent className="p-0">
+  1441→            <CertificatePreview
+  1442→              title={title}
+  1443→              bodyText={previewText}
+  1444→              organizationName={organizationName}
+  1445→              layout={layout}
+  1446→              studentName="Aisha Khalid"
+  1447→              courseTitle={course.title}
+  1448→              certNumber="LL-SAMPLE-001"
+  1449→              issueDate={formatDate(new Date())}
+  1450→            />
+  1451→          </CardContent>
+  1452→        </Card>
+  1453→      </div>
+  1454→    </div>
+  1455→  );
+  1456→}
+  1457→
+  1458→function CertificatePreview({
+  1459→  title, bodyText, organizationName, layout, studentName, courseTitle, certNumber, issueDate,
+  1460→}: {
+  1461→  title: string;
+  1462→  bodyText: string;
+  1463→  organizationName: string;
+  1464→  layout: "CLASSIC" | "MODERN" | "MINIMAL";
+  1465→  studentName: string;
+  1466→  courseTitle: string;
+  1467→  certNumber: string;
+  1468→  issueDate: string;
+  1469→}) {
+  1470→  if (layout === "MINIMAL") {
+  1471→    return (
+  1472→      <div className="rounded-lg border border-border bg-card p-6 text-center">
+  1473→        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{organizationName}</p>
+  1474→        <p className="font-heading text-xl font-bold text-foreground mt-2">{title}</p>
+  1475→        <p className="font-heading text-2xl font-bold text-accent mt-3">{studentName}</p>
+  1476→        <p className="text-xs text-muted-foreground mt-2">{bodyText}</p>
+  1477→        <Separator className="my-3" />
+  1478→        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+  1479→          <span>{issueDate}</span>
+  1480→          <span>{certNumber}</span>
+  1481→        </div>
+  1482→      </div>
+  1483→    );
+  1484→  }
+  1485→  if (layout === "MODERN") {
+  1486→    return (
+  1487→      <div className="rounded-xl border-2 border-accent/40 bg-gradient-to-br from-accent/[0.04] to-primary/[0.04] p-6">
+  1488→        <div className="flex items-center justify-between">
+  1489→          <Award className="h-8 w-8 text-accent" />
+  1490→          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{organizationName}</p>
+  1491→        </div>
+  1492→        <div className="text-center mt-4">
+  1493→          <p className="font-heading text-lg font-bold text-foreground">{title}</p>
+  1494→          <p className="font-heading text-2xl font-bold text-accent mt-2">{studentName}</p>
+  1495→          <p className="text-xs text-muted-foreground mt-2 max-w-xs mx-auto">{bodyText}</p>
+  1496→        </div>
+  1497→        <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-4 pt-3 border-t border-border">
+  1498→          <span>{issueDate}</span>
+  1499→          <span className="font-mono">{certNumber}</span>
+  1500→        </div>
+  1501→      </div>
+  1502→    );
+  1503→  }
+  1504→  // CLASSIC
+  1505→  return (
+  1506→    <div className="rounded-lg border-4 border-primary/30 bg-card p-6 text-center">
+  1507→      <div className="border-b-2 border-accent/30 pb-3">
+  1508→        <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">{organizationName}</p>
+  1509→        <p className="font-heading text-xl font-bold text-foreground mt-1">{title}</p>
+  1510→      </div>
+  1511→      <p className="font-heading text-2xl font-bold text-primary mt-4">{studentName}</p>
+  1512→      <p className="text-xs text-muted-foreground mt-3 max-w-xs mx-auto">{bodyText}</p>
+  1513→      <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-4 pt-3 border-t-2 border-accent/30">
+  1514→        <span>{issueDate}</span>
+  1515→        <span className="font-mono">{certNumber}</span>
+  1516→      </div>
+  1517→    </div>
+  1518→  );
+  1519→}
+  1520→
+  1521→// ============= SETTINGS TAB =============
+  1522→function SettingsTab({
+  1523→  course, plans, onRefresh, onDeleted,
+  1524→}: {
+  1525→  course: CourseDetail;
+  1526→  plans: SubscriptionPlanPublic[];
+  1527→  onRefresh: () => void;
+  1528→  onDeleted: () => void;
+  1529→}) {
+  1530→  const navigate = useAppStore((s) => s.navigate);
+  1531→  const [title, setTitle] = useState(course.title);
+  1532→  const [description, setDescription] = useState(course.description || "");
+  1533→  const [category, setCategory] = useState(course.category || "");
+  1534→  const [accessType, setAccessType] = useState<"FREE" | "PAID">(course.accessType);
+  1535→  const [isPublished, setIsPublished] = useState(course.isPublished);
+  1536→  const [planIds, setPlanIds] = useState<string[]>(course.planAccess.map((p) => p.planId));
+  1537→  const [saving, setSaving] = useState(false);
+  1538→  const [deleteOpen, setDeleteOpen] = useState(false);
+  1539→
+  1540→  useEffect(() => {
+  1541→    setTitle(course.title);
+  1542→    setDescription(course.description || "");
+  1543→    setCategory(course.category || "");
+  1544→    setAccessType(course.accessType);
+  1545→    setIsPublished(course.isPublished);
+  1546→    setPlanIds(course.planAccess.map((p) => p.planId));
+  1547→  }, [course]);
+  1548→
+  1549→  function togglePlan(id: string) {
+  1550→    setPlanIds((cur) =>
+  1551→      cur.includes(id) ? cur.filter((p) => p !== id) : [...cur, id]
+  1552→    );
+  1553→  }
+  1554→
+  1555→  async function save() {
+  1556→    if (!title.trim()) {
+  1557→      toast({ title: "Title required", variant: "destructive" });
+  1558→      return;
+  1559→    }
+  1560→    if (accessType === "PAID" && planIds.length === 0) {
+  1561→      toast({ title: "Select at least one plan", variant: "destructive" });
+  1562→      return;
+  1563→    }
+  1564→    setSaving(true);
+  1565→    try {
+  1566→      await apiPost(`/api/admin/courses/${course.id}`, {
+  1567→        title: title.trim(),
+  1568→        description: description.trim() || null,
+  1569→        category: category.trim() || null,
+  1570→        accessType,
+  1571→        isPublished,
+  1572→        planIds,
+  1573→      }, { method: "PUT" });
+  1574→      toast({ title: "Course updated" });
+  1575→      onRefresh();
+  1576→    } catch { /* toast */ } finally {
+  1577→      setSaving(false);
+  1578→    }
+  1579→  }
+  1580→
+  1581→  async function doDelete() {
+  1582→    try {
+  1583→      await apiPost(`/api/admin/courses/${course.id}`, null, { method: "DELETE" });
+  1584→      toast({ title: "Course deleted", description: course.title });
+  1585→      onDeleted();
+  1586→    } catch { /* toast */ }
+  1587→  }
+  1588→
+  1589→  return (
+  1590→    <div className="space-y-4">
+  1591→      <Card className="p-5 space-y-3 border-border bg-card shadow-sm">
+  1592→        <CardHeader className="p-0">
+  1593→          <CardTitle className="font-heading text-base font-semibold">Course Details</CardTitle>
+  1594→          <CardDescription className="mt-1">Update the basic information about this course.</CardDescription>
+  1595→        </CardHeader>
+  1596→        <CardContent className="p-0 space-y-3">
+  1597→          <div className="space-y-1.5">
+  1598→            <Label htmlFor="s-title" className="text-xs font-medium text-muted-foreground">Title</Label>
+  1599→            <Input id="s-title" value={title} onChange={(e) => setTitle(e.target.value)} className="h-9 rounded-lg" />
+  1600→          </div>
+  1601→          <div className="space-y-1.5">
+  1602→            <Label htmlFor="s-desc" className="text-xs font-medium text-muted-foreground">Description</Label>
+  1603→            <Textarea id="s-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="rounded-lg" />
+  1604→          </div>
+  1605→          <div className="grid grid-cols-2 gap-3">
+  1606→            <div className="space-y-1.5">
+  1607→              <Label htmlFor="s-cat" className="text-xs font-medium text-muted-foreground">Category</Label>
+  1608→              <Input id="s-cat" value={category} onChange={(e) => setCategory(e.target.value)} className="h-9 rounded-lg" />
+  1609→            </div>
+  1610→            <div className="space-y-1.5">
+  1611→              <Label className="text-xs font-medium text-muted-foreground">Access Type</Label>
+  1612→              <Select value={accessType} onValueChange={(v) => setAccessType(v as "FREE" | "PAID")}>
+  1613→                <SelectTrigger className="w-full h-9 rounded-lg">
+  1614→                  <SelectValue />
+  1615→                </SelectTrigger>
+  1616→                <SelectContent>
+  1617→                  <SelectItem value="FREE">Free</SelectItem>
+  1618→                  <SelectItem value="PAID">Paid</SelectItem>
+  1619→                </SelectContent>
+  1620→              </Select>
+  1621→            </div>
+  1622→          </div>
+  1623→
+  1624→          {accessType === "PAID" && (
+  1625→            <div className="space-y-2 rounded-lg border border-border p-3 bg-muted/30">
+  1626→              <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Required Plans</Label>
+  1627→              {plans.length === 0 ? (
+  1628→                <p className="text-xs text-destructive">No subscription plans exist. Create one in the Plans section first.</p>
+  1629→              ) : (
+  1630→                <div className="space-y-2 max-h-32 overflow-y-auto scrollbar-thin">
+  1631→                  {plans.map((p) => (
+  1632→                    <label key={p.id} className="flex items-center gap-2 cursor-pointer rounded-md p-1.5 transition-colors hover:bg-background">
+  1633→                      <Checkbox
+  1634→                        checked={planIds.includes(p.id)}
+  1635→                        onCheckedChange={() => togglePlan(p.id)}
+  1636→                      />
+  1637→                      <span className="text-sm text-foreground">{p.name}</span>
+  1638→                    </label>
+  1639→                  ))}
+  1640→                </div>
+  1641→              )}
+  1642→            </div>
+  1643→          )}
+  1644→
+  1645→          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+  1646→            <div>
+  1647→              <Label htmlFor="s-pub" className="text-sm font-medium">Published</Label>
+  1648→              <p className="text-xs text-muted-foreground mt-0.5">Make this course visible to students.</p>
+  1649→            </div>
+  1650→            <Switch id="s-pub" checked={isPublished} onCheckedChange={setIsPublished} />
+  1651→          </div>
+  1652→
+  1653→          <div className="flex justify-end gap-2 pt-2">
+  1654→            <Button disabled={saving} onClick={save} className="h-9 gap-2">
+  1655→              <Save className="h-4 w-4" /> {saving ? "Saving…" : "Save Changes"}
+  1656→            </Button>
+  1657→          </div>
+  1658→        </CardContent>
+  1659→      </Card>
+  1660→
+  1661→      {/* Danger zone */}
+  1662→      <Card className="border-destructive/30 p-5 shadow-sm">
+  1663→        <CardHeader className="p-0">
+  1664→          <CardTitle className="font-heading text-base font-semibold text-destructive">Danger Zone</CardTitle>
+  1665→          <CardDescription className="mt-1">Permanent actions that cannot be undone.</CardDescription>
+  1666→        </CardHeader>
+  1667→        <CardContent className="p-0 mt-4">
+  1668→          <div className="flex items-center justify-between rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+  1669→            <div>
+  1670→              <p className="text-sm font-medium text-foreground">Delete this course</p>
+  1671→              <p className="text-xs text-muted-foreground mt-0.5">
+  1672→                Permanently removes the course and all related content.
+  1673→              </p>
+  1674→            </div>
+  1675→            <Button
+  1676→              variant="destructive"
+  1677→              size="sm"
+  1678→              className="h-9 gap-2"
+  1679→              onClick={() => setDeleteOpen(true)}
+  1680→            >
+  1681→              <Trash2 className="h-4 w-4" /> Delete Course
+  1682→            </Button>
+  1683→          </div>
+  1684→        </CardContent>
+  1685→      </Card>
+  1686→
+  1687→      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+  1688→        <AlertDialogContent>
+  1689→          <AlertDialogHeader>
+  1690→            <AlertDialogTitle>Delete course permanently?</AlertDialogTitle>
+  1691→            <AlertDialogDescription>
+  1692→              This will delete <strong>{course.title}</strong> and all topics, videos, materials, assignments and submissions. This cannot be undone.
+  1693→            </AlertDialogDescription>
+  1694→          </AlertDialogHeader>
+  1695→          <AlertDialogFooter>
+  1696→            <AlertDialogCancel>Cancel</AlertDialogCancel>
+  1697→            <AlertDialogAction
+  1698→              className="bg-destructive text-white hover:bg-destructive/90"
+  1699→              onClick={doDelete}
+  1700→            >
+  1701→              Delete Permanently
+  1702→            </AlertDialogAction>
+  1703→          </AlertDialogFooter>
+  1704→        </AlertDialogContent>
+  1705→      </AlertDialog>
+  1706→
+  1707→      <div className="flex items-center justify-between text-xs text-muted-foreground pt-2">
+  1708→        <span>Created {formatDateTime(course.createdAt)}</span>
+  1709→        <button
+  1710→          className="text-accent hover:underline"
+  1711→          onClick={() => navigate(["admin", "courses"])}
+  1712→        >
+  1713→          Back to courses list
+  1714→        </button>
+  1715→      </div>
+  1716→    </div>
+  1717→  );
+  1718→}
+
+[showing lines 1019-1718 of 1719; use offset=1719 with limit to continue reading]

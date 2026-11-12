@@ -38,36 +38,36 @@ interface NotificationsResponse {
  */
 const TYPE_META: Record<
   string,
-  { icon: React.ElementType; label: string; tone: string }
+  { icon: React.ElementType; labelKey: string; tone: string }
 > = {
   DISCUSSION_REPLY: {
     icon: MessageSquare,
-    label: "Discussions",
+    labelKey: "notifications.labelDiscussions",
     tone: "text-accent bg-accent/10",
   },
   CERTIFICATE: {
     icon: Award,
-    label: "Certificates",
+    labelKey: "notifications.labelCertificates",
     tone: "text-success bg-success/10",
   },
   COURSE: {
     icon: BookOpen,
-    label: "Courses",
+    labelKey: "notifications.labelCourses",
     tone: "text-accent bg-accent/10",
   },
   ANNOUNCEMENT: {
     icon: Info,
-    label: "Announcements",
+    labelKey: "notifications.labelAnnouncements",
     tone: "text-primary bg-primary/10",
   },
   ASSIGNMENT: {
     icon: AlertCircle,
-    label: "Assignments",
+    labelKey: "notifications.labelAssignments",
     tone: "text-warning bg-warning/10",
   },
   SYSTEM: {
     icon: Info,
-    label: "System",
+    labelKey: "notifications.labelSystem",
     tone: "text-muted-foreground bg-muted",
   },
 };
@@ -76,7 +76,7 @@ function metaFor(type: string) {
   return (
     TYPE_META[type] ?? {
       icon: Info,
-      label: "General",
+      labelKey: "notifications.labelGeneral",
       tone: "text-muted-foreground bg-muted",
     }
   );
@@ -93,6 +93,7 @@ function metaFor(type: string) {
  * - A "Mark all as read" button calls PATCH ?all=true.
  */
 export function StudentNotifications() {
+  const { t } = useI18n();
   const navigate = useAppStore((s) => s.navigate);
   const { data, loading, error, refetch, setData } =
     useApiFetch<NotificationsResponse>("/api/student/notifications");
@@ -103,12 +104,12 @@ export function StudentNotifications() {
   const groups = useMemo(() => {
     const map = new Map<string, NotificationItem[]>();
     for (const n of data?.notifications ?? []) {
-      const key = metaFor(n.type).label;
+      const key = metaFor(n.type).labelKey;
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(n);
     }
-    return Array.from(map.entries()).map(([label, items]) => ({
-      label,
+    return Array.from(map.entries()).map(([labelKey, items]) => ({
+      labelKey,
       items,
       unread: items.filter((n) => !n.isRead).length,
     }));
@@ -155,7 +156,7 @@ export function StudentNotifications() {
           unreadCount: res.unreadCount,
         });
       }
-      toast({ title: "All notifications marked as read" });
+      toast({ title: t("notifications.allMarkedRead") });
     } catch {
     } finally {
       setMarkingAll(false);
@@ -177,9 +178,9 @@ export function StudentNotifications() {
     return (
       <EmptyState
         icon={<Bell className="h-5 w-5" />}
-        title="Couldn't load notifications"
+        title={t("notifications.couldntLoad")}
         description={error}
-        action={<Button onClick={() => refetch()}>Try again</Button>}
+        action={<Button onClick={() => refetch()}>{t("notifications.tryAgain")}</Button>}
       />
     );
   }
@@ -203,12 +204,12 @@ export function StudentNotifications() {
             </div>
             <div className="min-w-0">
               <h1 className="font-heading text-lg font-semibold text-foreground truncate">
-                Notifications
+                {t("common.notifications")}
               </h1>
               <p className="text-sm text-muted-foreground mt-0.5">
                 {notifications.length === 0
-                  ? "You're all caught up."
-                  : `${unread} unread · ${notifications.length} total in view`}
+                  ? t("notifications.allCaughtUp")
+                  : t("notifications.unreadTotal").replace("{unread}", String(unread)).replace("{total}", String(notifications.length))}
               </p>
             </div>
           </div>
@@ -221,7 +222,7 @@ export function StudentNotifications() {
               className="gap-2"
             >
               <CheckCheck className="h-4 w-4" />
-              {markingAll ? "Marking…" : "Mark all as read"}
+              {markingAll ? t("notifications.marking") : t("notifications.markAllReadShort")}
             </Button>
           )}
         </div>
@@ -231,14 +232,14 @@ export function StudentNotifications() {
       {notifications.length === 0 ? (
         <EmptyState
           icon={<Bell className="h-5 w-5" />}
-          title="No notifications"
-          description="When something happens — a reply to your discussion post, a new certificate, or a course announcement — you'll see it here."
+          title={t("common.noNotifications")}
+          description={t("notifications.noNotificationsDesc")}
           action={
             <Button
               onClick={() => navigate(["student", "overview"])}
               className="gap-2"
             >
-              Back to dashboard
+              {t("notifications.backToDashboard")}
             </Button>
           }
         />
@@ -246,8 +247,8 @@ export function StudentNotifications() {
         <div className="space-y-5">
           {groups.map((group) => (
             <NotificationGroup
-              key={group.label}
-              label={group.label}
+              key={group.labelKey}
+              labelKey={group.labelKey}
               items={group.items}
               unread={group.unread}
               markingId={markingId}
@@ -263,18 +264,19 @@ export function StudentNotifications() {
 /* ──────────────────────────────────────────────────────────────────────── */
 
 function NotificationGroup({
-  label,
+  labelKey,
   items,
   unread,
   markingId,
   onMarkRead,
 }: {
-  label: string;
+  labelKey: string;
   items: NotificationItem[];
   unread: number;
   markingId: string | null;
   onMarkRead: (n: NotificationItem) => void;
 }) {
+  const { t } = useI18n();
   const meta = useMemo(() => {
     // Use the first item's type to pick the icon/tone — every item in a
     // group shares the same TYPE_META label, so the icon is consistent.
@@ -298,12 +300,12 @@ function NotificationGroup({
           <Icon className="h-3.5 w-3.5" />
         </span>
         <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-foreground/80">
-          {label}
+          {t(labelKey as any)}
         </h2>
         <span className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
         {unread > 0 && (
           <Badge className="bg-accent/15 text-accent border-transparent text-[10px] px-1.5 py-0 h-4">
-            {unread} new
+            {unread} {t("notifications.new")}
           </Badge>
         )}
       </div>
@@ -337,10 +339,11 @@ function NotificationRow({
   onClick,
 }: {
   notification: NotificationItem;
-  meta: { icon: React.ElementType; label: string; tone: string };
+  meta: { icon: React.ElementType; labelKey: string; tone: string };
   marking: boolean;
   onClick: () => void;
 }) {
+  const { t } = useI18n();
   const Icon = meta.icon;
   const wasRecent =
     Date.now() - new Date(notification.createdAt).getTime() < 24 * 60 * 60 * 1000;
@@ -376,7 +379,7 @@ function NotificationRow({
         {!notification.isRead && (
           <span
             className="h-1.5 w-1.5 rounded-full bg-accent ring-2 ring-card"
-            aria-label="Unread"
+            aria-label={t("notifications.unread")}
           />
         )}
       </div>
@@ -406,7 +409,7 @@ function NotificationRow({
               variant="outline"
               className="ml-1.5 text-[10px] px-1.5 py-0 h-4 border-border text-muted-foreground"
             >
-              recent
+              {t("notifications.recent")}
             </Badge>
           )}
         </div>
@@ -432,7 +435,7 @@ function NotificationRow({
             ) : (
               <>
                 <Check className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Mark read</span>
+                <span className="hidden sm:inline">{t("notifications.markRead")}</span>
               </>
             )}
           </Button>

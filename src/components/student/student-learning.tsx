@@ -27,6 +27,7 @@ import {
   HelpCircle, XCircle, RefreshCw, ListChecks, MessageSquare, StickyNote,
 } from "lucide-react";
 import { formatDateTime } from "@/types";
+import { useI18n } from "@/lib/i18n/store";
 
 interface VideoProgressInfo {
   lastPosition: number;
@@ -155,6 +156,7 @@ interface CourseDetail {
 interface CourseResponse { course: CourseDetail }
 
 export function StudentLearning({ courseId, onBack }: { courseId: string; onBack: () => void }) {
+  const { t } = useI18n();
   const { data, loading, error, refetch, setData } = useApiFetch<CourseResponse>(
     `/api/student/courses/${courseId}`
   );
@@ -219,13 +221,13 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
     return (
       <div className="space-y-4">
         <Button variant="outline" size="sm" onClick={onBack} className="gap-2">
-          <ArrowLeft className="h-4 w-4" /> Back to courses
+          <ArrowLeft className="h-4 w-4" /> {t("learning.backToCourses")}
         </Button>
         <EmptyState
           icon={<AlertTriangle className="h-5 w-5" />}
-          title="Couldn't open course"
+          title={t("learning.couldntOpenCourse")}
           description={error}
-          action={<Button onClick={onBack}>Back to courses</Button>}
+          action={<Button onClick={onBack}>{t("learning.backToCourses")}</Button>}
         />
       </div>
     );
@@ -235,9 +237,9 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
     return (
       <EmptyState
         icon={<PlayCircle className="h-5 w-5" />}
-        title="Course not found"
-        description="This course may have been removed or is not accessible."
-        action={<Button onClick={onBack}>Back to courses</Button>}
+        title={t("learning.courseNotFound")}
+        description={t("learning.courseMayRemoved")}
+        action={<Button onClick={onBack}>{t("learning.backToCourses")}</Button>}
       />
     );
   }
@@ -295,8 +297,8 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
 
     if (updated.justCompleted) {
       toast({
-        title: "Lesson completed",
-        description: "Great work! Your progress has been saved.",
+        title: t("learning.lessonCompletedToast"),
+        description: t("learning.greatWorkSaved"),
       });
     }
   }
@@ -304,8 +306,8 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
   async function handleSubmissionSuccess() {
     await refetch();
     toast({
-      title: "Assignment submitted",
-      description: "Your submission has been received.",
+      title: t("learning.assignmentSubmittedToast"),
+      description: t("learning.assignmentSubmittedDesc"),
     });
   }
 
@@ -314,12 +316,12 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
       {/* ─── Compact breadcrumb header ─── */}
       <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3 shadow-sm">
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0 h-8 w-8" aria-label="Back to courses">
+          <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0 h-8 w-8" aria-label={t("learning.backToCourses")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <button onClick={onBack} className="hover:text-foreground transition-colors">My Courses</button>
+              <button onClick={onBack} className="hover:text-foreground transition-colors">{t("learning.myCourses")}</button>
               <span>/</span>
               <span className="truncate">{course.title}</span>
               {activeVideo && (
@@ -342,7 +344,7 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
                     : "bg-primary text-primary-foreground border-transparent text-[10px] px-1.5 py-0 h-4"
                 }
               >
-                {course.accessType === "FREE" ? "Free" : "Paid"}
+                {course.accessType === "FREE" ? t("common.free") : t("common.paid")}
               </Badge>
             </div>
           </div>
@@ -350,9 +352,9 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
         <div className="flex items-center gap-3 shrink-0">
           <div className="hidden sm:flex flex-col items-end">
             <span className="text-xs font-medium text-foreground">
-              {course.courseCompletion.completedVideos}/{course.courseCompletion.totalVideos} lessons
+              {course.courseCompletion.completedVideos}/{course.courseCompletion.totalVideos} {t("courses.lessons")}
             </span>
-            <span className="text-[10px] text-muted-foreground">completed</span>
+            <span className="text-[10px] text-muted-foreground">{t("learning.completed")}</span>
           </div>
           <div className="flex items-center gap-2 min-w-[120px]">
             <Progress
@@ -385,8 +387,8 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
           ) : (
             <EmptyState
               icon={<VideoIcon className="h-5 w-5" />}
-              title="No videos in this course"
-              description="This course doesn't have any published video lessons yet."
+              title={t("courses.noVideosYet")}
+              description={t("courses.noVideosDesc")}
             />
           )}
 
@@ -410,28 +412,28 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
                   className="rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent gap-1.5 px-4 py-2.5 text-sm font-medium transition-all"
                 >
                   <Info className="h-3.5 w-3.5" />
-                  Overview
+                  {t("learning.tab.overview")}
                 </TabsTrigger>
                 <TabsTrigger
                   value="notes"
                   className="rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent gap-1.5 px-4 py-2.5 text-sm font-medium transition-all"
                 >
                   <StickyNote className="h-3.5 w-3.5" />
-                  My Notes
+                  {t("learning.tab.notes")}
                 </TabsTrigger>
                 <TabsTrigger
                   value="discussions"
                   className="rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent gap-1.5 px-4 py-2.5 text-sm font-medium transition-all"
                 >
                   <MessageSquare className="h-3.5 w-3.5" />
-                  Discussion
+                  {t("learning.tab.discussion")}
                 </TabsTrigger>
                 <TabsTrigger
                   value="resources"
                   className="rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent gap-1.5 px-4 py-2.5 text-sm font-medium transition-all"
                 >
                   <FileText className="h-3.5 w-3.5" />
-                  Resources
+                  {t("learning.tab.resources")}
                   {(course.materials.length > 0 || (activeTopic && activeTopic.materials.length > 0)) && (
                     <Badge variant="outline" className="ml-0.5 text-[10px] px-1.5 py-0 h-4 border-border text-muted-foreground">
                       {course.materials.length + (activeTopic?.materials.length || 0)}
@@ -452,7 +454,7 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
                       </h3>
                       {activeTopic && (
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          Topic: {activeTopic.title}
+                          {t("learning.topic")} {activeTopic.title}
                         </p>
                       )}
                     </div>
@@ -464,20 +466,20 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
                     <div className="flex items-center gap-3 pt-2 border-t border-border">
                       {activeVideo.progress?.isCompleted ? (
                         <Badge className="bg-success/15 text-success border-transparent gap-1">
-                          <CheckCircle2 className="h-3 w-3" /> Completed
+                          <CheckCircle2 className="h-3 w-3" /> {t("common.completed")}
                         </Badge>
                       ) : activeVideo.progress?.lastPosition ? (
                         <Badge className="bg-warning/15 text-warning border-transparent gap-1">
-                          <Clock className="h-3 w-3" /> In Progress
+                          <Clock className="h-3 w-3" /> {t("common.inProgress")}
                         </Badge>
                       ) : (
                         <Badge variant="outline" className="text-muted-foreground gap-1">
-                          <PlayCircle className="h-3 w-3" /> Not Started
+                          <PlayCircle className="h-3 w-3" /> {t("common.notStarted")}
                         </Badge>
                       )}
                       {activeVideo.duration > 0 && (
                         <span className="text-xs text-muted-foreground">
-                          Duration: {formatVideoDuration(activeVideo.duration)}
+                          {t("common.duration")}: {formatVideoDuration(activeVideo.duration)}
                         </span>
                       )}
                     </div>
@@ -515,7 +517,7 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
                 {activeTopic && activeTopic.materials.length > 0 && (
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                      Topic Materials · {activeTopic.title}
+                      {t("learning.topicMaterialsLabel")} · {activeTopic.title}
                     </p>
                     <ul className="space-y-2">
                       {activeTopic.materials.map((m) => (
@@ -527,7 +529,7 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
                 {course.materials.length > 0 && (
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                      Course Materials
+                      {t("learning.courseMaterials")}
                     </p>
                     <ul className="space-y-2">
                       {course.materials.map((m) => (
@@ -541,9 +543,9 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground mb-2">
                       <FileText className="h-5 w-5" />
                     </div>
-                    <p className="text-sm font-medium text-foreground">No resources available</p>
+                    <p className="text-sm font-medium text-foreground">{t("learning.noResources")}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Supplementary materials will appear here when provided by the university.
+                      {t("learning.noResourcesDesc")}
                     </p>
                   </div>
                 )}
@@ -559,9 +561,9 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
           <CardHeader className="border-b border-border pb-4">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-heading text-sm font-semibold text-foreground">Course Content</p>
+                <p className="font-heading text-sm font-semibold text-foreground">{t("courses.courseContent")}</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {course.topics.length} topic{course.topics.length > 1 ? "s" : ""} · {course.courseCompletion.totalVideos} lessons
+                  {course.topics.length} {t("common.topics")} · {course.courseCompletion.totalVideos} {t("courses.lessons")}
                 </p>
               </div>
               {/* Circular progress ring */}
@@ -585,7 +587,7 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
           <CardContent className="p-0 overflow-y-auto max-h-[55vh] lg:max-h-[calc(100vh-20rem)] scrollbar-thin">
             {course.topics.length === 0 ? (
               <p className="text-sm text-muted-foreground p-6 text-center">
-                No topics published yet.
+                {t("learning.noTopicsPublished")}
               </p>
             ) : (
               <Accordion
@@ -617,7 +619,7 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
                               {topic.title}
                             </p>
                             <p className="text-[10px] text-muted-foreground mt-0.5">
-                              {completedInTopic}/{topic.videos.length} lessons
+                              {completedInTopic}/{topic.videos.length} {t("courses.lessons")}
                             </p>
                           </div>
                         </div>
@@ -681,14 +683,14 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
             <div className="flex items-center justify-between text-[11px]">
               <span className="flex items-center gap-1.5 text-muted-foreground">
                 <PlayCircle className="h-3 w-3 text-accent" />
-                Videos Watched
+                {t("learning.videosWatched")}
               </span>
               <span className="font-semibold text-foreground">{course.courseCompletion.completedVideos}</span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="flex items-center gap-1.5 text-muted-foreground">
                 <CheckCircle2 className="h-3 w-3 text-success" />
-                Topics Completed
+                {t("learning.topicsCompleted")}
               </span>
               <span className="font-semibold text-foreground">{course.courseCompletion.completedTopics}/{course.courseCompletion.totalTopics}</span>
             </div>
