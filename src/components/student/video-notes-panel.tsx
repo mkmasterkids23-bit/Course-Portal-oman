@@ -60,13 +60,13 @@ export function VideoNotesPanel({
   courseId: string;
   topicId: string | null;
   videoId: string;
-  videoTitle: string;
+  videoTitle?: string;
   /** Returns the current playback position in seconds, or 0 if unknown. */
-  getCurrentTime: () => number;
+  getCurrentTime?: () => number;
   /** Seeks the active video element to the given position in seconds. */
-  seekTo: (seconds: number) => void;
+  seekTo?: (seconds: number) => void;
   /** False for YouTube videos (no way to read currentTime). */
-  canCaptureTimestamp: boolean;
+  canCaptureTimestamp?: boolean;
 }) {
   const { data, loading, refetch, setData } = useApiFetch<NotesResponse>(
     `/api/student/notes?courseId=${encodeURIComponent(courseId)}`
@@ -83,7 +83,7 @@ export function VideoNotesPanel({
   const [editContent, setEditContent] = useState("");
 
   function captureTimestamp() {
-    const t = getCurrentTime();
+    const t = getCurrentTime?.() ?? 0;
     setCapturedTs(Math.max(0, Math.floor(t)));
   }
 
@@ -98,7 +98,7 @@ export function VideoNotesPanel({
     }
     setSaving(true);
     try {
-      const ts = capturedTs ?? (canCaptureTimestamp ? Math.max(0, Math.floor(getCurrentTime())) : null);
+      const ts = capturedTs ?? (canCaptureTimestamp ? Math.max(0, Math.floor(getCurrentTime?.() ?? 0)) : null);
       const res = await apiPost<{ note: NoteItem }>("/api/student/notes", {
         courseId,
         topicId,
@@ -244,7 +244,7 @@ export function VideoNotesPanel({
               <Textarea
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder={`Write a note about “${truncate(videoTitle, 40)}”…`}
+                placeholder={`Write a note about “${truncate(videoTitle || "this lesson", 40)}”…`}
                 rows={2}
                 className="resize-y bg-card"
               />
@@ -310,7 +310,7 @@ export function VideoNotesPanel({
                         <div className="flex items-start justify-between gap-2 mb-1.5">
                           {n.videoTimestamp !== null ? (
                             <button
-                              onClick={() => seekTo(n.videoTimestamp!)}
+                              onClick={() => seekTo?.(n.videoTimestamp!)}
                               className="inline-flex items-center gap-1 rounded-md border border-accent/30 bg-accent/5 px-2 py-0.5 text-[11px] font-medium text-accent hover:bg-accent/10 transition-colors"
                               title="Jump to this moment in the video"
                             >

@@ -493,7 +493,10 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
                   videoId={activeVideo.id}
                   courseId={course.id}
                   topicId={activeTopic?.id || null}
-                  videoRef={null}
+                  videoTitle={activeVideo.title}
+                  canCaptureTimestamp={false}
+                  getCurrentTime={() => 0}
+                  seekTo={() => {}}
                 />
               )}
             </TabsContent>
