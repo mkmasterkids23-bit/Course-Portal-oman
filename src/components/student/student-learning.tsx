@@ -24,7 +24,7 @@ import {
   ArrowLeft, PlayCircle, CheckCircle2, Lock, FileText, Download, Link as LinkIcon,
   Upload, Award, ClipboardList, AlertTriangle, Clock, Video as VideoIcon, Info,
   Maximize2, Minimize2, ChevronLeft, ChevronRight, BookOpen, Sparkles,
-  HelpCircle, XCircle, RefreshCw, ListChecks, MessageSquare,
+  HelpCircle, XCircle, RefreshCw, ListChecks, MessageSquare, StickyNote,
 } from "lucide-react";
 import { formatDateTime } from "@/types";
 
@@ -310,224 +310,65 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
   }
 
   return (
-    <div className="space-y-5">
-      {/* ─── Premium header ─── */}
-      <div className="rounded-xl border border-border bg-card p-4 md:p-5 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            <Button variant="outline" size="icon" onClick={onBack} className="shrink-0 h-9 w-9" aria-label="Back to courses">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 mb-0.5">
-                {course.category && (
-                  <Badge variant="outline" className="text-[11px] border-border text-muted-foreground">
-                    {course.category}
-                  </Badge>
-                )}
-                <Badge
-                  className={
-                    course.accessType === "FREE"
-                      ? "bg-success/15 text-success border-transparent"
-                      : "bg-primary text-primary-foreground border-transparent"
-                  }
-                >
-                  {course.accessType === "FREE" ? "Free" : "Paid"}
+    <div className="space-y-4 animate-page-in">
+      {/* ─── Compact breadcrumb header ─── */}
+      <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3 shadow-sm">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0 h-8 w-8" aria-label="Back to courses">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <button onClick={onBack} className="hover:text-foreground transition-colors">My Courses</button>
+              <span>/</span>
+              <span className="truncate">{course.title}</span>
+              {activeVideo && (
+                <>
+                  <span>/</span>
+                  <span className="truncate text-foreground font-medium">{activeVideo.title}</span>
+                </>
+              )}
+            </div>
+            <div className="flex items-center gap-2 mt-0.5">
+              {course.category && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-border text-muted-foreground">
+                  {course.category}
                 </Badge>
-              </div>
-              <h1 className="font-heading text-lg md:text-xl font-semibold text-foreground truncate">
-                {course.title}
-              </h1>
+              )}
+              <Badge
+                className={
+                  course.accessType === "FREE"
+                    ? "bg-success/15 text-success border-transparent text-[10px] px-1.5 py-0 h-4"
+                    : "bg-primary text-primary-foreground border-transparent text-[10px] px-1.5 py-0 h-4"
+                }
+              >
+                {course.accessType === "FREE" ? "Free" : "Paid"}
+              </Badge>
             </div>
           </div>
-          <div className="flex items-center gap-4 shrink-0">
-            <div className="hidden sm:flex flex-col items-end gap-0.5">
-              <span className="text-xs font-medium text-foreground">
-                {course.courseCompletion.completedVideos}/{course.courseCompletion.totalVideos} lessons
-              </span>
-              <span className="text-[11px] text-muted-foreground">completed</span>
-            </div>
-            <div className="flex items-center gap-2.5 min-w-[160px]">
-              <Progress
-                value={course.courseCompletion.percent}
-                className={`h-2 w-32 bg-muted ${course.courseCompletion.allCompleted ? "[&_[data-slot=progress-indicator]]:bg-success" : "[&_[data-slot=progress-indicator]]:bg-accent"}`}
-              />
-              <span className="text-sm font-semibold text-foreground tabular-nums">{course.courseCompletion.percent}%</span>
-            </div>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="hidden sm:flex flex-col items-end">
+            <span className="text-xs font-medium text-foreground">
+              {course.courseCompletion.completedVideos}/{course.courseCompletion.totalVideos} lessons
+            </span>
+            <span className="text-[10px] text-muted-foreground">completed</span>
+          </div>
+          <div className="flex items-center gap-2 min-w-[120px]">
+            <Progress
+              value={course.courseCompletion.percent}
+              className={`h-1.5 w-24 bg-muted ${course.courseCompletion.allCompleted ? "[&_[data-slot=progress-indicator]]:bg-success" : "[&_[data-slot=progress-indicator]]:bg-accent"}`}
+            />
+            <span className="text-xs font-semibold text-foreground tabular-nums">{course.courseCompletion.percent}%</span>
           </div>
         </div>
       </div>
 
-      {/* ─── Layout: LEFT sidebar + RIGHT main content ─── */}
-      <div className="grid gap-5 lg:grid-cols-[300px_1fr]">
-        {/* ─── LEFT: Course Lessons Sidebar ─── */}
-        <div className="space-y-4">
-        <Card className="lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-6rem)] flex flex-col shadow-sm overflow-hidden">
-          {/* Sidebar header with circular progress */}
-          <CardHeader className="border-b border-border bg-gradient-to-br from-soft-sage/60 to-card">
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-accent" />
-                  Course Lessons
-                </CardTitle>
-                <CardDescription className="mt-1 text-xs">
-                  {course.topics.length} topic{course.topics.length > 1 ? "s" : ""} · {course.courseCompletion.totalVideos} lessons
-                </CardDescription>
-              </div>
-              {/* Circular progress ring */}
-              <div className="relative shrink-0">
-                <svg className="h-14 w-14 -rotate-90" viewBox="0 0 56 56">
-                  <circle cx="28" cy="28" r="24" fill="none" stroke="currentColor" strokeWidth="4" className="text-muted" />
-                  <circle
-                    cx="28" cy="28" r="24" fill="none"
-                    stroke="currentColor" strokeWidth="4" strokeLinecap="round"
-                    className={course.courseCompletion.allCompleted ? "text-success" : "text-accent"}
-                    strokeDasharray={`${(course.courseCompletion.percent / 100) * 150.8} 150.8`}
-                    style={{ transition: "stroke-dasharray 0.6s cubic-bezier(0.4,0,0.2,1)" }}
-                  />
-                </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-foreground">
-                  {course.courseCompletion.percent}%
-                </span>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0 overflow-y-auto max-h-[60vh] lg:max-h-[calc(100vh-22rem)] scrollbar-thin">
-            {course.topics.length === 0 ? (
-              <p className="text-sm text-muted-foreground p-6 text-center">
-                No topics published yet.
-              </p>
-            ) : (
-              <Accordion
-                type="multiple"
-                defaultValue={[course.topics[0]?.id].filter(Boolean) as string[]}
-                className="px-3 py-2"
-              >
-                {course.topics.map((topic, topicIdx) => {
-                  const completedInTopic = topic.videos.filter(
-                    (v) => v.progress?.isCompleted
-                  ).length;
-                  const isActiveTopic = topic.id === activeTopic?.id;
-                  const topicComplete = completedInTopic === topic.videos.length && topic.videos.length > 0;
-                  return (
-                    <AccordionItem key={topic.id} value={topic.id} className="border-b border-border/60 last:border-b-0">
-                      <AccordionTrigger className="hover:no-underline px-2 py-3 rounded-lg hover:bg-muted/40 transition-colors">
-                        <div className="flex items-center gap-2.5 flex-1 min-w-0 text-left">
-                          <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-semibold ${
-                            topicComplete
-                              ? "bg-success/15 text-success"
-                              : isActiveTopic
-                                ? "bg-accent/15 text-accent"
-                                : "bg-muted text-muted-foreground"
-                          }`}>
-                            {topicComplete ? <CheckCircle2 className="h-3.5 w-3.5" /> : topicIdx + 1}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-semibold truncate ${isActiveTopic ? "text-accent" : "text-foreground"}`}>
-                              {topic.title}
-                            </p>
-                            <p className="text-[11px] text-muted-foreground mt-0.5">
-                              {completedInTopic}/{topic.videos.length} lessons
-                            </p>
-                          </div>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pb-2 pt-1">
-                        <ul className="space-y-0.5 ml-9">
-                          {topic.videos.map((video, videoIdx) => {
-                            const isActive = video.id === activeVideo?.id;
-                            const completed = video.progress?.isCompleted;
-                            return (
-                              <li key={video.id} className="relative">
-                                {videoIdx < topic.videos.length - 1 && (
-                                  <span className="absolute left-3 top-7 bottom-0 w-px bg-border" aria-hidden />
-                                )}
-                                <button
-                                  onClick={() => setUserSelectedVideoId(video.id)}
-                                  className={`group flex w-full items-start gap-2.5 rounded-lg px-2 py-2 text-left text-sm transition-all duration-200 ${
-                                    isActive
-                                      ? "bg-soft-sage text-primary"
-                                      : "text-foreground hover:bg-muted/60"
-                                  }`}
-                                >
-                                  <span className="relative z-10 mt-0.5 shrink-0 flex h-5 w-5 items-center justify-center rounded-full bg-card ring-1 ring-border">
-                                    {completed ? (
-                                      <CheckCircle2 className="h-4 w-4 text-success" />
-                                    ) : isActive ? (
-                                      <PlayCircle className="h-4 w-4 text-primary" />
-                                    ) : (
-                                      <PlayCircle className="h-4 w-4 text-muted-foreground/70 group-hover:text-foreground" />
-                                    )}
-                                  </span>
-                                  <span className="min-w-0 flex-1">
-                                    <span className={`flex items-center gap-1.5 truncate ${isActive ? "font-semibold text-primary" : "font-medium text-foreground group-hover:text-accent"}`}>
-                                      <span className="truncate">{video.title}</span>
-                                      {video.hasQuestions && (
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <span className={cn(
-                                              "inline-flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px] font-semibold shrink-0",
-                                              video.assessmentPassed === true
-                                                ? "bg-success/15 text-success"
-                                                : video.assessmentPassed === false
-                                                  ? "bg-destructive/10 text-destructive"
-                                                  : "bg-accent/10 text-accent"
-                                            )}>
-                                              <HelpCircle className="h-3 w-3" />
-                                              {video.questionCount}
-                                            </span>
-                                          </TooltipTrigger>
-                                          <TooltipContent side="right">
-                                            {video.assessmentPassed === true
-                                              ? "Assessment passed"
-                                              : video.assessmentPassed === false
-                                                ? "Assessment not passed — retake needed"
-                                                : `${video.questionCount} question${video.questionCount > 1 ? "s" : ""} in this video`}
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      )}
-                                    </span>
-                                    {video.duration > 0 && (
-                                      <span className="block text-[11px] text-muted-foreground mt-0.5">
-                                        {formatVideoDuration(video.duration)}
-                                      </span>
-                                    )}
-                                  </span>
-                                </button>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </AccordionContent>
-                    </AccordionItem>
-                  );
-                })}
-              </Accordion>
-            )}
-          </CardContent>
-          {/* Stats footer */}
-          <div className="border-t border-border p-4 space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="flex items-center gap-1.5 text-muted-foreground">
-                <PlayCircle className="h-3.5 w-3.5 text-accent" />
-                Videos Watched
-              </span>
-              <span className="font-semibold text-foreground">{course.courseCompletion.completedVideos}</span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="flex items-center gap-1.5 text-muted-foreground">
-                <CheckCircle2 className="h-3.5 w-3.5 text-success" />
-                Topics Completed
-              </span>
-              <span className="font-semibold text-foreground">{course.courseCompletion.completedTopics}/{course.courseCompletion.totalTopics}</span>
-            </div>
-          </div>
-        </Card>
-        </div>
-
-        {/* ─── RIGHT: Main content area ─── */}
-        <div className="space-y-5 min-w-0">
+      {/* ─── Main Layout: LEFT content + RIGHT curriculum ─── */}
+      <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
+        {/* ─── LEFT: Video + Tabs ─── */}
+        <div className="space-y-4 min-w-0">
+          {/* Video player */}
           {activeVideo ? (
             <VideoPlayer
               key={activeVideo.id}
@@ -549,36 +390,9 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
             />
           )}
 
-          {/* Topic materials */}
-          {activeTopic && activeTopic.materials.length > 0 && (
-            <Card className="shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10 text-accent">
-                    <FileText className="h-4 w-4" />
-                  </span>
-                  Materials · {activeTopic.title}
-                </CardTitle>
-                <CardDescription>Reference documents for this topic</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {activeTopic.materials.map((m) => (
-                    <MaterialRow key={m.id} material={m} />
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Assignment panel — completely hidden until ALL videos are completed.
-              Before completion, show a locked placeholder that does NOT reveal
-              the assignment title, description, or instructions. */}
+          {/* Assignment panel — hidden until all videos completed */}
           {course.assignment && course.courseCompletion.allCompleted ? (
-            <AssignmentPanel
-              course={course}
-              onSubmitted={handleSubmissionSuccess}
-            />
+            <AssignmentPanel course={course} onSubmitted={handleSubmissionSuccess} />
           ) : course.assignment ? (
             <LockedAssignmentCard
               completedVideos={course.courseCompletion.completedVideos}
@@ -587,83 +401,296 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
             />
           ) : null}
 
-          {/* ─── Materials & Discussions tabs ───
-              Two-pane area below the assignment / topic materials.
-              "Materials" lists the course-level reference docs (hidden
-              entirely if the course has none); "Discussions" hosts the
-              per-course discussion threads. The default tab honours a
-              `?tab=discussions` query param (used by the global
-              Discussions view to deep-link into a specific thread). */}
-          <Tabs
-            defaultValue={discussionsTabDefault ? "discussions" : "materials"}
-            className="gap-3"
-          >
-            <TabsList>
-              <TabsTrigger value="materials" className="gap-1.5">
-                <FileText className="h-3.5 w-3.5" />
-                Materials
-                {course.materials.length > 0 && (
-                  <Badge
-                    variant="outline"
-                    className="ml-1 text-[10px] px-1.5 py-0 h-4 border-border text-muted-foreground"
-                  >
-                    {course.materials.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="discussions" className="gap-1.5">
-                <MessageSquare className="h-3.5 w-3.5" />
-                Discussions
-              </TabsTrigger>
-            </TabsList>
+          {/* ─── 4-Tab Interface below video ─── */}
+          <Tabs defaultValue="overview" className="gap-0">
+            <div className="border-b border-border">
+              <TabsList className="bg-transparent border-0 p-0 h-auto gap-0">
+                <TabsTrigger
+                  value="overview"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent gap-1.5 px-4 py-2.5 text-sm font-medium transition-all"
+                >
+                  <Info className="h-3.5 w-3.5" />
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger
+                  value="notes"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent gap-1.5 px-4 py-2.5 text-sm font-medium transition-all"
+                >
+                  <StickyNote className="h-3.5 w-3.5" />
+                  My Notes
+                </TabsTrigger>
+                <TabsTrigger
+                  value="discussions"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent gap-1.5 px-4 py-2.5 text-sm font-medium transition-all"
+                >
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  Discussion
+                </TabsTrigger>
+                <TabsTrigger
+                  value="resources"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent gap-1.5 px-4 py-2.5 text-sm font-medium transition-all"
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  Resources
+                  {(course.materials.length > 0 || (activeTopic && activeTopic.materials.length > 0)) && (
+                    <Badge variant="outline" className="ml-0.5 text-[10px] px-1.5 py-0 h-4 border-border text-muted-foreground">
+                      {course.materials.length + (activeTopic?.materials.length || 0)}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-            <TabsContent value="materials" className="mt-0">
-              {course.materials.length > 0 ? (
-                <Card className="shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10 text-accent">
-                        <FileText className="h-4 w-4" />
-                      </span>
-                      All Course Materials
-                    </CardTitle>
-                    <CardDescription>
-                      {course.materials.length} document{course.materials.length > 1 ? "s" : ""} attached to this course
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {course.materials.map((m) => (
-                        <MaterialRow key={m.id} material={m} />
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              ) : (
-                <Card className="shadow-sm border-dashed">
-                  <CardContent className="py-10 text-center">
-                    <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                      <FileText className="h-5 w-5" />
+            {/* Tab 1: Overview */}
+            <TabsContent value="overview" className="mt-0 p-4">
+              <div className="space-y-3">
+                {activeVideo && (
+                  <>
+                    <div>
+                      <h3 className="font-heading text-base font-semibold text-foreground">
+                        {activeVideo.title}
+                      </h3>
+                      {activeTopic && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Topic: {activeTopic.title}
+                        </p>
+                      )}
                     </div>
-                    <p className="font-heading text-sm font-semibold text-foreground">
-                      No course-level materials
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Reference documents attached to topics appear under the
-                      video player while you watch.
-                    </p>
-                  </CardContent>
-                </Card>
+                    {activeVideo.description && (
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {activeVideo.description}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-3 pt-2 border-t border-border">
+                      {activeVideo.progress?.isCompleted ? (
+                        <Badge className="bg-success/15 text-success border-transparent gap-1">
+                          <CheckCircle2 className="h-3 w-3" /> Completed
+                        </Badge>
+                      ) : activeVideo.progress?.lastPosition ? (
+                        <Badge className="bg-warning/15 text-warning border-transparent gap-1">
+                          <Clock className="h-3 w-3" /> In Progress
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-muted-foreground gap-1">
+                          <PlayCircle className="h-3 w-3" /> Not Started
+                        </Badge>
+                      )}
+                      {activeVideo.duration > 0 && (
+                        <span className="text-xs text-muted-foreground">
+                          Duration: {formatVideoDuration(activeVideo.duration)}
+                        </span>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            </TabsContent>
+
+            {/* Tab 2: My Notes */}
+            <TabsContent value="notes" className="mt-0 p-4">
+              {activeVideo && (
+                <VideoNotesPanel
+                  videoId={activeVideo.id}
+                  courseId={course.id}
+                  topicId={activeTopic?.id || null}
+                  videoRef={null}
+                />
               )}
             </TabsContent>
 
+            {/* Tab 3: Discussion */}
             <TabsContent value="discussions" className="mt-0">
               <CourseDiscussionsPanel
                 courseId={course.id}
                 highlightDiscussionId={highlightDiscussionId}
               />
             </TabsContent>
+
+            {/* Tab 4: Resources */}
+            <TabsContent value="resources" className="mt-0 p-4">
+              <div className="space-y-3">
+                {activeTopic && activeTopic.materials.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                      Topic Materials · {activeTopic.title}
+                    </p>
+                    <ul className="space-y-2">
+                      {activeTopic.materials.map((m) => (
+                        <MaterialRow key={m.id} material={m} />
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {course.materials.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                      Course Materials
+                    </p>
+                    <ul className="space-y-2">
+                      {course.materials.map((m) => (
+                        <MaterialRow key={m.id} material={m} />
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {course.materials.length === 0 && (!activeTopic || activeTopic.materials.length === 0) && (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground mb-2">
+                      <FileText className="h-5 w-5" />
+                    </div>
+                    <p className="text-sm font-medium text-foreground">No resources available</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Supplementary materials will appear here when provided by the university.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
           </Tabs>
+        </div>
+
+        {/* ─── RIGHT: Course Curriculum Panel ─── */}
+        <div className="space-y-4">
+        <Card className="lg:sticky lg:top-[5.5rem] lg:self-start lg:max-h-[calc(100vh-7rem)] flex flex-col shadow-sm overflow-hidden">
+          {/* Panel header with circular progress */}
+          <CardHeader className="border-b border-border pb-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-heading text-sm font-semibold text-foreground">Course Content</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {course.topics.length} topic{course.topics.length > 1 ? "s" : ""} · {course.courseCompletion.totalVideos} lessons
+                </p>
+              </div>
+              {/* Circular progress ring */}
+              <div className="relative shrink-0">
+                <svg className="h-12 w-12 -rotate-90" viewBox="0 0 48 48">
+                  <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" strokeWidth="3.5" className="text-muted" />
+                  <circle
+                    cx="24" cy="24" r="20" fill="none"
+                    stroke="currentColor" strokeWidth="3.5" strokeLinecap="round"
+                    className={course.courseCompletion.allCompleted ? "text-success" : "text-accent"}
+                    strokeDasharray={`${(course.courseCompletion.percent / 100) * 125.66} 125.66`}
+                    style={{ transition: "stroke-dasharray 0.6s cubic-bezier(0.4,0,0.2,1)" }}
+                  />
+                </svg>
+                <span className="absolute inset-0 flex items-center justify-center text-[11px] font-bold text-foreground">
+                  {course.courseCompletion.percent}%
+                </span>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0 overflow-y-auto max-h-[55vh] lg:max-h-[calc(100vh-20rem)] scrollbar-thin">
+            {course.topics.length === 0 ? (
+              <p className="text-sm text-muted-foreground p-6 text-center">
+                No topics published yet.
+              </p>
+            ) : (
+              <Accordion
+                type="multiple"
+                defaultValue={[course.topics[0]?.id].filter(Boolean) as string[]}
+                className="px-2 py-1"
+              >
+                {course.topics.map((topic, topicIdx) => {
+                  const completedInTopic = topic.videos.filter(
+                    (v) => v.progress?.isCompleted
+                  ).length;
+                  const isActiveTopic = topic.id === activeTopic?.id;
+                  const topicComplete = completedInTopic === topic.videos.length && topic.videos.length > 0;
+                  return (
+                    <AccordionItem key={topic.id} value={topic.id} className="border-b border-border/50 last:border-b-0">
+                      <AccordionTrigger className="hover:no-underline px-2 py-2.5 rounded-md hover:bg-muted/30 transition-colors text-sm">
+                        <div className="flex items-center gap-2 flex-1 min-w-0 text-left">
+                          <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-semibold ${
+                            topicComplete
+                              ? "bg-success/15 text-success"
+                              : isActiveTopic
+                                ? "bg-accent/15 text-accent"
+                                : "bg-muted text-muted-foreground"
+                          }`}>
+                            {topicComplete ? <CheckCircle2 className="h-3 w-3" /> : String(topicIdx + 1).padStart(2, "0")}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-xs font-semibold truncate ${isActiveTopic ? "text-accent" : "text-foreground"}`}>
+                              {topic.title}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                              {completedInTopic}/{topic.videos.length} lessons
+                            </p>
+                          </div>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="pb-1.5 pt-0.5">
+                        <ul className="space-y-0.5 ml-8">
+                          {topic.videos.map((video) => {
+                            const isActive = video.id === activeVideo?.id;
+                            const completed = video.progress?.isCompleted;
+                            return (
+                              <li key={video.id}>
+                                <button
+                                  onClick={() => setUserSelectedVideoId(video.id)}
+                                  className={`group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-all duration-150 ${
+                                    isActive
+                                      ? "bg-soft-sage text-primary"
+                                      : "text-foreground hover:bg-muted/40"
+                                  }`}
+                                >
+                                  <span className="shrink-0 flex h-4 w-4 items-center justify-center">
+                                    {completed ? (
+                                      <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                                    ) : isActive ? (
+                                      <PlayCircle className="h-3.5 w-3.5 text-primary" />
+                                    ) : (
+                                      <PlayCircle className="h-3.5 w-3.5 text-muted-foreground/50 group-hover:text-foreground" />
+                                    )}
+                                  </span>
+                                  <span className="min-w-0 flex-1">
+                                    <span className={`flex items-center gap-1 truncate ${isActive ? "font-semibold text-primary" : "font-medium text-foreground group-hover:text-accent"}`}>
+                                      <span className="truncate">{video.title}</span>
+                                      {video.hasQuestions && (
+                                        <span className={cn(
+                                          "inline-flex items-center gap-0.5 rounded px-1 py-0.5 text-[9px] font-semibold shrink-0",
+                                          video.assessmentPassed === true
+                                            ? "bg-success/15 text-success"
+                                            : video.assessmentPassed === false
+                                              ? "bg-destructive/10 text-destructive"
+                                              : "bg-accent/10 text-accent"
+                                        )}>
+                                          <HelpCircle className="h-2.5 w-2.5" />
+                                          {video.questionCount}
+                                        </span>
+                                      )}
+                                    </span>
+                                  </span>
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
+            )}
+          </CardContent>
+          {/* Stats footer */}
+          <div className="border-t border-border p-3 space-y-1.5">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="flex items-center gap-1.5 text-muted-foreground">
+                <PlayCircle className="h-3 w-3 text-accent" />
+                Videos Watched
+              </span>
+              <span className="font-semibold text-foreground">{course.courseCompletion.completedVideos}</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="flex items-center gap-1.5 text-muted-foreground">
+                <CheckCircle2 className="h-3 w-3 text-success" />
+                Topics Completed
+              </span>
+              <span className="font-semibold text-foreground">{course.courseCompletion.completedTopics}/{course.courseCompletion.totalTopics}</span>
+            </div>
+          </div>
+        </Card>
         </div>
       </div>
     </div>
@@ -1491,35 +1518,6 @@ function VideoPlayer({
           )}
         </CardContent>
       </Card>
-
-      {/* ─── Inline notes panel ───
-          Lives directly below the compact video card so the student can
-          capture a thought the moment it occurs to them. The panel reads
-          the current playback position via the closures below (which close
-          over videoRef) and seeks the video when a note's timestamp is
-          clicked. For YouTube videos (where videoRef is null because we
-          render an iframe) we pass canCaptureTimestamp=false so the
-          capture button is disabled but the panel still works for
-          timestamp-less notes. */}
-      <VideoNotesPanel
-        courseId={courseId}
-        topicId={topicId}
-        videoId={video.id}
-        videoTitle={video.title}
-        canCaptureTimestamp={!isYouTube}
-        getCurrentTime={() => videoRef.current?.currentTime ?? 0}
-        seekTo={(t) => {
-          const el = videoRef.current;
-          if (!el) return;
-          try {
-            el.currentTime = t;
-            lastTimeRef.current = t;
-            // If the video is paused, nudge it to play so the user sees
-            // the moment they jumped to.
-            if (el.paused) void el.play().catch(() => {});
-          } catch {}
-        }}
-      />
     </>
   );
 }
