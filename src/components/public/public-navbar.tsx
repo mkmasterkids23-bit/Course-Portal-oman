@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Menu, X, LogIn, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LanguageSwitcher } from "@/components/shared/language-switcher";
 import { BrandLogo } from "@/components/shared/brand-logo";
 import { useAppStore } from "@/stores/app-store";
 import { cn } from "@/lib/utils";
@@ -70,6 +71,7 @@ export function PublicNavbar() {
         </nav>
 
         <div className="hidden md:flex items-center gap-2">
+          <LanguageSwitcher />
           <Button
             variant="ghost"
             onClick={() => navigate(["login"])}

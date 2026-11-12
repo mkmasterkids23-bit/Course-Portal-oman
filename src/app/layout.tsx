@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { Inter, Manrope } from "next/font/google";
+import { Inter, Manrope, Noto_Kufi_Arabic } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { DirectionManager } from "@/components/shared/direction-manager";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -13,6 +14,13 @@ const manrope = Manrope({
   variable: "--font-manrope",
   subsets: ["latin"],
   display: "swap",
+});
+
+const notoKufiArabic = Noto_Kufi_Arabic({
+  variable: "--font-arabic",
+  subsets: ["arabic"],
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -48,8 +56,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${manrope.variable} font-sans antialiased bg-background text-foreground`}
+        className={`${inter.variable} ${manrope.variable} ${notoKufiArabic.variable} font-sans antialiased bg-background text-foreground`}
       >
+        <DirectionManager />
         {children}
         <Toaster />
       </body>

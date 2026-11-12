@@ -1,4 +1,5 @@
 "use client";
+import { LanguageSwitcher } from "@/components/shared/language-switcher";
 
 import { useAppStore } from "@/stores/app-store";
 import { Button } from "@/components/ui/button";
@@ -72,6 +73,7 @@ export function UniversityTopbar({ onToggleSidebar }: { onToggleSidebar: () => v
       </div>
 
       <div className="flex items-center gap-3">
+        <LanguageSwitcher />
         <div className="hidden items-center gap-1.5 rounded-full border border-primary/15 bg-soft-sage/60 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary shadow-sm transition-colors duration-200 sm:flex">
           <Building2 className="h-3 w-3" />
           <span className="max-w-[180px] truncate">{uniName}</span>

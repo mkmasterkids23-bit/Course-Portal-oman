@@ -1,4 +1,5 @@
 "use client";
+import { LanguageSwitcher } from "@/components/shared/language-switcher";
 
 import { useAppStore } from "@/stores/app-store";
 import { Button } from "@/components/ui/button";
@@ -67,6 +68,7 @@ export function AdminTopbar({ onToggleSidebar }: { onToggleSidebar: () => void }
       </div>
 
       <div className="flex items-center gap-3">
+        <LanguageSwitcher />
         <div className="hidden items-center gap-1.5 rounded-full border border-accent/25 bg-soft-sage px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary shadow-sm transition-colors duration-200 sm:flex">
           <Shield className="h-3 w-3" />
           <span>Administrator</span>

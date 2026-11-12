@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAppStore } from "@/stores/app-store";
 import { Button } from "@/components/ui/button";
+import { LanguageSwitcher } from "@/components/shared/language-switcher";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
@@ -81,14 +82,17 @@ export function RegisterPage() {
       {/* Top bar */}
       <div className="flex items-center justify-between p-4 md:px-6 lg:px-8">
         <BrandLogo onClick={() => navigate([""])} />
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate([""])}
-          className="gap-2 h-9 text-foreground hover:bg-soft-sage"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back to home
-        </Button>
+        <div className="flex items-center gap-2">
+          <LanguageSwitcher />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate([""])}
+            className="gap-2 h-9 text-foreground hover:bg-soft-sage"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to home
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-1 items-center justify-center px-4 pb-12">

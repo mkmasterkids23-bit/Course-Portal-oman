@@ -1,4 +1,5 @@
 "use client";
+import { LanguageSwitcher } from "@/components/shared/language-switcher";
 
 import { useAppStore } from "@/stores/app-store";
 import { Button } from "@/components/ui/button";
@@ -72,6 +73,7 @@ export function StudentTopbar({ onToggleSidebar }: { onToggleSidebar: () => void
       </div>
 
       <div className="flex items-center gap-3">
+        <LanguageSwitcher />
         {/* Accent "Student" badge */}
         <div className="hidden items-center gap-1.5 rounded-full border border-accent/20 bg-gradient-to-r from-accent/10 to-accent/5 px-3 py-1 text-xs font-semibold text-accent shadow-sm transition-colors duration-200 sm:flex">
           <GraduationCap className="h-3.5 w-3.5" />

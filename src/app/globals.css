@@ -300,3 +300,124 @@ input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
+/* ─── RTL (Arabic) Support ─── */
+
+/* Arabic font activation */
+.font-arabic-active {
+  font-family: var(--font-arabic), 'Noto Kufi Arabic', sans-serif !important;
+}
+.font-arabic-active h1, .font-arabic-active h2, .font-arabic-active h3,
+.font-arabic-active h4, .font-arabic-active h5, .font-arabic-active h6 {
+  font-family: var(--font-arabic), 'Noto Kufi Arabic', sans-serif !important;
+}
+
+/* RTL direction utilities */
+[dir="rtl"] {
+  text-align: right;
+}
+
+/* Mirror directional icons in RTL */
+[dir="rtl"] .rtl-mirror {
+  transform: scaleX(-1);
+}
+
+/* Flip sidebar layout for RTL */
+[dir="rtl"] .lg\:pl-64 {
+  padding-left: 0 !important;
+  padding-right: 16rem !important;
+}
+[dir="rtl"] .fixed.inset-y-0.left-0 {
+  left: auto !important;
+  right: 0 !important;
+}
+
+/* Fix accordion chevron direction in RTL */
+[dir="rtl"] [data-state="open"] > [data-accordion-trigger] > svg {
+  transform: rotate(90deg);
+}
+
+/* Fix breadcrumb separator direction */
+[dir="rtl"] .breadcrumb-sep {
+  transform: scaleX(-1);
+}
+
+/* Ensure LTR for URLs, emails, code blocks */
+.ltr-isolate {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* Fix dropdown menu alignment in RTL */
+[dir="rtl"] [data-side="bottom"] {
+  text-align: right;
+}
+
+/* Fix table alignment */
+[dir="rtl"] table {
+  text-align: right;
+}
+[dir="rtl"] th {
+  text-align: right;
+}
+
+/* Fix progress bar direction */
+[dir="rtl"] [data-slot="progress-indicator"] {
+  margin-inline-start: auto;
+}
+
+/* Fix modal close button position */
+[dir="rtl"] [data-radix-dialog-close] {
+  right: auto !important;
+  left: 0.75rem !important;
+}
+
+/* Fix number input alignment */
+[dir="rtl"] input[type="number"] {
+  text-align: right;
+}
+
+/* Fix card text alignment */
+[dir="rtl"] .card,
+[dir="rtl"] [class*="bg-card"] {
+  text-align: right;
+}
+
+/* Fix form label alignment */
+[dir="rtl"] label {
+  text-align: right;
+}
+
+/* Fix flex row reversal for navigation in RTL */
+[dir="rtl"] .rtl-row-reverse {
+  flex-direction: row-reverse;
+}
+
+/* Fix back/forward button icons */
+[dir="rtl"] .back-btn svg {
+  transform: scaleX(-1);
+}
+
+/* Fix sidebar nav indicator (left border → right border) */
+[dir="rtl"] .sidebar-active-indicator {
+  left: auto !important;
+  right: 0 !important;
+  border-left: none !important;
+  border-right: 2px solid var(--primary) !important;
+}
+
+/* Fix avatar/text ordering in RTL */
+[dir="rtl"] .flex.items-center.gap-2 > :first-child {
+  margin-inline-end: 0.5rem;
+}
+
+/* Fix ChevronDown rotation in RTL */
+[dir="rtl"] [data-state="open"] [data-radix-chevron] {
+  transform: rotate(-180deg);
+}
+
+/* Fix toast positioning */
+[dir="rtl"] [data-sonner-toaster] {
+  direction: rtl;
+}
+

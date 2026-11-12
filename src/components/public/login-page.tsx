@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAppStore } from "@/stores/app-store";
 import { Button } from "@/components/ui/button";
+import { LanguageSwitcher } from "@/components/shared/language-switcher";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
@@ -67,6 +68,7 @@ export function LoginPage() {
         >
           <ArrowLeft className="h-4 w-4" /> Back to home
         </Button>
+        <LanguageSwitcher />
       </div>
 
       <div className="flex flex-1 items-center justify-center px-4 py-10">
