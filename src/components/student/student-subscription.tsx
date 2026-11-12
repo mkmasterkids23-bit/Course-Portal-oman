@@ -248,7 +248,7 @@ export function StudentSubscription() {
 
       {/* Renew dialog (when active, lets student renew early) */}
       <Dialog open={renewOpen && !isExpired && !!sub} onOpenChange={(o) => !isExpired && setRenewOpen(o)}>
-        <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="animate-scale-in w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t("subscription.renewYourSubscription")}</DialogTitle>
             <DialogDescription>

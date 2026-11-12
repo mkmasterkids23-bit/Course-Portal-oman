@@ -1,0 +1,769 @@
+     1→     1→"use client";
+     2→     2→
+     3→     3→import { useAppStore } from "@/stores/app-store";
+     4→     4→import { Button } from "@/components/ui/button";
+     5→     5→import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+     6→     6→import { Badge } from "@/components/ui/badge";
+     7→     7→import { Progress } from "@/components/ui/progress";
+     8→     8→import { Skeleton } from "@/components/ui/skeleton";
+     9→     9→import { EmptyState } from "@/components/shared/empty-state";
+    10→    10→import { CourseThumbnail } from "@/components/shared/course-thumbnail";
+    11→    11→import { useApiFetch } from "@/hooks/use-api";
+    12→    12→import {
+    13→    13→  BookOpen, PlayCircle, ClipboardList, Award, TrendingUp, ArrowRight,
+    14→    14→  CalendarDays, CheckCircle2, Lock, Clock, Sparkles, GraduationCap, CreditCard,
+    15→    15→  History, Video, FileText, XCircle, AlertTriangle, ArrowUpRight,
+    16→    16→} from "lucide-react";
+    17→    17→import { formatDate, formatDateTime, formatPrice } from "@/types";
+    18→    18→import { useI18n } from "@/lib/i18n/store";
+    19→    19→
+    20→    20→interface SubscriptionInfo {
+    21→    21→  planId: string;
+    22→    22→  planName: string;
+    23→    23→  planPrice: number;
+    24→    24→  planCurrency: string;
+    25→    25→  planDuration: number;
+    26→    26→  planDurationUnit: string;
+    27→    27→  startDate: string;
+    28→    28→  expiryDate: string;
+    29→    29→  status: "ACTIVE" | "EXPIRED";
+    30→    30→  remainingDays: number;
+    31→    31→  elapsedPercent: number;
+    32→    32→}
+    33→    33→
+    34→    34→interface OverviewData {
+    35→    35→  welcomeName: string;
+    36→    36→  subscription: SubscriptionInfo | null;
+    37→    37→  learning: {
+    38→    38→    availableCourses: number;
+    39→    39→    inProgressCourses: number;
+    40→    40→    completedCourses: number;
+    41→    41→    overallPercent: number;
+    42→    42→  };
+    43→    43→  continueLearning: {
+    44→    44→    courseId: string;
+    45→    45→    courseTitle: string;
+    46→    46→    thumbnail: string | null;
+    47→    47→    lastVideoId: string;
+    48→    48→    lastVideoTitle: string;
+    49→    49→    percent: number;
+    50→    50→  }[];
+    51→    51→  upcomingAssignments: {
+    52→    52→    id: string;
+    53→    53→    courseId: string;
+    54→    54→    courseTitle: string;
+    55→    55→    assignmentTitle: string;
+    56→    56→    dueDate: string | null;
+    57→    57→    unlocked: boolean;
+    58→    58→    submitted: boolean;
+    59→    59→    coursePercent: number;
+    60→    60→  }[];
+    61→    61→  recentCertificates: {
+    62→    62→    id: string;
+    63→    63→    courseTitle: string;
+    64→    64→    issuedAt: string;
+    65→    65→    certificateNumber: string;
+    66→    66→  }[];
+    67→    67→  upcomingActivities?: UpcomingActivity[];
+    68→    68→}
+    69→    69→
+    70→    70→interface UpcomingActivity {
+    71→    71→  id: string;
+    72→    72→  type: "assignment" | "assessment";
+    73→    73→  courseId: string;
+    74→    74→  courseTitle: string;
+    75→    75→  title: string;
+    76→    76→  dueDate: string | null;
+    77→    77→  status: "available" | "locked" | "pending" | "submitted";
+    78→    78→  priority: "normal" | "overdue";
+    79→    79→}
+    80→    80→
+    81→    81→interface ActivityItem {
+    82→    82→  id: string;
+    83→    83→  type: "video_completed" | "assessment" | "submission" | "certificate";
+    84→    84→  courseId: string;
+    85→    85→  courseTitle: string;
+    86→    86→  title: string;
+    87→    87→  detail: string;
+    88→    88→  timestamp: string;
+    89→    89→  score?: number;
+    90→    90→  passed?: boolean;
+    91→    91→  certificateNumber?: string;
+    92→    92→}
+    93→    93→
+    94→    94→export function StudentOverview() {
+    95→    95→  const { t } = useI18n();
+    96→    96→  const navigate = useAppStore((s) => s.navigate);
+    97→    97→  const { data, loading, error } = useApiFetch<OverviewData>("/api/student/overview");
+    98→    98→  const { data: activityData, loading: activityLoading } = useApiFetch<{ activities: ActivityItem[] }>(
+    99→    99→    "/api/student/recent-activity"
+   100→   100→  );
+   101→   101→
+   102→   102→  if (loading) {
+   103→   103→    return (
+   104→   104→      <div className="space-y-6">
+   105→   105→        <Skeleton className="h-36 w-full rounded-xl" />
+   106→   106→        <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
+   107→   107→          {[1, 2, 3, 4].map((i) => (
+   108→   108→            <Skeleton key={i} className="h-28 rounded-xl" />
+   109→   109→          ))}
+   110→   110→        </div>
+   111→   111→        <Skeleton className="h-72 w-full rounded-xl" />
+   112→   112→        <div className="grid gap-4 lg:grid-cols-2">
+   113→   113→          <Skeleton className="h-64 rounded-xl" />
+   114→   114→          <Skeleton className="h-64 rounded-xl" />
+   115→   115→        </div>
+   116→   116→        <Skeleton className="h-72 w-full rounded-xl" />
+   117→   117→      </div>
+   118→   118→    );
+   119→   119→  }
+   120→   120→
+   121→   121→  if (error || !data) {
+   122→   122→    return (
+   123→   123→      <EmptyState
+   124→   124→        icon={<GraduationCap className="h-5 w-5" />}
+   125→   125→        title={t("student.couldntLoadOverview")}
+   126→   126→        description={error || t("student.pleaseTryAgain")}
+   127→   127→        action={<Button onClick={() => window.location.reload()}>{t("common.reload")}</Button>}
+   128→   128→      />
+   129→   129→    );
+   130→   130→  }
+   131→   131→
+   132→   132→  const today = new Date().toLocaleDateString("en-GB", {
+   133→   133→    weekday: "long", day: "2-digit", month: "long", year: "numeric",
+   134→   134→  });
+   135→   135→
+   136→   136→  return (
+   137→   137→    <div className="space-y-6">
+   138→   138→      {/* ─── Premium welcome header ─── */}
+   139→   139→      <Card className="relative overflow-hidden border-border shadow-sm">
+   140→   140→        {/* Deep forest gradient backdrop */}
+   141→   141→        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-accent/80" />
+   142→   142→        {/* Decorative sage glow */}
+   143→   143→        <div
+   144→   144→          className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full opacity-60"
+   145→   145→          style={{ background: "radial-gradient(circle, rgba(120,151,134,0.45), transparent 70%)" }}
+   146→   146→        />
+   147→   147→        <div
+   148→   148→          className="pointer-events-none absolute -right-10 bottom-0 h-40 w-40 rounded-full opacity-40"
+   149→   149→          style={{ background: "radial-gradient(circle, rgba(232,239,234,0.3), transparent 70%)" }}
+   150→   150→        />
+   151→   151→        <CardContent className="relative p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+   152→   152→          <div className="text-primary-foreground">
+   153→   153→            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-sm mb-3">
+   154→   154→              <CalendarDays className="h-3.5 w-3.5" />
+   155→   155→              <span>{today}</span>
+   156→   156→            </div>
+   157→   157→            <h1 className="font-heading text-2xl md:text-3xl font-bold text-white">
+   158→   158→              {t("dashboard.welcome")}, {data.welcomeName}
+   159→   159→            </h1>
+   160→   160→            <p className="text-white/80 mt-2 max-w-xl text-sm md:text-base">
+   161→   161→              {data.learning.inProgressCourses > 0
+   162→   162→                ? `${data.learning.inProgressCourses} ${t("dashboard.inProgressCourses")}.`
+   163→   163→                : data.learning.availableCourses > 0
+   164→   164→                  ? t("student.startCourseToSeeList")
+   165→   165→                  : t("student.subscribeToAccess")}
+   166→   166→            </p>
+   167→   167→          </div>
+   168→   168→          <Button
+   169→   169→            size="lg"
+   170→   170→            onClick={() => navigate(["student", "courses"])}
+   171→   171→            className="gap-2 self-start md:self-center bg-white text-primary hover:bg-white/90 shadow-md"
+   172→   172→          >
+   173→   173→            <BookOpen className="h-4 w-4" /> {t("student.browseCoursesShort")}
+   174→   174→          </Button>
+   175→   175→        </CardContent>
+   176→   176→      </Card>
+   177→   177→
+   178→   178→      {/* ─── Subscription status ─── */}
+   179→   179→      {data.subscription ? (
+   180→   180→        <Card className="overflow-hidden border-border shadow-sm transition-all duration-200 hover:shadow-md">
+   181→   181→          <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
+   182→   182→            <div>
+   183→   183→              <CardTitle className="text-base flex items-center gap-2">
+   184→   184→                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10 text-accent">
+   185→   185→                  <CreditCard className="h-4 w-4" />
+   186→   186→                </span>
+   187→   187→                {t("student.subscriptionStatus")}
+   188→   188→              </CardTitle>
+   189→   189→              <CardDescription className="mt-1.5">
+   190→   190→                {data.subscription.planName} · {formatPrice(data.subscription.planPrice, data.subscription.planCurrency)}
+   191→   191→              </CardDescription>
+   192→   192→            </div>
+   193→   193→            <Badge
+   194→   194→              className={
+   195→   195→                data.subscription.status === "ACTIVE"
+   196→   196→                  ? "bg-success/15 text-success border-transparent"
+   197→   197→                  : "bg-destructive/10 text-destructive border-transparent"
+   198→   198→              }
+   199→   199→            >
+   200→   200→              {data.subscription.status === "ACTIVE" ? t("common.active") : t("common.expired")}
+   201→   201→            </Badge>
+   202→   202→          </CardHeader>
+   203→   203→          <CardContent className="space-y-4">
+   204→   204→            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+   205→   205→              <span className="flex items-center gap-1.5 text-muted-foreground">
+   206→   206→                <Clock className="h-3.5 w-3.5 text-accent" />
+   207→   207→                {t("student.started")} {formatDate(data.subscription.startDate)}
+   208→   208→              </span>
+   209→   209→              <span className="flex items-center gap-1.5 text-muted-foreground">
+   210→   210→                <CalendarDays className="h-3.5 w-3.5 text-accent" />
+   211→   211→                {t("student.expires")} {formatDate(data.subscription.expiryDate)}
+   212→   212→              </span>
+   213→   213→              <span className="flex items-center gap-1.5 font-semibold text-foreground">
+   214→   214→                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent/10 text-accent text-[10px]">⏱</span>
+   215→   215→                {data.subscription.remainingDays} {t("subscription.daysLeft")}
+   216→   216→              </span>
+   217→   217→            </div>
+   218→   218→            <div>
+   219→   219→              <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
+   220→   220→                <span>{t("student.planUsage")}</span>
+   221→   221→                <span className="font-medium text-foreground">{Math.round(data.subscription.elapsedPercent)}%</span>
+   222→   222→              </div>
+   223→   223→              <Progress
+   224→   224→                value={data.subscription.elapsedPercent}
+   225→   225→                className="h-2 bg-muted [&_[data-slot=progress-indicator]]:bg-accent"
+   226→   226→              />
+   227→   227→            </div>
+   228→   228→            <Button variant="outline" size="sm" onClick={() => navigate(["student", "subscription"])} className="mt-1">
+   229→   229→              {t("student.manageSubscription")}
+   230→   230→            </Button>
+   231→   231→          </CardContent>
+   232→   232→        </Card>
+   233→   233→      ) : (
+   234→   234→        <Card className="border-accent/30 bg-gradient-to-br from-soft-sage to-card shadow-sm">
+   235→   235→          <CardContent className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+   236→   236→            <div className="flex items-start gap-3">
+   237→   237→              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent shrink-0 ring-1 ring-accent/20">
+   238→   238→                <Sparkles className="h-5 w-5" />
+   239→   239→              </div>
+   240→   240→              <div>
+   241→   241→                <p className="font-heading font-semibold text-foreground">{t("student.unlockPremiumCourses")}</p>
+   242→   242→                <p className="text-sm text-muted-foreground mt-0.5">
+   243→   243→                  {t("student.subscribeToAccess")}
+   244→   244→                </p>
+   245→   245→              </div>
+   246→   246→            </div>
+   247→   247→            <Button onClick={() => navigate(["student", "subscription"])} className="gap-2 shadow-sm">
+   248→   248→              {t("student.viewPlans")} <ArrowRight className="h-4 w-4" />
+   249→   249→            </Button>
+   250→   250→          </CardContent>
+   251→   251→        </Card>
+   252→   252→      )}
+   253→   253→
+   254→   254→      {/* ─── Summary stat cards ─── */}
+   255→   255→      <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
+   256→   256→        <StatCard
+   257→   257→          icon={<BookOpen className="h-5 w-5" />}
+   258→   258→          label={t("student.availableCourses")}
+   259→   259→          value={data.learning.availableCourses}
+   260→   260→          tint="accent"
+   261→   261→        />
+   262→   262→        <StatCard
+   263→   263→          icon={<PlayCircle className="h-5 w-5" />}
+   264→   264→          label={t("dashboard.inProgressCourses")}
+   265→   265→          value={data.learning.inProgressCourses}
+   266→   266→          tint="primary"
+   267→   267→        />
+   268→   268→        <StatCard
+   269→   269→          icon={<CheckCircle2 className="h-5 w-5" />}
+   270→   270→          label={t("dashboard.completedCourses")}
+   271→   271→          value={data.learning.completedCourses}
+   272→   272→          tint="success"
+   273→   273→        />
+   274→   274→        <StatCard
+   275→   275→          icon={<TrendingUp className="h-5 w-5" />}
+   276→   276→          label={t("student.overallProgress")}
+   277→   277→          value={`${data.learning.overallPercent}%`}
+   278→   278→          tint="warning"
+   279→   279→        />
+   280→   280→      </div>
+   281→   281→
+   282→   282→      {/* ─── Continue Learning ─── */}
+   283→   283→      <Card className="shadow-sm transition-all duration-200 hover:shadow-md">
+   284→   284→        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+   285→   285→          <div>
+   286→   286→            <CardTitle className="text-base flex items-center gap-2">
+   287→   287→              <PlayCircle className="h-4 w-4 text-accent" />
+   288→   288→              {t("dashboard.continueLearning")}
+   289→   289→            </CardTitle>
+   290→   290→            <CardDescription className="mt-1">{t("student.pickUpWhereLeftOff")}</CardDescription>
+   291→   291→          </div>
+   292→   292→          {data.continueLearning.length > 0 && (
+   293→   293→            <Button variant="ghost" size="sm" onClick={() => navigate(["student", "courses"])} className="gap-1 text-accent hover:bg-accent/10 hover:text-accent">
+   294→   294→              {t("common.viewAll")} <ArrowRight className="h-4 w-4" />
+   295→   295→            </Button>
+   296→   296→          )}
+   297→   297→        </CardHeader>
+   298→   298→        <CardContent>
+   299→   299→          {data.continueLearning.length === 0 ? (
+   300→   300→            <EmptyState
+   301→   301→              icon={<PlayCircle className="h-5 w-5" />}
+   302→   302→              title={t("student.noLessonsWatchedYet")}
+   303→   303→              description={t("student.startCourseToSeeList")}
+   304→   304→              action={<Button size="sm" onClick={() => navigate(["student", "courses"])} className="gap-2">
+   305→   305→                {t("common.exploreCourses")} <ArrowRight className="h-4 w-4" />
+   306→   306→              </Button>}
+   307→   307→            />
+   308→   308→          ) : (
+   309→   309→            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+   310→   310→              {data.continueLearning.map((c) => (
+   311→   311→                <button
+   312→   312→                  key={c.courseId}
+   313→   313→                  onClick={() => navigate(["student", "learn", c.courseId])}
+   314→   314→                  className="group relative text-left rounded-xl border border-border bg-card p-4 shadow-sm hover:shadow-md hover:border-accent/40 transition-all duration-200"
+   315→   315→                >
+   316→   316→                  <div className="flex gap-3">
+   317→   317→                    <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border">
+   318→   318→                      <CourseThumbnail
+   319→   319→                        thumbnail={c.thumbnail}
+   320→   320→                        firstVideoUrl={(c as any).firstVideoUrl}
+   321→   321→                        firstVideoSource={(c as any).firstVideoSource}
+   322→   322→                        alt={c.courseTitle}
+   323→   323→                        className="h-full w-full"
+   324→   324→                        showPlayOverlay
+   325→   325→                      />
+   326→   326→                    </div>
+   327→   327→                    <div className="min-w-0 flex-1">
+   328→   328→                      <p className="text-sm font-semibold text-foreground line-clamp-1 group-hover:text-accent transition-colors">
+   329→   329→                        {c.courseTitle}
+   330→   330→                      </p>
+   331→   331→                      <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+   332→   332→                        {t("student.upNext")} {c.lastVideoTitle}
+   333→   333→                      </p>
+   334→   334→                    </div>
+   335→   335→                  </div>
+   336→   336→                  <div className="mt-3">
+   337→   337→                    <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
+   338→   338→                      <span>{t("student.progress")}</span>
+   339→   339→                      <span className="font-medium text-foreground">{c.percent}%</span>
+   340→   340→                    </div>
+   341→   341→                    <Progress
+   342→   342→                      value={c.percent}
+   343→   343→                      className={`h-1.5 bg-muted ${c.percent === 100 ? "[&_[data-slot=progress-indicator]]:bg-success" : "[&_[data-slot=progress-indicator]]:bg-accent"}`}
+   344→   344→                    />
+   345→   345→                  </div>
+   346→   346→                </button>
+   347→   347→              ))}
+   348→   348→            </div>
+   349→   349→          )}
+   350→   350→        </CardContent>
+   351→   351→      </Card>
+   352→   352→
+   353→   353→      {/* ─── Upcoming Assignments + Recent Certificates ─── */}
+   354→   354→      <div className="grid gap-4 lg:grid-cols-2">
+   355→   355→        <Card className="shadow-sm transition-all duration-200 hover:shadow-md">
+   356→   356→          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+   357→   357→            <div>
+   358→   358→              <CardTitle className="text-base flex items-center gap-2">
+   359→   359→                <ClipboardList className="h-4 w-4 text-accent" />
+   360→   360→                {t("student.upcomingAssignments")}
+   361→   361→              </CardTitle>
+   362→   362→              <CardDescription className="mt-1">{t("student.submitAfterCompletion")}</CardDescription>
+   363→   363→            </div>
+   364→   364→            <Button variant="ghost" size="sm" onClick={() => navigate(["student", "assignments"])} className="gap-1 text-accent hover:bg-accent/10 hover:text-accent">
+   365→   365→              {t("common.viewAll")} <ArrowRight className="h-4 w-4" />
+   366→   366→            </Button>
+   367→   367→          </CardHeader>
+   368→   368→          <CardContent>
+   369→   369→            {data.upcomingAssignments.length === 0 ? (
+   370→   370→              <EmptyState
+   371→   371→                icon={<ClipboardList className="h-5 w-5" />}
+   372→   372→                title={t("student.noAssignmentsAvailable")}
+   373→   373→                description={t("student.assignmentsAppearHere")}
+   374→   374→              />
+   375→   375→            ) : (
+   376→   376→              <ul className="space-y-2">
+   377→   377→                {data.upcomingAssignments.slice(0, 5).map((a) => (
+   378→   378→                  <li
+   379→   379→                    key={a.id}
+   380→   380→                    className="group flex items-start justify-between gap-3 rounded-lg border border-border bg-card p-3 hover:border-accent/30 hover:bg-soft-sage/30 transition-all duration-200"
+   381→   381→                  >
+   382→   382→                    <div className="min-w-0 flex-1">
+   383→   383→                      <p className="text-sm font-medium text-foreground line-clamp-1">{a.assignmentTitle}</p>
+   384→   384→                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{a.courseTitle}</p>
+   385→   385→                      <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
+   386→   386→                        {a.dueDate && (
+   387→   387→                          <span className="flex items-center gap-1">
+   388→   388→                            <Clock className="h-3 w-3 text-accent" /> {t("student.due")} {formatDate(a.dueDate)}
+   389→   389→                          </span>
+   390→   390→                        )}
+   391→   391→                        <span>{a.coursePercent}% {t("student.courseProgress")}</span>
+   392→   392→                      </div>
+   393→   393→                    </div>
+   394→   394→                    <Badge
+   395→   395→                      className={
+   396→   396→                        a.submitted
+   397→   397→                          ? "bg-success/15 text-success border-transparent"
+   398→   398→                          : a.unlocked
+   399→   399→                            ? "bg-accent/10 text-accent border-transparent"
+   400→   400→                            : "bg-muted text-muted-foreground border-transparent"
+   401→   401→                      }
+   402→   402→                    >
+   403→   403→                      {a.submitted ? t("student.submitted") : a.unlocked ? t("student.available") : (
+   404→   404→                        <span className="flex items-center gap-1"><Lock className="h-3 w-3" /> {t("common.locked")}</span>
+   405→   405→                      )}
+   406→   406→                    </Badge>
+   407→   407→                  </li>
+   408→   408→                ))}
+   409→   409→              </ul>
+   410→   410→            )}
+   411→   411→          </CardContent>
+   412→   412→        </Card>
+   413→   413→
+   414→   414→        <Card className="shadow-sm transition-all duration-200 hover:shadow-md">
+   415→   415→          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+   416→   416→            <div>
+   417→   417→              <CardTitle className="text-base flex items-center gap-2">
+   418→   418→                <Award className="h-4 w-4 text-accent" />
+   419→   419→                {t("dashboard.recentCertificates")}
+   420→   420→              </CardTitle>
+   421→   421→              <CardDescription className="mt-1">{t("student.yourAchievements")}</CardDescription>
+   422→   422→            </div>
+   423→   423→            <Button variant="ghost" size="sm" onClick={() => navigate(["student", "certificates"])} className="gap-1 text-accent hover:bg-accent/10 hover:text-accent">
+   424→   424→              {t("common.viewAll")} <ArrowRight className="h-4 w-4" />
+   425→   425→            </Button>
+   426→   426→          </CardHeader>
+   427→   427→          <CardContent>
+   428→   428→            {data.recentCertificates.length === 0 ? (
+   429→   429→              <EmptyState
+   430→   430→                icon={<Award className="h-5 w-5" />}
+   431→   431→                title={t("certificates.noCertificates")}
+   432→   432→                description={t("certificates.earnFirst")}
+   433→   433→              />
+   434→   434→            ) : (
+   435→   435→              <ul className="space-y-2">
+   436→   436→                {data.recentCertificates.map((c) => (
+   437→   437→                  <li
+   438→   438→                    key={c.id}
+   439→   439→                    className="group flex items-start justify-between gap-3 rounded-lg border border-border bg-card p-3 hover:border-accent/30 hover:bg-soft-sage/30 transition-all duration-200"
+   440→   440→                  >
+   441→   441→                    <div className="flex items-start gap-3 min-w-0 flex-1">
+   442→   442→                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-accent/15 to-accent/5 text-accent shrink-0 ring-1 ring-accent/20">
+   443→   443→                        <Award className="h-5 w-5" />
+   444→   444→                      </div>
+   445→   445→                      <div className="min-w-0">
+   446→   446→                        <p className="text-sm font-semibold text-foreground line-clamp-1">{c.courseTitle}</p>
+   447→   447→                        <p className="text-xs text-muted-foreground mt-0.5">
+   448→   448→                          {t("certificates.issuedOn")} {formatDate(c.issuedAt)} · {c.certificateNumber}
+   449→   449→                        </p>
+   450→   450→                      </div>
+   451→   451→                    </div>
+   452→   452→                    <Button size="sm" variant="outline" onClick={() => navigate(["student", "certificates"])} className="shrink-0">
+   453→   453→                      {t("common.view")}
+   454→   454→                    </Button>
+   455→   455→                  </li>
+   456→   456→                ))}
+   457→   457→              </ul>
+   458→   458→            )}
+   459→   459→          </CardContent>
+   460→   460→        </Card>
+   461→   461→      </div>
+   462→   462→
+   463→   463→      {/* ─── Upcoming Activities (assignments + pending assessments) ─── */}
+   464→   464→      {data.upcomingActivities && data.upcomingActivities.length > 0 && (
+   465→   465→        <Card className="shadow-sm transition-all duration-200 hover:shadow-md">
+   466→   466→          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+   467→   467→            <div>
+   468→   468→              <CardTitle className="text-base flex items-center gap-2">
+   469→   469→                <CalendarDays className="h-4 w-4 text-accent" />
+   470→   470→                {t("dashboard.upcomingActivities")}
+   471→   471→              </CardTitle>
+   472→   472→              <CardDescription className="mt-1">
+   473→   473→                {t("student.pendingAssessments")}
+   474→   474→              </CardDescription>
+   475→   475→            </div>
+   476→   476→            <Button
+   477→   477→              variant="ghost"
+   478→   478→              size="sm"
+   479→   479→              onClick={() => navigate(["student", "assignments"])}
+   480→   480→              className="gap-1 text-accent hover:bg-accent/10 hover:text-accent"
+   481→   481→            >
+   482→   482→              {t("common.viewAll")} <ArrowRight className="h-4 w-4" />
+   483→   483→            </Button>
+   484→   484→          </CardHeader>
+   485→   485→          <CardContent>
+   486→   486→            <div className="grid gap-3 sm:grid-cols-2">
+   487→   487→              {data.upcomingActivities.map((act) => (
+   488→   488→                <UpcomingActivityCard
+   489→   489→                  key={act.id}
+   490→   490→                  activity={act}
+   491→   491→                  onClick={() => navigate(["student", "learn", act.courseId])}
+   492→   492→                />
+   493→   493→              ))}
+   494→   494→            </div>
+   495→   495→          </CardContent>
+   496→   496→        </Card>
+   497→   497→      )}
+   498→   498→
+   499→   499→      {/* ─── Recent Activity timeline ─── */}
+   500→   500→      <Card className="shadow-sm transition-all duration-200 hover:shadow-md">
+   501→   501→        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+   502→   502→          <div>
+   503→   503→            <CardTitle className="text-base flex items-center gap-2">
+   504→   504→              <History className="h-4 w-4 text-accent" />
+   505→   505→              {t("dashboard.recentActivity")}
+   506→   506→            </CardTitle>
+   507→   507→            <CardDescription className="mt-1">
+   508→   508→              {t("student.recentActivityDesc")}
+   509→   509→            </CardDescription>
+   510→   510→          </div>
+   511→   511→        </CardHeader>
+   512→   512→        <CardContent>
+   513→   513→          {activityLoading ? (
+   514→   514→            <div className="space-y-3">
+   515→   515→              {[1, 2, 3, 4].map((i) => (
+   516→   516→                <Skeleton key={i} className="h-14 w-full rounded-lg" />
+   517→   517→              ))}
+   518→   518→            </div>
+   519→   519→          ) : activityData?.activities && activityData.activities.length > 0 ? (
+   520→   520→            <ol className="relative space-y-1 max-h-[28rem] overflow-y-auto scrollbar-thin pr-1">
+   521→   521→              {/* vertical spine */}
+   522→   522→              <span
+   523→   523→                aria-hidden
+   524→   524→                className="pointer-events-none absolute left-[1.45rem] top-2 bottom-2 w-px bg-gradient-to-b from-accent/40 via-border to-transparent"
+   525→   525→              />
+   526→   526→              {activityData.activities.map((a, i) => (
+   527→   527→                <ActivityTimelineRow key={a.id} item={a} isFirst={i === 0} />
+   528→   528→              ))}
+   529→   529→            </ol>
+   530→   530→          ) : (
+   531→   531→            <EmptyState
+   532→   532→              icon={<History className="h-5 w-5" />}
+   533→   533→              title={t("student.noActivityYet")}
+   534→   534→              description={t("student.startCourseActivity")}
+   535→   535→              action={
+   536→   536→                <Button size="sm" onClick={() => navigate(["student", "courses"])} className="gap-2">
+   537→   537→                  {t("student.browseCoursesShort")} <ArrowRight className="h-4 w-4" />
+   538→   538→                </Button>
+   539→   539→              }
+   540→   540→            />
+   541→   541→          )}
+   542→   542→        </CardContent>
+   543→   543→      </Card>
+   544→   544→    </div>
+   545→   545→  );
+   546→   546→}
+   547→   547→
+   548→   548→function UpcomingActivityCard({
+   549→   549→  activity,
+   550→   550→  onClick,
+   551→   551→}: {
+   552→   552→  activity: UpcomingActivity;
+   553→   553→  onClick: () => void;
+   554→   554→}) {
+   555→   555→  const { t } = useI18n();
+   556→   556→  const isAssignment = activity.type === "assignment";
+   557→   557→  const isOverdue = activity.priority === "overdue";
+   558→   558→
+   559→   559→  const Icon = isAssignment ? ClipboardList : Video;
+   560→   560→
+   561→   561→  const statusBadge = (() => {
+   562→   562→    switch (activity.status) {
+   563→   563→      case "submitted":
+   564→   564→        return (
+   565→   565→          <Badge className="bg-success/15 text-success border-transparent">
+   566→   566→            <CheckCircle2 className="h-3 w-3" /> {t("student.submitted")}
+   567→   567→          </Badge>
+   568→   568→        );
+   569→   569→      case "available":
+   570→   570→        return (
+   571→   571→          <Badge className="bg-accent/10 text-accent border-transparent">
+   572→   572→            <CheckCircle2 className="h-3 w-3" /> {t("student.available")}
+   573→   573→          </Badge>
+   574→   574→        );
+   575→   575→      case "pending":
+   576→   576→        return (
+   577→   577→          <Badge className="bg-warning/15 text-warning border-transparent">
+   578→   578→            <Clock className="h-3 w-3" /> {t("common.scheduled")}
+   579→   579→          </Badge>
+   580→   580→        );
+   581→   581→      case "locked":
+   582→   582→      default:
+   583→   583→        return (
+   584→   584→          <Badge className="bg-muted text-muted-foreground border-transparent">
+   585→   585→            <Lock className="h-3 w-3" /> {t("common.locked")}
+   586→   586→          </Badge>
+   587→   587→        );
+   588→   588→    }
+   589→   589→  })();
+   590→   590→
+   591→   591→  return (
+   592→   592→    <button
+   593→   593→      onClick={onClick}
+   594→   594→      className="group relative text-left rounded-xl border border-border bg-card p-4 shadow-sm hover:shadow-md hover:border-accent/40 hover:-translate-y-0.5 transition-all duration-200"
+   595→   595→    >
+   596→   596→      <div className="flex items-start gap-3">
+   597→   597→        <div
+   598→   598→          className={`flex h-10 w-10 items-center justify-center rounded-lg shrink-0 ring-1 ${
+   599→   599→            isOverdue
+   600→   600→              ? "bg-destructive/10 text-destructive ring-destructive/20"
+   601→   601→              : isAssignment
+   602→   602→                ? "bg-accent/10 text-accent ring-accent/20"
+   603→   603→                : "bg-primary/10 text-primary ring-primary/20"
+   604→   604→          }`}
+   605→   605→        >
+   606→   606→          <Icon className="h-5 w-5" />
+   607→   607→        </div>
+   608→   608→        <div className="min-w-0 flex-1">
+   609→   609→          <div className="flex items-start justify-between gap-2">
+   610→   610→            <p className="text-sm font-semibold text-foreground line-clamp-1 group-hover:text-accent transition-colors">
+   611→   611→              {activity.title}
+   612→   612→            </p>
+   613→   613→            <ArrowUpRight className="h-4 w-4 text-muted-foreground/60 group-hover:text-accent shrink-0 transition-colors" />
+   614→   614→          </div>
+   615→   615→          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+   616→   616→            {activity.courseTitle}
+   617→   617→          </p>
+   618→   618→          <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
+   619→   619→            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+   620→   620→              <span className="flex items-center gap-1 rounded-full bg-muted/60 px-2 py-0.5 text-[10px] uppercase tracking-wide font-medium text-muted-foreground">
+   621→   621→                {isAssignment ? t("student.assignment") : t("student.assessment")}
+   622→   622→              </span>
+   623→   623→              {activity.dueDate && (
+   624→   624→                <span
+   625→   625→                  className={`flex items-center gap-1 ${
+   626→   626→                    isOverdue ? "text-destructive font-medium" : ""
+   627→   627→                  }`}
+   628→   628→                >
+   629→   629→                  <Clock className="h-3 w-3" />
+   630→   630→                  {isOverdue ? t("student.overdue") : t("student.due") + " "}
+   631→   631→                  {formatDate(activity.dueDate)}
+   632→   632→                </span>
+   633→   633→              )}
+   634→   634→            </div>
+   635→   635→            {statusBadge}
+   636→   636→          </div>
+   637→   637→        </div>
+   638→   638→      </div>
+   639→   639→    </button>
+   640→   640→  );
+   641→   641→}
+   642→   642→
+   643→   643→function ActivityTimelineRow({
+   644→   644→  item,
+   645→   645→  isFirst,
+   646→   646→}: {
+   647→   647→  item: ActivityItem;
+   648→   648→  isFirst: boolean;
+   649→   649→}) {
+   650→   650→  const { t } = useI18n();
+   651→   651→  const meta = activityMeta(item, t);
+   652→   652→  return (
+   653→   653→    <li
+   654→   654→      className={`relative flex gap-3 rounded-lg px-2 py-2.5 transition-colors duration-200 hover:bg-muted/40 ${
+   655→   655→        isFirst ? "" : ""
+   656→   656→      }`}
+   657→   657→    >
+   658→   658→      {/* node */}
+   659→   659→      <div className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ring-2 ring-background bg-soft-sage text-accent">
+   660→   660→        {meta.icon}
+   661→   661→      </div>
+   662→   662→      <div className="min-w-0 flex-1 pt-0.5">
+   663→   663→        <div className="flex items-start justify-between gap-2">
+   664→   664→          <p className="text-sm font-medium text-foreground line-clamp-1">
+   665→   665→            {item.title}
+   666→   666→          </p>
+   667→   667→          <span className="text-[11px] text-muted-foreground whitespace-nowrap shrink-0">
+   668→   668→            {formatDateTime(item.timestamp)}
+   669→   669→          </span>
+   670→   670→        </div>
+   671→   671→        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+   672→   672→          <span className="text-muted-foreground/80">{item.courseTitle}</span>
+   673→   673→          {" · "}
+   674→   674→          {item.detail}
+   675→   675→        </p>
+   676→   676→        {meta.badge && <div className="mt-1.5">{meta.badge}</div>}
+   677→   677→      </div>
+   678→   678→    </li>
+   679→   679→  );
+   680→   680→}
+   681→   681→
+   682→   682→function activityMeta(item: ActivityItem, t: (key: any) => string): {
+   683→   683→  icon: React.ReactNode;
+   684→   684→  badge?: React.ReactNode;
+   685→   685→} {
+   686→   686→  switch (item.type) {
+   687→   687→    case "video_completed":
+   688→   688→      return {
+   689→   689→        icon: <Video className="h-4 w-4" />,
+   690→   690→        badge: (
+   691→   691→          <Badge className="bg-accent/10 text-accent border-transparent">
+   692→   692→            <CheckCircle2 className="h-3 w-3" /> {t("common.completed")}
+   693→   693→          </Badge>
+   694→   694→        ),
+   695→   695→      };
+   696→   696→    case "assessment":
+   697→   697→      return {
+   698→   698→        icon: item.passed ? (
+   699→   699→          <CheckCircle2 className="h-4 w-4 text-success" />
+   700→   700→        ) : (
+   701→   701→          <AlertTriangle className="h-4 w-4 text-warning" />
+   702→   702→        ),
+   703→   703→        badge: (
+   704→   704→          <Badge
+   705→   705→            className={
+   706→   706→              item.passed
+   707→   707→                ? "bg-success/15 text-success border-transparent"
+   708→   708→                : "bg-warning/15 text-warning border-transparent"
+   709→   709→            }
+   710→   710→          >
+   711→   711→            {item.passed ? t("student.passedShort") : t("student.attempted")}
+   712→   712→            {typeof item.score === "number" ? ` · ${item.score}%` : ""}
+   713→   713→          </Badge>
+   714→   714→        ),
+   715→   715→      };
+   716→   716→    case "submission":
+   717→   717→      return {
+   718→   718→        icon: <FileText className="h-4 w-4" />,
+   719→   719→        badge: (
+   720→   720→          <Badge className="bg-primary/10 text-primary border-transparent">
+   721→   721→            <CheckCircle2 className="h-3 w-3" /> {t("student.submitted")}
+   722→   722→          </Badge>
+   723→   723→        ),
+   724→   724→      };
+   725→   725→    case "certificate":
+   726→   726→      return {
+   727→   727→        icon: <Award className="h-4 w-4 text-success" />,
+   728→   728→        badge: item.certificateNumber ? (
+   729→   729→          <Badge className="bg-success/15 text-success border-transparent">
+   730→   730→            <Award className="h-3 w-3" /> {item.certificateNumber}
+   731→   731→          </Badge>
+   732→   732→        ) : undefined,
+   733→   733→      };
+   734→   734→    default:
+   735→   735→      return {
+   736→   736→        icon: <XCircle className="h-4 w-4" />,
+   737→   737→      };
+   738→   738→  }
+   739→   739→}
+   740→   740→
+   741→   741→function StatCard({
+   742→   742→  icon, label, value, tint,
+   743→   743→}: {
+   744→   744→  icon: React.ReactNode;
+   745→   745→  label: string;
+   746→   746→  value: number | string;
+   747→   747→  tint: "accent" | "primary" | "success" | "warning";
+   748→   748→}) {
+   749→   749→  const tintClasses: Record<typeof tint, string> = {
+   750→   750→    accent: "bg-accent/10 text-accent ring-accent/20",
+   751→   751→    primary: "bg-primary/10 text-primary ring-primary/20",
+   752→   752→    success: "bg-success/15 text-success ring-success/20",
+   753→   753→    warning: "bg-warning/15 text-warning ring-warning/20",
+   754→   754→  };
+   755→   755→  return (
+   756→   756→    <Card className="p-4 sm:p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 overflow-hidden">
+   757→   757→      <div className="flex items-center gap-3 min-w-0">
+   758→   758→        <div className={`flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl ring-1 ${tintClasses[tint]} shrink-0`}>
+   759→   759→          {icon}
+   760→   760→        </div>
+   761→   761→        <div className="min-w-0">
+   762→   762→          <p className="font-heading text-xl sm:text-2xl font-bold text-foreground leading-none truncate">{value}</p>
+   763→   763→          <p className="text-xs text-muted-foreground mt-1.5 truncate">{label}</p>
+   764→   764→        </div>
+   765→   765→      </div>
+   766→   766→    </Card>
+   767→   767→  );
+   768→   768→}
+   769→   769→

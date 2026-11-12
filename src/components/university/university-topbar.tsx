@@ -54,7 +54,7 @@ export function UniversityTopbar({ onToggleSidebar }: { onToggleSidebar: () => v
   const uniName = user?.universityName || "University";
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-2 sm:gap-4 border-b border-border/80 bg-background/80 px-3 sm:px-4 md:px-6 shadow-sm backdrop-blur-xl transition-shadow duration-300 overflow-x-hidden">
+    <header className="shadow-premium sticky top-0 z-30 flex h-16 items-center justify-between gap-2 sm:gap-4 border-b border-border/80 bg-background/80 px-3 sm:px-4 md:px-6 backdrop-blur-xl transition-shadow duration-300 overflow-x-hidden">
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <Button
           variant="ghost"

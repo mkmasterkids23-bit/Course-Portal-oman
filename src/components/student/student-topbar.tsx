@@ -55,7 +55,7 @@ export function StudentTopbar({ onToggleSidebar }: { onToggleSidebar: () => void
     .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-2 sm:gap-4 border-b border-border/80 bg-background/80 px-3 sm:px-4 md:px-6 shadow-sm backdrop-blur-xl transition-shadow duration-300 overflow-x-hidden">
+    <header className="shadow-premium sticky top-0 z-30 flex h-16 items-center justify-between gap-2 sm:gap-4 border-b border-border/80 bg-background/80 px-3 sm:px-4 md:px-6 backdrop-blur-xl transition-shadow duration-300 overflow-x-hidden">
       {/* Subtle accent underline */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
 

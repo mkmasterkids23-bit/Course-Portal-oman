@@ -160,7 +160,7 @@ export function StudentCertificates() {
 
       {/* Preview dialog with iframe */}
       <Dialog open={!!previewCert} onOpenChange={(o) => !o && setPreviewCert(null)}>
-        <DialogContent className="max-w-5xl w-full h-[90vh] flex flex-col p-0 gap-0">
+        <DialogContent className="animate-scale-in max-w-5xl w-full h-[90vh] flex flex-col p-0 gap-0">
           <DialogHeader className="p-4 border-b border-border flex-row items-center justify-between space-y-0 bg-gradient-to-r from-soft-sage/60 to-card">
             <div>
               <DialogTitle className="text-base">{previewCert?.templateTitle}</DialogTitle>

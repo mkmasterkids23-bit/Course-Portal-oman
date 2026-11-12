@@ -287,7 +287,7 @@ export function CourseDiscussionsPanel({
 
       {/* New post dialog */}
       <Dialog open={newDialogOpen} onOpenChange={setNewDialogOpen}>
-        <DialogContent>
+        <DialogContent className="animate-scale-in">
           <DialogHeader>
             <DialogTitle>Start a new discussion</DialogTitle>
             <DialogDescription>

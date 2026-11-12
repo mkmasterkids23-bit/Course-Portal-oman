@@ -314,7 +314,7 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
   return (
     <div className="space-y-4 animate-page-in pb-20 lg:pb-4">
       {/* ─── Compact breadcrumb header ─── */}
-      <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3 shadow-sm">
+      <div className="shadow-premium flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0 h-8 w-8" aria-label={t("learning.backToCourses")}>
             <ArrowLeft className="h-4 w-4" />
@@ -409,28 +409,28 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
               <TabsList className="bg-transparent border-0 p-0 h-auto gap-0 flex-nowrap">
                 <TabsTrigger
                   value="overview"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent gap-1.5 px-4 py-2.5 text-sm font-medium transition-all"
+                  className="tab-underline rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent gap-1.5 px-4 py-2.5 text-sm font-medium transition-all"
                 >
                   <Info className="h-3.5 w-3.5" />
                   {t("learning.tab.overview")}
                 </TabsTrigger>
                 <TabsTrigger
                   value="notes"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent gap-1.5 px-4 py-2.5 text-sm font-medium transition-all"
+                  className="tab-underline rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent gap-1.5 px-4 py-2.5 text-sm font-medium transition-all"
                 >
                   <StickyNote className="h-3.5 w-3.5" />
                   {t("learning.tab.notes")}
                 </TabsTrigger>
                 <TabsTrigger
                   value="discussions"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent gap-1.5 px-4 py-2.5 text-sm font-medium transition-all"
+                  className="tab-underline rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent gap-1.5 px-4 py-2.5 text-sm font-medium transition-all"
                 >
                   <MessageSquare className="h-3.5 w-3.5" />
                   {t("learning.tab.discussion")}
                 </TabsTrigger>
                 <TabsTrigger
                   value="resources"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent gap-1.5 px-4 py-2.5 text-sm font-medium transition-all"
+                  className="tab-underline rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent gap-1.5 px-4 py-2.5 text-sm font-medium transition-all"
                 >
                   <FileText className="h-3.5 w-3.5" />
                   {t("learning.tab.resources")}
@@ -556,7 +556,7 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
 
         {/* ─── RIGHT: Course Curriculum Panel ─── */}
         <div className="space-y-4">
-        <Card className="lg:sticky lg:top-[5.5rem] lg:self-start lg:max-h-[calc(100vh-7rem)] flex flex-col shadow-sm overflow-hidden">
+        <Card className="shadow-premium lg:sticky lg:top-[5.5rem] lg:self-start lg:max-h-[calc(100vh-7rem)] flex flex-col overflow-hidden">
           {/* Panel header with circular progress */}
           <CardHeader className="border-b border-border pb-4">
             <div className="flex items-center justify-between gap-3">
@@ -1360,7 +1360,7 @@ function VideoPlayer({
       )}
 
       {/* ─── Default compact view ─── */}
-      <Card className="overflow-hidden p-0 shadow-sm">
+      <Card className="shadow-premium overflow-hidden p-0">
         {/* Compact video area — centered, max 640px, dark frame */}
         <div className="bg-gradient-to-b from-foreground/[0.03] to-card p-4 md:p-6">
           <div className="relative mx-auto overflow-hidden rounded-xl bg-black shadow-lg ring-1 ring-black/20" style={{ maxWidth: "640px" }}>
@@ -1920,7 +1920,7 @@ function AssignmentPanel({
   }
 
   return (
-    <Card className="shadow-sm border-accent/20">
+    <Card className="card-elevated border-accent/20">
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10 text-accent">

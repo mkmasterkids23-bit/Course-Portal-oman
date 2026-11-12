@@ -432,7 +432,7 @@ function StudentProfileDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="animate-scale-in w-[95vw] max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">
             Student Profile

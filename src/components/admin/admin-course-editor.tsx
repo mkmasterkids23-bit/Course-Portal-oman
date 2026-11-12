@@ -516,7 +516,7 @@ function TopicFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="animate-scale-in w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">{target ? t("common.edit") : t("courses.addTopic")}</DialogTitle>
           <DialogDescription>{t("courses.topicDescription")}</DialogDescription>
@@ -641,7 +641,7 @@ function VideoFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="animate-scale-in w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">{target ? t("common.edit") : t("courses.addVideo")}</DialogTitle>
           <DialogDescription>{t("courses.videoSource")}</DialogDescription>
@@ -958,7 +958,7 @@ function MaterialFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="animate-scale-in w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">{target ? t("common.edit") : t("courses.addMaterial")}</DialogTitle>
           <DialogDescription>{t("courses.materialTitle")}</DialogDescription>
@@ -1255,7 +1255,7 @@ function AssignmentFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="animate-scale-in w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">{target ? t("common.edit") : t("courses.addAssignment")}</DialogTitle>
           <DialogDescription>{t("courses.assignmentInstructions")}</DialogDescription>

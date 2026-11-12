@@ -136,7 +136,7 @@ export function StudentOverview() {
   return (
     <div className="space-y-6">
       {/* ─── Premium welcome header ─── */}
-      <Card className="relative overflow-hidden border-border shadow-sm">
+      <Card className="hero-gradient relative overflow-hidden border-border shadow-sm">
         {/* Deep forest gradient backdrop */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-accent/80" />
         {/* Decorative sage glow */}
@@ -177,7 +177,7 @@ export function StudentOverview() {
 
       {/* ─── Subscription status ─── */}
       {data.subscription ? (
-        <Card className="overflow-hidden border-border shadow-sm transition-all duration-200 hover:shadow-md">
+        <Card className="shadow-premium overflow-hidden border-border transition-all duration-200 hover:shadow-md">
           <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
             <div>
               <CardTitle className="text-base flex items-center gap-2">
@@ -311,7 +311,7 @@ export function StudentOverview() {
                 <button
                   key={c.courseId}
                   onClick={() => navigate(["student", "learn", c.courseId])}
-                  className="group relative text-left rounded-xl border border-border bg-card p-4 shadow-sm hover:shadow-md hover:border-accent/40 transition-all duration-200"
+                  className="group card-glow hover-lift relative text-left rounded-xl border border-border bg-card p-4 hover:shadow-md hover:border-accent/40 transition-all duration-200"
                 >
                   <div className="flex gap-3">
                     <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border">
@@ -651,7 +651,7 @@ function ActivityTimelineRow({
   const meta = activityMeta(item, t);
   return (
     <li
-      className={`relative flex gap-3 rounded-lg px-2 py-2.5 transition-colors duration-200 hover:bg-muted/40 ${
+      className={`animate-entrance relative flex gap-3 rounded-lg px-2 py-2.5 transition-colors duration-200 hover:bg-muted/40 ${
         isFirst ? "" : ""
       }`}
     >
@@ -753,13 +753,13 @@ function StatCard({
     warning: "bg-warning/15 text-warning ring-warning/20",
   };
   return (
-    <Card className="p-4 sm:p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 overflow-hidden">
+    <Card className="card-glow p-4 sm:p-5 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 overflow-hidden">
       <div className="flex items-center gap-3 min-w-0">
-        <div className={`flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl ring-1 ${tintClasses[tint]} shrink-0`}>
+        <div className={`flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl icon-gradient ring-1 ${tintClasses[tint]} shrink-0`}>
           {icon}
         </div>
         <div className="min-w-0">
-          <p className="font-heading text-xl sm:text-2xl font-bold text-foreground leading-none truncate">{value}</p>
+          <p className="animate-count font-heading text-xl sm:text-2xl font-bold text-foreground leading-none truncate">{value}</p>
           <p className="text-xs text-muted-foreground mt-1.5 truncate">{label}</p>
         </div>
       </div>

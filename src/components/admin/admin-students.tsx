@@ -524,7 +524,7 @@ function AddStudentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="animate-scale-in w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">{t("dashboard.addStudent")}</DialogTitle>
           <DialogDescription>{t("dashboard.addStudent")}</DialogDescription>
@@ -621,7 +621,7 @@ function EditStudentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="animate-scale-in w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">{t("profile.editProfile")}</DialogTitle>
           <DialogDescription>{target?.email}</DialogDescription>

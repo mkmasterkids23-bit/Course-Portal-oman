@@ -440,7 +440,7 @@ function CourseCard({ course, onOpen }: { course: CourseItem; onOpen: () => void
 
   return (
     <Card
-      className="group overflow-hidden p-0 cursor-pointer shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-1 hover:border-accent/40"
+      className="group card-glow overflow-hidden p-0 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-1 hover:border-accent/40"
       onClick={onOpen}
     >
       {/* Thumbnail */}

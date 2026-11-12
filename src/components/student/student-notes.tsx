@@ -305,7 +305,7 @@ export function StudentNotes() {
 
       {/* ─── Edit dialog ─── */}
       <Dialog open={editing !== null} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent>
+        <DialogContent className="animate-scale-in">
           <DialogHeader>
             <DialogTitle>{t("notes.editNote")}</DialogTitle>
             <DialogDescription>

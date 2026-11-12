@@ -72,7 +72,7 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col overflow-hidden bg-soft-sage/40">
+    <div className="surface-gradient relative min-h-screen flex flex-col overflow-hidden bg-soft-sage/40">
       <div
         className="pointer-events-none absolute inset-0 -z-10 opacity-90"
         style={{
@@ -98,7 +98,7 @@ export function RegisterPage() {
       </div>
 
       <div className="flex flex-1 items-center justify-center px-4 pb-12">
-        <Card className="w-full max-w-2xl rounded-lg border border-border bg-card p-6 shadow-md md:p-8">
+        <Card className="animate-scale-in w-full max-w-2xl rounded-lg border border-border bg-card p-6 shadow-md md:p-8">
           {/* Header */}
           <div className="mb-6 space-y-3 text-center">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">

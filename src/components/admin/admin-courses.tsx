@@ -431,7 +431,7 @@ function CourseFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="animate-scale-in w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">{isEdit ? t("courses.editCourse") : t("courses.createNewCourse")}</DialogTitle>
           <DialogDescription>
@@ -572,7 +572,7 @@ function CourseCard({
 }) {
   const { t } = useI18n();
   return (
-    <Card className="group flex flex-col overflow-hidden border-border p-0 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-accent/30">
+    <Card className="group card-glow flex flex-col overflow-hidden border-border p-0 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-accent/30">
       {/* Cover image */}
       <button onClick={onManage} className="relative h-36 overflow-hidden bg-muted text-left">
         <CourseThumbnail

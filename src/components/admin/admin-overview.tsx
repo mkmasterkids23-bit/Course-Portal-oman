@@ -93,7 +93,7 @@ export function AdminOverview() {
   return (
     <div className="space-y-6">
       {/* Premium welcome header */}
-      <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary via-primary to-[#2A3F35] p-6 text-primary-foreground shadow-[0_2px_8px_rgba(37,51,43,0.12)]">
+      <div className="hero-gradient relative overflow-hidden rounded-xl border border-primary/20 p-6 text-primary-foreground shadow-[0_2px_8px_rgba(37,51,43,0.12)]">
         <div
           className="absolute inset-0 opacity-30"
           style={{
@@ -309,7 +309,7 @@ export function AdminOverview() {
           {/* Recent activity — two columns */}
           <div className="grid gap-4 lg:grid-cols-2">
             {/* Recent Students */}
-            <Card className="overflow-hidden border-border bg-card shadow-sm">
+            <Card className="card-elevated overflow-hidden border-border bg-card shadow-sm">
               <div className="flex items-center justify-between border-b border-border p-5">
                 <div className="flex items-center gap-2.5">
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 text-accent">
@@ -349,7 +349,7 @@ export function AdminOverview() {
             </Card>
 
             {/* Recent Submissions */}
-            <Card className="overflow-hidden border-border bg-card shadow-sm">
+            <Card className="card-elevated overflow-hidden border-border bg-card shadow-sm">
               <div className="flex items-center justify-between border-b border-border p-5">
                 <div className="flex items-center gap-2.5">
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-warning/15 text-warning">
@@ -390,7 +390,7 @@ export function AdminOverview() {
           </div>
 
           {/* Quick actions */}
-          <Card className="border-dashed border-border bg-card/50 shadow-sm">
+          <Card className="card-elevated border-dashed border-border bg-card/50 shadow-sm">
             <CardContent className="p-5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -440,13 +440,13 @@ function PremiumStatCard({
   const borderClass = urgent ? "ring-1 ring-warning/30" : "";
 
   return (
-    <Card className={`group overflow-hidden border-border bg-card p-4 sm:p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${borderClass}`}>
+    <Card className={`group card-glow overflow-hidden border-border bg-card p-4 sm:p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${borderClass}`}>
       <div className="flex flex-col gap-3 min-w-0">
-        <div className={`flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl ${toneClasses[tone]} transition-transform duration-200 group-hover:scale-105 shrink-0`}>
+        <div className={`flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl icon-gradient ${toneClasses[tone]} transition-transform duration-200 group-hover:scale-105 shrink-0`}>
           {icon}
         </div>
         <div className="min-w-0">
-          <p className="font-heading text-xl sm:text-2xl lg:text-[28px] font-bold text-foreground leading-none tracking-tight">
+          <p className="animate-count font-heading text-xl sm:text-2xl lg:text-[28px] font-bold text-foreground leading-none tracking-tight">
             {value.toLocaleString()}
           </p>
           <p className="mt-1.5 text-[13px] font-medium text-foreground/90 truncate">{label}</p>

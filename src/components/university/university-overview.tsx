@@ -49,7 +49,7 @@ export function UniversityOverview() {
   return (
     <div className="space-y-6">
       {/* Premium welcome header */}
-      <div className="relative overflow-hidden rounded-lg border border-primary/20 bg-gradient-to-br from-primary via-primary to-primary/85 p-6 text-primary-foreground shadow-sm">
+      <div className="hero-gradient relative overflow-hidden rounded-lg border border-primary/20 p-6 text-primary-foreground shadow-sm">
         <div
           className="absolute inset-0 opacity-25"
           style={{
@@ -332,16 +332,16 @@ function PremiumStatCard({
 
   return (
     <Card
-      className={`group overflow-hidden rounded-lg border-border bg-card p-4 sm:p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${borderClass}`}
+      className={`group card-glow overflow-hidden rounded-lg border-border bg-card p-4 sm:p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${borderClass}`}
     >
       <div className="flex flex-col gap-3 min-w-0">
         <div
-          className={`flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl ${toneClasses[tone]} transition-transform duration-200 group-hover:scale-105 shrink-0`}
+          className={`flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl icon-gradient ${toneClasses[tone]} transition-transform duration-200 group-hover:scale-105 shrink-0`}
         >
           {icon}
         </div>
         <div className="min-w-0">
-          <p className="font-heading text-xl sm:text-2xl lg:text-[28px] font-bold text-foreground leading-none tracking-tight">
+          <p className="animate-count font-heading text-xl sm:text-2xl lg:text-[28px] font-bold text-foreground leading-none tracking-tight">
             {value.toLocaleString()}
           </p>
           <p className="mt-1.5 text-[13px] font-medium text-foreground/90 truncate">{label}</p>
@@ -365,7 +365,7 @@ function QuickActionButton({
     <Button
       variant="outline"
       size="sm"
-      className="h-9 w-full justify-start gap-2 border-border bg-card transition-all duration-200 hover:border-accent/30 hover:bg-soft-sage/40"
+      className="hover-lift h-9 w-full justify-start gap-2 border-border bg-card transition-all duration-200 hover:border-accent/30 hover:bg-soft-sage/40"
       onClick={onClick}
     >
       <span className="text-accent">{icon}</span>

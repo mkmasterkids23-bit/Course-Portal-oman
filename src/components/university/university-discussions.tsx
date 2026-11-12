@@ -329,7 +329,7 @@ function DiscussionDetailDialog({
 
   return (
     <Dialog open={true} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0">
+      <DialogContent className="animate-scale-in max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0">
         <DialogHeader className="p-5 border-b border-border">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">

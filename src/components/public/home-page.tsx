@@ -54,7 +54,7 @@ export function HomePage() {
   return (
     <div>
       {/* ─────────── Hero ─────────── */}
-      <section className="relative overflow-hidden border-b border-border bg-soft-sage/40">
+      <section className="hero-gradient relative overflow-hidden border-b border-border bg-soft-sage/40">
         <div
           className="pointer-events-none absolute inset-0 -z-10 opacity-90"
           style={{
@@ -215,7 +215,7 @@ export function HomePage() {
       {/* ─────────── Stats bar ─────────── */}
       <section className="border-b border-border bg-card">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-10">
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-4 md:divide-x md:divide-border">
+          <div className="grid grid-cols-2 gap-6 md:grid-cols-4 md:divide-x md:divide-border stagger-children">
             {stats.map((s, idx) => (
               <div
                 key={s.label}
@@ -651,7 +651,7 @@ export function HomePage() {
       </section>
 
       {/* ─────────── CTA ─────────── */}
-      <section className="bg-primary text-primary-foreground">
+      <section className="hero-gradient bg-primary text-primary-foreground">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-16 text-center md:py-20">
           <h2 className="font-heading text-2xl font-semibold tracking-tight md:text-[32px]">
             {t("public.readyToStartJourney")}
@@ -688,7 +688,7 @@ function CourseCardMini({ course, onOpen }: { course: CoursePublic; onOpen: () =
   const { t } = useI18n();
   return (
     <Card
-      className="group cursor-pointer overflow-hidden p-0 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-accent/40"
+      className="group card-glow cursor-pointer overflow-hidden p-0 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-accent/40"
       onClick={onOpen}
     >
       <div className="relative h-44 overflow-hidden bg-muted">
@@ -750,7 +750,7 @@ function PlanCard({ plan, onSelect }: { plan: SubscriptionPlanPublic; onSelect: 
   const { t } = useI18n();
   return (
     <Card
-      className={`relative flex flex-col p-6 shadow-sm transition-all duration-200 hover:shadow-md ${
+      className={`relative flex flex-col ${plan.isPopular ? "card-glow" : "card-elevated"} p-6 transition-all duration-200 hover:shadow-md ${
         plan.isPopular
           ? "border-accent/60 ring-1 ring-accent/25 shadow-md"
           : "hover:border-accent/40"

@@ -77,7 +77,7 @@ export function UniversitySidebar({ onNavigate }: { onNavigate?: () => void }) {
     .toUpperCase();
 
   return (
-    <aside className="relative flex h-full w-full flex-col border-r border-sidebar-border bg-gradient-to-b from-card via-muted/20 to-muted/50">
+    <aside className="glass-panel relative flex h-full w-full flex-col border-r border-sidebar-border bg-gradient-to-b from-card via-muted/20 to-muted/50">
       {/* Subtle accent right edge */}
       <div className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-accent/0 via-accent/40 to-accent/0" />
 

@@ -237,7 +237,7 @@ function IssuedCertificatesDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="animate-scale-in w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold">Issued Certificates — {row?.courseTitle}</DialogTitle>
           <DialogDescription>
