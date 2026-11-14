@@ -558,6 +558,8 @@ export const translations = {
     "empty.noData": "No data available",
     "empty.noResults": "No matching results found",
     "empty.tryDifferent": "Try a different search term or filter.",
+    "empty.noUniversities": "No universities yet",
+    "empty.noUniversitiesDesc": "Universities will appear here once they register on the platform.",
 
     // ─── Admin ───
     "admin.universities": "Universities",
@@ -1690,6 +1692,8 @@ export const translations = {
     "empty.noData": "لا توجد بيانات",
     "empty.noResults": "لم يتم العثور على نتائج مطابقة",
     "empty.tryDifferent": "جرب كلمة بحث أو مرشحاً مختلفاً.",
+    "empty.noUniversities": "لا توجد جامعات بعد",
+    "empty.noUniversitiesDesc": "ستظهر الجامعات هنا عند تسجيلها في المنصة.",
 
     // ─── Admin ───
     "admin.universities": "الجامعات",

@@ -27,13 +27,20 @@ export function HomePage() {
   const { data: plansData, loading: plansLoading } = useApiFetch<{ plans: SubscriptionPlanPublic[] }>(
     "/api/public/plans"
   );
+  const { data: uniData } = useApiFetch<{ universities: { id: string; name: string; logo: string | null; description: string | null; courseCount: number }[] }>(
+    "/api/public/universities"
+  );
 
   const courses = coursesData?.courses || [];
   const featured = courses.slice(0, 6);
   const plans = plansData?.plans || [];
 
-  // Derive universities from course data (no extra API call)
+  // Use universities from the dedicated API, falling back to course-derived data
   const universities = (() => {
+    if (uniData?.universities && uniData.universities.length > 0) {
+      return uniData.universities.slice(0, 6);
+    }
+    // Fallback: derive from course data
     const map = new Map<string, { id: string; name: string; logo?: string | null; courseCount: number }>();
     for (const c of courses) {
       if (!c.university) continue;
@@ -257,7 +264,7 @@ export function HomePage() {
           </Button>
         </div>
 
-        {universities.length === 0 ? (
+        {coursesLoading && universities.length === 0 ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
               <Card key={i} className="p-5 shadow-sm">
@@ -272,6 +279,12 @@ export function HomePage() {
               </Card>
             ))}
           </div>
+        ) : universities.length === 0 ? (
+          <Card className="border-dashed p-8 text-center">
+            <Building2 className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+            <p className="text-sm font-medium text-foreground">{t("empty.noUniversities")}</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("empty.noUniversitiesDesc")}</p>
+          </Card>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {universities.map((u) => (
