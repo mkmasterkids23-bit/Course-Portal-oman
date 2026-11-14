@@ -406,6 +406,15 @@ export const translations = {
     "auth.alreadyHaveAccount": "Already have an account?",
     "auth.registerHere": "Register here",
     "auth.dontHaveAccount": "Don't have an account?",
+    "auth.signUp": "Sign Up",
+    "auth.username": "Username",
+    "auth.newHere": "New here?",
+    "auth.newHereDesc": "Join us today and discover a world of possibilities. Create your account in seconds!",
+    "auth.oneOfUs": "One of us?",
+    "auth.oneOfUsDesc": "Welcome back! Sign in to continue your journey with us.",
+    "auth.orSignInSocial": "Or sign in with social platforms",
+    "auth.orSignUpSocial": "Or sign up with social platforms",
+    "auth.demoCredsChip": "Demo: admin@courselearn.dev / admin123",
 
     // ─── Public ───
     "public.heroLabel": "A New Way to Learn",
@@ -1540,6 +1549,15 @@ export const translations = {
     "auth.alreadyHaveAccount": "لديك حساب بالفعل؟",
     "auth.registerHere": "سجل هنا",
     "auth.dontHaveAccount": "ليس لديك حساب؟",
+    "auth.signUp": "إنشاء حساب",
+    "auth.username": "اسم المستخدم",
+    "auth.newHere": "جديد هنا؟",
+    "auth.newHereDesc": "انضم إلينا اليوم واكتشف عالماً من الإمكانيات. أنشئ حسابك في ثوانٍ!",
+    "auth.oneOfUs": "أحدنا؟",
+    "auth.oneOfUsDesc": "مرحباً بعودتك! سجل الدخول لمتابعة رحلتك معنا.",
+    "auth.orSignInSocial": "أو سجل الدخول عبر المنصات الاجتماعية",
+    "auth.orSignUpSocial": "أو أنشئ حساباً عبر المنصات الاجتماعية",
+    "auth.demoCredsChip": "تجريبي: admin@courselearn.dev / admin123",
 
     // ─── Public ───
     "public.heroLabel": "طريقة جديدة للتعلم",
