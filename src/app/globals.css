@@ -56,100 +56,100 @@
 }
 
 :root {
-  /* ─── Sage Green + Warm White Design System ─── */
-  --radius: 0.5rem; /* 8px — clean, professional radius */
+  /* ─── Purple Lavender Design System (eCoursie-inspired) ─── */
+  --radius: 0.75rem; /* 12px — generous rounded corners */
 
   /* Backgrounds & surfaces */
-  --background: #F5F7F4;       /* Canvas Background */
-  --foreground: #25332B;       /* Primary Text */
-  --card: #FFFFFF;             /* Pure White */
-  --card-foreground: #25332B;
+  --background: #F4F3FA;       /* Soft lavender-white canvas */
+  --foreground: #2E2C3A;       /* Dark charcoal text */
+  --card: #FFFFFF;             /* Pure White cards */
+  --card-foreground: #2E2C3A;
   --popover: #FFFFFF;
-  --popover-foreground: #25332B;
+  --popover-foreground: #2E2C3A;
 
   /* Brand colours */
-  --primary: #344F42;          /* Deep Forest — primary actions, selected nav */
-  --primary-foreground: #FCFCFA; /* Warm White */
-  --secondary: #E5EAE5;        /* Border-level surface */
-  --secondary-foreground: #344F42;
-  --muted: #F0F4F0;            /* Muted Background */
-  --muted-foreground: #77827B; /* Secondary Text */
-  --accent: #789786;           /* Primary Sage — accent colour */
-  --accent-foreground: #FCFCFA;
+  --primary: #5B54D9;          /* Brand Purple — primary actions, buttons, headings */
+  --primary-foreground: #FFFFFF;
+  --secondary: #EEEDFB;       /* Light lavender surface */
+  --secondary-foreground: #5B54D9;
+  --muted: #F0EFF8;           /* Very light lavender muted */
+  --muted-foreground: #8E8D96;/* Gray secondary text */
+  --accent: #5B54D9;          /* Same purple as accent */
+  --accent-foreground: #FFFFFF;
 
   /* Extended palette tokens */
-  --deep-forest: #344F42;      /* Deep Forest */
-  --primary-sage: #789786;     /* Primary Sage */
-  --soft-sage: #E8EFEA;        /* Soft Sage */
-  --canvas: #F5F7F4;           /* Canvas Background */
-  --warm-white: #FCFCFA;       /* Warm White */
-  --muted-bg: #F0F4F0;         /* Muted Background */
-  --info: #668BAA;             /* Information */
+  --deep-forest: #5B54D9;     /* Keep token name but purple value */
+  --primary-sage: #5B54D9;    /* Keep token name but purple value */
+  --soft-sage: #EEEDFB;       /* Light lavender (was soft sage) */
+  --canvas: #F4F3FA;
+  --warm-white: #FFFFFF;
+  --muted-bg: #F0EFF8;
+  --info: #668BAA;
 
   /* Status colours */
-  --destructive: #C96A6A;      /* Error */
-  --success: #43866A;          /* Success */
-  --success-foreground: #FCFCFA;
-  --warning: #D9A441;          /* Warning */
-  --warning-foreground: #FCFCFA;
+  --destructive: #E0708A;     /* Soft pink-red */
+  --success: #43866A;
+  --success-foreground: #FFFFFF;
+  --warning: #D9A441;
+  --warning-foreground: #FFFFFF;
 
   /* Borders & inputs */
-  --border: #E5EAE5;
-  --input: #E5EAE5;
-  --ring: #789786;             /* Primary Sage ring */
+  --border: #E8E8EC;          /* Very light gray border */
+  --input: #E8E8EC;
+  --ring: #5B54D9;            /* Purple ring */
 
-  /* Charts — sage and neutral tones */
-  --chart-1: #344F42;  /* Deep Forest */
-  --chart-2: #789786;  /* Primary Sage */
-  --chart-3: #A5B8AD;  /* Light Sage */
+  /* Charts — purple and pastel tones */
+  --chart-1: #5B54D9;  /* Brand Purple */
+  --chart-2: #C77FE0;  /* Orchid */
+  --chart-3: #E0708A;  /* Pink */
   --chart-4: #D9A441;  /* Warning */
   --chart-5: #43866A;  /* Success */
 
   /* Sidebar */
-  --sidebar: #FFFFFF;
-  --sidebar-foreground: #25332B;
-  --sidebar-primary: #344F42;
-  --sidebar-primary-foreground: #FCFCFA;
-  --sidebar-accent: #E8EFEA;   /* Soft Sage for active items */
-  --sidebar-accent-foreground: #344F42;
-  --sidebar-border: #E5EAE5;
-  --sidebar-ring: #789786;
+  --sidebar: #5B54D9;         /* Purple sidebar */
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #FFFFFF;
+  --sidebar-primary-foreground: #5B54D9;
+  --sidebar-accent: rgba(255,255,255,0.15); /* Translucent white for active */
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: rgba(255,255,255,0.1);
+  --sidebar-ring: #5B54D9;
 }
 
 .dark {
-  --background: #1A2420;
-  --foreground: #E8EFEA;
-  --card: #243029;
-  --card-foreground: #E8EFEA;
-  --popover: #243029;
-  --popover-foreground: #E8EFEA;
-  --primary: #E8EFEA;
-  --primary-foreground: #1A2420;
-  --secondary: #2D3A33;
-  --secondary-foreground: #E8EFEA;
-  --muted: #2D3A33;
-  --muted-foreground: #95A59B;
-  --accent: #789786;
-  --accent-foreground: #FCFCFA;
-  --destructive: #C96A6A;
+  --background: #1A1825;
+  --foreground: #E8E7F0;
+  --card: #252335;
+  --card-foreground: #E8E7F0;
+  --popover: #252335;
+  --popover-foreground: #E8E7F0;
+  --primary: #7B73E9;
+  --primary-foreground: #FFFFFF;
+  --secondary: #2D2B40;
+  --secondary-foreground: #E8E7F0;
+  --muted: #2D2B40;
+  --muted-foreground: #9594A0;
+  --accent: #7B73E9;
+  --accent-foreground: #FFFFFF;
+  --destructive: #E0708A;
   --border: rgba(255,255,255,0.08);
   --input: rgba(255,255,255,0.12);
-  --ring: #789786;
+  --ring: #7B73E9;
   --success: #43866A;
   --warning: #D9A441;
-  --chart-1: #789786;
-  --chart-2: #95A59B;
-  --chart-3: #B5C4BC;
+  --chart-1: #7B73E9;
+  --chart-2: #C77FE0;
+  --chart-3: #E0708A;
   --chart-4: #D9A441;
   --chart-5: #43866A;
-  --sidebar: #243029;
-  --sidebar-foreground: #E8EFEA;
-  --sidebar-primary: #E8EFEA;
-  --sidebar-primary-foreground: #1A2420;
-  --sidebar-accent: #2D3A33;
-  --sidebar-accent-foreground: #E8EFEA;
+  --sidebar: #252335;
+  --sidebar-foreground: #E8E7F0;
+  --sidebar-primary: #E8E7F0;
+  --sidebar-primary-foreground: #252335;
+  --sidebar-accent: #2D2B40;
+  --sidebar-accent-foreground: #E8E7F0;
   --sidebar-border: rgba(255,255,255,0.08);
-  --sidebar-ring: #789786;
+  --sidebar-ring: #7B73E9;
 }
 
 @layer base {
@@ -182,22 +182,22 @@
 @layer components {
   /* Enhanced card with hover elevation + colored shadow */
   .card-elevated {
-    box-shadow: 0 1px 3px rgba(37, 51, 43, 0.04), 0 1px 2px rgba(37, 51, 43, 0.02);
+    box-shadow: 0 1px 3px rgba(91, 84, 217, 0.04), 0 1px 2px rgba(91, 84, 217, 0.02);
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .card-elevated:hover {
-    box-shadow: 0 8px 24px rgba(37, 51, 43, 0.08), 0 2px 8px rgba(37, 51, 43, 0.04);
+    box-shadow: 0 8px 24px rgba(91, 84, 217, 0.08), 0 2px 8px rgba(91, 84, 217, 0.04);
     transform: translateY(-2px);
   }
 
   /* Premium card with accent border glow on hover */
   .card-glow {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 1px 3px rgba(37, 51, 43, 0.04);
+    box-shadow: 0 1px 3px rgba(91, 84, 217, 0.04);
   }
   .card-glow:hover {
-    box-shadow: 0 12px 32px rgba(15, 118, 110, 0.10), 0 4px 12px rgba(37, 51, 43, 0.05);
-    border-color: rgba(15, 118, 110, 0.3);
+    box-shadow: 0 12px 32px rgba(91, 84, 217, 0.10), 0 4px 12px rgba(91, 84, 217, 0.05);
+    border-color: rgba(91, 84, 217, 0.3);
     transform: translateY(-3px);
   }
 
@@ -219,7 +219,7 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at 80% 20%, rgba(15, 118, 110, 0.3), transparent 50%),
+    background: radial-gradient(circle at 80% 20%, rgba(91, 84, 217, 0.3), transparent 50%),
                 radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.08), transparent 40%);
     pointer-events: none;
   }
@@ -413,10 +413,10 @@
 
   /* Premium shadow */
   .shadow-premium {
-    box-shadow: 0 2px 8px rgba(37, 51, 43, 0.04), 0 1px 3px rgba(37, 51, 43, 0.02);
+    box-shadow: 0 2px 8px rgba(91, 84, 217, 0.04), 0 1px 3px rgba(91, 84, 217, 0.02);
   }
   .shadow-premium-hover:hover {
-    box-shadow: 0 8px 24px rgba(37, 51, 43, 0.08), 0 2px 8px rgba(37, 51, 43, 0.04);
+    box-shadow: 0 8px 24px rgba(91, 84, 217, 0.08), 0 2px 8px rgba(91, 84, 217, 0.04);
   }
 
   /* Icon container with gradient */

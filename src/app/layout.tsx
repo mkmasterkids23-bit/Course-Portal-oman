@@ -1,19 +1,14 @@
 import type { Metadata } from "next";
-import { Inter, Manrope, Noto_Kufi_Arabic } from "next/font/google";
+import { Poppins, Noto_Kufi_Arabic } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { DirectionManager } from "@/components/shared/direction-manager";
 
-const inter = Inter({
+const poppins = Poppins({
   variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
-});
-
-const manrope = Manrope({
-  variable: "--font-manrope",
-  subsets: ["latin"],
-  display: "swap",
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 const notoKufiArabic = Noto_Kufi_Arabic({
@@ -56,7 +51,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${manrope.variable} ${notoKufiArabic.variable} font-sans antialiased bg-background text-foreground`}
+        className={`${poppins.variable} ${notoKufiArabic.variable} font-sans antialiased bg-background text-foreground`}
       >
         <DirectionManager />
         {children}
