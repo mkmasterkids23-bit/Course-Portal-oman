@@ -1626,12 +1626,12 @@ function QuestionOverlay({
 }) {
   return (
     <div
-      className="absolute inset-0 z-30 flex items-center justify-center bg-black/85 backdrop-blur-sm p-3 sm:p-4 animate-in fade-in duration-150"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 sm:p-6 animate-in fade-in duration-150"
       role="dialog"
       aria-modal="true"
       aria-label={`Question ${answeredCount + 1} of ${totalCount}`}
     >
-      <div className="w-full max-w-md max-h-[90vh] flex flex-col rounded-xl border border-accent/20 bg-card shadow-2xl ring-1 ring-accent/10 overflow-hidden">
+      <div className="w-full max-w-lg max-h-[90vh] flex flex-col rounded-xl border border-accent/20 bg-card shadow-2xl ring-1 ring-accent/10 overflow-hidden">
         {/* Header strip — sage themed (fixed at top) */}
         <div className="flex items-center justify-between gap-2 border-b border-accent/15 bg-gradient-to-r from-soft-sage to-transparent px-4 py-2.5 shrink-0">
           <div className="flex items-center gap-2 min-w-0">
