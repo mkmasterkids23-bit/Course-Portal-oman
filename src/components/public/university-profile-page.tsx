@@ -69,7 +69,10 @@ const LEVEL_BADGE_CLASS: Record<ProfileCourse["level"], string> = {
 
 export function UniversityProfilePage({ universityId }: { universityId: string }) {
   const { t } = useI18n();
-  const { data, loading } = useApiFetch(`/api/public/universities/${universityId}`);
+  const navigate = useAppStore((s) => s.navigate);
+  const { data, loading, error } = useApiFetch<UniversityProfileData>(
+    `/api/public/universities/${universityId}`
+  );
 
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");

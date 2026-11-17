@@ -274,6 +274,8 @@ export function UniversityDiscussions() {
 // ─── Discussion Detail Dialog ───────────────────────────────────────────
 
 function DiscussionDetailDialog({
+  discussionId,
+  onClose,
   onDelete,
 }: {
   discussionId: string;

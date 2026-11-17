@@ -89,6 +89,8 @@ interface RepliesResponse {
  * scrolls into view.
  */
 export function CourseDiscussionsPanel({
+  courseId,
+  highlightDiscussionId,
 }: {
   courseId: string;
   highlightDiscussionId?: string | null;
@@ -346,6 +348,8 @@ export function CourseDiscussionsPanel({
 /* ──────────────────────────────────────────────────────────────────────── */
 
 function DiscussionThread({
+  discussion,
+  defaultOpen,
   onReplyPosted,
   onDeleted,
   onUpdated,

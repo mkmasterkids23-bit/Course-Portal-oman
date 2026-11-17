@@ -205,7 +205,6 @@ export const translations = {
     "nav.universitySettings": "Settings",
     "nav.universityCertificates": "Certificates",
     "nav.universitySubmissions": "Submissions",
-    "nav.universityDiscussions": "Discussions",
 
     // ─── Dashboard ───
     "dashboard.welcome": "Welcome back",
@@ -273,6 +272,7 @@ export const translations = {
     "courses.requiredPlans": "Required Subscription Plans",
     "courses.publishImmediately": "Publish immediately",
     "courses.published": "Published",
+    "courses.draft": "Draft",
     "courses.unpublished": "Unpublished",
     "courses.publish": "Publish",
     "courses.unpublish": "Unpublish",
@@ -331,7 +331,6 @@ export const translations = {
     "learning.myCourses": "My Courses",
     "learning.courseProgress": "Course Progress",
     "learning.lessonsCompleted": "lessons completed",
-    "learning.markAsComplete": "Mark as Complete",
     "learning.keepWatching": "Keep watching",
     "learning.videoTracking": "Video progress is being tracked. Continue watching to unlock lesson completion.",
     "learning.youtubeTracking": "YouTube video tracking",
@@ -366,7 +365,6 @@ export const translations = {
     "learning.assessmentPassed": "Assessment Passed",
     "learning.assessmentRequired": "Assessment Required",
     "learning.assessmentFailed": "Assessment Failed — Retake Needed",
-    "learning.questionCount": "Questions",
     "learning.quickCheck": "Quick Check",
     "learning.submitAnswer": "Submit Answer",
     "learning.score": "Score",
@@ -523,7 +521,6 @@ export const translations = {
     "notes.noNotes": "No notes yet",
     "notes.createFirstNote": "Create notes while watching lessons to save important points.",
     "notes.addNote": "Add Note",
-    "notes.editNote": "Edit Note",
     "notes.deleteNote": "Delete note?",
 
     // ─── Bookmarks ───
@@ -1348,7 +1345,6 @@ export const translations = {
     "nav.universitySettings": "الإعدادات",
     "nav.universityCertificates": "الشهادات",
     "nav.universitySubmissions": "التسليمات",
-    "nav.universityDiscussions": "المناقشات",
 
     // ─── Dashboard ───
     "dashboard.welcome": "مرحباً بعودتك",
@@ -1416,6 +1412,7 @@ export const translations = {
     "courses.requiredPlans": "خطط الاشتراك المطلوبة",
     "courses.publishImmediately": "نشر فوراً",
     "courses.published": "منشور",
+    "courses.draft": "مسودة",
     "courses.unpublished": "غير منشور",
     "courses.publish": "نشر",
     "courses.unpublish": "إلغاء النشر",
@@ -1474,7 +1471,6 @@ export const translations = {
     "learning.myCourses": "مقرراتي",
     "learning.courseProgress": "تقدم المقرر",
     "learning.lessonsCompleted": "دروس مكتملة",
-    "learning.markAsComplete": "تحديد كمكتمل",
     "learning.keepWatching": "متابعة المشاهدة",
     "learning.videoTracking": "يتم تتبع تقدم الفيديو. تابع المشاهدة لفتح إتمام الدرس.",
     "learning.youtubeTracking": "تتبع فيديو يوتيوب",
@@ -1509,7 +1505,6 @@ export const translations = {
     "learning.assessmentPassed": "التقييم مجتاز",
     "learning.assessmentRequired": "التقييم مطلوب",
     "learning.assessmentFailed": "التقييم غير مجتاز — إعادة محاولة مطلوبة",
-    "learning.questionCount": "أسئلة",
     "learning.quickCheck": "تحقق سريع",
     "learning.submitAnswer": "إرسال الإجابة",
     "learning.score": "الدرجة",
@@ -1666,7 +1661,6 @@ export const translations = {
     "notes.noNotes": "لا توجد ملاحظات بعد",
     "notes.createFirstNote": "أنشئ ملاحظات أثناء مشاهدة الدروس لحفظ النقاط المهمة.",
     "notes.addNote": "إضافة ملاحظة",
-    "notes.editNote": "تعديل الملاحظة",
     "notes.deleteNote": "حذف الملاحظة؟",
 
     // ─── Bookmarks ───

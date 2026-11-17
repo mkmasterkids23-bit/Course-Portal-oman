@@ -93,6 +93,7 @@ interface VideoRow {
   displayOrder: number;
   isPublished: boolean;
   duration: number;
+  topicId: string | null;
 }
 
 interface VideoQuestion {
@@ -152,6 +153,8 @@ export function UniversityCourseEditor({
   onBack: () => void;
 }) {
   const navigate = useAppStore((s) => s.navigate);
+  const query = useAppStore((s) => s.query);
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<string>("topics");
 
   // Deep link via ?tab=certificate — React 19 "store previous value" pattern
@@ -307,6 +310,8 @@ export function UniversityCourseEditor({
 // ============= TOPICS & VIDEOS TAB =============
 function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () => void }) {
   const { t } = useI18n();
+  const [addTopicOpen, setAddTopicOpen] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editTopic, setEditTopic] = useState<TopicRow | null>(null);
   const [deleteTopic, setDeleteTopic] = useState<TopicRow | null>(null);
   const [addVideoFor, setAddVideoFor] = useState<TopicRow | null>(null);
@@ -1037,6 +1042,8 @@ function VideoFormDialog({
 // ============= MATERIALS TAB =============
 function MaterialsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () => void }) {
   const { t } = useI18n();
+  const [addOpen, setAddOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<MaterialRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<MaterialRow | null>(null);
 
   const grouped = useMemo(() => {
@@ -1413,6 +1420,8 @@ function MaterialFormDialog({
 // ============= ASSIGNMENTS TAB =============
 function AssignmentsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () => void }) {
   const { t } = useI18n();
+  const navigate = useAppStore((s) => s.navigate);
+  const [addOpen, setAddOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<AssignmentRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AssignmentRow | null>(null);
 
@@ -1586,6 +1595,7 @@ function AssignmentsTab({ course, onRefresh }: { course: CourseDetail; onRefresh
 }
 
 function AssignmentFormDialog({
+  open,
   onOpenChange,
   courseId,
   target,
@@ -1787,6 +1797,7 @@ function AssignmentFormDialog({
 
 // ============= CERTIFICATE TAB =============
 function CertificateTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () => void }) {
+  const { t } = useI18n();
   const template = course.certificateTemplate;
   const [isEnabled, setIsEnabled] = useState(template?.isEnabled ?? true);
   const [title, setTitle] = useState(template?.title || "Certificate of Completion");
@@ -2079,6 +2090,7 @@ function SettingsTab({
   onDeleted: () => void;
 }) {
   const navigate = useAppStore((s) => s.navigate);
+  const { t } = useI18n();
   const [title, setTitle] = useState(course.title);
   const [description, setDescription] = useState(course.description || "");
   const [category, setCategory] = useState(course.category || "");
@@ -2360,6 +2372,7 @@ function VideoQuestionsPanel({
   onClose: () => void;
   reportCount: (videoId: string, n: number) => void;
 }) {
+  const { t } = useI18n();
   const { data, loading, error, refetch } = useApiFetch<QuestionsResponse>(
     `/api/university/videos/${videoId}/questions`
   );

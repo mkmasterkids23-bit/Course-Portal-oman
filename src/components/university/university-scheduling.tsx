@@ -158,17 +158,21 @@ export function UniversityScheduling() {
           c.availabilityMode !== "ALWAYS" &&
           (c.startDate || c.endDate)
       )
-      .map((c) => ({
-        ...c,
-        start: c.startDate ? new Date(c.startDate) : null,
-        end: c.endDate ? new Date(c.endDate) : null,
-        status:
-          c.start && c.start > now
-            ? "upcoming"
-            : c.end && c.end < now
-              ? "ended"
-              : "active",
-      }))
+      .map((c) => {
+        const start = c.startDate ? new Date(c.startDate) : null;
+        const end = c.endDate ? new Date(c.endDate) : null;
+        return {
+          ...c,
+          start,
+          end,
+          status:
+            start && start > now
+              ? "upcoming"
+              : end && end < now
+                ? "ended"
+                : "active",
+        };
+      })
       .sort((a, b) => {
         const aT = a.start?.getTime() || a.end?.getTime() || 0;
         const bT = b.start?.getTime() || b.end?.getTime() || 0;

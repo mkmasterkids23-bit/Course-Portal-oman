@@ -528,6 +528,8 @@ function initials(name: string): string {
 
 // ─── Form Dialog ──────────────────────────────────────────────────────────
 function InstructorFormDialog({
+  open,
+  onOpenChange,
   target,
   courses,
   onSaved,

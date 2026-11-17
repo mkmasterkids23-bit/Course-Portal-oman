@@ -141,6 +141,8 @@ interface CourseDetail {
   courseCompletion: {
     totalVideos: number;
     completedVideos: number;
+    completedTopics: number;
+    totalTopics: number;
     percent: number;
     allCompleted: boolean;
   };
@@ -157,7 +159,7 @@ interface CourseResponse { course: CourseDetail }
 
 export function StudentLearning({ courseId, onBack }: { courseId: string; onBack: () => void }) {
   const { t } = useI18n();
-  const { data, loading, error, refetch } = useApiFetch<CourseResponse>(
+  const { data, loading, error, refetch, setData } = useApiFetch<CourseResponse>(
     `/api/student/courses/${courseId}`
   );
 
@@ -285,9 +287,19 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
         ).length;
         const total = videos.length;
         const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+        const totalTopics = data.course.topics.length;
+        const completedTopics = data.course.topics.filter((topic) =>
+          topic.videos.length > 0 &&
+          topic.videos.every(
+            (v) =>
+              (v.id === updated.videoId ? updated.progress.isCompleted : v.progress?.isCompleted)
+          )
+        ).length;
         return {
           totalVideos: total,
           completedVideos: completed,
+          completedTopics,
+          totalTopics,
           percent,
           allCompleted: total > 0 && completed === total,
         };
@@ -1831,6 +1843,8 @@ function MaterialRow({ material }: { material: MaterialItem }) {
 /* ===================== Locked Assignment Placeholder ===================== */
 
 function LockedAssignmentCard({
+  completedVideos,
+  totalVideos,
   percent,
 }: {
   completedVideos: number;
@@ -1874,6 +1888,8 @@ function LockedAssignmentCard({
 }
 
 function AssignmentPanel({
+  course,
+  onSubmitted,
 }: {
   course: CourseDetail;
   onSubmitted: () => void;

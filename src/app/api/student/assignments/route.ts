@@ -41,7 +41,35 @@ export async function GET() {
       },
     });
 
-    const result = [];
+    type AssignmentWithCourse = {
+      id: string;
+      courseId: string;
+      courseTitle: string;
+      title: string;
+      description: string | null;
+      instructions: string | null;
+      fileUrl: string | null;
+      dueDate: Date | null;
+      isPublished: boolean;
+      allowResubmission: boolean;
+      submission: {
+        id: string;
+        fileUrl: string;
+        submittedAt: Date;
+        status: "SUBMITTED" | "REVIEWED";
+        reviewNotes: string | null;
+        reviewedAt: Date | null;
+      } | null;
+      unlocked: boolean;
+      lockedReason: string | null;
+      courseCompletion: {
+        percent: number;
+        completedVideos: number;
+        totalVideos: number;
+        allCompleted: boolean;
+      };
+    };
+    const result: AssignmentWithCourse[] = [];
     for (const a of assignments) {
       const access = await canStudentAccessCourse(user.id, a.course.id);
       if (!access.allowed) continue; // skip courses student can't access

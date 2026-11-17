@@ -27,6 +27,7 @@ export interface SubscriptionPlanPublic {
   benefits: string[];
   isActive: boolean;
   isPopular: boolean;
+  createdAt: string;
 }
 
 export interface CoursePublic {

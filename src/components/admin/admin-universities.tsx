@@ -61,6 +61,7 @@ interface UniversityRow {
   email: string;
   createdAt: string;
   courseCount: number;
+  courses?: UniversityCourseRow[];
 }
 
 interface UniversitiesResponse {

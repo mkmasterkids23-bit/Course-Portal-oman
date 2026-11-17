@@ -50,6 +50,8 @@ interface NotesResponse {
  * timestamp — the UI shows a hint in that case.
  */
 export function VideoNotesPanel({
+  courseId,
+  topicId,
   videoId,
   videoTitle,
   getCurrentTime,

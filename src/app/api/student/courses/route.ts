@@ -50,7 +50,29 @@ export async function GET(req: Request) {
     const subPlanId = subscription?.planId;
 
     // Determine which courses are accessible to the student
-    const accessibleCourses = [];
+    type AccessibleCourse = {
+      id: string;
+      title: string;
+      description: string | null;
+      thumbnail: string | null;
+      firstVideoUrl: string | null;
+      firstVideoSource: string | null;
+      category: string | null;
+      accessType: "FREE" | "PAID";
+      level: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+      university: { id: string; name: string; logo: string | null } | null;
+      topicsCount: number;
+      videosCount: number;
+      completedVideos: number;
+      completedTopics: number;
+      percent: number;
+      lastWatchedVideoId: string | null;
+      lastWatchedVideoTitle: string | null;
+      lastWatchedAt: string | null;
+      createdAt: string;
+      popularity: number;
+    };
+    const accessibleCourses: AccessibleCourse[] = [];
     for (const c of allCourses) {
       let allowed = false;
       if (c.accessType === "FREE") {
@@ -107,7 +129,9 @@ export async function GET(req: Request) {
         percent: stats.percent,
         lastWatchedVideoId: lastProgress?.videoId ?? null,
         lastWatchedVideoTitle: lastProgress?.video.title ?? null,
-        lastWatchedAt: lastProgress?.updatedAt ?? null,
+        lastWatchedAt: lastProgress?.updatedAt
+          ? lastProgress.updatedAt.toISOString()
+          : null,
         createdAt: c.createdAt.toISOString(),
         popularity: popularityRows.length,
       });
