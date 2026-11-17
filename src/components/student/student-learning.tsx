@@ -61,6 +61,7 @@ interface PlayerApi {
   currentTime: () => number;
   duration: () => number;
   pause: () => void;
+  play: () => void;
   seekTo: (t: number) => void;
   paused: () => boolean;
 }
@@ -905,6 +906,7 @@ function VideoPlayer({
       currentTime: () => el.currentTime,
       duration: () => el.duration,
       pause: () => { el.pause(); },
+      play: () => { void el.play().catch(() => {}); },
       seekTo: (t) => { el.currentTime = t; },
       paused: () => el.paused,
     };
@@ -1124,7 +1126,12 @@ function VideoPlayer({
       setSelectedAnswer(null);
 
       if (questionsData && newMap.size >= questionsData.questions.length) {
-        // All answered → auto-submit the assessment
+        // All answered → resume playback FIRST (within the user gesture),
+        // then auto-submit the assessment in the background.
+        try {
+          const api = playerApiRef.current;
+          if (api && api.paused()) api.play();
+        } catch {}
         void submitAssessment(newMap);
         return;
       }
@@ -1132,7 +1139,8 @@ function VideoPlayer({
       // If the playhead is already past another unanswered question (e.g.
       // after a forward seek that skipped several), surface the next one
       // instead of resuming playback.
-      const cur = videoRef.current?.currentTime || 0;
+      const api = playerApiRef.current;
+      const cur = api?.currentTime() || 0;
       if (questionsData) {
         const nextQ = questionsData.questions.find(
           (q) => !newMap.has(q.id) && cur >= q.timestamp - 0.5
@@ -1146,9 +1154,8 @@ function VideoPlayer({
 
       // Otherwise resume normal playback
       try {
-        const el = videoRef.current;
-        if (el && el.paused) {
-          void el.play().catch(() => {});
+        if (api && api.paused()) {
+          api.play();
         }
       } catch {}
     },
@@ -1187,14 +1194,14 @@ function VideoPlayer({
       clearTimeout(feedbackTimerRef.current);
       feedbackTimerRef.current = null;
     }
-    const el = videoRef.current;
-    if (el && questionsData && questionsData.questions.length > 0) {
+    const api = playerApiRef.current;
+    if (api && questionsData && questionsData.questions.length > 0) {
       const firstTs = questionsData.questions[0].timestamp;
       const target = Math.max(0, firstTs - 1);
       try {
-        el.currentTime = target;
+        api.seekTo(target);
         lastTimeRef.current = target;
-        void el.play().catch(() => {});
+        api.play();
       } catch {}
     }
   }, [questionsData]);
@@ -1203,9 +1210,9 @@ function VideoPlayer({
   const handleDismissResult = useCallback(() => {
     setAssessmentResult(null);
     try {
-      const el = videoRef.current;
-      if (el && el.paused) {
-        void el.play().catch(() => {});
+      const api = playerApiRef.current;
+      if (api && api.paused()) {
+        api.play();
       }
     } catch {}
   }, []);
@@ -1251,6 +1258,7 @@ function VideoPlayer({
               currentTime: () => { try { return p.getCurrentTime() || 0; } catch { return 0; } },
               duration: () => { try { return p.getDuration() || 0; } catch { return 0; } },
               pause: () => { try { p.pauseVideo(); } catch {} },
+              play: () => { try { p.playVideo(); } catch {} },
               seekTo: (t) => { try { p.seekTo(t, true); } catch {} },
               paused: () => { try { return p.getPlayerState() === 2; } catch { return true; } },
             };
@@ -1321,6 +1329,17 @@ function VideoPlayer({
 
   // Overlay JSX rendered on top of the video element (question popup or
   // assessment result card). Same JSX reused in compact + expanded views.
+  // Manually continue after the feedback confirmation — clears the feedback
+  // timer and advances immediately (submits assessment or resumes playback).
+  const handleContinueAfterAnswer = useCallback(() => {
+    if (feedbackTimerRef.current) {
+      clearTimeout(feedbackTimerRef.current);
+      feedbackTimerRef.current = null;
+    }
+    // Build the current answered map (includes the just-submitted answer)
+    afterAnswerSubmitted(answeredMap);
+  }, [answeredMap, afterAnswerSubmitted]);
+
   const videoOverlays = (
     <>
       {activeQuestion && (
@@ -1330,6 +1349,7 @@ function VideoPlayer({
           showFeedback={showFeedback}
           onSelect={(idx) => setSelectedAnswer(idx)}
           onSubmit={handleSubmitAnswer}
+          onContinue={handleContinueAfterAnswer}
           answeredCount={answeredMap.size}
           totalCount={questionsData?.questions.length ?? 0}
         />
@@ -1420,7 +1440,14 @@ function VideoPlayer({
         <div className="bg-gradient-to-b from-foreground/[0.03] to-card p-4 md:p-6">
           <div className="relative mx-auto overflow-hidden rounded-xl bg-black shadow-lg ring-1 ring-black/20" style={{ maxWidth: "640px" }}>
             <div className="aspect-video w-full flex items-center justify-center relative">
-              {isYouTube ? (
+              {expanded ? (
+                // When expanded, the video element lives in the fullscreen
+                // overlay above. Render a placeholder here so videoRef/
+                // ytContainerRef don't point at a hidden second video element.
+                <div className="flex h-full w-full items-center justify-center text-white/40">
+                  <PlayCircle className="h-8 w-8" />
+                </div>
+              ) : isYouTube ? (
                 <div
                   key={video.id}
                   ref={ytContainerRef}
@@ -1441,15 +1468,17 @@ function VideoPlayer({
                 />
               )}
               {/* Expand button overlay */}
-              <button
-                onClick={() => setExpanded(true)}
-                className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-lg bg-black/70 px-2.5 py-1.5 text-xs font-medium text-white backdrop-blur-sm hover:bg-black/90 transition-colors z-10 shadow-lg ring-1 ring-white/10"
-                aria-label="Expand video to fullscreen"
-              >
-                <Maximize2 className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Expand</span>
-              </button>
-              {videoOverlays}
+              {!expanded && (
+                <button
+                  onClick={() => setExpanded(true)}
+                  className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-lg bg-black/70 px-2.5 py-1.5 text-xs font-medium text-white backdrop-blur-sm hover:bg-black/90 transition-colors z-10 shadow-lg ring-1 ring-white/10"
+                  aria-label="Expand video to fullscreen"
+                >
+                  <Maximize2 className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Expand</span>
+                </button>
+              )}
+              {!expanded && videoOverlays}
             </div>
           </div>
         </div>
@@ -1556,6 +1585,7 @@ function QuestionOverlay({
   showFeedback,
   onSelect,
   onSubmit,
+  onContinue,
   answeredCount,
   totalCount,
 }: {
@@ -1564,6 +1594,7 @@ function QuestionOverlay({
   showFeedback: boolean;
   onSelect: (idx: number) => void;
   onSubmit: () => void;
+  onContinue: () => void;
   answeredCount: number;
   totalCount: number;
 }) {
@@ -1639,13 +1670,23 @@ function QuestionOverlay({
           <div className="flex items-center justify-between gap-3 pt-1">
             <p className="text-[11px] text-muted-foreground">
               {showFeedback
-                ? "Answer recorded — your video will resume shortly."
+                ? "Answer recorded."
                 : "Pick an answer to continue."}
             </p>
             {showFeedback ? (
-              <span className="inline-flex items-center gap-1.5 rounded-md bg-success/15 px-2.5 py-1.5 text-xs font-medium text-success">
-                <CheckCircle2 className="h-3.5 w-3.5" /> Saved
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-md bg-success/15 px-2.5 py-1.5 text-xs font-medium text-success">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Saved
+                </span>
+                <Button
+                  onClick={onContinue}
+                  size="sm"
+                  className="gap-1.5 shadow-sm"
+                >
+                  Continue
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
             ) : (
               <Button
                 onClick={onSubmit}
