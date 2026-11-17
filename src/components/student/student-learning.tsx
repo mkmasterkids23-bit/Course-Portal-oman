@@ -1096,10 +1096,10 @@ function VideoPlayer({
         );
         setAssessmentResult(res.assessment);
         // Refresh the questions endpoint so the assessment badge reflects
-        // the latest passed/attempts state, and refresh the parent course
-        // data so the sidebar + course completion update.
+        // the latest passed/attempts state. Defer the course refetch so it
+        // doesn't cause a re-render that disrupts video playback.
         refetchQuestions();
-        refetchCourse?.();
+        setTimeout(() => refetchCourse?.(), 1000);
         if (res.assessment.passed) {
           toast({
             title: "Assessment Passed!",
@@ -1163,8 +1163,9 @@ function VideoPlayer({
   );
 
   // Submit the currently-selected answer for the active popup question.
-  // Shows a brief "Answer saved" confirmation, then advances via
-  // afterAnswerSubmitted.
+  // Shows a "Answer saved" confirmation with a Continue button. The user
+  // clicks Continue to advance — this keeps the resume within a user gesture
+  // (browsers block play() from setTimeout/auto-timer callbacks).
   const handleSubmitAnswer = useCallback(() => {
     if (!activeQuestion || selectedAnswer === null) return;
     const qid = activeQuestion.id;
@@ -1172,13 +1173,8 @@ function VideoPlayer({
     newMap.set(qid, selectedAnswer);
     setAnsweredMap(newMap);
     setShowFeedback(true);
-
-    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
-    feedbackTimerRef.current = setTimeout(() => {
-      feedbackTimerRef.current = null;
-      afterAnswerSubmitted(newMap);
-    }, 1200);
-  }, [activeQuestion, selectedAnswer, answeredMap, afterAnswerSubmitted]);
+    // No auto-timer — the Continue button calls handleContinueAfterAnswer.
+  }, [activeQuestion, selectedAnswer, answeredMap]);
 
   // Reset all in-session assessment state and let the student try again.
   // Seeks back to ~1s before the first question so popups re-trigger as the
@@ -1336,7 +1332,14 @@ function VideoPlayer({
       clearTimeout(feedbackTimerRef.current);
       feedbackTimerRef.current = null;
     }
-    // Build the current answered map (includes the just-submitted answer)
+    // Resume playback IMMEDIATELY — directly in the click handler so it's
+    // within the user gesture and before any state updates / re-renders
+    // from the assessment submission can interfere.
+    try {
+      const api = playerApiRef.current;
+      if (api && api.paused()) api.play();
+    } catch {}
+    // Then advance (submit assessment or check for next question)
     afterAnswerSubmitted(answeredMap);
   }, [answeredMap, afterAnswerSubmitted]);
 
