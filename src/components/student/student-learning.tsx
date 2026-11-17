@@ -362,7 +362,7 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
   }
 
   return (
-    <div className="space-y-4 animate-page-in pb-20 lg:pb-4">
+    <div className="min-h-screen bg-soft-sage/20 space-y-4 animate-page-in pb-20 lg:pb-4">
       {/* ─── Compact breadcrumb header ─── */}
       <div className="shadow-premium flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3">
         <div className="flex items-center gap-2 min-w-0 flex-1">
