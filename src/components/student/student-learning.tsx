@@ -11,9 +11,6 @@ import { EmptyState } from "@/components/shared/empty-state";
 import {
   Accordion, AccordionItem, AccordionTrigger, AccordionContent,
 } from "@/components/ui/accordion";
-import {
-  Tooltip, TooltipTrigger, TooltipContent,
-} from "@/components/ui/tooltip";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
 import { VideoNotesPanel } from "@/components/student/video-notes-panel";
@@ -28,6 +25,45 @@ import {
 } from "lucide-react";
 import { formatDateTime } from "@/types";
 import { useI18n } from "@/lib/i18n/store";
+
+// ─── YouTube IFrame Player API (loaded once, shared across mounts) ───
+declare global {
+  interface Window {
+    YT?: any;
+    onYouTubeIframeAPIReady?: () => void;
+  }
+}
+
+let ytApiPromise: Promise<any> | null = null;
+function loadYouTubeAPI(): Promise<any> {
+  if (typeof window === "undefined") return Promise.reject(new Error("no window"));
+  if (window.YT && window.YT.Player) return Promise.resolve(window.YT);
+  if (ytApiPromise) return ytApiPromise;
+  ytApiPromise = new Promise((resolve) => {
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      if (typeof prev === "function") { try { prev(); } catch {} }
+      resolve(window.YT);
+    };
+    const existing = document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
+    if (!existing) {
+      const tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
+      document.head.appendChild(tag);
+    }
+  });
+  return ytApiPromise;
+}
+
+// Player abstraction — lets HTML5 <video> and the YouTube IFrame player share
+// one set of tracking logic (time ticks, seek handling, question triggers).
+interface PlayerApi {
+  currentTime: () => number;
+  duration: () => number;
+  pause: () => void;
+  seekTo: (t: number) => void;
+  paused: () => boolean;
+}
 
 interface VideoProgressInfo {
   lastPosition: number;
@@ -778,11 +814,11 @@ function VideoPlayer({
   // Timer ref for the post-submit feedback delay (cleared on unmount/video change).
   const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // YouTube completion timer
-  const ytStartRef = useRef<number | null>(null);
-  const ytTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const ytWatchSecondsRef = useRef<number>(0);
-  const [ytCanMarkComplete, setYtCanMarkComplete] = useState(false);
+  // ─── Player abstraction + YouTube IFrame player ───
+  const playerApiRef = useRef<PlayerApi | null>(null);
+  const ytPlayerRef = useRef<any>(null);
+  const ytPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const ytContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Local UI state
   const [localCompleted, setLocalCompleted] = useState<boolean>(
@@ -807,12 +843,14 @@ function VideoPlayer({
     lastPostRef.current = 0;
     resumeAppliedRef.current = false;
     setLocalCompleted(video.progress?.isCompleted || false);
-    setYtCanMarkComplete(false);
-    ytWatchSecondsRef.current = 0;
-    if (ytTimerRef.current) {
-      clearInterval(ytTimerRef.current);
-      ytTimerRef.current = null;
+    // Tear down any YouTube player + polling from the previous video.
+    if (ytPollRef.current) {
+      clearInterval(ytPollRef.current);
+      ytPollRef.current = null;
     }
+    try { ytPlayerRef.current?.destroy?.(); } catch {}
+    ytPlayerRef.current = null;
+    playerApiRef.current = null;
     // ─── Reset assessment state ───
     setActiveQuestion(null);
     setSelectedAnswer(null);
@@ -834,16 +872,16 @@ function VideoPlayer({
   useEffect(() => {
     if (!questionsActive || !questionsData) return;
     if (activeQuestion || assessmentResult || showFeedback || submittingAssessment) return;
-    const el = videoRef.current;
-    if (!el) return;
-    const cur = el.currentTime;
+    const api = playerApiRef.current;
+    if (!api) return;
+    const cur = api.currentTime();
     const missed = questionsData.questions.find(
       (q) => !answeredMap.has(q.id) && cur >= q.timestamp - 0.5
     );
-    if (missed && !el.paused) {
+    if (missed && !api.paused()) {
       try {
-        el.pause();
-        lastTimeRef.current = el.currentTime;
+        api.pause();
+        lastTimeRef.current = api.currentTime();
       } catch {}
       setActiveQuestion(missed);
       setSelectedAnswer(null);
@@ -862,6 +900,14 @@ function VideoPlayer({
   const handleLoadedMetadata = () => {
     const el = videoRef.current;
     if (!el) return;
+    // Wire up the shared player abstraction for HTML5 video.
+    playerApiRef.current = {
+      currentTime: () => el.currentTime,
+      duration: () => el.duration,
+      pause: () => { el.pause(); },
+      seekTo: (t) => { el.currentTime = t; },
+      paused: () => el.paused,
+    };
     durationRef.current = el.duration || durationRef.current;
     if (!resumeAppliedRef.current && video.progress?.lastPosition) {
       // resume within (duration - 2) so we don't immediately fire ended
@@ -879,9 +925,9 @@ function VideoPlayer({
 
   // Core: timeupdate handler — accumulate real watch time.
   const handleTimeUpdate = () => {
-    const el = videoRef.current;
-    if (!el) return;
-    const cur = el.currentTime;
+    const api = playerApiRef.current;
+    if (!api) return;
+    const cur = api.currentTime();
     const last = lastTimeRef.current;
 
     // ─── Question trigger check ───
@@ -905,7 +951,7 @@ function VideoPlayer({
         if (answeredMap.has(q.id)) continue;
         if (cur >= q.timestamp && last < q.timestamp) {
           try {
-            el.pause();
+            api.pause();
             lastTimeRef.current = cur;
           } catch {}
           setActiveQuestion(q);
@@ -925,6 +971,12 @@ function VideoPlayer({
     // Update lastTime to current — even on seek, so next delta is small.
     lastTimeRef.current = cur;
 
+    // Forward-seek past an unanswered question (YouTube doesn't fire seeked).
+    if (delta > 1.5 && questionsActive && !activeQuestion && !assessmentResult && !showFeedback && !submittingAssessment && questionsData) {
+      const skipped = questionsData.questions.find((q) => !answeredMap.has(q.id) && cur > q.timestamp + 0.5);
+      if (skipped) { try { api.pause(); } catch {} setActiveQuestion(skipped); setSelectedAnswer(null); return; }
+    }
+
     // Throttled server POST every 5 seconds
     const now = Date.now();
     if (now - lastPostRef.current > 5000) {
@@ -938,9 +990,9 @@ function VideoPlayer({
   // progress bar past an unanswered question, pause and surface that question
   // so they can't skip it.
   const handleSeeked = () => {
-    const el = videoRef.current;
-    if (!el) return;
-    const newTime = el.currentTime;
+    const api = playerApiRef.current;
+    if (!api) return;
+    const newTime = api.currentTime();
     lastTimeRef.current = newTime;
 
     if (
@@ -957,7 +1009,7 @@ function VideoPlayer({
       );
       if (skipped) {
         try {
-          el.pause();
+          api.pause();
         } catch {}
         setActiveQuestion(skipped);
         setSelectedAnswer(null);
@@ -982,10 +1034,12 @@ function VideoPlayer({
           certificateId: string | null;
         }>("/api/student/progress", {
           videoId: video.id,
-          lastPosition: videoRef.current?.currentTime || 0,
+          lastPosition: isCompletionHint && Number.isFinite(durationRef.current) && durationRef.current > 0
+            ? durationRef.current : (videoRef.current?.currentTime || 0),
           watchTimeSeconds: watchTimeRef.current,
-          duration: durationRef.current,
+          duration: Number.isFinite(durationRef.current) ? durationRef.current : 0,
           isCompleted: isCompletionHint,
+          ended: isCompletionHint,
         });
         setLocalCompleted(res.progress.isCompleted);
         onProgress({
@@ -1017,57 +1071,6 @@ function VideoPlayer({
     },
     [video.id, onProgress]
   );
-
-  // Manual "Mark complete" for YouTube videos
-  const markYtComplete = async () => {
-    setPosting(true);
-    try {
-      const res = await apiPost<{
-        progress: VideoProgressInfo;
-        justCompleted: boolean;
-        rejectedCompletion: boolean;
-        certificateIssued: boolean;
-        certificateId: string | null;
-      }>("/api/student/progress", {
-        videoId: video.id,
-        lastPosition: durationRef.current,
-        watchTimeSeconds: ytWatchSecondsRef.current,
-        duration: durationRef.current,
-        isCompleted: true,
-      });
-      setLocalCompleted(res.progress.isCompleted);
-      onProgress({
-        videoId: video.id,
-        progress: res.progress,
-        justCompleted: res.justCompleted,
-      });
-      if (res.justCompleted) {
-        toast({
-          title: "Lesson completed",
-          description: "Great work! Your progress has been saved.",
-        });
-      }
-      if (res.rejectedCompletion) {
-        toast({
-          title: "Completion not recorded",
-          description:
-            "You need to keep the video playing for at least 85% of its duration.",
-          variant: "destructive",
-        });
-      }
-      // Certificate auto-issued upon course completion
-      if (res.certificateIssued && res.certificateId) {
-        toast({
-          title: "🎉 Certificate Issued!",
-          description:
-            "Congratulations! You've completed the course and your certificate has been automatically generated. View it in My Certificates.",
-        });
-      }
-    } catch {
-    } finally {
-      setPosting(false);
-    }
-  };
 
   /* ──────────────────────────────────────────────────────────────
      Video Assessment — submit, retake, dismiss handlers
@@ -1217,31 +1220,75 @@ function VideoPlayer({
     };
   }, []);
 
-  /* YouTube handling */
-  const ytEmbedUrl = useMemo(() => toYouTubeEmbed(video.videoUrl), [video.videoUrl]);
-  const isYouTube = video.source === "YOUTUBE" && ytEmbedUrl !== null;
+  /* YouTube handling — full IFrame Player API integration */
+  const ytVideoId = useMemo(() => toYouTubeVideoId(video.videoUrl), [video.videoUrl]);
+  const isYouTube = video.source === "YOUTUBE" && ytVideoId !== null;
 
-  // YouTube timer: accumulate watch time + enable mark-complete after 85%.
+  // Keep latest handlers in refs so the YouTube polling always calls current closures.
+  const handleTimeUpdateRef = useRef<() => void>(() => {});
+  const handleEndedRef = useRef<() => void>(() => {});
+  handleTimeUpdateRef.current = handleTimeUpdate;
+  handleEndedRef.current = handleEnded;
+
+  // Create a YouTube IFrame Player on the container div.
   useEffect(() => {
-    if (!isYouTube) return;
-    if (ytTimerRef.current) clearInterval(ytTimerRef.current);
-    ytStartRef.current = Date.now();
+    if (!isYouTube || !ytVideoId) return;
+    const container = ytContainerRef.current;
+    if (!container) return;
+    let cancelled = false;
+    let player: any = null;
 
-    ytTimerRef.current = setInterval(() => {
-      ytWatchSecondsRef.current = (Date.now() - (ytStartRef.current || Date.now())) / 1000;
-      const dur = durationRef.current;
-      if (dur > 0 && ytWatchSecondsRef.current >= dur * 0.85) {
-        setYtCanMarkComplete(true);
-      }
-    }, 1000);
+    loadYouTubeAPI().then((YT) => {
+      if (cancelled || !YT || !YT.Player || !ytContainerRef.current) return;
+      player = new YT.Player(ytContainerRef.current, {
+        videoId: ytVideoId,
+        playerVars: { rel: 0, modestbranding: 1, playsinline: 1 },
+        events: {
+          onReady: (e: any) => {
+            const p = e.target;
+            ytPlayerRef.current = p;
+            playerApiRef.current = {
+              currentTime: () => { try { return p.getCurrentTime() || 0; } catch { return 0; } },
+              duration: () => { try { return p.getDuration() || 0; } catch { return 0; } },
+              pause: () => { try { p.pauseVideo(); } catch {} },
+              seekTo: (t) => { try { p.seekTo(t, true); } catch {} },
+              paused: () => { try { return p.getPlayerState() === 2; } catch { return true; } },
+            };
+            try { const d = p.getDuration(); if (Number.isFinite(d) && d > 0) durationRef.current = d; } catch {}
+            if (!resumeAppliedRef.current && video.progress?.lastPosition) {
+              const dur = durationRef.current;
+              if (dur > 0) {
+                const target = Math.min(video.progress.lastPosition, Math.max(0, dur - 3));
+                try { p.seekTo(target, true); } catch {}
+                lastTimeRef.current = target;
+                resumeAppliedRef.current = true;
+              }
+            }
+          },
+          onStateChange: (e: any) => {
+            const state = e.data;
+            if (state === 1) { // PLAYING
+              if (ytPollRef.current) clearInterval(ytPollRef.current);
+              ytPollRef.current = setInterval(() => { handleTimeUpdateRef.current(); }, 250);
+            } else if (state === 0) { // ENDED
+              if (ytPollRef.current) { clearInterval(ytPollRef.current); ytPollRef.current = null; }
+              handleEndedRef.current();
+            } else {
+              if (ytPollRef.current) { clearInterval(ytPollRef.current); ytPollRef.current = null; }
+            }
+          },
+        },
+      });
+    });
 
     return () => {
-      if (ytTimerRef.current) {
-        clearInterval(ytTimerRef.current);
-        ytTimerRef.current = null;
-      }
+      cancelled = true;
+      if (ytPollRef.current) { clearInterval(ytPollRef.current); ytPollRef.current = null; }
+      try { player?.destroy?.(); } catch {}
+      ytPlayerRef.current = null;
+      if (isYouTube) playerApiRef.current = null;
     };
-  }, [isYouTube, video.id]);
+  }, [isYouTube, ytVideoId, video.id, expanded]);
 
   // Pre-compute the assessment status badge + overlay JSX so both the compact
   // and expanded views can render the same overlays without duplication.
@@ -1340,16 +1387,11 @@ function VideoPlayer({
           {/* Video fills the remaining space */}
           <div className="flex-1 flex items-center justify-center p-2 sm:p-4">
             <div className="relative w-full h-full flex items-center justify-center">
-              {video.source === "YOUTUBE" && ytEmbedUrl ? (
-                <iframe
+              {isYouTube ? (
+                <div
                   key={video.id}
-                  src={ytEmbedUrl}
-                  title={video.title}
-                  className="w-full h-full max-w-[1600px]"
-                  style={{ aspectRatio: "16 / 9" }}
-                  frameBorder={0}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
+                  ref={ytContainerRef}
+                  className="w-full h-full"
                 />
               ) : (
                 <video
@@ -1378,15 +1420,11 @@ function VideoPlayer({
         <div className="bg-gradient-to-b from-foreground/[0.03] to-card p-4 md:p-6">
           <div className="relative mx-auto overflow-hidden rounded-xl bg-black shadow-lg ring-1 ring-black/20" style={{ maxWidth: "640px" }}>
             <div className="aspect-video w-full flex items-center justify-center relative">
-              {video.source === "YOUTUBE" && ytEmbedUrl ? (
-                <iframe
+              {isYouTube ? (
+                <div
                   key={video.id}
-                  src={ytEmbedUrl}
-                  title={video.title}
+                  ref={ytContainerRef}
                   className="w-full h-full"
-                  frameBorder={0}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
                 />
               ) : (
                 <video
@@ -1494,46 +1532,8 @@ function VideoPlayer({
             </div>
           )}
 
-          {/* YouTube: explain limitation + show manual mark-complete */}
-          {isYouTube && (
-            <div className="rounded-lg border border-warning/30 bg-warning/5 p-3.5 space-y-2">
-              <div className="flex items-start gap-2.5">
-                <Info className="h-4 w-4 text-warning shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    YouTube video tracking
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    YouTube videos cannot report precise playback events to us. The
-                    &quot;Mark as complete&quot; button below unlocks after you have
-                    kept this page open for at least 85% of the video&apos;s duration.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 pl-6">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span tabIndex={0} className="inline-flex">
-                      <Button
-                        size="sm"
-                        onClick={markYtComplete}
-                        disabled={!ytCanMarkComplete || localCompleted || posting}
-                        className="gap-2 shadow-sm"
-                      >
-                        <CheckCircle2 className="h-4 w-4" />
-                        {localCompleted ? "Completed" : ytCanMarkComplete ? "Mark as complete" : `Keep watching (${Math.round((ytWatchSecondsRef.current / Math.max(1, durationRef.current)) * 100)}%)`}
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {ytCanMarkComplete
-                      ? "You can now mark this video complete."
-                      : "Available after watching at least 85% of the video duration."}
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            </div>
-          )}
+          {/* YouTube videos are fully embedded + auto-tracked via the IFrame
+              Player API. No manual "Mark as complete" button needed. */}
         </CardContent>
       </Card>
     </>
@@ -2065,19 +2065,15 @@ function AssignmentPanel({
 }
 
 // Local helper for YouTube URL parsing
-function toYouTubeEmbed(url: string): string | null {
+function toYouTubeVideoId(url: string): string | null {
   try {
     const u = new URL(url);
-    if (u.hostname === "youtu.be") {
-      const id = u.pathname.slice(1);
-      return `https://www.youtube.com/embed/${id}?rel=0`;
-    }
+    if (u.hostname === "youtu.be") return u.pathname.slice(1) || null;
     if (u.hostname.includes("youtube.com")) {
-      const id = u.searchParams.get("v");
-      if (id) return `https://www.youtube.com/embed/${id}?rel=0`;
-      // /embed/ID or /shorts/ID
+      const v = u.searchParams.get("v");
+      if (v) return v;
       const m = u.pathname.match(/\/(embed|shorts)\/([\w-]+)/);
-      if (m) return `https://www.youtube.com/embed/${m[2]}?rel=0`;
+      if (m) return m[2];
     }
     return null;
   } catch {
