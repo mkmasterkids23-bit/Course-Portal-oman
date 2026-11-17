@@ -1631,9 +1631,9 @@ function QuestionOverlay({
       aria-modal="true"
       aria-label={`Question ${answeredCount + 1} of ${totalCount}`}
     >
-      <div className="w-full max-w-md rounded-xl border border-accent/20 bg-card shadow-2xl ring-1 ring-accent/10 overflow-hidden">
-        {/* Header strip — sage themed */}
-        <div className="flex items-center justify-between gap-2 border-b border-accent/15 bg-gradient-to-r from-soft-sage to-transparent px-4 py-2.5">
+      <div className="w-full max-w-md max-h-[90vh] flex flex-col rounded-xl border border-accent/20 bg-card shadow-2xl ring-1 ring-accent/10 overflow-hidden">
+        {/* Header strip — sage themed (fixed at top) */}
+        <div className="flex items-center justify-between gap-2 border-b border-accent/15 bg-gradient-to-r from-soft-sage to-transparent px-4 py-2.5 shrink-0">
           <div className="flex items-center gap-2 min-w-0">
             <span className="flex h-6 w-6 items-center justify-center rounded-md bg-accent/15 text-primary shrink-0">
               <HelpCircle className="h-3.5 w-3.5" />
@@ -1647,8 +1647,8 @@ function QuestionOverlay({
           </span>
         </div>
 
-        {/* Body */}
-        <div className="p-4 sm:p-5 space-y-4">
+        {/* Body — scrollable if content is tall */}
+        <div className="flex-1 overflow-y-auto scrollbar-thin p-4 sm:p-5 space-y-4">
           <p className="text-base font-semibold text-foreground leading-relaxed">
             {question.question}
           </p>
@@ -1691,50 +1691,50 @@ function QuestionOverlay({
               );
             })}
           </div>
+        </div>
 
-          {/* Footer — submit / skip / continue */}
-          <div className="flex items-center justify-between gap-3 pt-1">
-            <p className="text-[11px] text-muted-foreground">
-              {showFeedback
-                ? "Answer recorded."
-                : "Pick an answer to continue."}
-            </p>
-            {showFeedback ? (
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-md bg-success/15 px-2.5 py-1.5 text-xs font-medium text-success">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Saved
-                </span>
-                <Button
-                  onClick={onContinue}
-                  size="sm"
-                  className="gap-1.5 shadow-sm"
-                >
-                  Continue
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Button
-                  onClick={onSkip}
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5"
-                >
-                  Continue
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  onClick={onSubmit}
-                  disabled={selectedAnswer === null}
-                  size="sm"
-                  className="gap-2 shadow-sm"
-                >
-                  Submit Answer
-                </Button>
-              </div>
-            )}
-          </div>
+        {/* Footer — always visible at the bottom (submit / skip / continue) */}
+        <div className="shrink-0 flex items-center justify-between gap-3 border-t border-border px-4 py-3 bg-card">
+          <p className="text-[11px] text-muted-foreground">
+            {showFeedback
+              ? "Answer recorded."
+              : "Pick an answer to continue."}
+          </p>
+          {showFeedback ? (
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-success/15 px-2.5 py-1.5 text-xs font-medium text-success">
+                <CheckCircle2 className="h-3.5 w-3.5" /> Saved
+              </span>
+              <Button
+                onClick={onContinue}
+                size="sm"
+                className="gap-1.5 shadow-sm"
+              >
+                Continue
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={onSkip}
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+              >
+                Continue
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                onClick={onSubmit}
+                disabled={selectedAnswer === null}
+                size="sm"
+                className="gap-2 shadow-sm"
+              >
+                Submit Answer
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>
