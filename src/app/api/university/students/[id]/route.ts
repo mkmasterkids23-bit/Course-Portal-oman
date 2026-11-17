@@ -158,9 +158,7 @@ export async function GET(
         const completionPct =
           c.totalVideos > 0
             ? Math.round((c.completedVideos / c.totalVideos) * 100)
-            : c.completedVideos > 0
-              ? 100
-              : 0;
+            : 100; // no videos → considered 100% complete
         return {
           id: c.id,
           title: c.title,

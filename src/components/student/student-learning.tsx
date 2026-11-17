@@ -286,7 +286,8 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
               : v.progress?.isCompleted
         ).length;
         const total = videos.length;
-        const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+        // No videos → course is considered fully watched (assignment unlocked).
+        const percent = total > 0 ? Math.round((completed / total) * 100) : 100;
         const totalTopics = data.course.topics.length;
         const completedTopics = data.course.topics.filter((topic) =>
           topic.videos.length > 0 &&
@@ -301,7 +302,7 @@ export function StudentLearning({ courseId, onBack }: { courseId: string; onBack
           completedTopics,
           totalTopics,
           percent,
-          allCompleted: total > 0 && completed === total,
+          allCompleted: total === 0 || completed === total,
         };
       })(),
     };

@@ -62,7 +62,9 @@ export async function getCourseCompletionStats(
     select: { id: true },
   });
   if (topics.length === 0) {
-    return { totalTopics: 0, completedTopics: 0, totalVideos: 0, completedVideos: 0, percent: 0 };
+    // No topics = no required content → course is considered fully watched
+    // so the student can proceed to the assignment / certificate.
+    return { totalTopics: 0, completedTopics: 0, totalVideos: 0, completedVideos: 0, percent: 100 };
   }
   const topicIds = topics.map((t) => t.id);
   const videos = await db.videoLesson.findMany({
@@ -70,12 +72,14 @@ export async function getCourseCompletionStats(
     select: { id: true, topicId: true },
   });
   if (videos.length === 0) {
+    // No videos = nothing to watch → considered fully completed so the
+    // assignment is unlocked and the certificate can be issued.
     return {
       totalTopics: topics.length,
-      completedTopics: 0,
+      completedTopics: topics.length, // all (zero-video) topics are "done"
       totalVideos: 0,
       completedVideos: 0,
-      percent: 0,
+      percent: 100,
     };
   }
   const videoIds = videos.map((v) => v.id);
@@ -145,7 +149,9 @@ export async function isCourseCompletedByStudent(
   courseId: string
 ): Promise<boolean> {
   const stats = await getCourseCompletionStats(studentId, courseId);
-  return stats.totalVideos > 0 && stats.completedVideos === stats.totalVideos;
+  // When there are no videos (totalVideos === 0), the course is considered
+  // completed — the student can go straight to the assignment.
+  return stats.completedVideos === stats.totalVideos;
 }
 
 /**

@@ -104,8 +104,9 @@ export async function GET(
     );
 
     const stats = await getCourseCompletionStats(user.id, course.id);
-    const allCompleted =
-      stats.totalVideos > 0 && stats.completedVideos === stats.totalVideos;
+    // A course with no videos is considered complete — the student can go
+    // straight to the assignment.
+    const allCompleted = stats.completedVideos === stats.totalVideos;
 
     const result = {
       id: course.id,

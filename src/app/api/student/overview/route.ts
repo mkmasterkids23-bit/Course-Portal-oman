@@ -55,10 +55,8 @@ export async function GET() {
       availableCourses++;
       overallPercentSum += stats.percent;
 
-      if (
-        stats.totalVideos > 0 &&
-        stats.completedVideos === stats.totalVideos
-      ) {
+      if (stats.completedVideos === stats.totalVideos) {
+        // Includes no-video courses (0 === 0) — considered completed.
         completedCourses++;
       } else if (stats.completedVideos > 0) {
         inProgressCourses++;
