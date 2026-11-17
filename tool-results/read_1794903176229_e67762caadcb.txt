@@ -1,0 +1,936 @@
+     1→"use client";
+     2→
+     3→import { useEffect, useMemo, useState } from "react";
+     4→import { Card } from "@/components/ui/card";
+     5→import { Button } from "@/components/ui/button";
+     6→import { Input } from "@/components/ui/input";
+     7→import { Label } from "@/components/ui/label";
+     8→import { Badge } from "@/components/ui/badge";
+     9→import { Skeleton } from "@/components/ui/skeleton";
+    10→import { Textarea } from "@/components/ui/textarea";
+    11→import {
+    12→  Dialog,
+    13→  DialogContent,
+    14→  DialogDescription,
+    15→  DialogFooter,
+    16→  DialogHeader,
+    17→  DialogTitle,
+    18→} from "@/components/ui/dialog";
+    19→import {
+    20→  AlertDialog,
+    21→  AlertDialogAction,
+    22→  AlertDialogCancel,
+    23→  AlertDialogContent,
+    24→  AlertDialogDescription,
+    25→  AlertDialogFooter,
+    26→  AlertDialogHeader,
+    27→  AlertDialogTitle,
+    28→} from "@/components/ui/alert-dialog";
+    29→import {
+    30→  DropdownMenu,
+    31→  DropdownMenuContent,
+    32→  DropdownMenuItem,
+    33→  DropdownMenuSeparator,
+    34→  DropdownMenuTrigger,
+    35→} from "@/components/ui/dropdown-menu";
+    36→import {
+    37→  Drawer,
+    38→  DrawerContent,
+    39→  DrawerDescription,
+    40→  DrawerHeader,
+    41→  DrawerTitle,
+    42→} from "@/components/ui/drawer";
+    43→import { EmptyState } from "@/components/shared/empty-state";
+    44→import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
+    45→import { useAppStore } from "@/stores/app-store";
+    46→import { useI18n } from "@/lib/i18n/store";
+    47→import { toast } from "@/hooks/use-toast";
+    48→import { formatDate } from "@/types";
+    49→import {
+    50→  Building2, Search, Plus, MoreHorizontal, Pencil, Trash2,
+    51→  Eye, Mail, BookOpen, Layers, Video, ClipboardList, Calendar,
+    52→  Upload, GraduationCap,
+    53→} from "lucide-react";
+    54→
+    55→// ─── Types ──────────────────────────────────────────────────────────────
+    56→interface UniversityRow {
+    57→  id: string;
+    58→  name: string;
+    59→  logo: string | null;
+    60→  description: string | null;
+    61→  email: string;
+    62→  createdAt: string;
+    63→  courseCount: number;
+    64→  courses?: UniversityCourseRow[];
+    65→}
+    66→
+    67→interface UniversitiesResponse {
+    68→  universities: UniversityRow[];
+    69→}
+    70→
+    71→interface UniversityCourseRow {
+    72→  id: string;
+    73→  title: string;
+    74→  description: string | null;
+    75→  thumbnail: string | null;
+    76→  category: string | null;
+    77→  accessType: "FREE" | "PAID";
+    78→  isPublished: boolean;
+    79→  createdAt: string;
+    80→  videosCount: number;
+    81→  topicsCount: number;
+    82→  assignmentsCount: number;
+    83→}
+    84→
+    85→interface UniversityDetail extends UniversityRow {
+    86→  updatedAt: string;
+    87→  courseCount: number;
+    88→  courses: UniversityCourseRow[];
+    89→}
+    90→
+    91→interface UniversityDetailResponse {
+    92→  university: UniversityDetail;
+    93→}
+    94→
+    95→// ─── Main Component ─────────────────────────────────────────────────────
+    96→export function AdminUniversities() {
+    97→  const { t } = useI18n();
+    98→  const query = useAppStore((s) => s.query);
+    99→  const navigate = useAppStore((s) => s.navigate);
+   100→  const [search, setSearch] = useState("");
+   101→  const [addOpen, setAddOpen] = useState(false);
+   102→  const [editTarget, setEditTarget] = useState<UniversityRow | null>(null);
+   103→  const [deleteTarget, setDeleteTarget] = useState<UniversityRow | null>(null);
+   104→
+   105→  const qs = useMemo(() => {
+   106→    if (!search.trim()) return "";
+   107→    return `?q=${encodeURIComponent(search.trim())}`;
+   108→  }, [search]);
+   109→
+   110→  const { data, loading, error, refetch } = useApiFetch<UniversitiesResponse>(
+   111→    qs ? `/api/admin/universities${qs}` : "/api/admin/universities",
+   112→  );
+   113→
+   114→  // Auto-open Add dialog when query.action=new
+   115→  const [lastAction, setLastAction] = useState<string | undefined>(undefined);
+   116→  if (query.action !== lastAction) {
+   117→    setLastAction(query.action);
+   118→    if (query.action === "new") setAddOpen(true);
+   119→  }
+   120→
+   121→  const universities = data?.universities || [];
+   122→
+   123→  return (
+   124→    <div className="space-y-4">
+   125→      {/* Toolbar */}
+   126→      <Card className="border-border bg-card p-4 shadow-sm">
+   127→        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+   128→          <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
+   129→            <div className="relative flex-1">
+   130→              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+   131→              <Input
+   132→                value={search}
+   133→                onChange={(e) => setSearch(e.target.value)}
+   134→                placeholder={t("common.search")}
+   135→                className="h-9 rounded-lg pl-9 focus-visible:ring-2 focus-visible:ring-ring"
+   136→                aria-label={t("common.search")}
+   137→              />
+   138→            </div>
+   139→          </div>
+   140→          <Button className="h-9 gap-2" onClick={() => setAddOpen(true)}>
+   141→            <Plus className="h-4 w-4" /> {t("admin.addUniversity")}
+   142→          </Button>
+   143→        </div>
+   144→      </Card>
+   145→
+   146→      {/* Count summary */}
+   147→      {!loading && !error && universities.length > 0 && (
+   148→        <div className="flex items-center justify-between">
+   149→          <p className="text-sm text-muted-foreground">
+   150→            {t("common.showing")} <span className="font-medium text-foreground">{universities.length}</span>{" "}
+   151→            {t("common.universities")}
+   152→          </p>
+   153→        </div>
+   154→      )}
+   155→
+   156→      {/* Content */}
+   157→      {loading ? (
+   158→        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+   159→          {Array.from({ length: 6 }).map((_, i) => (
+   160→            <Card key={i} className="overflow-hidden border-border p-0">
+   161→              <div className="h-24 w-full bg-muted" />
+   162→              <div className="p-5 space-y-3">
+   163→                <Skeleton className="h-5 w-2/3" />
+   164→                <Skeleton className="h-4 w-full" />
+   165→                <Skeleton className="h-4 w-1/2" />
+   166→                <div className="flex gap-2 pt-2">
+   167→                  <Skeleton className="h-8 w-full" />
+   168→                  <Skeleton className="h-8 w-10" />
+   169→                </div>
+   170→              </div>
+   171→            </Card>
+   172→          ))}
+   173→        </div>
+   174→      ) : error ? (
+   175→        <EmptyState
+   176→          className="m-4"
+   177→          icon={<Building2 className="h-5 w-5" />}
+   178→          title={t("common.error")}
+   179→          description={error}
+   180→        />
+   181→      ) : universities.length === 0 ? (
+   182→        <EmptyState
+   183→          className="m-4"
+   184→          icon={<Building2 className="h-5 w-5" />}
+   185→          title={search.trim() ? t("empty.noResults") : t("empty.noData")}
+   186→          description={
+   187→            search.trim()
+   188→              ? t("empty.tryDifferent")
+   189→              : t("admin.addUniversity")
+   190→          }
+   191→          action={
+   192→            !search.trim() ? (
+   193→              <Button onClick={() => setAddOpen(true)} className="gap-2">
+   194→                <Plus className="h-4 w-4" /> {t("admin.addUniversity")}
+   195→              </Button>
+   196→            ) : undefined
+   197→          }
+   198→        />
+   199→      ) : (
+   200→        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+   201→          {universities.map((u) => (
+   202→            <UniversityCard
+   203→              key={u.id}
+   204→              university={u}
+   205→              onView={() => navigate(["admin", "universities", u.id])}
+   206→              onEdit={() => setEditTarget(u)}
+   207→              onDelete={() => setDeleteTarget(u)}
+   208→            />
+   209→          ))}
+   210→        </div>
+   211→      )}
+   212→
+   213→      {/* Add dialog */}
+   214→      <UniversityFormDialog
+   215→        open={addOpen}
+   216→        onOpenChange={setAddOpen}
+   217→        onSaved={() => {
+   218→          refetch();
+   219→          setAddOpen(false);
+   220→          toast({ title: t("common.success") });
+   221→        }}
+   222→      />
+   223→
+   224→      {/* Edit dialog */}
+   225→      <UniversityFormDialog
+   226→        open={!!editTarget}
+   227→        onOpenChange={(v) => !v && setEditTarget(null)}
+   228→        target={editTarget}
+   229→        onSaved={() => {
+   230→          refetch();
+   231→          setEditTarget(null);
+   232→          toast({ title: t("common.success") });
+   233→        }}
+   234→      />
+   235→
+   236→      {/* Delete confirm */}
+   237→      <AlertDialog
+   238→        open={!!deleteTarget}
+   239→        onOpenChange={(v) => !v && setDeleteTarget(null)}
+   240→      >
+   241→        <AlertDialogContent>
+   242→          <AlertDialogHeader>
+   243→            <AlertDialogTitle>{t("common.delete")}</AlertDialogTitle>
+   244→            <AlertDialogDescription>
+   245→              {t("admin.universityDesc")}
+   246→            </AlertDialogDescription>
+   247→          </AlertDialogHeader>
+   248→          <AlertDialogFooter>
+   249→            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+   250→            <AlertDialogAction
+   251→              className="bg-destructive text-white hover:bg-destructive/90"
+   252→              onClick={async () => {
+   253→                if (!deleteTarget) return;
+   254→                try {
+   255→                  await apiPost(
+   256→                    `/api/admin/universities/${deleteTarget.id}`,
+   257→                    null,
+   258→                    { method: "DELETE" },
+   259→                  );
+   260→                  toast({
+   261→                    title: t("common.success"),
+   262→                    description: deleteTarget.name,
+   263→                  });
+   264→                  setDeleteTarget(null);
+   265→                  refetch();
+   266→                } catch {
+   267→                  /* toast handled in apiPost */
+   268→                }
+   269→              }}
+   270→            >
+   271→              {t("common.delete")}
+   272→            </AlertDialogAction>
+   273→          </AlertDialogFooter>
+   274→        </AlertDialogContent>
+   275→      </AlertDialog>
+   276→    </div>
+   277→  );
+   278→}
+   279→
+   280→// ─── University Card ────────────────────────────────────────────────────
+   281→function UniversityCard({
+   282→  university,
+   283→  onView,
+   284→  onEdit,
+   285→  onDelete,
+   286→}: {
+   287→  university: UniversityRow;
+   288→  onView: () => void;
+   289→  onEdit: () => void;
+   290→  onDelete: () => void;
+   291→}) {
+   292→  const { t } = useI18n();
+   293→  const initials = useMemo(
+   294→    () =>
+   295→      university.name
+   296→        .split(/\s+/)
+   297→        .map((w) => w[0])
+   298→        .filter(Boolean)
+   299→        .slice(0, 2)
+   300→        .join("")
+   301→        .toUpperCase(),
+   302→    [university.name],
+   303→  );
+   304→
+   305→  return (
+   306→    <Card className="group flex flex-col overflow-hidden border-border p-0 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-accent/30">
+   307→      {/* Banner / logo header */}
+   308→      <button
+   309→        onClick={onView}
+   310→        className="relative h-24 overflow-hidden bg-gradient-to-br from-primary via-primary to-[#2A3F35] text-left"
+   311→        aria-label={`View ${university.name} details`}
+   312→      >
+   313→        <div
+   314→          className="absolute inset-0 opacity-30"
+   315→          style={{
+   316→            backgroundImage:
+   317→              "radial-gradient(circle at 20% 50%, rgba(120,151,134,0.55), transparent 55%), radial-gradient(circle at 80% 20%, rgba(252,252,250,0.12), transparent 45%)",
+   318→          }}
+   319→        />
+   320→        <div className="relative flex h-full items-center gap-3 p-4">
+   321→          {university.logo ? (
+   322→            <img
+   323→              src={university.logo}
+   324→              alt={`${university.name} logo`}
+   325→              className="h-14 w-14 rounded-lg bg-background object-contain p-1 ring-1 ring-background/30 shadow-sm"
+   326→            />
+   327→          ) : (
+   328→            <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-background/95 text-primary font-heading text-lg font-bold shadow-sm">
+   329→              {initials || <GraduationCap className="h-6 w-6" />}
+   330→            </div>
+   331→          )}
+   332→          <div className="min-w-0 flex-1">
+   333→            <Badge className="border-0 bg-primary-foreground/15 text-primary-foreground backdrop-blur">
+   334→              <Building2 className="h-3 w-3 mr-1" /> {t("common.university")}
+   335→            </Badge>
+   336→          </div>
+   337→        </div>
+   338→      </button>
+   339→
+   340→      {/* Content */}
+   341→      <div className="flex flex-1 flex-col p-5">
+   342→        <button onClick={onView} className="text-left">
+   343→          <h3 className="font-heading font-semibold text-foreground line-clamp-1 transition-colors duration-200 group-hover:text-accent">
+   344→            {university.name}
+   345→          </h3>
+   346→          <p className="mt-1 text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
+   347→            {university.description || t("admin.universityDesc")}
+   348→          </p>
+   349→        </button>
+   350→
+   351→        {/* Email */}
+   352→        <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+   353→          <Mail className="h-3.5 w-3.5 text-accent" />
+   354→          <span className="truncate">{university.email}</span>
+   355→        </div>
+   356→
+   357→        {/* Stats row */}
+   358→        <div className="mt-4 flex items-center gap-4 border-t border-border pt-3 text-xs">
+   359→          <span className="flex items-center gap-1 text-muted-foreground">
+   360→            <BookOpen className="h-3.5 w-3.5 text-accent" />
+   361→            <span className="font-semibold text-foreground">{university.courseCount}</span>{" "}
+   362→            {t("common.courses")}
+   363→          </span>
+   364→          <span className="flex items-center gap-1 text-muted-foreground ml-auto">
+   365→            <Calendar className="h-3.5 w-3.5 text-accent" />
+   366→            {formatDate(university.createdAt)}
+   367→          </span>
+   368→        </div>
+   369→
+   370→        {/* Actions */}
+   371→        <div className="mt-4 flex items-center gap-2">
+   372→          <Button size="sm" className="h-9 flex-1 gap-1.5" onClick={onView}>
+   373→            <Eye className="h-3.5 w-3.5" /> {t("admin.viewDetails")}
+   374→          </Button>
+   375→          <Button
+   376→            variant="outline"
+   377→            size="sm"
+   378→            className="h-9 gap-1.5"
+   379→            onClick={onEdit}
+   380→            aria-label={t("common.edit")}
+   381→          >
+   382→            <Pencil className="h-3.5 w-3.5" />
+   383→            <span className="sr-only">{t("common.edit")}</span>
+   384→          </Button>
+   385→          <DropdownMenu>
+   386→            <DropdownMenuTrigger asChild>
+   387→              <Button
+   388→                variant="outline"
+   389→                size="sm"
+   390→                className="h-9 px-2"
+   391→                aria-label={`More actions for ${university.name}`}
+   392→              >
+   393→                <MoreHorizontal className="h-3.5 w-3.5" />
+   394→              </Button>
+   395→            </DropdownMenuTrigger>
+   396→            <DropdownMenuContent align="end" className="w-48">
+   397→              <DropdownMenuItem onClick={onView} className="gap-2">
+   398→                <Eye className="h-4 w-4 text-muted-foreground" /> {t("admin.viewDetails")}
+   399→              </DropdownMenuItem>
+   400→              <DropdownMenuItem onClick={onEdit} className="gap-2">
+   401→                <Pencil className="h-4 w-4 text-muted-foreground" /> {t("common.edit")}
+   402→              </DropdownMenuItem>
+   403→              <DropdownMenuSeparator />
+   404→              <DropdownMenuItem
+   405→                variant="destructive"
+   406→                onClick={onDelete}
+   407→                className="gap-2"
+   408→              >
+   409→                <Trash2 className="h-4 w-4" /> {t("common.delete")}
+   410→              </DropdownMenuItem>
+   411→            </DropdownMenuContent>
+   412→          </DropdownMenu>
+   413→        </div>
+   414→      </div>
+   415→    </Card>
+   416→  );
+   417→}
+   418→
+   419→// ─── Form Dialog (Add / Edit) ───────────────────────────────────────────
+   420→interface FormValues {
+   421→  name: string;
+   422→  email: string;
+   423→  password: string;
+   424→  description: string;
+   425→  logoFile: File | null;
+   426→  logoPreview: string | null;
+   427→}
+   428→
+   429→function UniversityFormDialog({
+   430→  open,
+   431→  onOpenChange,
+   432→  target,
+   433→  onSaved,
+   434→}: {
+   435→  open: boolean;
+   436→  onOpenChange: (v: boolean) => void;
+   437→  target?: UniversityRow | null;
+   438→  onSaved: () => void;
+   439→}) {
+   440→  const { t } = useI18n();
+   441→  const isEdit = !!target;
+   442→  const [values, setValues] = useState<FormValues>({
+   443→    name: "",
+   444→    email: "",
+   445→    password: "",
+   446→    description: "",
+   447→    logoFile: null,
+   448→    logoPreview: null,
+   449→  });
+   450→  const [saving, setSaving] = useState(false);
+   451→
+   452→  useEffect(() => {
+   453→    if (target) {
+   454→      setValues({
+   455→        name: target.name,
+   456→        email: target.email,
+   457→        password: "",
+   458→        description: target.description || "",
+   459→        logoFile: null,
+   460→        logoPreview: target.logo,
+   461→      });
+   462→    } else if (open) {
+   463→      setValues({
+   464→        name: "",
+   465→        email: "",
+   466→        password: "",
+   467→        description: "",
+   468→        logoFile: null,
+   469→        logoPreview: null,
+   470→      });
+   471→    }
+   472→  }, [target, open]);
+   473→
+   474→  function onLogoSelected(file: File | null) {
+   475→    if (!file) {
+   476→      setValues((v) => ({ ...v, logoFile: null, logoPreview: target?.logo || null }));
+   477→      return;
+   478→    }
+   479→    const previewUrl = URL.createObjectURL(file);
+   480→    setValues((v) => ({ ...v, logoFile: file, logoPreview: previewUrl }));
+   481→  }
+   482→
+   483→  async function submit() {
+   484→    if (!values.name.trim()) {
+   485→      toast({ title: t("common.name") + " " + t("common.required"), variant: "destructive" });
+   486→      return;
+   487→    }
+   488→    if (!values.email.trim()) {
+   489→      toast({ title: t("common.email") + " " + t("common.required"), variant: "destructive" });
+   490→      return;
+   491→    }
+   492→    if (!isEdit && !values.password) {
+   493→      toast({ title: t("common.password") + " " + t("common.required"), variant: "destructive" });
+   494→      return;
+   495→    }
+   496→    if (values.password && values.password.length < 6) {
+   497→      toast({
+   498→        title: t("common.password"),
+   499→        description: t("common.required"),
+   500→        variant: "destructive",
+   501→      });
+   502→      return;
+   503→    }
+   504→
+   505→    setSaving(true);
+   506→    try {
+   507→      const fd = new FormData();
+   508→      fd.append("name", values.name.trim());
+   509→      fd.append("email", values.email.trim());
+   510→      if (values.password) fd.append("password", values.password);
+   511→      if (values.description.trim()) fd.append("description", values.description.trim());
+   512→      if (values.logoFile) fd.append("logo", values.logoFile);
+   513→
+   514→      const url = isEdit
+   515→        ? `/api/admin/universities/${target!.id}`
+   516→        : "/api/admin/universities";
+   517→
+   518→      // apiUpload uses POST; for PUT we fetch directly with FormData.
+   519→      if (isEdit) {
+   520→        const res = await fetch(url, {
+   521→          method: "PUT",
+   522→          body: fd,
+   523→          credentials: "include",
+   524→        });
+   525→        const json = await res.json();
+   526→        if (!res.ok) {
+   527→          const msg = json.error || `Request failed (${res.status})`;
+   528→          toast({ title: t("common.error"), description: msg, variant: "destructive" });
+   529→          throw new Error(msg);
+   530→        }
+   531→      } else {
+   532→        await apiUpload(url, fd);
+   533→      }
+   534→      onSaved();
+   535→    } catch {
+   536→      /* toast handled in helpers */
+   537→    } finally {
+   538→      setSaving(false);
+   539→    }
+   540→  }
+   541→
+   542→  const previewInitials = values.name
+   543→    .split(/\s+/)
+   544→    .map((w) => w[0])
+   545→    .filter(Boolean)
+   546→    .slice(0, 2)
+   547→    .join("")
+   548→    .toUpperCase();
+   549→
+   550→  return (
+   551→    <Dialog open={open} onOpenChange={onOpenChange}>
+   552→      <DialogContent className="animate-scale-in w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
+   553→        <DialogHeader>
+   554→          <DialogTitle className="font-heading text-lg font-semibold">
+   555→            {isEdit ? t("courses.editCourse") : t("admin.addUniversity")}
+   556→          </DialogTitle>
+   557→          <DialogDescription>
+   558→            {isEdit
+   559→              ? t("admin.universityDesc")
+   560→              : t("admin.universityDesc")}
+   561→          </DialogDescription>
+   562→        </DialogHeader>
+   563→        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+   564→          {/* Logo preview + upload */}
+   565→          <div className="space-y-1.5">
+   566→            <Label className="text-xs font-medium text-muted-foreground">{t("admin.universityLogo")}</Label>
+   567→            <div className="flex items-center gap-3">
+   568→              <div className="h-16 w-16 overflow-hidden rounded-lg bg-muted flex items-center justify-center shrink-0 ring-1 ring-border">
+   569→                {values.logoPreview ? (
+   570→                  <img
+   571→                    src={values.logoPreview}
+   572→                    alt=""
+   573→                    className="h-full w-full object-contain p-1"
+   574→                  />
+   575→                ) : previewInitials ? (
+   576→                  <span className="font-heading text-lg font-bold text-primary">
+   577→                    {previewInitials}
+   578→                  </span>
+   579→                ) : (
+   580→                  <Building2 className="h-5 w-5 text-muted-foreground" />
+   581→                )}
+   582→              </div>
+   583→              <div className="flex-1 space-y-1.5">
+   584→                <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs text-accent hover:underline">
+   585→                  <Upload className="h-3.5 w-3.5" />
+   586→                  {values.logoFile ? t("common.edit") : t("common.upload")}
+   587→                  <input
+   588→                    type="file"
+   589→                    accept="image/*"
+   590→                    className="hidden"
+   591→                    onChange={(e) => {
+   592→                      const f = e.target.files?.[0] || null;
+   593→                      onLogoSelected(f);
+   594→                    }}
+   595→                  />
+   596→                </label>
+   597→                <p className="text-xs text-muted-foreground">
+   598→                  {t("admin.universityLogo")}
+   599→                </p>
+   600→              </div>
+   601→            </div>
+   602→          </div>
+   603→
+   604→          <div className="space-y-1.5">
+   605→            <Label htmlFor="uf-name" className="text-xs font-medium text-muted-foreground">
+   606→              {t("admin.universityName")}
+   607→            </Label>
+   608→            <Input
+   609→              id="uf-name"
+   610→              value={values.name}
+   611→              onChange={(e) => setValues({ ...values, name: e.target.value })}
+   612→              placeholder={t("admin.universityName")}
+   613→              className="h-9 rounded-lg"
+   614→            />
+   615→          </div>
+   616→
+   617→          <div className="space-y-1.5">
+   618→            <Label htmlFor="uf-email" className="text-xs font-medium text-muted-foreground">
+   619→              {t("common.email")}
+   620→            </Label>
+   621→            <Input
+   622→              id="uf-email"
+   623→              type="email"
+   624→              value={values.email}
+   625→              onChange={(e) => setValues({ ...values, email: e.target.value })}
+   626→              placeholder={t("common.email")}
+   627→              className="h-9 rounded-lg"
+   628→            />
+   629→          </div>
+   630→
+   631→          <div className="space-y-1.5">
+   632→            <Label htmlFor="uf-pass" className="text-xs font-medium text-muted-foreground">
+   633→              {t("common.password")} {isEdit && <span className="text-muted-foreground/70">({t("common.optional")})</span>}
+   634→            </Label>
+   635→            <Input
+   636→              id="uf-pass"
+   637→              type="password"
+   638→              value={values.password}
+   639→              onChange={(e) => setValues({ ...values, password: e.target.value })}
+   640→              placeholder={t("common.password")}
+   641→              className="h-9 rounded-lg"
+   642→            />
+   643→          </div>
+   644→
+   645→          <div className="space-y-1.5">
+   646→            <Label htmlFor="uf-desc" className="text-xs font-medium text-muted-foreground">
+   647→              {t("common.description")} <span className="text-muted-foreground/70">({t("common.optional")})</span>
+   648→            </Label>
+   649→            <Textarea
+   650→              id="uf-desc"
+   651→              value={values.description}
+   652→              onChange={(e) => setValues({ ...values, description: e.target.value })}
+   653→              placeholder={t("admin.universityDesc")}
+   654→              rows={3}
+   655→              className="rounded-lg"
+   656→            />
+   657→          </div>
+   658→        </div>
+   659→        <DialogFooter>
+   660→          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>
+   661→            {t("common.cancel")}
+   662→          </Button>
+   663→          <Button disabled={saving} className="h-9" onClick={submit}>
+   664→            {saving ? t("common.saving") : isEdit ? t("profile.saveChanges") : t("common.create")}
+   665→          </Button>
+   666→        </DialogFooter>
+   667→      </DialogContent>
+   668→    </Dialog>
+   669→  );
+   670→}
+   671→
+   672→// ─── Detail Drawer ──────────────────────────────────────────────────────
+   673→function UniversityDetailDrawer({
+   674→  target,
+   675→  onOpenChange,
+   676→}: {
+   677→  target: UniversityRow | null;
+   678→  onOpenChange: (v: boolean) => void;
+   679→}) {
+   680→  const { t } = useI18n();
+   681→  const open = !!target;
+   682→  const { data, loading, error } = useApiFetch<UniversityDetailResponse>(
+   683→    target ? `/api/admin/universities/${target.id}` : null,
+   684→  );
+   685→
+   686→  // Reset fetch when drawer closes — pass null url above handles that
+   687→  const university = data?.university || target;
+   688→  const initials = useMemo(() => {
+   689→    if (!university) return "";
+   690→    return university.name
+   691→      .split(/\s+/)
+   692→      .map((w) => w[0])
+   693→      .filter(Boolean)
+   694→      .slice(0, 2)
+   695→      .join("")
+   696→      .toUpperCase();
+   697→  }, [university]);
+   698→
+   699→  return (
+   700→    <Drawer open={open} onOpenChange={onOpenChange}>
+   701→      <DrawerContent className="max-h-[88vh]">
+   702→        <div className="mx-auto w-full max-w-3xl">
+   703→          <DrawerHeader className="border-b border-border">
+   704→            <DrawerTitle className="font-heading text-xl font-semibold text-foreground">
+   705→              {university?.name}
+   706→            </DrawerTitle>
+   707→            <DrawerDescription>
+   708→              {university?.description || t("admin.universityDesc")}
+   709→            </DrawerDescription>
+   710→          </DrawerHeader>
+   711→
+   712→          <div className="space-y-4 p-4 md:p-6 overflow-y-auto max-h-[calc(88vh-6rem)] scrollbar-thin">
+   713→            {loading ? (
+   714→              <div className="space-y-3">
+   715→                <Skeleton className="h-24 w-full rounded-lg" />
+   716→                <Skeleton className="h-6 w-40" />
+   717→                <Skeleton className="h-32 w-full rounded-lg" />
+   718→              </div>
+   719→            ) : error ? (
+   720→              <EmptyState
+   721→                icon={<Building2 className="h-5 w-5" />}
+   722→                title={t("common.error")}
+   723→                description={error}
+   724→              />
+   725→            ) : university ? (
+   726→              <>
+   727→                {/* Header card */}
+   728→                <Card className="overflow-hidden border-border p-0">
+   729→                  <div className="relative h-24 bg-gradient-to-br from-primary via-primary to-[#2A3F35]">
+   730→                    <div
+   731→                      className="absolute inset-0 opacity-30"
+   732→                      style={{
+   733→                        backgroundImage:
+   734→                          "radial-gradient(circle at 20% 50%, rgba(120,151,134,0.55), transparent 55%), radial-gradient(circle at 80% 20%, rgba(252,252,250,0.12), transparent 45%)",
+   735→                      }}
+   736→                    />
+   737→                  </div>
+   738→                  <div className="relative -mt-10 px-5 pb-5">
+   739→                    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+   740→                      <div className="flex items-end gap-3">
+   741→                        {university.logo ? (
+   742→                          <img
+   743→                            src={university.logo}
+   744→                            alt={`${university.name} logo`}
+   745→                            className="h-20 w-20 rounded-xl bg-background object-contain p-1.5 ring-2 ring-background shadow-sm"
+   746→                          />
+   747→                        ) : (
+   748→                          <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-background text-primary font-heading text-2xl font-bold ring-2 ring-background shadow-sm">
+   749→                            {initials || <GraduationCap className="h-7 w-7" />}
+   750→                          </div>
+   751→                        )}
+   752→                        <div className="pb-1">
+   753→                          <Badge className="gap-1">
+   754→                            <Building2 className="h-3 w-3" /> {t("admin.universityPartner")}
+   755→                          </Badge>
+   756→                        </div>
+   757→                      </div>
+   758→                    </div>
+   759→                  </div>
+   760→                </Card>
+   761→
+   762→                {/* Stats row */}
+   763→                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+   764→                  <DetailStat
+   765→                    icon={<BookOpen className="h-4 w-4" />}
+   766→                    label={t("common.courses")}
+   767→                    value={university.courseCount}
+   768→                  />
+   769→                  <DetailStat
+   770→                    icon={<Mail className="h-4 w-4" />}
+   771→                    label={t("common.email")}
+   772→                    value={university.email}
+   773→                    isText
+   774→                  />
+   775→                  <DetailStat
+   776→                    icon={<Calendar className="h-4 w-4" />}
+   777→                    label={t("common.date")}
+   778→                    value={formatDate(university.createdAt)}
+   779→                    isText
+   780→                  />
+   781→                  <DetailStat
+   782→                    icon={<GraduationCap className="h-4 w-4" />}
+   783→                    label={t("common.status")}
+   784→                    value={t("common.active")}
+   785→                    isText
+   786→                  />
+   787→                </div>
+   788→
+   789→                {/* Description block */}
+   790→                {university.description && (
+   791→                  <Card className="border-border p-5">
+   792→                    <h4 className="font-heading text-sm font-semibold text-foreground mb-2">
+   793→                      {t("public.about")}
+   794→                    </h4>
+   795→                    <p className="text-sm text-muted-foreground leading-relaxed">
+   796→                      {university.description}
+   797→                    </p>
+   798→                  </Card>
+   799→                )}
+   800→
+   801→                {/* Courses list */}
+   802→                <div className="space-y-3">
+   803→                  <div className="flex items-center justify-between">
+   804→                    <h4 className="font-heading text-sm font-semibold text-foreground">
+   805→                      {t("common.courses")}
+   806→                    </h4>
+   807→                    <Badge variant="outline">
+   808→                      {university.courseCount} {t("common.all")}
+   809→                    </Badge>
+   810→                  </div>
+   811→
+   812→                  {university.courses?.length === 0 ? (
+   813→                    <EmptyState
+   814→                      icon={<BookOpen className="h-5 w-5" />}
+   815→                      title={t("empty.noCourses")}
+   816→                      description={t("admin.universityDesc")}
+   817→                    />
+   818→                  ) : (
+   819→                    <div className="space-y-2">
+   820→                      {university.courses?.map((c) => (
+   821→                        <CourseRowItem key={c.id} course={c} />
+   822→                      ))}
+   823→                    </div>
+   824→                  )}
+   825→                </div>
+   826→              </>
+   827→            ) : null}
+   828→          </div>
+   829→        </div>
+   830→      </DrawerContent>
+   831→    </Drawer>
+   832→  );
+   833→}
+   834→
+   835→function DetailStat({
+   836→  icon,
+   837→  label,
+   838→  value,
+   839→  isText,
+   840→}: {
+   841→  icon: React.ReactNode;
+   842→  label: string;
+   843→  value: number | string;
+   844→  isText?: boolean;
+   845→}) {
+   846→  return (
+   847→    <Card className="border-border p-3">
+   848→      <div className="flex items-center gap-2 text-accent">
+   849→        {icon}
+   850→        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+   851→          {label}
+   852→        </span>
+   853→      </div>
+   854→      <p
+   855→        className={`mt-1.5 font-heading font-semibold text-foreground ${
+   856→          isText ? "text-sm truncate" : "text-xl"
+   857→        }`}
+   858→        title={isText ? String(value) : undefined}
+   859→      >
+   860→        {isText && typeof value === "string"
+   861→          ? value.length > 22
+   862→            ? value.slice(0, 20) + "…"
+   863→            : value
+   864→          : typeof value === "number"
+   865→            ? value.toLocaleString()
+   866→            : value}
+   867→      </p>
+   868→    </Card>
+   869→  );
+   870→}
+   871→
+   872→function CourseRowItem({ course }: { course: UniversityCourseRow }) {
+   873→  const { t } = useI18n();
+   874→  return (
+   875→    <Card className="border-border p-3 transition-colors duration-200 hover:bg-muted/30">
+   876→      <div className="flex items-start gap-3">
+   877→        <div className="h-12 w-20 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border">
+   878→          {course.thumbnail ? (
+   879→            <img
+   880→              src={course.thumbnail}
+   881→              alt=""
+   882→              className="h-full w-full object-cover"
+   883→            />
+   884→          ) : (
+   885→            <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+   886→              <BookOpen className="h-4 w-4" />
+   887→            </div>
+   888→          )}
+   889→        </div>
+   890→        <div className="min-w-0 flex-1">
+   891→          <div className="flex items-start justify-between gap-2">
+   892→            <h5 className="font-medium text-sm text-foreground line-clamp-1">
+   893→              {course.title}
+   894→            </h5>
+   895→            <div className="flex gap-1 shrink-0">
+   896→              {course.accessType === "FREE" ? (
+   897→                <Badge variant="outline" className="text-success border-success/30">
+   898→                  {t("common.free")}
+   899→                </Badge>
+   900→              ) : (
+   901→                <Badge variant="outline" className="text-primary border-primary/30">
+   902→                  {t("common.paid")}
+   903→                </Badge>
+   904→              )}
+   905→              {course.isPublished ? (
+   906→                <Badge className="bg-success/95 text-success-foreground">{t("common.published")}</Badge>
+   907→              ) : (
+   908→                <Badge variant="outline">{t("common.draft")}</Badge>
+   909→              )}
+   910→            </div>
+   911→          </div>
+   912→          {course.description && (
+   913→            <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
+   914→              {course.description}
+   915→            </p>
+   916→          )}
+   917→          <div className="mt-1.5 flex items-center gap-3 text-[11px] text-muted-foreground">
+   918→            <span className="flex items-center gap-1">
+   919→              <Layers className="h-3 w-3 text-accent" />
+   920→              {course.topicsCount} {t("common.topics")}
+   921→            </span>
+   922→            <span className="flex items-center gap-1">
+   923→              <Video className="h-3 w-3 text-accent" />
+   924→              {course.videosCount} {t("common.lessons")}
+   925→            </span>
+   926→            <span className="flex items-center gap-1">
+   927→              <ClipboardList className="h-3 w-3 text-accent" />
+   928→              {course.assignmentsCount} {t("common.assignments")}
+   929→            </span>
+   930→          </div>
+   931→        </div>
+   932→      </div>
+   933→    </Card>
+   934→  );
+   935→}
+   936→

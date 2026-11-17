@@ -1,0 +1,823 @@
+     1→"use client";
+     2→
+     3→import { useAppStore } from "@/stores/app-store";
+     4→import { Button } from "@/components/ui/button";
+     5→import { Card, CardContent } from "@/components/ui/card";
+     6→import { Badge } from "@/components/ui/badge";
+     7→import { Skeleton } from "@/components/ui/skeleton";
+     8→import { EmptyState } from "@/components/shared/empty-state";
+     9→import { CourseThumbnail } from "@/components/shared/course-thumbnail";
+    10→import { UniversityBadge } from "@/components/shared/university-badge";
+    11→import { useApiFetch } from "@/hooks/use-api";
+    12→import {
+    13→  ArrowRight, BookOpen, Award, Users, Clock, CheckCircle2,
+    14→  Sparkles, GraduationCap, Video, FileText, ShieldCheck, Star, TrendingUp,
+    15→  Building2, PlayCircle, Timer, Trophy, ChevronDown, Handshake
+    16→} from "lucide-react";
+    17→import { formatPrice, durationUnitLabel, type CoursePublic, type SubscriptionPlanPublic } from "@/types";
+    18→import { useI18n } from "@/lib/i18n/store";
+    19→
+    20→export function HomePage() {
+    21→  const { t } = useI18n();
+    22→  const navigate = useAppStore((s) => s.navigate);
+    23→
+    24→  const { data: coursesData, loading: coursesLoading } = useApiFetch<{ courses: CoursePublic[] }>(
+    25→    "/api/public/courses"
+    26→  );
+    27→  const { data: plansData, loading: plansLoading } = useApiFetch<{ plans: SubscriptionPlanPublic[] }>(
+    28→    "/api/public/plans"
+    29→  );
+    30→  const { data: uniData } = useApiFetch<{ universities: { id: string; name: string; logo: string | null; description: string | null; courseCount: number }[] }>(
+    31→    "/api/public/universities"
+    32→  );
+    33→
+    34→  const courses = coursesData?.courses || [];
+    35→  const featured = courses.slice(0, 6);
+    36→  const plans = plansData?.plans || [];
+    37→
+    38→  // Use universities from the dedicated API, falling back to course-derived data
+    39→  const universities = (() => {
+    40→    if (uniData?.universities && uniData.universities.length > 0) {
+    41→      return uniData.universities.slice(0, 6);
+    42→    }
+    43→    // Fallback: derive from course data
+    44→    const map = new Map<string, { id: string; name: string; logo?: string | null; courseCount: number }>();
+    45→    for (const c of courses) {
+    46→      if (!c.university) continue;
+    47→      const existing = map.get(c.university.id);
+    48→      if (existing) existing.courseCount += 1;
+    49→      else map.set(c.university.id, { id: c.university.id, name: c.university.name, logo: c.university.logo ?? null, courseCount: 1 });
+    50→    }
+    51→    return Array.from(map.values()).sort((a, b) => b.courseCount - a.courseCount).slice(0, 6);
+    52→  })();
+    53→
+    54→  const stats = [
+    55→    { icon: Building2, label: t("common.universities"), value: universities.length > 0 ? String(universities.length) : "6+" },
+    56→    { icon: BookOpen, label: t("common.courses"), value: courses.length > 0 ? String(courses.length) : "48" },
+    57→    { icon: Users, label: t("public.enrolledStudents"), value: "2,000+" },
+    58→    { icon: Award, label: t("public.certificatesIssued"), value: "5,400+" },
+    59→  ];
+    60→
+    61→  return (
+    62→    <div>
+    63→      {/* ─────────── Hero ─────────── */}
+    64→      <section className="hero-gradient relative overflow-hidden border-b border-border bg-soft-sage/40">
+    65→        <div
+    66→          className="pointer-events-none absolute inset-0 -z-10 opacity-90"
+    67→          style={{
+    68→            background:
+    69→              "radial-gradient(circle at 80% 20%, rgba(120,151,134,0.18), transparent 55%), radial-gradient(circle at 10% 80%, rgba(52,79,66,0.06), transparent 55%)",
+    70→          }}
+    71→        />
+    72→        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-16 md:py-20 lg:py-24">
+    73→          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+    74→            {/* Left column */}
+    75→            <div className="space-y-6 animate-fade-in-up">
+    76→              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm">
+    77→                <Sparkles className="h-3.5 w-3.5 text-accent" />
+    78→                <span>{t("public.heroLabel")}</span>
+    79→              </div>
+    80→              <h1 className="font-heading text-3xl font-semibold leading-[1.1] tracking-tight text-foreground md:text-4xl lg:text-[44px]">
+    81→                {t("public.heroTitleAlt")}
+    82→              </h1>
+    83→              <p className="text-base text-muted-foreground max-w-xl leading-relaxed md:text-lg">
+    84→                {t("public.heroDescAlt")}
+    85→              </p>
+    86→              <div className="flex flex-wrap items-center gap-3 pt-1">
+    87→                <Button
+    88→                  size="lg"
+    89→                  onClick={() => navigate(["courses"])}
+    90→                  className="gap-2 h-11 px-6 bg-primary text-primary-foreground hover:bg-primary/90"
+    91→                >
+    92→                  {t("common.exploreCourses")}
+    93→                  <ArrowRight className="h-4 w-4" />
+    94→                </Button>
+    95→                <Button
+    96→                  size="lg"
+    97→                  variant="outline"
+    98→                  onClick={() => navigate(["courses"])}
+    99→                  className="gap-2 h-11 px-6 border-border bg-card hover:bg-soft-sage"
+   100→                >
+   101→                  <Building2 className="h-4 w-4" />
+   102→                  {t("public.discoverUniversities")}
+   103→                </Button>
+   104→              </div>
+   105→              <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-3 text-sm text-muted-foreground">
+   106→                <span className="flex items-center gap-1.5">
+   107→                  <Video className="h-4 w-4 text-accent" /> {t("public.recordedVideoLessons")}
+   108→                </span>
+   109→                <span className="flex items-center gap-1.5">
+   110→                  <Award className="h-4 w-4 text-accent" /> {t("public.verifiableCertificatesShort")}
+   111→                </span>
+   112→                <span className="flex items-center gap-1.5">
+   113→                  <ShieldCheck className="h-4 w-4 text-accent" /> {t("public.structuredLearningPaths")}
+   114→                </span>
+   115→              </div>
+   116→            </div>
+   117→
+   118→            {/* Right column — visual composition */}
+   119→            <div className="relative hidden lg:block animate-fade-in-up">
+   120→              <div className="relative space-y-4">
+   121→                {/* Top: university identity strip */}
+   122→                <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+   123→                  <div className="flex items-center justify-between">
+   124→                    <div className="flex items-center gap-3">
+   125→                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+   126→                        <GraduationCap className="h-5 w-5" />
+   127→                      </div>
+   128→                      <div>
+   129→                        <p className="font-heading text-sm font-semibold tracking-tight text-foreground">
+   130→                          {t("public.multiUniversityCatalog")}
+   131→                        </p>
+   132→                        <p className="text-xs text-muted-foreground">{t("public.browseCoursesAcrossInstitutions")}</p>
+   133→                      </div>
+   134→                    </div>
+   135→                    <Badge className="bg-success/15 text-success hover:bg-success/15" variant="secondary">
+   136→                      {t("public.live")}
+   137→                    </Badge>
+   138→                  </div>
+   139→                  <div className="mt-3 flex flex-wrap items-center gap-2">
+   140→                    {universities.slice(0, 4).map((u, i) => (
+   141→                      <span
+   142→                        key={u.id}
+   143→                        className="inline-flex items-center gap-1.5 rounded-full border border-border bg-soft-sage px-2 py-0.5 text-xs font-medium text-foreground"
+   144→                      >
+   145→                        {u.logo ? (
+   146→                          <img src={u.logo} alt="" className="h-3.5 w-3.5 rounded-full object-cover" />
+   147→                        ) : (
+   148→                          <Building2 className="h-3 w-3 text-accent" />
+   149→                        )}
+   150→                        {u.name}
+   151→                      </span>
+   152→                    ))}
+   153→                    {universities.length === 0 && (
+   154→                      <>
+   155→                        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-soft-sage px-2 py-0.5 text-xs font-medium text-foreground">
+   156→                          <Building2 className="h-3 w-3 text-accent" /> Global Tech Institute
+   157→                        </span>
+   158→                        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-soft-sage px-2 py-0.5 text-xs font-medium text-foreground">
+   159→                          <Building2 className="h-3 w-3 text-accent" /> Design Academy
+   160→                        </span>
+   161→                        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-soft-sage px-2 py-0.5 text-xs font-medium text-foreground">
+   162→                          <Building2 className="h-3 w-3 text-accent" /> Business School
+   163→                        </span>
+   164→                      </>
+   165→                    )}
+   166→                  </div>
+   167→                </div>
+   168→
+   169→                {/* Middle: featured course card */}
+   170→                <div className="rounded-lg border border-border bg-card p-4 shadow-sm transition-all duration-200 hover:shadow-md">
+   171→                  <div className="flex items-start gap-3">
+   172→                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-soft-sage text-accent">
+   173→                      <PlayCircle className="h-6 w-6" />
+   174→                    </div>
+   175→                    <div className="min-w-0 flex-1">
+   176→                      <div className="mb-1 flex items-center gap-2">
+   177→                        <Badge className="bg-primary text-primary-foreground text-[10px]" variant="default">
+   178→                          {t("common.paid")}
+   179→                        </Badge>
+   180→                        <Badge variant="outline" className="border-border text-[10px]">Marketing</Badge>
+   181→                      </div>
+   182→                      <p className="font-heading text-sm font-semibold tracking-tight text-foreground line-clamp-1">
+   183→                        {featured[0]?.title || "Digital Marketing Foundations"}
+   184→                      </p>
+   185→                      <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
+   186→                        {featured[0]?.description || "A structured path from strategy to execution."}
+   187→                      </p>
+   188→                    </div>
+   189→                  </div>
+   190→                  <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-xs text-muted-foreground">
+   191→                    <span className="flex items-center gap-1.5">
+   192→                      <Video className="h-3.5 w-3.5 text-accent" /> 12 lessons
+   193→                    </span>
+   194→                    <span className="flex items-center gap-1.5">
+   195→                      <Clock className="h-3.5 w-3.5 text-accent" /> 4h 20m
+   196→                    </span>
+   197→                  </div>
+   198→                </div>
+   199→
+   200→                {/* Bottom: certificate preview */}
+   201→                <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+   202→                  <div className="flex items-center gap-3">
+   203→                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/15 text-success">
+   204→                      <Trophy className="h-5 w-5" />
+   205→                    </div>
+   206→                    <div className="flex-1">
+   207→                      <p className="font-heading text-sm font-semibold tracking-tight text-foreground">
+   208→                        {t("public.certificateEarnedShort")}
+   209→                      </p>
+   210→                      <p className="text-xs text-muted-foreground">{t("public.verifiableId")} · CL-2024-08AF31</p>
+   211→                    </div>
+   212→                    <ShieldCheck className="h-5 w-5 text-success" />
+   213→                  </div>
+   214→                </div>
+   215→              </div>
+   216→              <div className="absolute -bottom-4 -right-4 -z-10 h-full w-full rounded-lg border border-accent/20 bg-soft-sage/50" />
+   217→            </div>
+   218→          </div>
+   219→        </div>
+   220→      </section>
+   221→
+   222→      {/* ─────────── Stats bar ─────────── */}
+   223→      <section className="border-b border-border bg-card">
+   224→        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-10">
+   225→          <div className="grid grid-cols-2 gap-6 md:grid-cols-4 md:divide-x md:divide-border stagger-children">
+   226→            {stats.map((s, idx) => (
+   227→              <div
+   228→                key={s.label}
+   229→                className={`flex items-center gap-3 ${idx > 0 ? "md:pl-6" : ""}`}
+   230→              >
+   231→                <div className="stat-icon bg-soft-sage text-accent">
+   232→                  <s.icon className="h-5 w-5" />
+   233→                </div>
+   234→                <div>
+   235→                  <p className="font-heading text-2xl font-bold tabular-nums leading-none text-foreground">
+   236→                    {s.value}
+   237→                  </p>
+   238→                  <p className="mt-1 text-xs text-muted-foreground">{s.label}</p>
+   239→                </div>
+   240→              </div>
+   241→            ))}
+   242→          </div>
+   243→        </div>
+   244→      </section>
+   245→
+   246→      {/* ─────────── Featured Universities ─────────── */}
+   247→      <section className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-16">
+   248→        <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
+   249→          <div className="space-y-2">
+   250→            <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+   251→              {t("public.featuredUniversities")}
+   252→            </p>
+   253→            <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
+   254→              {t("public.learnFromTrustedInstitutions")}
+   255→            </h2>
+   256→          </div>
+   257→          <Button
+   258→            variant="outline"
+   259→            onClick={() => navigate(["courses"])}
+   260→            className="gap-2 h-9 border-border bg-card hover:bg-soft-sage"
+   261→          >
+   262→            {t("public.browseAllCourses")}
+   263→            <ArrowRight className="h-4 w-4" />
+   264→          </Button>
+   265→        </div>
+   266→
+   267→        {coursesLoading && universities.length === 0 ? (
+   268→          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+   269→            {[1, 2, 3].map((i) => (
+   270→              <Card key={i} className="p-5 shadow-sm">
+   271→                <div className="flex items-center gap-3">
+   272→                  <Skeleton className="h-12 w-12 rounded-lg" />
+   273→                  <div className="space-y-2">
+   274→                    <Skeleton className="h-4 w-32" />
+   275→                    <Skeleton className="h-3 w-20" />
+   276→                  </div>
+   277→                </div>
+   278→                <Skeleton className="mt-4 h-3 w-full" />
+   279→              </Card>
+   280→            ))}
+   281→          </div>
+   282→        ) : universities.length === 0 ? (
+   283→          <Card className="border-dashed p-8 text-center">
+   284→            <Building2 className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+   285→            <p className="text-sm font-medium text-foreground">{t("empty.noUniversities")}</p>
+   286→            <p className="text-xs text-muted-foreground mt-1">{t("empty.noUniversitiesDesc")}</p>
+   287→          </Card>
+   288→        ) : (
+   289→          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+   290→            {universities.map((u) => (
+   291→              <Card
+   292→                key={u.id}
+   293→                className="group cursor-pointer p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:border-accent/40"
+   294→                onClick={() => navigate(["courses"])}
+   295→              >
+   296→                <div className="flex items-center gap-4">
+   297→                  {u.logo ? (
+   298→                    <img
+   299→                      src={u.logo}
+   300→                      alt={`${u.name} logo`}
+   301→                      className="h-12 w-12 rounded-lg object-cover bg-white ring-1 ring-border"
+   302→                    />
+   303→                  ) : (
+   304→                    <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground ring-1 ring-primary/30">
+   305→                      <Building2 className="h-5 w-5" />
+   306→                    </span>
+   307→                  )}
+   308→                  <div className="min-w-0 flex-1">
+   309→                    <h3 className="font-heading text-base font-semibold tracking-tight text-foreground line-clamp-1 transition-colors group-hover:text-primary">
+   310→                      {u.name}
+   311→                    </h3>
+   312→                    <p className="mt-0.5 text-xs text-muted-foreground">
+   313→                      {u.courseCount} {t("public.coursesPublished")}
+   314→                    </p>
+   315→                  </div>
+   316→                </div>
+   317→                <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
+   318→                  <span className="text-xs text-muted-foreground">{t("public.exploreCatalog")}</span>
+   319→                  <ArrowRight className="h-4 w-4 text-accent transition-transform group-hover:translate-x-0.5" />
+   320→                </div>
+   321→              </Card>
+   322→            ))}
+   323→          </div>
+   324→        )}
+   325→      </section>
+   326→
+   327→      {/* ─────────── Explore Courses ─────────── */}
+   328→      <section id="courses" className="border-y border-border bg-muted/40">
+   329→        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-16">
+   330→          <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
+   331→            <div className="space-y-2">
+   332→              <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+   333→                {t("common.exploreCourses")}
+   334→              </p>
+   335→              <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
+   336→                {t("public.startLearningPopular")}
+   337→              </h2>
+   338→            </div>
+   339→            <Button
+   340→              variant="outline"
+   341→              onClick={() => navigate(["courses"])}
+   342→              className="gap-2 h-9 border-border bg-card hover:bg-soft-sage"
+   343→            >
+   344→              {t("public.viewAllCourses")}
+   345→              <ArrowRight className="h-4 w-4" />
+   346→            </Button>
+   347→          </div>
+   348→
+   349→          {coursesLoading ? (
+   350→            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+   351→              {[1, 2, 3].map((i) => (
+   352→                <Card key={i} className="overflow-hidden p-0">
+   353→                  <Skeleton className="h-44 w-full rounded-none" />
+   354→                  <div className="space-y-3 p-5">
+   355→                    <Skeleton className="h-4 w-1/3" />
+   356→                    <Skeleton className="h-6 w-3/4" />
+   357→                    <Skeleton className="h-4 w-full" />
+   358→                    <Skeleton className="h-4 w-2/3" />
+   359→                  </div>
+   360→                </Card>
+   361→              ))}
+   362→            </div>
+   363→          ) : featured.length === 0 ? (
+   364→            <EmptyState
+   365→              icon={<BookOpen className="h-5 w-5" />}
+   366→              title={t("public.noCoursesPublishedYet")}
+   367→              description={t("public.noCoursesPublishedDesc")}
+   368→            />
+   369→          ) : (
+   370→            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+   371→              {featured.map((c) => (
+   372→                <CourseCardMini key={c.id} course={c} onOpen={() => navigate(["courses"])} />
+   373→              ))}
+   374→            </div>
+   375→          )}
+   376→        </div>
+   377→      </section>
+   378→
+   379→      {/* ─────────── How It Works ─────────── */}
+   380→      <section className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-20">
+   381→        <div className="mb-12 space-y-2 text-center">
+   382→          <p className="text-xs font-semibold uppercase tracking-wider text-accent">{t("public.howItWorks")}</p>
+   383→          <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
+   384→            {t("public.threeStepsToCertificate")}
+   385→          </h2>
+   386→          <p className="mx-auto max-w-2xl text-sm text-muted-foreground md:text-base">
+   387→            {t("public.howItWorksDesc")}
+   388→          </p>
+   389→        </div>
+   390→        <div className="grid gap-5 md:grid-cols-3">
+   391→          {[
+   392→            { icon: BookOpen, step: "01", title: t("public.stepDiscover"), desc: t("public.stepDiscoverDesc") },
+   393→            { icon: ShieldCheck, step: "02", title: t("public.stepChoose"), desc: t("public.stepChooseDesc") },
+   394→            { icon: Award, step: "03", title: t("public.stepLearnEarn"), desc: t("public.stepLearnEarnDesc") },
+   395→          ].map((s) => (
+   396→            <Card key={s.step} className="relative p-6 shadow-sm transition-all duration-200 hover:shadow-md">
+   397→              <div className="absolute right-5 top-5 font-heading text-3xl font-bold tabular-nums text-soft-sage">
+   398→                {s.step}
+   399→              </div>
+   400→              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-soft-sage text-accent">
+   401→                <s.icon className="h-5 w-5" />
+   402→              </div>
+   403→              <h3 className="font-heading text-base font-semibold tracking-tight text-foreground">
+   404→                {s.title}
+   405→              </h3>
+   406→              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.desc}</p>
+   407→            </Card>
+   408→          ))}
+   409→        </div>
+   410→      </section>
+   411→
+   412→      {/* ─────────── Interactive Learning ─────────── */}
+   413→      <section className="border-y border-border bg-muted/40">
+   414→        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-20">
+   415→          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+   416→            <div className="space-y-5">
+   417→              <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+   418→                {t("public.interactiveLearning")}
+   419→              </p>
+   420→              <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
+   421→                {t("public.builtForActiveLearning")}
+   422→              </h2>
+   423→              <p className="text-sm leading-relaxed text-muted-foreground md:text-base">
+   424→                {t("public.interactiveLearningDesc")}
+   425→              </p>
+   426→              <div className="space-y-3 pt-2">
+   427→                {[
+   428→                  { icon: Video, title: t("public.feature.videoBased"), desc: t("public.feature.videoBasedDesc") },
+   429→                  { icon: Timer, title: t("public.feature.timedQuestions"), desc: t("public.feature.timedQuestionsDesc") },
+   430→                  { icon: FileText, title: t("public.feature.assignments"), desc: t("public.feature.assignmentsDesc") },
+   431→                  { icon: Trophy, title: t("public.feature.certificates"), desc: t("public.feature.certificatesDesc") },
+   432→                ].map((f) => (
+   433→                  <div
+   434→                    key={f.title}
+   435→                    className="flex items-start gap-3 rounded-lg border border-border bg-card p-4 transition-all duration-200 hover:border-accent/40 hover:shadow-sm"
+   436→                  >
+   437→                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-soft-sage text-accent">
+   438→                      <f.icon className="h-4 w-4" />
+   439→                    </div>
+   440→                    <div>
+   441→                      <p className="font-heading text-sm font-semibold tracking-tight text-foreground">
+   442→                        {f.title}
+   443→                      </p>
+   444→                      <p className="mt-0.5 text-xs text-muted-foreground">{f.desc}</p>
+   445→                    </div>
+   446→                  </div>
+   447→                ))}
+   448→              </div>
+   449→            </div>
+   450→
+   451→            {/* Visual: assessment mockup */}
+   452→            <div className="relative">
+   453→              <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+   454→                <div className="mb-4 flex items-center justify-between border-b border-border pb-4">
+   455→                  <div className="flex items-center gap-3">
+   456→                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+   457→                      <Timer className="h-5 w-5" />
+   458→                    </div>
+   459→                    <div>
+   460→                      <p className="font-heading text-sm font-semibold tracking-tight text-foreground">
+   461→                        {t("public.assessmentMockup")}
+   462→                      </p>
+   463→                      <p className="text-xs text-muted-foreground">{t("public.question2Of5")}</p>
+   464→                    </div>
+   465→                  </div>
+   466→                  <div className="flex items-center gap-1.5 rounded-full bg-warning/15 px-2.5 py-1 text-xs font-medium text-warning">
+   467→                    <Clock className="h-3 w-3" /> 00:47
+   468→                  </div>
+   469→                </div>
+   470→                <p className="text-sm font-medium text-foreground">
+   471→                  {t("public.contentFunnelQuestion")}
+   472→                </p>
+   473→                <div className="mt-4 space-y-2">
+   474→                  {[
+   475→                    { label: t("public.increaseSocialFollowers"), selected: false },
+   476→                    { label: t("public.guideProspectsConversion"), selected: true },
+   477→                    { label: t("public.reduceAdSpend"), selected: false },
+   478→                    { label: t("public.improveEmailDeliverability"), selected: false },
+   479→                  ].map((opt) => (
+   480→                    <div
+   481→                      key={opt.label}
+   482→                      className={`flex items-center gap-3 rounded-lg border p-3 text-sm transition-all duration-200 ${
+   483→                        opt.selected
+   484→                          ? "border-primary bg-soft-sage text-foreground"
+   485→                          : "border-border bg-card text-muted-foreground"
+   486→                      }`}
+   487→                    >
+   488→                      <span
+   489→                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
+   490→                          opt.selected ? "border-primary bg-primary text-primary-foreground" : "border-border"
+   491→                        }`}
+   492→                      >
+   493→                        {opt.selected && <CheckCircle2 className="h-3 w-3" />}
+   494→                      </span>
+   495→                      {opt.label}
+   496→                    </div>
+   497→                  ))}
+   498→                </div>
+   499→                <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
+   500→                  <span className="text-xs text-muted-foreground">{t("public.autoGradedOnSubmit")}</span>
+   501→                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success">
+   502→                    <ShieldCheck className="h-3.5 w-3.5" /> {t("public.verifiedProgress")}
+   503→                  </span>
+   504→                </div>
+   505→              </div>
+   506→              <div className="absolute -bottom-3 -right-3 -z-10 h-full w-full rounded-lg border border-accent/20 bg-soft-sage/40" />
+   507→            </div>
+   508→          </div>
+   509→        </div>
+   510→      </section>
+   511→
+   512→      {/* ─────────── Learning Plans ─────────── */}
+   513→      <section id="plans" className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-20">
+   514→        <div className="mb-10 space-y-3 text-center">
+   515→          <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+   516→            {t("nav.learningPlans")}
+   517→          </p>
+   518→          <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
+   519→            {t("public.choosePlanFitsGoals")}
+   520→          </h2>
+   521→          <p className="mx-auto max-w-2xl text-sm text-muted-foreground">
+   522→            {t("public.transparentPricing")}
+   523→          </p>
+   524→        </div>
+   525→
+   526→        {plansLoading ? (
+   527→          <div className="grid gap-5 md:grid-cols-3">
+   528→            {[1, 2, 3].map((i) => (
+   529→              <Card key={i} className="p-6">
+   530→                <Skeleton className="mb-4 h-6 w-1/3" />
+   531→                <Skeleton className="mb-2 h-10 w-2/3" />
+   532→                <Skeleton className="mb-6 h-4 w-1/2" />
+   533→                <div className="space-y-3">
+   534→                  {[1, 2, 3, 4].map((j) => (
+   535→                    <Skeleton key={j} className="h-4 w-full" />
+   536→                  ))}
+   537→                </div>
+   538→                <Skeleton className="mt-6 h-10 w-full" />
+   539→              </Card>
+   540→            ))}
+   541→          </div>
+   542→        ) : plans.length === 0 ? (
+   543→          <EmptyState
+   544→            icon={<TrendingUp className="h-5 w-5" />}
+   545→            title={t("public.noSubscriptionPlansYet")}
+   546→            description={t("public.noPlansDesc")}
+   547→          />
+   548→        ) : (
+   549→          <div className="mx-auto grid max-w-5xl gap-5 md:grid-cols-3 md:items-start">
+   550→            {plans.map((p) => (
+   551→              <PlanCard
+   552→                key={p.id}
+   553→                plan={p}
+   554→                onSelect={() => navigate(["register"], { planId: p.id })}
+   555→              />
+   556→            ))}
+   557→          </div>
+   558→        )}
+   559→      </section>
+   560→
+   561→      {/* ─────────── University Partnership ─────────── */}
+   562→      <section className="border-y border-border bg-soft-sage/40">
+   563→        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-20">
+   564→          <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+   565→            <div className="space-y-5">
+   566→              <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+   567→                {t("public.universityPartnership")}
+   568→              </p>
+   569→              <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
+   570→                {t("public.bringInstitutionToCourseLearn")}
+   571→              </h2>
+   572→              <p className="text-sm leading-relaxed text-muted-foreground md:text-base">
+   573→                {t("public.partnershipDescAlt")}
+   574→              </p>
+   575→              <div className="flex flex-wrap items-center gap-3 pt-2">
+   576→                <Button
+   577→                  size="lg"
+   578→                  onClick={() => navigate(["register"])}
+   579→                  className="gap-2 h-11 px-6 bg-primary text-primary-foreground hover:bg-primary/90"
+   580→                >
+   581→                  <Handshake className="h-4 w-4" />
+   582→                  {t("public.becomePartner")}
+   583→                </Button>
+   584→                <Button
+   585→                  size="lg"
+   586→                  variant="outline"
+   587→                  onClick={() => navigate(["about"])}
+   588→                  className="h-11 px-6 border-border bg-card hover:bg-soft-sage"
+   589→                >
+   590→                  {t("public.learnMore")}
+   591→                </Button>
+   592→              </div>
+   593→            </div>
+   594→
+   595→            <div className="grid grid-cols-2 gap-4">
+   596→              {[
+   597→                { icon: Building2, title: t("public.publishCourses"), desc: t("public.publishCoursesDesc") },
+   598→                { icon: Video, title: t("public.deliverLessons"), desc: t("public.deliverLessonsDesc") },
+   599→                { icon: FileText, title: t("public.assessLearners"), desc: t("public.assessLearnersDesc") },
+   600→                { icon: Award, title: t("public.issueCertificates"), desc: t("public.issueCertificatesDesc") },
+   601→              ].map((f) => (
+   602→                <Card key={f.title} className="p-5 shadow-sm transition-all duration-200 hover:shadow-md">
+   603→                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-soft-sage text-accent">
+   604→                    <f.icon className="h-5 w-5" />
+   605→                  </div>
+   606→                  <h3 className="font-heading text-sm font-semibold tracking-tight text-foreground">
+   607→                    {f.title}
+   608→                  </h3>
+   609→                  <p className="mt-1 text-xs text-muted-foreground">{f.desc}</p>
+   610→                </Card>
+   611→              ))}
+   612→            </div>
+   613→          </div>
+   614→        </div>
+   615→      </section>
+   616→
+   617→      {/* ─────────── FAQ ─────────── */}
+   618→      <section className="mx-auto max-w-3xl px-4 md:px-6 lg:px-8 py-20">
+   619→        <div className="mb-10 space-y-2 text-center">
+   620→          <p className="text-xs font-semibold uppercase tracking-wider text-accent">{t("public.faqAlt")}</p>
+   621→          <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground md:text-[28px]">
+   622→            {t("public.faq")}
+   623→          </h2>
+   624→        </div>
+   625→        <div className="space-y-3">
+   626→          {[
+   627→            {
+   628→              q: t("public.faqStarted"),
+   629→              a: t("public.faqStartedAns"),
+   630→            },
+   631→            {
+   632→              q: t("public.faqCertificatesVerifiable"),
+   633→              a: t("public.faqCertificatesVerifiableAns"),
+   634→            },
+   635→            {
+   636→              q: t("public.faqProgressTracking"),
+   637→              a: t("public.faqProgressTrackingAns"),
+   638→            },
+   639→            {
+   640→              q: t("public.faqMultipleUniversities"),
+   641→              a: t("public.faqMultipleUniversitiesAns"),
+   642→            },
+   643→            {
+   644→              q: t("public.faqPlanExpire"),
+   645→              a: t("public.faqPlanExpireAns"),
+   646→            },
+   647→          ].map((item) => (
+   648→            <details
+   649→              key={item.q}
+   650→              className="group rounded-lg border border-border bg-card p-0 shadow-sm transition-all duration-200 hover:border-accent/40 [&[open]]:shadow-md"
+   651→            >
+   652→              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4">
+   653→                <span className="font-heading text-sm font-semibold tracking-tight text-foreground">
+   654→                  {item.q}
+   655→                </span>
+   656→                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180" />
+   657→              </summary>
+   658→              <div className="px-5 pb-5 text-sm leading-relaxed text-muted-foreground">
+   659→                {item.a}
+   660→              </div>
+   661→            </details>
+   662→          ))}
+   663→        </div>
+   664→      </section>
+   665→
+   666→      {/* ─────────── CTA ─────────── */}
+   667→      <section className="hero-gradient bg-primary text-primary-foreground">
+   668→        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-16 text-center md:py-20">
+   669→          <h2 className="font-heading text-2xl font-semibold tracking-tight md:text-[32px]">
+   670→            {t("public.readyToStartJourney")}
+   671→          </h2>
+   672→          <p className="mx-auto mt-3 max-w-xl text-sm text-primary-foreground/80 md:text-base">
+   673→            {t("public.ctaCreateAccount")}
+   674→          </p>
+   675→          <div className="mt-7 flex flex-wrap justify-center gap-3">
+   676→            <Button
+   677→              size="lg"
+   678→              variant="secondary"
+   679→              onClick={() => navigate(["register"])}
+   680→              className="gap-2 h-11 px-6 bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+   681→            >
+   682→              {t("common.getStarted")}
+   683→              <ArrowRight className="h-4 w-4" />
+   684→            </Button>
+   685→            <Button
+   686→              size="lg"
+   687→              variant="outline"
+   688→              onClick={() => navigate(["courses"])}
+   689→              className="h-11 border-primary-foreground/30 bg-transparent px-6 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+   690→            >
+   691→              {t("public.browseCoursesShort")}
+   692→            </Button>
+   693→          </div>
+   694→        </div>
+   695→      </section>
+   696→    </div>
+   697→  );
+   698→}
+   699→
+   700→function CourseCardMini({ course, onOpen }: { course: CoursePublic; onOpen: () => void }) {
+   701→  const { t } = useI18n();
+   702→  return (
+   703→    <Card
+   704→      className="group card-glow cursor-pointer overflow-hidden p-0 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-accent/40"
+   705→      onClick={onOpen}
+   706→    >
+   707→      <div className="relative h-44 overflow-hidden bg-muted">
+   708→        <CourseThumbnail
+   709→          thumbnail={course.thumbnail}
+   710→          firstVideoUrl={(course as any).firstVideoUrl}
+   711→          firstVideoSource={(course as any).firstVideoSource}
+   712→          alt={course.title}
+   713→          className="h-full w-full"
+   714→          showPlayOverlay
+   715→        />
+   716→        <div className="absolute top-3 left-3 flex gap-1.5">
+   717→          <Badge
+   718→            variant={course.accessType === "FREE" ? "secondary" : "default"}
+   719→            className={
+   720→              course.accessType === "FREE"
+   721→                ? "bg-success/15 text-success hover:bg-success/20"
+   722→                : "bg-primary text-primary-foreground"
+   723→            }
+   724→          >
+   725→            {course.accessType === "FREE" ? t("common.free") : t("common.paid")}
+   726→          </Badge>
+   727→          {course.category && (
+   728→            <Badge variant="outline" className="border-border bg-background/85 backdrop-blur">
+   729→              {course.category}
+   730→            </Badge>
+   731→          )}
+   732→        </div>
+   733→      </div>
+   734→      <CardContent className="space-y-2.5 p-5">
+   735→        <h3 className="font-heading text-[15px] font-semibold tracking-tight text-foreground line-clamp-1 transition-colors group-hover:text-primary">
+   736→          {course.title}
+   737→        </h3>
+   738→        {course.university && (
+   739→          <UniversityBadge university={course.university} size="xs" />
+   740→        )}
+   741→        <p className="min-h-[2.5rem] text-sm text-muted-foreground line-clamp-2">
+   742→          {course.description || t("courses.noDescription")}
+   743→        </p>
+   744→        <div className="flex items-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
+   745→          <span className="flex items-center gap-1.5">
+   746→            <BookOpen className="h-3.5 w-3.5" /> {course.topicsCount} {t("courses.topics")}
+   747→          </span>
+   748→          <span className="flex items-center gap-1.5">
+   749→            <Video className="h-3.5 w-3.5" /> {course.videosCount} {t("courses.lessons")}
+   750→          </span>
+   751→          {course.accessType === "PAID" && course.planNames.length > 0 && (
+   752→            <span className="flex items-center gap-1.5 text-accent">
+   753→              <ShieldCheck className="h-3.5 w-3.5" /> {course.planNames.join(", ")}
+   754→            </span>
+   755→          )}
+   756→        </div>
+   757→      </CardContent>
+   758→    </Card>
+   759→  );
+   760→}
+   761→
+   762→function PlanCard({ plan, onSelect }: { plan: SubscriptionPlanPublic; onSelect: () => void }) {
+   763→  const { t } = useI18n();
+   764→  return (
+   765→    <Card
+   766→      className={`relative flex flex-col ${plan.isPopular ? "card-glow" : "card-elevated"} p-6 transition-all duration-200 hover:shadow-md ${
+   767→        plan.isPopular
+   768→          ? "border-accent/60 ring-1 ring-accent/25 shadow-md"
+   769→          : "hover:border-accent/40"
+   770→      }`}
+   771→    >
+   772→      {plan.isPopular && (
+   773→        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+   774→          <Badge className="bg-primary text-primary-foreground shadow-sm">
+   775→            <Star className="h-3 w-3 fill-current" /> {t("common.popularPlan")}
+   776→          </Badge>
+   777→        </div>
+   778→      )}
+   779→      <div className="mb-4">
+   780→        <h3 className="font-heading text-lg font-semibold tracking-tight text-foreground">
+   781→          {plan.name}
+   782→        </h3>
+   783→        {plan.description && (
+   784→          <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{plan.description}</p>
+   785→        )}
+   786→      </div>
+   787→      <div className="mb-5">
+   788→        <span className="font-heading text-3xl font-bold tracking-tight text-foreground">
+   789→          {formatPrice(plan.price, plan.currency)}
+   790→        </span>
+   791→        <span className="ml-1 text-sm text-muted-foreground">
+   792→          / {plan.duration}{" "}
+   793→          {durationUnitLabel(plan.durationUnit).toLowerCase().replace(/s$/, "")}
+   794→          {plan.duration > 1 ? "s" : ""}
+   795→        </span>
+   796→      </div>
+   797→      <ul className="mb-6 flex-1 space-y-2.5">
+   798→        {plan.features.slice(0, 6).map((f, i) => (
+   799→          <li key={i} className="flex items-start gap-2 text-sm text-foreground">
+   800→            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+   801→            <span>{f}</span>
+   802→          </li>
+   803→        ))}
+   804→        {plan.features.length > 6 && (
+   805→          <li className="text-xs text-muted-foreground">+ {plan.features.length - 6} {t("common.more")}</li>
+   806→        )}
+   807→      </ul>
+   808→      <Button
+   809→        onClick={onSelect}
+   810→        variant={plan.isPopular ? "default" : "outline"}
+   811→        className={`h-10 w-full gap-2 ${
+   812→          plan.isPopular
+   813→            ? "bg-primary text-primary-foreground hover:bg-primary/90"
+   814→            : "border-border bg-card hover:bg-soft-sage"
+   815→        }`}
+   816→      >
+   817→        {t("common.selectPlan")}
+   818→        <ArrowRight className="h-4 w-4" />
+   819→      </Button>
+   820→    </Card>
+   821→  );
+   822→}
+   823→
