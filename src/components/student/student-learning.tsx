@@ -1343,6 +1343,26 @@ function VideoPlayer({
     afterAnswerSubmitted(answeredMap);
   }, [answeredMap, afterAnswerSubmitted]);
 
+  // Skip the current question without answering — dismisses the popup and
+  // resumes the video. The question is marked as "answered" with -1 (skipped)
+  // so the missed-question catch-up effect doesn't immediately re-trigger it.
+  // The assessment will treat -1 as "no answer" (wrong) if the user doesn't
+  // retake.
+  const handleSkipQuestion = useCallback(() => {
+    if (activeQuestion) {
+      const newMap = new Map(answeredMap);
+      newMap.set(activeQuestion.id, -1);
+      setAnsweredMap(newMap);
+    }
+    setActiveQuestion(null);
+    setSelectedAnswer(null);
+    setShowFeedback(false);
+    try {
+      const api = playerApiRef.current;
+      if (api && api.paused()) api.play();
+    } catch {}
+  }, [activeQuestion, answeredMap]);
+
   const videoOverlays = (
     <>
       {activeQuestion && (
@@ -1353,6 +1373,7 @@ function VideoPlayer({
           onSelect={(idx) => setSelectedAnswer(idx)}
           onSubmit={handleSubmitAnswer}
           onContinue={handleContinueAfterAnswer}
+          onSkip={handleSkipQuestion}
           answeredCount={answeredMap.size}
           totalCount={questionsData?.questions.length ?? 0}
         />
@@ -1589,6 +1610,7 @@ function QuestionOverlay({
   onSelect,
   onSubmit,
   onContinue,
+  onSkip,
   answeredCount,
   totalCount,
 }: {
@@ -1598,6 +1620,7 @@ function QuestionOverlay({
   onSelect: (idx: number) => void;
   onSubmit: () => void;
   onContinue: () => void;
+  onSkip: () => void;
   answeredCount: number;
   totalCount: number;
 }) {
@@ -1669,7 +1692,7 @@ function QuestionOverlay({
             })}
           </div>
 
-          {/* Footer — submit / feedback */}
+          {/* Footer — submit / skip / continue */}
           <div className="flex items-center justify-between gap-3 pt-1">
             <p className="text-[11px] text-muted-foreground">
               {showFeedback
@@ -1691,14 +1714,25 @@ function QuestionOverlay({
                 </Button>
               </div>
             ) : (
-              <Button
-                onClick={onSubmit}
-                disabled={selectedAnswer === null}
-                size="sm"
-                className="gap-2 shadow-sm"
-              >
-                Submit Answer
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={onSkip}
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                >
+                  Continue
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  onClick={onSubmit}
+                  disabled={selectedAnswer === null}
+                  size="sm"
+                  className="gap-2 shadow-sm"
+                >
+                  Submit Answer
+                </Button>
+              </div>
             )}
           </div>
         </div>
