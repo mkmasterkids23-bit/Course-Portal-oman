@@ -87,7 +87,7 @@ export async function GET(
             where: { videoId: { in: videoIds } },
             _count: { id: true },
           })
-        : Promise.resolve([]),
+        : Promise.resolve([] as { videoId: string; _count: { id: number } }[]),
       db.videoAssessment.findMany({
         where: { studentId: user.id, videoId: { in: videoIds }, passed: true },
         select: { videoId: true },
@@ -105,7 +105,7 @@ export async function GET(
               reviewedAt: true,
             },
           })
-        : Promise.resolve([]),
+        : Promise.resolve([] as { id: string; assignmentId: string; fileUrl: string; submittedAt: Date; status: string; reviewNotes: string | null; reviewedAt: Date | null }[]),
     ]);
 
     const progressMap = new Map(progressRows.map((p) => [p.videoId, p]));

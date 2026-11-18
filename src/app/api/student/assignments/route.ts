@@ -5,128 +5,146 @@ import {
   getStudentSubscription,
   handleAuthError,
 } from "@/lib/auth";
-import {
-  canStudentAccessCourse,
-  getCourseCompletionStats,
-  isCourseCompletedByStudent,
-} from "@/lib/course-utils";
 
 export async function GET() {
   try {
     const user = await requireStudent();
-    const subscription = await getStudentSubscription(user.id);
-    const isSubActive = subscription?.status === "ACTIVE";
 
-    // Fetch all published assignments across published courses
-    const assignments = await db.assignment.findMany({
-      where: {
-        isPublished: true,
-        course: { isPublished: true },
-      },
-      orderBy: { createdAt: "desc" },
-      include: {
-        course: { select: { id: true, title: true } },
-        submissions: {
-          where: { studentId: user.id },
-          select: {
-            id: true,
-            fileUrl: true,
-            submittedAt: true,
-            status: true,
-            reviewNotes: true,
-            reviewedAt: true,
+    // ─── BATCH: Fetch ALL data in parallel ───
+    const [
+      subscription,
+      assignments,
+      allCourses,
+      allVideoProgress,
+      allVideoQuestions,
+      allPassedAssessments,
+      allPublishedVideos,
+    ] = await Promise.all([
+      getStudentSubscription(user.id),
+      db.assignment.findMany({
+        where: { isPublished: true, course: { isPublished: true } },
+        orderBy: { createdAt: "desc" },
+        include: {
+          course: { select: { id: true, title: true } },
+          submissions: {
+            where: { studentId: user.id },
+            select: {
+              id: true, fileUrl: true, submittedAt: true,
+              status: true, reviewNotes: true, reviewedAt: true,
+            },
+            take: 1,
           },
-          take: 1,
         },
-      },
-    });
+      }),
+      // All courses with planAccess for access check
+      db.course.findMany({
+        where: { isPublished: true },
+        select: { id: true, accessType: true, planAccess: { select: { planId: true } } },
+      }),
+      // ALL video progress
+      db.videoProgress.findMany({
+        where: { studentId: user.id },
+        select: { videoId: true, isCompleted: true },
+      }),
+      // ALL video questions (distinct videoIds)
+      db.videoQuestion.findMany({
+        distinct: ["videoId"],
+        select: { videoId: true },
+      }),
+      // ALL passed assessments
+      db.videoAssessment.findMany({
+        where: { studentId: user.id, passed: true },
+        select: { videoId: true },
+      }),
+      // ALL published videos
+      db.videoLesson.findMany({
+        where: { isPublished: true },
+        select: { id: true, courseId: true },
+      }),
+    ]);
 
-    type AssignmentWithCourse = {
-      id: string;
-      courseId: string;
-      courseTitle: string;
-      title: string;
-      description: string | null;
-      instructions: string | null;
-      fileUrl: string | null;
-      dueDate: Date | null;
-      isPublished: boolean;
-      allowResubmission: boolean;
-      submission: {
-        id: string;
-        fileUrl: string;
-        submittedAt: Date;
-        status: "SUBMITTED" | "REVIEWED";
-        reviewNotes: string | null;
-        reviewedAt: Date | null;
-      } | null;
-      unlocked: boolean;
-      lockedReason: string | null;
-      courseCompletion: {
-        percent: number;
-        completedVideos: number;
-        totalVideos: number;
-        allCompleted: boolean;
-      };
-    };
-    const result: AssignmentWithCourse[] = [];
-    for (const a of assignments) {
-      const access = await canStudentAccessCourse(user.id, a.course.id);
-      if (!access.allowed) continue; // skip courses student can't access
+    // ─── Build lookup maps ───
+    const isSubActive = subscription?.status === "ACTIVE";
+    const subPlanId = subscription?.planId;
 
-      const stats = await getCourseCompletionStats(user.id, a.course.id);
-      const completed = await isCourseCompletedByStudent(user.id, a.course.id);
-      const unlocked = isSubActive && completed;
-
-      const submission = a.submissions[0] || null;
-
-      result.push({
-        id: a.id,
-        courseId: a.course.id,
-        courseTitle: a.course.title,
-        title: a.title,
-        description: a.description,
-        instructions: a.instructions,
-        fileUrl: a.fileUrl,
-        dueDate: a.dueDate,
-        isPublished: a.isPublished,
-        allowResubmission: a.allowResubmission,
-        submission: submission
-          ? {
-              id: submission.id,
-              fileUrl: submission.fileUrl,
-              submittedAt: submission.submittedAt,
-              status: submission.status as "SUBMITTED" | "REVIEWED",
-              reviewNotes: submission.reviewNotes,
-              reviewedAt: submission.reviewedAt,
-            }
-          : null,
-        unlocked,
-        lockedReason: !isSubActive
-          ? "Subscription expired"
-          : !completed
-            ? "Complete all course lessons first"
-            : null,
-        courseCompletion: {
-          percent: stats.percent,
-          completedVideos: stats.completedVideos,
-          totalVideos: stats.totalVideos,
-          allCompleted: completed,
-        },
-      });
+    const progressMap = new Map(allVideoProgress.map((p) => [p.videoId, p]));
+    const questionVideoIds = new Set(allVideoQuestions.map((q) => q.videoId));
+    const passedSet = new Set(allPassedAssessments.map((a) => a.videoId));
+    const videosByCourse = new Map<string, string[]>();
+    for (const v of allPublishedVideos) {
+      if (!videosByCourse.has(v.courseId)) videosByCourse.set(v.courseId, []);
+      videosByCourse.get(v.courseId)!.push(v.id);
     }
 
-    return NextResponse.json({
-      assignments: result,
-      subscription,
-    });
+    // Access check map
+    const accessibleCourseIds = new Set<string>();
+    for (const c of allCourses) {
+      if (c.accessType === "FREE") accessibleCourseIds.add(c.id);
+      else if (isSubActive && subPlanId && c.planAccess.some((pa) => pa.planId === subPlanId))
+        accessibleCourseIds.add(c.id);
+    }
+
+    // ─── Helper: compute completion inline ───
+    function computeStats(courseId: string) {
+      const videoIds = videosByCourse.get(courseId) || [];
+      const totalVideos = videoIds.length;
+      if (totalVideos === 0) return { totalVideos: 0, completedVideos: 0, percent: 100, allCompleted: true };
+      let completedVideos = 0;
+      for (const vid of videoIds) {
+        const p = progressMap.get(vid);
+        if (p?.isCompleted === true && (!questionVideoIds.has(vid) || passedSet.has(vid))) {
+          completedVideos++;
+        }
+      }
+      return {
+        totalVideos,
+        completedVideos,
+        percent: Math.round((completedVideos / totalVideos) * 100),
+        allCompleted: completedVideos === totalVideos,
+      };
+    }
+
+    // ─── Build result ───
+    const result = assignments
+      .filter((a) => accessibleCourseIds.has(a.course.id))
+      .map((a) => {
+        const stats = computeStats(a.course.id);
+        const submission = a.submissions[0] || null;
+        return {
+          id: a.id,
+          courseId: a.course.id,
+          courseTitle: a.course.title,
+          title: a.title,
+          description: a.description,
+          instructions: a.instructions,
+          fileUrl: a.fileUrl,
+          dueDate: a.dueDate,
+          isPublished: a.isPublished,
+          allowResubmission: a.allowResubmission,
+          submission: submission ? {
+            id: submission.id,
+            fileUrl: submission.fileUrl,
+            submittedAt: submission.submittedAt,
+            status: submission.status as "SUBMITTED" | "REVIEWED",
+            reviewNotes: submission.reviewNotes,
+            reviewedAt: submission.reviewedAt,
+          } : null,
+          unlocked: isSubActive && stats.allCompleted,
+          lockedReason: !isSubActive ? "Subscription expired" : !stats.allCompleted ? "Complete all lessons first" : null,
+          courseCompletion: {
+            percent: stats.percent,
+            completedVideos: stats.completedVideos,
+            totalVideos: stats.totalVideos,
+            allCompleted: stats.allCompleted,
+          },
+        };
+      });
+
+    return NextResponse.json({ assignments: result });
   } catch (e) {
     const authErr = await handleAuthError(e);
     if (authErr) return authErr;
     console.error("[student/assignments GET]", e);
-    return NextResponse.json(
-      { error: "Failed to load assignments" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to load assignments" }, { status: 500 });
   }
 }

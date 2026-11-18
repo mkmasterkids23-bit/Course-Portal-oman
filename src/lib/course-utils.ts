@@ -163,26 +163,26 @@ export async function canStudentAccessCourse(
   studentId: string,
   courseId: string
 ): Promise<{ allowed: boolean; reason?: string }> {
-  const course = await db.course.findUnique({
-    where: { id: courseId },
-    select: { id: true, accessType: true, isPublished: true },
-  });
-  if (!course) return { allowed: false, reason: "Course not found" };
+  // Fetch course WITH planAccess in a single query (was 2 separate queries)
+  const [course, sub] = await Promise.all([
+    db.course.findUnique({
+      where: { id: courseId },
+      select: { id: true, accessType: true, isPublished: true, planAccess: { select: { planId: true } } },
+    }),
+    db.subscription.findFirst({
+      where: { studentId, status: "ACTIVE", expiryDate: { gt: new Date() } },
+      orderBy: { createdAt: "desc" },
+      select: { planId: true },
+    }),
+  ]);
 
+  if (!course) return { allowed: false, reason: "Course not found" };
   if (course.accessType === "FREE") return { allowed: true };
 
-  // Paid course — check active subscription against plan access
-  const sub = await db.subscription.findFirst({
-    where: { studentId, status: "ACTIVE", expiryDate: { gt: new Date() } },
-    orderBy: { createdAt: "desc" },
-  });
   if (!sub) return { allowed: false, reason: "No active subscription" };
-
-  const access = await db.coursePlanAccess.findFirst({
-    where: { courseId, planId: sub.planId },
-  });
-  if (!access) return { allowed: false, reason: "Your plan does not include this course" };
-
+  if (!course.planAccess.some((pa) => pa.planId === sub.planId)) {
+    return { allowed: false, reason: "Your plan does not include this course" };
+  }
   return { allowed: true };
 }
 
