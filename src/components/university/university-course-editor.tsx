@@ -44,7 +44,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
-import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
+import { Progress } from "@/components/ui/progress";
+import { useApiFetch, apiPost, apiUpload, apiUploadWithProgress } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
 import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
@@ -808,6 +809,7 @@ function VideoFormDialog({
   const [displayOrder, setDisplayOrder] = useState("");
   const [isPublished, setIsPublished] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   useEffect(() => {
     if (target) {
@@ -861,18 +863,19 @@ function VideoFormDialog({
     fd.append("isPublished", String(isPublished));
 
     setSaving(true);
+    setUploadProgress(file ? 0 : null);
     try {
       if (target) {
-        const res = await fetch(`/api/university/videos/${target.id}`, {
-          method: "PUT",
-          body: fd,
-          credentials: "include",
-        });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error || "Failed");
+        const res = await apiUploadWithProgress(
+          `/api/university/videos/${target.id}`, fd, "PUT",
+          file ? (p) => setUploadProgress(p) : undefined
+        );
         toast({ title: "Video updated" });
       } else {
-        await apiUpload(`/api/university/courses/${courseId}/videos`, fd);
+        await apiUploadWithProgress(
+          `/api/university/courses/${courseId}/videos`, fd, "POST",
+          file ? (p) => setUploadProgress(p) : undefined
+        );
         toast({ title: "Video added" });
       }
       onSaved();
@@ -882,6 +885,7 @@ function VideoFormDialog({
       }
     } finally {
       setSaving(false);
+      setUploadProgress(null);
     }
   }
 
@@ -965,6 +969,11 @@ function VideoFormDialog({
                 onChange={(e) => setFile(e.target.files?.[0] || null)}
                 accept=".mp4,.webm,.mov,.mkv"
               />
+              {file && (
+                <p className="text-xs text-muted-foreground">
+                  Selected: {file.name} ({(file.size / (1024 * 1024)).toFixed(1)} MB)
+                </p>
+              )}
               {target && !file && (
                 <p className="text-xs text-muted-foreground">Leave empty to keep existing video.</p>
               )}
@@ -1026,13 +1035,32 @@ function VideoFormDialog({
             </div>
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button disabled={saving} className="h-9" onClick={submit}>
-            {saving ? "Saving…" : target ? "Save Changes" : "Add Video"}
-          </Button>
+        <DialogFooter className="flex-col gap-3">
+          {uploadProgress !== null && (
+            <div className="w-full space-y-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">
+                  {uploadProgress < 100 ? "Uploading video…" : "Processing…"}
+                </span>
+                <span className="font-semibold text-foreground tabular-nums">
+                  {uploadProgress}%
+                </span>
+              </div>
+              <Progress value={uploadProgress} className="h-2" />
+            </div>
+          )}
+          <div className="flex gap-2">
+            <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)} disabled={saving}>
+              Cancel
+            </Button>
+            <Button disabled={saving} className="h-9" onClick={submit}>
+              {saving
+                ? uploadProgress !== null
+                  ? `Uploading… ${uploadProgress}%`
+                  : "Saving…"
+                : target ? "Save Changes" : "Add Video"}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
