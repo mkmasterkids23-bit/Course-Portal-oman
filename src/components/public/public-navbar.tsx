@@ -34,10 +34,8 @@ export function PublicNavbar() {
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 w-full transition-all duration-200",
-        scrolled
-          ? "bg-card/90 backdrop-blur-md border-b border-border shadow-sm"
-          : "bg-card/60 backdrop-blur-sm border-b border-transparent"
+        "sticky top-0 z-40 w-full transition-all duration-200 bg-card border-b border-border",
+        scrolled && "shadow-sm"
       )}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-3 sm:px-4 md:px-6 lg:px-8 gap-3">
