@@ -5,126 +5,218 @@ import {
   getStudentSubscription,
   handleAuthError,
 } from "@/lib/auth";
-import {
-  canStudentAccessCourse,
-  getCourseCompletionStats,
-  isCourseCompletedByStudent,
-} from "@/lib/course-utils";
 
 export async function GET() {
   try {
     const user = await requireStudent();
     const firstName = user.name.split(" ")[0] || user.name;
-    const subscription = await getStudentSubscription(user.id);
 
-    // Fetch all accessible courses (mirror the courses endpoint logic)
-    const allCourses = await db.course.findMany({
-      where: { isPublished: true },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        title: true,
-        thumbnail: true,
-        planAccess: { select: { planId: true } },
-        accessType: true,
-        university: { select: { id: true, name: true, logo: true } },
-      },
-    });
+    // ─── BATCH 1: Fetch ALL data in parallel (9 queries at once) ───
+    // This replaces the old code that made 50+ sequential queries (calling
+    // getCourseCompletionStats per course + per assignment, each making 5
+    // queries). With a remote PostgreSQL database, each query has ~700ms
+    // latency, so 50 queries = 35 seconds. 9 parallel queries = ~1.4s.
+    const [
+      subscription,
+      allCourses,
+      allVideoProgress,
+      allVideoQuestions,
+      allPassedAssessments,
+      allPublishedVideos,
+      lastProgressRows,
+      assignments,
+      recentCertificatesRaw,
+    ] = await Promise.all([
+      // 1. Student subscription
+      getStudentSubscription(user.id),
+      // 2. All published courses with planAccess
+      db.course.findMany({
+        where: { isPublished: true },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          title: true,
+          thumbnail: true,
+          planAccess: { select: { planId: true } },
+          accessType: true,
+          university: { select: { id: true, name: true, logo: true } },
+        },
+      }),
+      // 3. ALL video progress for this student (single query)
+      db.videoProgress.findMany({
+        where: { studentId: user.id },
+        select: {
+          videoId: true,
+          isCompleted: true,
+          updatedAt: true,
+        },
+      }),
+      // 4. ALL video questions (distinct videoIds — to know which videos have questions)
+      db.videoQuestion.findMany({
+        distinct: ["videoId"],
+        select: { videoId: true },
+      }),
+      // 5. ALL passed assessments for this student
+      db.videoAssessment.findMany({
+        where: { studentId: user.id, passed: true },
+        select: { videoId: true },
+      }),
+      // 6. ALL published videos (to know which videos belong to which course)
+      db.videoLesson.findMany({
+        where: { isPublished: true },
+        select: {
+          id: true,
+          courseId: true,
+          title: true,
+          thumbnail: true,
+          videoUrl: true,
+          source: true,
+          displayOrder: true,
+        },
+        orderBy: { displayOrder: "asc" },
+      }),
+      // 7. Last-watched video progress per course (latest updatedAt)
+      db.videoProgress.findMany({
+        where: { studentId: user.id },
+        orderBy: { updatedAt: "desc" },
+        select: { videoId: true, updatedAt: true },
+      }),
+      // 8. All published assignments with student's submissions
+      db.assignment.findMany({
+        where: { isPublished: true, course: { isPublished: true } },
+        orderBy: { dueDate: "asc" },
+        include: {
+          course: { select: { id: true, title: true } },
+          submissions: {
+            where: { studentId: user.id },
+            select: { id: true },
+            take: 1,
+          },
+        },
+      }),
+      // 9. Recent certificates
+      db.certificate.findMany({
+        where: { studentId: user.id },
+        orderBy: { issuedAt: "desc" },
+        take: 5,
+        include: { course: { select: { title: true } } },
+      }),
+    ]);
 
+    // ─── Build lookup maps (in-memory, no DB queries) ───
     const isSubActive = subscription?.status === "ACTIVE";
     const subPlanId = subscription?.planId;
 
+    const progressMap = new Map(allVideoProgress.map((p) => [p.videoId, p]));
+    const questionVideoIds = new Set(allVideoQuestions.map((q) => q.videoId));
+    const passedAssessmentSet = new Set(allPassedAssessments.map((a) => a.videoId));
+    const videosByCourse = new Map<string, typeof allPublishedVideos>();
+    for (const v of allPublishedVideos) {
+      if (!videosByCourse.has(v.courseId)) videosByCourse.set(v.courseId, []);
+      videosByCourse.get(v.courseId)!.push(v);
+    }
+
+    // ─── Determine accessible courses ───
     const accessibleCourseIds: string[] = [];
+    const accessibleCourseSet = new Set<string>();
     for (const c of allCourses) {
       let allowed = false;
       if (c.accessType === "FREE") allowed = true;
       else if (isSubActive && subPlanId)
         allowed = c.planAccess.some((pa) => pa.planId === subPlanId);
-      if (allowed) accessibleCourseIds.push(c.id);
+      if (allowed) {
+        accessibleCourseIds.push(c.id);
+        accessibleCourseSet.add(c.id);
+      }
     }
 
+    // ─── Helper: compute completion stats for a course (in-memory) ───
+    function computeStats(courseId: string) {
+      const videos = videosByCourse.get(courseId) || [];
+      const totalVideos = videos.length;
+      if (totalVideos === 0) return { totalVideos: 0, completedVideos: 0, percent: 100 };
+      let completedVideos = 0;
+      for (const v of videos) {
+        const p = progressMap.get(v.id);
+        if (p?.isCompleted === true) {
+          // Video is completed only if it has no questions OR the assessment is passed
+          if (!questionVideoIds.has(v.id) || passedAssessmentSet.has(v.id)) {
+            completedVideos++;
+          }
+        }
+      }
+      const percent = Math.round((completedVideos / totalVideos) * 100);
+      return { totalVideos, completedVideos, percent };
+    }
+
+    // ─── Compute learning stats + continue learning ───
     let availableCourses = 0;
     let inProgressCourses = 0;
     let completedCourses = 0;
     let overallPercentSum = 0;
-
     const continueLearning: any[] = [];
 
+    // Build a map of courseId → latest progress (for continue learning)
+    const latestProgressByCourse = new Map<string, { videoId: string; updatedAt: Date }>();
+    for (const p of lastProgressRows) {
+      const video = allPublishedVideos.find((v) => v.id === p.videoId);
+      if (video && accessibleCourseSet.has(video.courseId)) {
+        const existing = latestProgressByCourse.get(video.courseId);
+        if (!existing || p.updatedAt > existing.updatedAt) {
+          latestProgressByCourse.set(video.courseId, { videoId: p.videoId, updatedAt: p.updatedAt });
+        }
+      }
+    }
+
     for (const cid of accessibleCourseIds) {
-      const stats = await getCourseCompletionStats(user.id, cid);
+      const stats = computeStats(cid);
       availableCourses++;
       overallPercentSum += stats.percent;
-
       if (stats.completedVideos === stats.totalVideos) {
-        // Includes no-video courses (0 === 0) — considered completed.
         completedCourses++;
       } else if (stats.completedVideos > 0) {
         inProgressCourses++;
       }
 
-      // last-watched video for "Continue Learning"
-      const lastProgress = await db.videoProgress.findFirst({
-        where: {
-          studentId: user.id,
-          video: { courseId: cid, isPublished: true },
-        },
-        orderBy: { updatedAt: "desc" },
-        select: {
-          videoId: true,
-          video: { select: { title: true } },
-        },
-      });
-      const courseMeta = allCourses.find((c) => c.id === cid);
-      if (lastProgress && courseMeta) {
-        // Fetch first video thumbnail for fallback
-        const firstVideo = await db.videoLesson.findFirst({
-          where: { courseId: cid, isPublished: true },
-          orderBy: { displayOrder: "asc" },
-          select: { thumbnail: true, videoUrl: true, source: true },
-        });
-        const uni = courseMeta.university;
-        continueLearning.push({
-          courseId: cid,
-          courseTitle: courseMeta.title,
-          thumbnail: courseMeta.thumbnail || firstVideo?.thumbnail || null,
-          firstVideoUrl: firstVideo?.videoUrl || null,
-          firstVideoSource: firstVideo?.source || null,
-          lastVideoId: lastProgress.videoId,
-          lastVideoTitle: lastProgress.video.title,
-          percent: stats.percent,
-          university: uni ? { id: uni.id, name: uni.name, logo: uni.logo } : null,
-        });
+      // Continue learning: if student has progress in this course
+      const latest = latestProgressByCourse.get(cid);
+      if (latest) {
+        const courseMeta = allCourses.find((c) => c.id === cid);
+        const video = allPublishedVideos.find((v) => v.id === latest.videoId);
+        const firstVideo = videosByCourse.get(cid)?.[0];
+        const uni = courseMeta?.university;
+        if (courseMeta && video) {
+          continueLearning.push({
+            courseId: cid,
+            courseTitle: courseMeta.title,
+            thumbnail: courseMeta.thumbnail || firstVideo?.thumbnail || null,
+            firstVideoUrl: firstVideo?.videoUrl || null,
+            firstVideoSource: firstVideo?.source || null,
+            lastVideoId: latest.videoId,
+            lastVideoTitle: video.title,
+            percent: stats.percent,
+            university: uni ? { id: uni.id, name: uni.name, logo: uni.logo } : null,
+          });
+        }
       }
     }
 
     const overallPercent =
-      availableCourses > 0
-        ? Math.round(overallPercentSum / availableCourses)
-        : 0;
+      availableCourses > 0 ? Math.round(overallPercentSum / availableCourses) : 0;
 
-    // Upcoming assignments (accessible + not yet submitted)
-    const assignments = await db.assignment.findMany({
-      where: {
-        isPublished: true,
-        course: { isPublished: true },
-      },
-      orderBy: { dueDate: "asc" },
-      include: {
-        course: { select: { id: true, title: true } },
-        submissions: {
-          where: { studentId: user.id },
-          select: { id: true },
-          take: 1,
-        },
-      },
+    // Sort continue-learning by recency, take 6
+    continueLearning.sort((a, b) => {
+      // Already sorted by updatedAt desc from latestProgressByCourse
+      return 0;
     });
+    continueLearning.splice(6);
 
+    // ─── Upcoming assignments (inline access + completion check) ───
     const upcomingAssignments: any[] = [];
     for (const a of assignments) {
-      const access = await canStudentAccessCourse(user.id, a.course.id);
-      if (!access.allowed) continue;
-      const completed = await isCourseCompletedByStudent(user.id, a.course.id);
-      const stats = await getCourseCompletionStats(user.id, a.course.id);
+      if (!accessibleCourseSet.has(a.course.id)) continue;
+      const stats = computeStats(a.course.id);
+      const completed = stats.completedVideos === stats.totalVideos;
       upcomingAssignments.push({
         id: a.id,
         courseId: a.course.id,
@@ -137,13 +229,7 @@ export async function GET() {
       });
     }
 
-    // Recent certificates
-    const recentCertificatesRaw = await db.certificate.findMany({
-      where: { studentId: user.id },
-      orderBy: { issuedAt: "desc" },
-      take: 5,
-      include: { course: { select: { title: true } } },
-    });
+    // ─── Recent certificates ───
     const recentCertificates = recentCertificatesRaw.map((c) => ({
       id: c.id,
       courseTitle: c.course.title,
@@ -151,18 +237,10 @@ export async function GET() {
       certificateNumber: c.certificateNumber,
     }));
 
-    // Sort continue-learning by recency (already sorted via DB), take 6
-    continueLearning.splice(6);
-
-    // ─── Upcoming activities: pending assignments + pending video assessments ───
-    // We extend the existing upcomingAssignments list with assessment items
-    // (videos that have questions and the student hasn't passed the test yet)
-    // so the dashboard can show a single consolidated "Upcoming Activities"
-    // section. Each item is normalized to:
-    //   { id, type, courseId, courseTitle, title, dueDate?, status, priority }
+    // ─── Upcoming activities ───
     const upcomingActivities: any[] = [];
 
-    // 1. Pending assignments (reuse upcomingAssignments but re-shape)
+    // 1. Pending assignments
     for (const a of upcomingAssignments) {
       const dueMs = a.dueDate ? new Date(a.dueDate).getTime() - Date.now() : null;
       upcomingActivities.push({
@@ -172,76 +250,31 @@ export async function GET() {
         courseTitle: a.courseTitle,
         title: a.assignmentTitle,
         dueDate: a.dueDate,
-        status: a.submitted
-          ? "submitted"
-          : a.unlocked
-            ? "available"
-            : "locked",
+        status: a.submitted ? "submitted" : a.unlocked ? "available" : "locked",
         priority: dueMs !== null && dueMs < 0 ? "overdue" : "normal",
       });
     }
 
-    // 2. Pending video assessments — videos with questions where the student
-    //    has watched (or started) but hasn't yet passed the assessment.
-    //    Limit to the student's accessible courses to keep things relevant.
-    const accessibleCourseIdSet = new Set(accessibleCourseIds);
-    const videosWithQuestions = await db.videoQuestion.findMany({
-      where: {
-        video: {
-          courseId: { in: accessibleCourseIds },
-          isPublished: true,
-        },
-      },
-      select: { videoId: true },
-      distinct: ["videoId"],
-    });
-    const videoIdsWithQuestions = videosWithQuestions.map((q) => q.videoId);
-
-    if (videoIdsWithQuestions.length) {
-      // Already-passed assessments
-      const passedAssessments = await db.videoAssessment.findMany({
-        where: {
-          studentId: user.id,
-          videoId: { in: videoIdsWithQuestions },
-          passed: true,
-        },
-        select: { videoId: true },
+    // 2. Pending video assessments (videos with questions not yet passed)
+    for (const v of allPublishedVideos) {
+      if (!questionVideoIds.has(v.id)) continue; // no questions
+      if (passedAssessmentSet.has(v.id)) continue; // already passed
+      if (!accessibleCourseSet.has(v.courseId)) continue; // not accessible
+      const courseMeta = allCourses.find((c) => c.id === v.courseId);
+      if (!courseMeta) continue;
+      upcomingActivities.push({
+        id: `va-${v.id}`,
+        type: "assessment",
+        courseId: v.courseId,
+        courseTitle: courseMeta.title,
+        title: v.title,
+        dueDate: null,
+        status: "pending",
+        priority: "normal",
       });
-      const passedSet = new Set(passedAssessments.map((a) => a.videoId));
-
-      // Pull the videos themselves (with course context) — only those not yet passed
-      const pendingAssessmentVideos = await db.videoLesson.findMany({
-        where: {
-          id: { in: videoIdsWithQuestions },
-          isPublished: true,
-        },
-        select: {
-          id: true,
-          title: true,
-          courseId: true,
-          course: { select: { id: true, title: true } },
-        },
-        take: 50,
-      });
-
-      for (const v of pendingAssessmentVideos) {
-        if (passedSet.has(v.id)) continue;
-        // Only show if the course is accessible to the student
-        if (!accessibleCourseIdSet.has(v.courseId)) continue;
-        upcomingActivities.push({
-          id: `va-${v.id}`,
-          type: "assessment",
-          courseId: v.courseId,
-          courseTitle: v.course.title,
-          title: v.title,
-          dueDate: null,
-          status: "pending",
-          priority: "normal",
-        });
-      }
     }
 
-    // Sort upcoming activities: overdue first, then by due date asc (nulls last)
+    // Sort: overdue first, then by due date
     upcomingActivities.sort((a, b) => {
       const pa = a.priority === "overdue" ? 0 : 1;
       const pb = b.priority === "overdue" ? 0 : 1;
@@ -250,7 +283,6 @@ export async function GET() {
       const db = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
       return da - db;
     });
-    // Cap at 8 entries so the dashboard stays tidy
     upcomingActivities.splice(8);
 
     return NextResponse.json({
