@@ -1823,7 +1823,7 @@ function VideoPlayer({
       <Card className="overflow-hidden rounded-2xl border-border p-0 shadow-lg ring-1 ring-black/[0.02]">
         {/* Video area — full width, rounded, subtle shadow */}
         <div className="bg-card p-3 sm:p-4">
-          <div className="relative mx-auto aspect-video w-full overflow-hidden rounded-xl bg-black shadow-md ring-1 ring-black/10">
+          <div className="relative mx-auto aspect-video w-full max-w-[720px] overflow-hidden rounded-xl bg-black shadow-md ring-1 ring-black/10">
             {expanded ? (
               // When expanded, the video element lives in the fullscreen
               // overlay above. Render a placeholder here so videoRef/
