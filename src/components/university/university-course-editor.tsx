@@ -44,8 +44,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
-import { Progress } from "@/components/ui/progress";
-import { useApiFetch, apiPost, apiUpload, apiUploadWithProgress } from "@/hooks/use-api";
+import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
 import { useAppStore } from "@/stores/app-store";
 import { useI18n } from "@/lib/i18n/store";
 import { toast } from "@/hooks/use-toast";
@@ -809,7 +808,7 @@ function VideoFormDialog({
   const [displayOrder, setDisplayOrder] = useState("");
   const [isPublished, setIsPublished] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   useEffect(() => {
     if (target) {
@@ -863,19 +862,20 @@ function VideoFormDialog({
     fd.append("isPublished", String(isPublished));
 
     setSaving(true);
-    setUploadProgress(file ? 0 : null);
+    setUploadingFile(!!file);
     try {
       if (target) {
-        const res = await apiUploadWithProgress(
-          `/api/university/videos/${target.id}`, fd, "PUT",
-          file ? (p) => setUploadProgress(p) : undefined
-        );
+        // Use fetch directly for PUT (edit) — reliable and works through the gateway.
+        const res = await fetch(`/api/university/videos/${target.id}`, {
+          method: "PUT",
+          body: fd,
+          credentials: "include",
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || "Failed");
         toast({ title: "Video updated" });
       } else {
-        await apiUploadWithProgress(
-          `/api/university/courses/${courseId}/videos`, fd, "POST",
-          file ? (p) => setUploadProgress(p) : undefined
-        );
+        await apiUpload(`/api/university/courses/${courseId}/videos`, fd);
         toast({ title: "Video added" });
       }
       onSaved();
@@ -885,7 +885,7 @@ function VideoFormDialog({
       }
     } finally {
       setSaving(false);
-      setUploadProgress(null);
+      setUploadingFile(false);
     }
   }
 
@@ -1036,17 +1036,12 @@ function VideoFormDialog({
           </div>
         </div>
         <DialogFooter className="flex-col gap-3">
-          {uploadProgress !== null && (
-            <div className="w-full space-y-1.5">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">
-                  {uploadProgress < 100 ? "Uploading video…" : "Processing…"}
-                </span>
-                <span className="font-semibold text-foreground tabular-nums">
-                  {uploadProgress}%
-                </span>
-              </div>
-              <Progress value={uploadProgress} className="h-2" />
+          {uploadingFile && (
+            <div className="w-full flex items-center gap-2 rounded-lg bg-soft-sage/40 px-3 py-2.5">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+              <span className="text-xs text-muted-foreground">
+                Uploading video file{file ? ` (${(file.size / (1024 * 1024)).toFixed(1)} MB)` : ""}… large files may take a minute.
+              </span>
             </div>
           )}
           <div className="flex gap-2">
@@ -1055,8 +1050,8 @@ function VideoFormDialog({
             </Button>
             <Button disabled={saving} className="h-9" onClick={submit}>
               {saving
-                ? uploadProgress !== null
-                  ? `Uploading… ${uploadProgress}%`
+                ? uploadingFile
+                  ? "Uploading…"
                   : "Saving…"
                 : target ? "Save Changes" : "Add Video"}
             </Button>
