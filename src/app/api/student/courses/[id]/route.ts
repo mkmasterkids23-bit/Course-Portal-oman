@@ -5,11 +5,6 @@ import {
   handleAuthError,
   errorResponse,
 } from "@/lib/auth";
-import {
-  canStudentAccessCourse,
-  getCourseCompletionStats,
-} from "@/lib/course-utils";
-
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -18,95 +13,134 @@ export async function GET(
     const user = await requireStudent();
     const { id } = await params;
 
-    const access = await canStudentAccessCourse(user.id, id);
-    if (!access.allowed) {
-      return errorResponse(access.reason || "Not allowed", 403, "NO_ACCESS");
-    }
-
-    const course = await db.course.findUnique({
-      where: { id },
-      include: {
-        topics: {
-          orderBy: { displayOrder: "asc" },
-          include: {
-            videos: {
-              where: { isPublished: true },
-              orderBy: { displayOrder: "asc" },
-            },
-            materials: {
-              where: { isPublished: true },
-              orderBy: { createdAt: "desc" },
+    // ─── Fetch course + subscription IN PARALLEL (saves ~2s vs sequential) ───
+    // Include planAccess so we can check access inline (avoids canStudentAccessCourse
+    // making 3 separate queries that duplicate this data).
+    const [course, subscription] = await Promise.all([
+      db.course.findUnique({
+        where: { id },
+        include: {
+          topics: {
+            orderBy: { displayOrder: "asc" },
+            include: {
+              videos: {
+                where: { isPublished: true },
+                orderBy: { displayOrder: "asc" },
+              },
+              materials: {
+                where: { isPublished: true },
+                orderBy: { createdAt: "desc" },
+              },
             },
           },
+          materials: {
+            where: { isPublished: true },
+            orderBy: { createdAt: "desc" },
+            include: { topic: { select: { id: true, title: true } } },
+          },
+          assignments: {
+            where: { isPublished: true },
+            orderBy: { createdAt: "desc" },
+          },
+          certificateTemplate: true,
+          planAccess: { select: { planId: true } },
         },
-        materials: {
-          where: { isPublished: true },
-          orderBy: { createdAt: "desc" },
-          include: { topic: { select: { id: true, title: true } } },
-        },
-        assignments: {
-          where: { isPublished: true },
-          orderBy: { createdAt: "desc" },
-        },
-        certificateTemplate: true,
-      },
-    });
+      }),
+      db.subscription.findFirst({
+        where: { studentId: user.id, status: "ACTIVE", expiryDate: { gt: new Date() } },
+        orderBy: { createdAt: "desc" },
+        select: { planId: true },
+      }),
+    ]);
 
     if (!course) return errorResponse("Course not found", 404);
 
-    // Fetch all video progress for this student in the course (single query)
-    const videoIds = course.topics.flatMap((t) => t.videos.map((v) => v.id));
-    const progressRows = await db.videoProgress.findMany({
-      where: { studentId: user.id, videoId: { in: videoIds } },
-      select: {
-        videoId: true,
-        lastPosition: true,
-        watchTimeSeconds: true,
-        duration: true,
-        isCompleted: true,
-        completedAt: true,
-      },
-    });
-    const progressMap = new Map(progressRows.map((p) => [p.videoId, p]));
+    // ─── Inline access check (replaces canStudentAccessCourse) ───
+    if (course.accessType !== "FREE") {
+      if (!subscription) {
+        return errorResponse("No active subscription", 403, "NO_ACCESS");
+      }
+      if (!course.planAccess.some((pa) => pa.planId === subscription.planId)) {
+        return errorResponse("Your plan does not include this course", 403, "NO_ACCESS");
+      }
+    }
 
-    // ─── Video Assessment data ───
-    // Fetch which videos have questions and which assessments the student has passed
-    const [videoQuestionsCount, passedAssessments] = await Promise.all([
-      db.videoQuestion.groupBy({
-        by: ["videoId"],
-        where: { videoId: { in: videoIds } },
-        _count: { id: true },
+    // ─── Fetch all student data IN PARALLEL (4 queries at once vs sequential) ───
+    const videoIds = course.topics.flatMap((t) => t.videos.map((v) => v.id));
+    const assignmentIds = course.assignments.map((a) => a.id);
+
+    const [progressRows, videoQuestionsCount, passedAssessments, submissions] = await Promise.all([
+      db.videoProgress.findMany({
+        where: { studentId: user.id, videoId: { in: videoIds } },
+        select: {
+          videoId: true,
+          lastPosition: true,
+          watchTimeSeconds: true,
+          duration: true,
+          isCompleted: true,
+          completedAt: true,
+        },
       }),
+      videoIds.length > 0
+        ? db.videoQuestion.groupBy({
+            by: ["videoId"],
+            where: { videoId: { in: videoIds } },
+            _count: { id: true },
+          })
+        : Promise.resolve([]),
       db.videoAssessment.findMany({
         where: { studentId: user.id, videoId: { in: videoIds }, passed: true },
         select: { videoId: true },
       }),
+      assignmentIds.length > 0
+        ? db.assignmentSubmission.findMany({
+            where: { studentId: user.id, assignmentId: { in: assignmentIds } },
+            select: {
+              id: true,
+              assignmentId: true,
+              fileUrl: true,
+              submittedAt: true,
+              status: true,
+              reviewNotes: true,
+              reviewedAt: true,
+            },
+          })
+        : Promise.resolve([]),
     ]);
+
+    const progressMap = new Map(progressRows.map((p) => [p.videoId, p]));
     const questionCountMap = new Map(videoQuestionsCount.map((q) => [q.videoId, q._count.id]));
     const passedAssessmentSet = new Set(passedAssessments.map((a) => a.videoId));
+    const submissionByAssignment = new Map(submissions.map((s) => [s.assignmentId, s]));
 
-    // Fetch the student's submission for this course's assignment(s)
-    const assignmentIds = course.assignments.map((a) => a.id);
-    const submissions = await db.assignmentSubmission.findMany({
-      where: { studentId: user.id, assignmentId: { in: assignmentIds } },
-      select: {
-        id: true,
-        assignmentId: true,
-        fileUrl: true,
-        submittedAt: true,
-        status: true,
-        reviewNotes: true,
-        reviewedAt: true,
-      },
-    });
-    const submissionByAssignment = new Map(
-      submissions.map((s) => [s.assignmentId, s])
+    // ─── Compute completion stats inline (avoids 5 extra DB queries that
+    // getCourseCompletionStats would make — all data is already fetched above) ───
+    const allVideos = course.topics.flatMap((t) => t.videos);
+    const totalVideos = allVideos.length;
+    const completedVideoIds = new Set(
+      videoIds.filter((vid) => {
+        const p = progressMap.get(vid);
+        return p?.isCompleted === true &&
+          (!questionCountMap.has(vid) || passedAssessmentSet.has(vid));
+      })
     );
-
-    const stats = await getCourseCompletionStats(user.id, course.id);
-    // A course with no videos is considered complete — the student can go
-    // straight to the assignment.
-    const allCompleted = stats.completedVideos === stats.totalVideos;
+    const completedVideos = completedVideoIds.size;
+    // Group videos by topic for completedTopics count
+    const videosByTopic = new Map<string, Set<string>>();
+    for (const t of course.topics) {
+      const vSet = new Set<string>();
+      for (const v of t.videos) vSet.add(v.id);
+      videosByTopic.set(t.id, vSet);
+    }
+    let completedTopics = 0;
+    for (const [, vIds] of videosByTopic) {
+      if (vIds.size > 0 && Array.from(vIds).every((id) => completedVideoIds.has(id))) {
+        completedTopics++;
+      }
+    }
+    const totalTopics = course.topics.length;
+    const percent = totalVideos > 0 ? Math.round((completedVideos / totalVideos) * 100) : 100;
+    const allCompleted = completedVideos === totalVideos;
 
     const result = {
       id: course.id,
@@ -210,9 +244,11 @@ export async function GET(
           }
         : null,
       courseCompletion: {
-        totalVideos: stats.totalVideos,
-        completedVideos: stats.completedVideos,
-        percent: stats.percent,
+        totalVideos,
+        completedVideos,
+        completedTopics,
+        totalTopics,
+        percent,
         allCompleted,
       },
       certificateTemplate: course.certificateTemplate
