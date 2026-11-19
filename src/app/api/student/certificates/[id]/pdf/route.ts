@@ -5,7 +5,18 @@ import {
   errorResponse,
 } from "@/lib/auth";
 import { buildCertificateHtml } from "@/lib/certificate-html";
-import puppeteer from "puppeteer";
+
+// Dynamically import puppeteer — on Vercel/serverless it may not be available.
+// The PDF endpoint will gracefully fall back to an HTML print page if
+// Puppeteer can't launch.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+let puppeteer: any = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  puppeteer = require("puppeteer");
+} catch {
+  // Puppeteer not installed (e.g., on Vercel) — PDF generation will fall back
+}
 
 /**
  * Generates the certificate as a **real downloadable PDF file** using
@@ -61,32 +72,38 @@ export async function GET(
       { forPrint: false }
     );
 
+    // If Puppeteer isn't available (e.g., on Vercel serverless), fall back
+    // to returning the HTML with a print dialog so the user can save as PDF
+    // from their browser.
+    if (!puppeteer) {
+      return new Response(html, {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+        },
+      });
+    }
+
     // Launch headless Chromium
     browser = await puppeteer.launch({
       headless: true,
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage", // avoids /dev/shm issues in containers
+        "--disable-dev-shm-usage",
         "--disable-gpu",
       ],
     });
 
     const page = await browser.newPage();
-
-    // Set the HTML content and wait for network idle so Google Fonts load
     await page.setContent(html, { waitUntil: "networkidle0", timeout: 30000 });
-
-    // Give fonts a moment to render
     await page.evaluateHandle("document.fonts.ready");
     await new Promise((r) => setTimeout(r, 500));
 
-    // Generate the PDF — landscape A4, single page
     const pdfBuffer = await page.pdf({
       format: "a4",
       landscape: true,
       printBackground: true,
-      pageRanges: "1", // only output the first page (certificate fits on one)
+      pageRanges: "1",
       scale: 0.82,
       margin: {
         top: "6mm",
