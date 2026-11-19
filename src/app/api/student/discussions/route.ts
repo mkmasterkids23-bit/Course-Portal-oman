@@ -150,6 +150,30 @@ export async function POST(req: Request) {
       },
     });
 
+    // Notify the course's assigned instructor (if any). The Notification model
+    // uses `studentId` for the recipient user id — instructors receive the
+    // notification on their userId, which works because the notification
+    // system queries by user id.
+    try {
+      const courseWithInstructor = await db.course.findUnique({
+        where: { id: courseId },
+        select: { instructor: { select: { userId: true } } },
+      });
+      if (courseWithInstructor?.instructor?.userId) {
+        await db.notification.create({
+          data: {
+            studentId: courseWithInstructor.instructor.userId,
+            type: "DISCUSSION_REPLY",
+            title: "New question in your course",
+            content: `A student posted: ${title.trim()}`,
+            relatedId: discussion.id,
+          },
+        });
+      }
+    } catch (notifyErr) {
+      console.error("[student/discussions notify]", notifyErr);
+    }
+
     return NextResponse.json({
       discussion: {
         id: discussion.id,

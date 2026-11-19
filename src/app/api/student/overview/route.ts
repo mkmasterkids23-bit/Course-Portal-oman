@@ -11,90 +11,50 @@ export async function GET() {
     const user = await requireStudent();
     const firstName = user.name.split(" ")[0] || user.name;
 
-    // ─── BATCH 1: Fetch ALL data in parallel (9 queries at once) ───
-    // This replaces the old code that made 50+ sequential queries (calling
-    // getCourseCompletionStats per course + per assignment, each making 5
-    // queries). With a remote PostgreSQL database, each query has ~700ms
-    // latency, so 50 queries = 35 seconds. 9 parallel queries = ~1.4s.
-    const [
-      subscription,
-      allCourses,
-      allVideoProgress,
-      allVideoQuestions,
-      allPassedAssessments,
-      allPublishedVideos,
-      lastProgressRows,
-      assignments,
-      recentCertificatesRaw,
-    ] = await Promise.all([
-      // 1. Student subscription
+    // ─── Fetch data in small batches (3 at a time) to avoid exhausting
+    // the remote PostgreSQL connection pool ("too many clients already") ───
+    const [subscription, allCourses, allVideoProgress] = await Promise.all([
       getStudentSubscription(user.id),
-      // 2. All published courses with planAccess
       db.course.findMany({
         where: { isPublished: true },
         orderBy: { createdAt: "desc" },
         select: {
-          id: true,
-          title: true,
-          thumbnail: true,
+          id: true, title: true, thumbnail: true,
           planAccess: { select: { planId: true } },
           accessType: true,
           university: { select: { id: true, name: true, logo: true } },
         },
       }),
-      // 3. ALL video progress for this student (single query)
       db.videoProgress.findMany({
         where: { studentId: user.id },
-        select: {
-          videoId: true,
-          isCompleted: true,
-          updatedAt: true,
-        },
+        select: { videoId: true, isCompleted: true, updatedAt: true },
       }),
-      // 4. ALL video questions (distinct videoIds — to know which videos have questions)
-      db.videoQuestion.findMany({
-        distinct: ["videoId"],
-        select: { videoId: true },
-      }),
-      // 5. ALL passed assessments for this student
-      db.videoAssessment.findMany({
-        where: { studentId: user.id, passed: true },
-        select: { videoId: true },
-      }),
-      // 6. ALL published videos (to know which videos belong to which course)
+    ]);
+
+    const [allVideoQuestions, allPassedAssessments, allPublishedVideos] = await Promise.all([
+      db.videoQuestion.findMany({ distinct: ["videoId"], select: { videoId: true } }),
+      db.videoAssessment.findMany({ where: { studentId: user.id, passed: true }, select: { videoId: true } }),
       db.videoLesson.findMany({
         where: { isPublished: true },
-        select: {
-          id: true,
-          courseId: true,
-          title: true,
-          thumbnail: true,
-          videoUrl: true,
-          source: true,
-          displayOrder: true,
-        },
+        select: { id: true, courseId: true, title: true, thumbnail: true, videoUrl: true, source: true, displayOrder: true },
         orderBy: { displayOrder: "asc" },
       }),
-      // 7. Last-watched video progress per course (latest updatedAt)
+    ]);
+
+    const [lastProgressRows, assignments, recentCertificatesRaw] = await Promise.all([
       db.videoProgress.findMany({
         where: { studentId: user.id },
         orderBy: { updatedAt: "desc" },
         select: { videoId: true, updatedAt: true },
       }),
-      // 8. All published assignments with student's submissions
       db.assignment.findMany({
         where: { isPublished: true, course: { isPublished: true } },
         orderBy: { dueDate: "asc" },
         include: {
           course: { select: { id: true, title: true } },
-          submissions: {
-            where: { studentId: user.id },
-            select: { id: true },
-            take: 1,
-          },
+          submissions: { where: { studentId: user.id }, select: { id: true }, take: 1 },
         },
       }),
-      // 9. Recent certificates
       db.certificate.findMany({
         where: { studentId: user.id },
         orderBy: { issuedAt: "desc" },

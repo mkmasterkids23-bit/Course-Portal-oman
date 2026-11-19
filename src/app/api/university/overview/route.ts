@@ -1,76 +1,76 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireUniversity, handleAuthError, errorResponse } from "@/lib/auth";
+import {
+  requireUniversityOrInstructor,
+  handleAuthError,
+  errorResponse,
+} from "@/lib/auth";
 
 /**
  * GET /api/university/overview
  * Returns dashboard stats scoped to the logged-in university.
+ * Instructors see stats only for their assigned courses.
  */
 export async function GET() {
   try {
-    const user = await requireUniversity();
+    const user = await requireUniversityOrInstructor();
     const universityId = user.universityId!;
 
-    // Pull all aggregate stats in parallel
+    // Instructors are scoped to their assigned courses.
+    const isInstructor = user.role === "INSTRUCTOR";
+    const instructorId = isInstructor ? user.instructorId : null;
+    const courseFilter = instructorId
+      ? { universityId, instructorId }
+      : { universityId };
+
+    // Pull aggregate stats in small batches (3 at a time) to avoid
+    // exhausting the remote PostgreSQL connection pool.
     const [
       totalCourses,
       totalPublishedCourses,
       totalVideoLessons,
+    ] = await Promise.all([
+      db.course.count({ where: courseFilter }),
+      db.course.count({ where: { ...courseFilter, isPublished: true } }),
+      db.videoLesson.count({ where: { course: courseFilter, isPublished: true } }),
+    ]);
+
+    const [
       pendingReviews,
       totalCertificatesIssued,
       totalAssignments,
-      totalSubmittedAssignments,
-      recentSubmissionsRaw,
-      recentCoursesRaw,
     ] = await Promise.all([
-      db.course.count({ where: { universityId } }),
-      db.course.count({ where: { universityId, isPublished: true } }),
-      db.videoLesson.count({
-        where: { course: { universityId }, isPublished: true },
-      }),
-      db.assignmentSubmission.count({
-        where: {
-          status: "SUBMITTED",
-          assignment: { course: { universityId } },
-        },
-      }),
-      db.certificate.count({ where: { course: { universityId } } }),
-      db.assignment.count({ where: { course: { universityId } } }),
-      db.assignmentSubmission.count({
-        where: { assignment: { course: { universityId } } },
-      }),
+      db.assignmentSubmission.count({ where: { status: "SUBMITTED", assignment: { course: courseFilter } } }),
+      db.certificate.count({ where: { course: courseFilter } }),
+      db.assignment.count({ where: { course: courseFilter } }),
+    ]);
+
+    const totalSubmittedAssignments = await db.assignmentSubmission.count({
+      where: { assignment: { course: courseFilter } },
+    });
+
+    const [recentSubmissionsRaw, recentCoursesRaw] = await Promise.all([
       db.assignmentSubmission.findMany({
-        where: { assignment: { course: { universityId } } },
+        where: { assignment: { course: courseFilter } },
         orderBy: { submittedAt: "desc" },
         take: 6,
         include: {
           student: { select: { id: true, name: true, email: true } },
-          assignment: {
-            select: {
-              id: true,
-              title: true,
-              course: { select: { id: true, title: true } },
-            },
-          },
+          assignment: { select: { id: true, title: true, course: { select: { id: true, title: true } } } },
         },
       }),
       db.course.findMany({
-        where: { universityId },
+        where: courseFilter,
         orderBy: { createdAt: "desc" },
         take: 5,
-        select: {
-          id: true,
-          title: true,
-          createdAt: true,
-          isPublished: true,
-        },
+        select: { id: true, title: true, createdAt: true, isPublished: true },
       }),
     ]);
 
-    // Count distinct students who have any progress in this university's courses
+    // Count distinct students who have any progress in this scope's courses
     const distinctStudents = await db.videoProgress.groupBy({
       by: ["studentId"],
-      where: { video: { course: { universityId } } },
+      where: { video: { course: courseFilter } },
     });
     const totalStudents = distinctStudents.length;
 

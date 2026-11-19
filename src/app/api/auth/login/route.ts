@@ -29,13 +29,37 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
-    const role = user.role as "ADMIN" | "STUDENT" | "UNIVERSITY";
+    // For INSTRUCTOR role, fetch their Instructor record so we can include
+    // the university context and instructorId in the response.
+    let instructorId: string | null = null;
+    let instructorUniversityId: string | null = user.university?.id ?? null;
+    let instructorUniversityName: string | null = user.university?.name ?? null;
+    let instructorUniversityLogo: string | null = user.university?.logo ?? null;
+    if (user.role === "INSTRUCTOR") {
+      const instructor = await db.instructor.findUnique({
+        where: { userId: user.id },
+        select: {
+          id: true,
+          university: { select: { id: true, name: true, logo: true } },
+        },
+      });
+      if (instructor) {
+        instructorId = instructor.id;
+        if (instructor.university) {
+          instructorUniversityId = instructor.university.id;
+          instructorUniversityName = instructor.university.name;
+          instructorUniversityLogo = instructor.university.logo;
+        }
+      }
+    }
+
+    const role = user.role as "ADMIN" | "STUDENT" | "UNIVERSITY" | "INSTRUCTOR";
     const token = signSession({
       userId: user.id,
       role,
       email: user.email,
       name: user.name,
-      universityId: user.university?.id ?? null,
+      universityId: instructorUniversityId,
     });
 
     const res = NextResponse.json({
@@ -47,9 +71,10 @@ export async function POST(req: Request) {
         phone: user.phone,
         bio: user.bio,
         profilePhoto: user.profilePhoto,
-        universityId: user.university?.id ?? null,
-        universityName: user.university?.name ?? null,
-        universityLogo: user.university?.logo ?? null,
+        universityId: instructorUniversityId,
+        universityName: instructorUniversityName,
+        universityLogo: instructorUniversityLogo,
+        instructorId,
       },
     });
     res.cookies.set(SESSION_COOKIE, token, SESSION_COOKIE_OPTIONS);

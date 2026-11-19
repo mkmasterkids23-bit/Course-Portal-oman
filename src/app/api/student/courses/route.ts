@@ -20,16 +20,9 @@ export async function GET(req: Request) {
       ? { isPublished: true, level: levelFilter }
       : { isPublished: true };
 
-    // ─── BATCH: Fetch ALL data in parallel (7 queries at once) ───
-    const [
-      subscription,
-      allCourses,
-      universities,
-      allVideoProgress,
-      allVideoQuestions,
-      allPassedAssessments,
-      allPublishedVideos,
-    ] = await Promise.all([
+    // ─── Fetch data in small batches (3 at a time) to avoid exhausting
+    // the remote PostgreSQL connection pool ───
+    const [subscription, allCourses, universities] = await Promise.all([
       getStudentSubscription(user.id),
       db.course.findMany({
         where: baseWhere,
@@ -45,31 +38,22 @@ export async function GET(req: Request) {
         orderBy: { name: "asc" },
         select: { id: true, name: true, logo: true },
       }),
-      // ALL video progress for this student
+    ]);
+
+    const [allVideoProgress, allVideoQuestions, allPassedAssessments] = await Promise.all([
       db.videoProgress.findMany({
         where: { studentId: user.id },
         select: { videoId: true, isCompleted: true, updatedAt: true },
       }),
-      // ALL video questions (distinct videoIds)
-      db.videoQuestion.findMany({
-        distinct: ["videoId"],
-        select: { videoId: true },
-      }),
-      // ALL passed assessments
-      db.videoAssessment.findMany({
-        where: { studentId: user.id, passed: true },
-        select: { videoId: true },
-      }),
-      // ALL published videos
-      db.videoLesson.findMany({
-        where: { isPublished: true },
-        select: {
-          id: true, courseId: true, title: true, thumbnail: true,
-          videoUrl: true, source: true, displayOrder: true,
-        },
-        orderBy: { displayOrder: "asc" },
-      }),
+      db.videoQuestion.findMany({ distinct: ["videoId"], select: { videoId: true } }),
+      db.videoAssessment.findMany({ where: { studentId: user.id, passed: true }, select: { videoId: true } }),
     ]);
+
+    const allPublishedVideos = await db.videoLesson.findMany({
+      where: { isPublished: true },
+      select: { id: true, courseId: true, title: true, thumbnail: true, videoUrl: true, source: true, displayOrder: true },
+      orderBy: { displayOrder: "asc" },
+    });
 
     // ─── Build lookup maps (in-memory) ───
     const isSubActive = subscription?.status === "ACTIVE";

@@ -1,14 +1,19 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireUniversity, handleAuthError, errorResponse } from "@/lib/auth";
+import {
+  requireUniversityOrInstructor,
+  handleAuthError,
+  errorResponse,
+} from "@/lib/auth";
 
 /**
  * GET /api/university/submissions
  * List all assignment submissions for the university's courses.
+ * Instructors only see submissions for their assigned courses.
  */
 export async function GET(req: Request) {
   try {
-    const user = await requireUniversity();
+    const user = await requireUniversityOrInstructor();
     const universityId = user.universityId!;
     const url = new URL(req.url);
     const q = (url.searchParams.get("q") || "").trim().toLowerCase();
@@ -16,9 +21,15 @@ export async function GET(req: Request) {
     const courseId = url.searchParams.get("courseId");
     const assignmentId = url.searchParams.get("assignmentId");
 
+    // Instructors are scoped to their assigned courses.
+    const instructorCourseFilter =
+      user.role === "INSTRUCTOR" && user.instructorId
+        ? { course: { universityId, instructorId: user.instructorId } }
+        : { course: { universityId } };
+
     const submissions = await db.assignmentSubmission.findMany({
       where: {
-        assignment: { course: { universityId } },
+        assignment: instructorCourseFilter,
         ...(status ? { status } : {}),
         ...(assignmentId ? { assignmentId } : {}),
         ...(courseId ? { assignment: { courseId } } : {}),

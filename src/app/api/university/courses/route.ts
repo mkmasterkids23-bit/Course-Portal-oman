@@ -1,23 +1,35 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireUniversity, handleAuthError, errorResponse } from "@/lib/auth";
+import {
+  requireUniversityOrInstructor,
+  handleAuthError,
+  errorResponse,
+} from "@/lib/auth";
 
 /**
  * GET /api/university/courses
  * List courses owned by the logged-in university.
+ * Instructors see only courses assigned to them.
  */
 export async function GET(req: Request) {
   try {
-    const user = await requireUniversity();
+    const user = await requireUniversityOrInstructor();
     const universityId = user.universityId!;
     const url = new URL(req.url);
     const q = (url.searchParams.get("q") || "").trim().toLowerCase();
     const category = url.searchParams.get("category") || "";
     const published = url.searchParams.get("published"); // "true" | "false"
 
+    // Instructors only see courses assigned to them.
+    const instructorFilter =
+      user.role === "INSTRUCTOR" && user.instructorId
+        ? { instructorId: user.instructorId }
+        : {};
+
     const courses = await db.course.findMany({
       where: {
         universityId,
+        ...instructorFilter,
         ...(q ? { title: { contains: q } } : {}),
         ...(category ? { category } : {}),
         ...(published === "true"
@@ -36,6 +48,12 @@ export async function GET(req: Request) {
           select: { thumbnail: true, videoUrl: true, source: true },
         },
         planAccess: { include: { plan: { select: { name: true } } } },
+        instructor: {
+          select: {
+            id: true,
+            user: { select: { name: true, email: true, profilePhoto: true } },
+          },
+        },
       },
     });
 
@@ -61,6 +79,8 @@ export async function GET(req: Request) {
           topicsCount: c.topics.length,
           videosCount: c.videos.length,
           planNames: c.planAccess.map((p) => p.plan.name),
+          instructorId: c.instructor?.id ?? null,
+          instructorName: c.instructor?.user.name ?? null,
         };
       }),
     });
@@ -75,10 +95,15 @@ export async function GET(req: Request) {
 /**
  * POST /api/university/courses
  * Create a course auto-scoped to the logged-in university.
+ * University admins can also assign an instructor via `instructorId`.
+ * (Instructors are not permitted to create courses.)
  */
 export async function POST(req: Request) {
   try {
-    const user = await requireUniversity();
+    const user = await requireUniversityOrInstructor();
+    if (user.role === "INSTRUCTOR") {
+      return errorResponse("Instructors cannot create courses", 403, "INSTRUCTOR_NO_CREATE");
+    }
     const universityId = user.universityId!;
     const body = await req.json();
     const {
@@ -94,6 +119,7 @@ export async function POST(req: Request) {
       endDate,
       availabilityMode,
       enrollmentOpen,
+      instructorId,
     } = body as {
       title?: string;
       description?: string;
@@ -107,6 +133,7 @@ export async function POST(req: Request) {
       endDate?: string | null;
       availabilityMode?: "ALWAYS" | "SCHEDULED" | "LIMITED";
       enrollmentOpen?: boolean;
+      instructorId?: string | null;
     };
 
     if (!title || !title.trim()) {
@@ -160,6 +187,22 @@ export async function POST(req: Request) {
       }
     }
 
+    // Validate the instructor belongs to this university (if provided)
+    let resolvedInstructorId: string | null = null;
+    if (instructorId) {
+      const instructor = await db.instructor.findFirst({
+        where: { id: instructorId, universityId, isActive: true },
+        select: { id: true },
+      });
+      if (!instructor) {
+        return errorResponse(
+          "Selected instructor is not part of your university",
+          400
+        );
+      }
+      resolvedInstructorId = instructor.id;
+    }
+
     const course = await db.course.create({
       data: {
         title: title.trim(),
@@ -175,6 +218,7 @@ export async function POST(req: Request) {
         startDate: startDateParsed,
         endDate: endDateParsed,
         enrollmentOpen: enrollmentOpen === undefined ? true : !!enrollmentOpen,
+        instructorId: resolvedInstructorId,
       },
     });
 

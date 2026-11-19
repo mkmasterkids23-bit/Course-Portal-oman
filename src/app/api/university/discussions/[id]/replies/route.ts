@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireUniversity, handleAuthError, errorResponse } from "@/lib/auth";
+import {
+  requireUniversityOrInstructor,
+  handleAuthError,
+  errorResponse,
+} from "@/lib/auth";
 
 /**
  * POST /api/university/discussions/[id]/replies
- * University sub-admin replies to a student's discussion.
+ * University sub-admin or instructor replies to a student's discussion.
  * The reply is marked with isInstructor=true so it shows with an instructor badge.
  */
 export async function POST(
@@ -12,15 +16,31 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireUniversity();
+    const user = await requireUniversityOrInstructor();
     const { id } = await params;
 
     const discussion = await db.discussion.findUnique({
       where: { id },
-      include: { course: { select: { universityId: true, title: true } } },
+      include: {
+        course: {
+          select: {
+            universityId: true,
+            title: true,
+            instructorId: true,
+          },
+        },
+      },
     });
     if (!discussion || discussion.course.universityId !== user.universityId) {
       return errorResponse("Discussion not found", 404);
+    }
+    // Instructors can only reply in their assigned courses.
+    if (
+      user.role === "INSTRUCTOR" &&
+      (!user.instructorId ||
+        discussion.course.instructorId !== user.instructorId)
+    ) {
+      return errorResponse("Not found", 404);
     }
 
     if (discussion.isLocked) {
@@ -89,7 +109,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireUniversity();
+    const user = await requireUniversityOrInstructor();
     const { id } = await params;
     const url = new URL(req.url);
     const replyId = url.searchParams.get("replyId");
@@ -98,9 +118,18 @@ export async function DELETE(
 
     const discussion = await db.discussion.findUnique({
       where: { id },
-      include: { course: { select: { universityId: true } } },
+      include: {
+        course: { select: { universityId: true, instructorId: true } },
+      },
     });
     if (!discussion || discussion.course.universityId !== user.universityId) {
+      return errorResponse("Not found", 404);
+    }
+    if (
+      user.role === "INSTRUCTOR" &&
+      (!user.instructorId ||
+        discussion.course.instructorId !== user.instructorId)
+    ) {
       return errorResponse("Not found", 404);
     }
 

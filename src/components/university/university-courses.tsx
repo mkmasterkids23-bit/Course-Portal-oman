@@ -69,6 +69,8 @@ interface CourseRow {
   endDate: string | null;
   availabilityMode: "ALWAYS" | "SCHEDULED" | "LIMITED";
   enrollmentOpen: boolean;
+  instructorId?: string | null;
+  instructorName?: string | null;
   createdAt: string;
   topicsCount: number;
   videosCount: number;
@@ -343,6 +345,7 @@ interface CourseFormValues {
   startDate: string;
   endDate: string;
   availabilityMode: "ALWAYS" | "SCHEDULED" | "LIMITED";
+  instructorId: string;
 }
 
 function CourseFormDialog({
@@ -371,9 +374,16 @@ function CourseFormDialog({
     startDate: "",
     endDate: "",
     availabilityMode: "ALWAYS",
+    instructorId: "",
   });
   const [saving, setSaving] = useState(false);
   const [uploadingThumb, setUploadingThumb] = useState(false);
+
+  // Fetch the university's active instructors for the assignment dropdown
+  const { data: instructorsData } = useApiFetch<{ instructors: { id: string; name: string; email: string }[] }>(
+    "/api/university/instructors?status=active"
+  );
+  const instructors = instructorsData?.instructors || [];
 
   useEffect(() => {
     if (target) {
@@ -396,6 +406,7 @@ function CourseFormDialog({
         startDate: toLocalDate(target.startDate),
         endDate: toLocalDate(target.endDate),
         availabilityMode: target.availabilityMode,
+        instructorId: target.instructorId || "",
       });
     } else if (open) {
       setValues({
@@ -410,6 +421,7 @@ function CourseFormDialog({
         startDate: "",
         endDate: "",
         availabilityMode: "ALWAYS",
+        instructorId: "",
       });
     }
   }, [target, open]);
@@ -489,6 +501,7 @@ function CourseFormDialog({
           availabilityMode: values.availabilityMode,
           startDate: values.startDate || null,
           endDate: values.endDate || null,
+          instructorId: values.instructorId || null,
           ...(values.accessType === "PAID" ? { planIds: values.planIds } : {}),
         }, { method: "PUT" });
         onSaved();
@@ -507,6 +520,7 @@ function CourseFormDialog({
             availabilityMode: values.availabilityMode,
             startDate: values.startDate || null,
             endDate: values.endDate || null,
+            instructorId: values.instructorId || null,
           }
         );
         onSaved(res.course.id);
@@ -750,6 +764,32 @@ function CourseFormDialog({
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Assigned Instructor */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium text-muted-foreground">
+              Assigned Instructor
+            </Label>
+            <Select
+              value={values.instructorId || "__none__"}
+              onValueChange={(v) => setValues({ ...values, instructorId: v === "__none__" ? "" : v })}
+            >
+              <SelectTrigger className="h-9 rounded-lg">
+                <SelectValue placeholder="No instructor assigned" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">No instructor assigned</SelectItem>
+                {instructors.map((inst) => (
+                  <SelectItem key={inst.id} value={inst.id}>
+                    {inst.name} ({inst.email})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Student questions and assignment submissions from this course will be sent to the assigned instructor.
+            </p>
           </div>
 
           {/* Published switch */}

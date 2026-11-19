@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import {
-  requireStudent,
   handleAuthError,
   errorResponse,
 } from "@/lib/auth";
+import { cookies } from "next/headers";
+import { SESSION_COOKIE, verifySession } from "@/lib/auth/server";
 
 /**
  * GET /api/student/notifications
@@ -17,15 +18,23 @@ import {
  */
 export async function GET() {
   try {
-    const user = await requireStudent();
+    // Accept both STUDENT and INSTRUCTOR roles (instructors receive
+    // notifications when students post discussions or submit assignments)
+    const cookieStore = await cookies();
+    const token = cookieStore.get(SESSION_COOKIE)?.value;
+    const session = token ? await verifySession(token) : null;
+    if (!session) {
+      return errorResponse("Not authenticated", 401);
+    }
+    const userId = session.userId;
 
     const [unread, recentRead] = await Promise.all([
       db.notification.findMany({
-        where: { studentId: user.id, isRead: false },
+        where: { studentId: userId, isRead: false },
         orderBy: { createdAt: "desc" },
       }),
       db.notification.findMany({
-        where: { studentId: user.id, isRead: true },
+        where: { studentId: userId, isRead: true },
         orderBy: { createdAt: "desc" },
         take: 20,
       }),
@@ -62,24 +71,28 @@ export async function GET() {
  */
 export async function PATCH(req: Request) {
   try {
-    const user = await requireStudent();
+    const cookieStore = await cookies();
+    const token = cookieStore.get(SESSION_COOKIE)?.value;
+    const session = token ? await verifySession(token) : null;
+    if (!session) return errorResponse("Not authenticated", 401);
+    const userId = session.userId;
+
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
     const all = url.searchParams.get("all");
 
     if (all === "true") {
       await db.notification.updateMany({
-        where: { studentId: user.id, isRead: false },
+        where: { studentId: userId, isRead: false },
         data: { isRead: true },
       });
     } else if (id) {
-      // Only the owner can mark their own notification.
       const existing = await db.notification.findUnique({
         where: { id },
         select: { studentId: true },
       });
       if (!existing) return errorResponse("Notification not found", 404);
-      if (existing.studentId !== user.id) {
+      if (existing.studentId !== userId) {
         return errorResponse("Not allowed", 403, "NO_ACCESS");
       }
       await db.notification.update({
@@ -94,7 +107,7 @@ export async function PATCH(req: Request) {
     }
 
     const unreadCount = await db.notification.count({
-      where: { studentId: user.id, isRead: false },
+      where: { studentId: userId, isRead: false },
     });
 
     return NextResponse.json({ ok: true, unreadCount });
