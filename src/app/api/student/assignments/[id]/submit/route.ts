@@ -113,6 +113,30 @@ export async function POST(
       },
     });
 
+    // Notify the course's assigned instructor (if any). The Notification model
+    // uses `studentId` for the recipient user id — instructors receive the
+    // notification on their userId, which works because the notification
+    // system queries by user id.
+    try {
+      const courseWithInstructor = await db.course.findUnique({
+        where: { id: assignment.courseId },
+        select: { instructor: { select: { userId: true } } },
+      });
+      if (courseWithInstructor?.instructor?.userId) {
+        await db.notification.create({
+          data: {
+            studentId: courseWithInstructor.instructor.userId,
+            type: "ASSIGNMENT",
+            title: "New assignment submission",
+            content: `A student submitted: ${assignment.title}`,
+            relatedId: submission.id,
+          },
+        });
+      }
+    } catch (notifyErr) {
+      console.error("[student/assignments submit notify]", notifyErr);
+    }
+
     // Auto-issue certificate (idempotent — uses shared helper that handles
     // template/no-template/disabled-template logic and prevents duplicates).
     // The certificate may have already been issued when the course was completed;

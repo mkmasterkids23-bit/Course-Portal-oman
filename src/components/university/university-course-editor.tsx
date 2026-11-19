@@ -72,6 +72,8 @@ interface CourseDetail {
   assignments: AssignmentRow[];
   certificateTemplate: CertTemplate | null;
   planAccess: { id: string; planId: string; planName: string }[];
+  instructorId?: string | null;
+  instructorName?: string | null;
 }
 
 interface TopicRow {
@@ -145,6 +147,15 @@ interface PlansResponse {
   plans: SubscriptionPlanPublic[];
 }
 
+interface InstructorOption {
+  id: string;
+  userId: string;
+  name: string;
+  email: string;
+  profilePhoto: string | null;
+  isActive: boolean;
+}
+
 export function UniversityCourseEditor({
   courseId,
   onBack,
@@ -170,6 +181,8 @@ export function UniversityCourseEditor({
   const { data: plansData } = useApiFetch<PlansResponse>("/api/public/plans");
 
   const course = data?.course;
+  const user = useAppStore((s) => s.user);
+  const isInstructor = user?.role === "INSTRUCTOR";
 
   return (
     <div className="space-y-4">
@@ -272,12 +285,14 @@ export function UniversityCourseEditor({
               >
                 <Award className="h-3.5 w-3.5" /> Certificate
               </TabsTrigger>
-              <TabsTrigger
-                value="settings"
-                className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-sm"
-              >
-                <Settings className="h-3.5 w-3.5" /> Settings
-              </TabsTrigger>
+              {!isInstructor && (
+                <TabsTrigger
+                  value="settings"
+                  className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-sm"
+                >
+                  <Settings className="h-3.5 w-3.5" /> Settings
+                </TabsTrigger>
+              )}
             </TabsList>
           </div>
 
@@ -293,14 +308,16 @@ export function UniversityCourseEditor({
           <TabsContent value="certificate" className="mt-4">
             <CertificateTab course={course} onRefresh={refetch} />
           </TabsContent>
-          <TabsContent value="settings" className="mt-4">
-            <SettingsTab
-              course={course}
-              plans={plansData?.plans || []}
-              onRefresh={refetch}
-              onDeleted={() => navigate(["university", "courses"])}
-            />
-          </TabsContent>
+          {!isInstructor && (
+            <TabsContent value="settings" className="mt-4">
+              <SettingsTab
+                course={course}
+                plans={plansData?.plans || []}
+                onRefresh={refetch}
+                onDeleted={() => navigate(["university", "courses"])}
+              />
+            </TabsContent>
+          )}
         </Tabs>
       )}
     </div>
@@ -2120,8 +2137,15 @@ function SettingsTab({
   const [accessType, setAccessType] = useState<"FREE" | "PAID">(course.accessType);
   const [isPublished, setIsPublished] = useState(course.isPublished);
   const [planIds, setPlanIds] = useState<string[]>(course.planAccess.map((p) => p.planId));
+  const [instructorId, setInstructorId] = useState<string>(course.instructorId || "__none__");
   const [saving, setSaving] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+
+  // Load the university's active instructors for the assignment dropdown.
+  const { data: instructorsData } = useApiFetch<{ instructors: InstructorOption[] }>(
+    "/api/university/instructors?status=active"
+  );
+  const instructors = instructorsData?.instructors || [];
 
   useEffect(() => {
     setTitle(course.title);
@@ -2130,6 +2154,7 @@ function SettingsTab({
     setAccessType(course.accessType);
     setIsPublished(course.isPublished);
     setPlanIds(course.planAccess.map((p) => p.planId));
+    setInstructorId(course.instructorId || "__none__");
   }, [course]);
 
   function togglePlan(id: string) {
@@ -2156,6 +2181,7 @@ function SettingsTab({
           accessType,
           isPublished,
           planIds,
+          instructorId: instructorId === "__none__" ? null : instructorId,
         },
         { method: "PUT" }
       );
@@ -2238,6 +2264,30 @@ function SettingsTab({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          {/* Assigned instructor */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium text-muted-foreground">Assigned Instructor</Label>
+            <Select
+              value={instructorId}
+              onValueChange={(v) => setInstructorId(v)}
+            >
+              <SelectTrigger className="w-full h-9 rounded-lg">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">No instructor assigned</SelectItem>
+                {instructors.map((i) => (
+                  <SelectItem key={i.id} value={i.id}>
+                    {i.name} {i.email ? `· ${i.email}` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-[11px] text-muted-foreground">
+              Student questions and assignment submissions will be routed to the assigned instructor.
+            </p>
           </div>
 
           {accessType === "PAID" && (

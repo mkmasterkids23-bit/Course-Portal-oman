@@ -1,22 +1,32 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireUniversity, handleAuthError, errorResponse } from "@/lib/auth";
+import {
+  requireUniversityOrInstructor,
+  handleAuthError,
+  errorResponse,
+} from "@/lib/auth";
 
 /**
  * GET /api/university/discussions
  * List all discussions across the university's courses.
+ * Instructors only see discussions in their assigned courses.
  * Supports ?courseId= filter and ?q= search.
  */
 export async function GET(req: Request) {
   try {
-    const user = await requireUniversity();
+    const user = await requireUniversityOrInstructor();
     const url = new URL(req.url);
     const courseId = url.searchParams.get("courseId");
     const q = url.searchParams.get("q")?.trim().toLowerCase();
 
-    // Get all course IDs belonging to this university
+    // Instructors are scoped to their assigned courses only.
+    const courseWhere =
+      user.role === "INSTRUCTOR" && user.instructorId
+        ? { universityId: user.universityId!, instructorId: user.instructorId }
+        : { universityId: user.universityId };
+
     const courses = await db.course.findMany({
-      where: { universityId: user.universityId },
+      where: courseWhere,
       select: { id: true, title: true },
     });
     const courseIds = courses.map((c) => c.id);

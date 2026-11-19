@@ -1,14 +1,28 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireUniversity, handleAuthError, errorResponse } from "@/lib/auth";
+import {
+  requireUniversityOrInstructor,
+  handleAuthError,
+  errorResponse,
+} from "@/lib/auth";
 
-/** Verify the given course belongs to the logged-in university. */
-async function verifyOwnership(courseId: string, universityId: string) {
+/** Verify the given course belongs to the logged-in university (and, for instructors, is assigned to them). */
+async function verifyOwnership(
+  courseId: string,
+  user: { universityId: string | null; role: string; instructorId?: string | null }
+) {
+  if (!user.universityId) return null;
   const course = await db.course.findUnique({
     where: { id: courseId },
-    select: { universityId: true },
+    select: { universityId: true, instructorId: true },
   });
-  if (!course || course.universityId !== universityId) return null;
+  if (!course || course.universityId !== user.universityId) return null;
+  // Instructors can only access courses assigned to them.
+  if (user.role === "INSTRUCTOR") {
+    if (!user.instructorId || course.instructorId !== user.instructorId) {
+      return null;
+    }
+  }
   return course;
 }
 
@@ -20,9 +34,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireUniversity();
+    const user = await requireUniversityOrInstructor();
     const { id } = await params;
-    const owned = await verifyOwnership(id, user.universityId!);
+    const owned = await verifyOwnership(id, user);
     if (!owned) return errorResponse("Not found", 404);
 
     const course = await db.course.findUnique({
@@ -47,9 +61,22 @@ export async function GET(
         planAccess: {
           include: { plan: { select: { id: true, name: true } } },
         },
+        instructor: {
+          select: {
+            id: true,
+            user: { select: { name: true, email: true, profilePhoto: true } },
+          },
+        },
       },
     });
     if (!course || course.universityId !== user.universityId) {
+      return errorResponse("Not found", 404);
+    }
+    // Instructors must only access their assigned course.
+    if (
+      user.role === "INSTRUCTOR" &&
+      (!user.instructorId || course.instructorId !== user.instructorId)
+    ) {
       return errorResponse("Not found", 404);
     }
 
@@ -69,6 +96,8 @@ export async function GET(
         enrollmentOpen: course.enrollmentOpen,
         createdAt: course.createdAt,
         updatedAt: course.updatedAt,
+        instructorId: course.instructor?.id ?? null,
+        instructorName: course.instructor?.user.name ?? null,
         topics: course.topics.map((t) => ({
           id: t.id,
           title: t.title,
@@ -148,9 +177,12 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireUniversity();
+    const user = await requireUniversityOrInstructor();
+    if (user.role === "INSTRUCTOR") {
+      return errorResponse("Instructors cannot edit course settings", 403, "INSTRUCTOR_NO_EDIT");
+    }
     const { id } = await params;
-    const owned = await verifyOwnership(id, user.universityId!);
+    const owned = await verifyOwnership(id, user);
     if (!owned) return errorResponse("Not found", 404);
 
     const body = await req.json();
@@ -167,6 +199,7 @@ export async function PUT(
       endDate,
       availabilityMode,
       enrollmentOpen,
+      instructorId,
     } = body as {
       title?: string;
       description?: string | null;
@@ -180,6 +213,7 @@ export async function PUT(
       endDate?: string | null;
       availabilityMode?: "ALWAYS" | "SCHEDULED" | "LIMITED";
       enrollmentOpen?: boolean;
+      instructorId?: string | null;
     };
 
     const existing = await db.course.findUnique({ where: { id } });
@@ -231,6 +265,31 @@ export async function PUT(
       return errorResponse("Paid courses must specify at least one plan", 400);
     }
 
+    // Resolve instructorId — validate it belongs to this university and is active.
+    // Pass null explicitly to unassign, undefined to leave unchanged.
+    let instructorIdValue: string | null | undefined = undefined;
+    if (instructorId !== undefined) {
+      if (instructorId === null || instructorId === "") {
+        instructorIdValue = null;
+      } else {
+        const instructor = await db.instructor.findFirst({
+          where: {
+            id: instructorId,
+            universityId: user.universityId!,
+            isActive: true,
+          },
+          select: { id: true },
+        });
+        if (!instructor) {
+          return errorResponse(
+            "Selected instructor is not part of your university",
+            400
+          );
+        }
+        instructorIdValue = instructor.id;
+      }
+    }
+
     await db.course.update({
       where: { id },
       data: {
@@ -247,6 +306,7 @@ export async function PUT(
         ...(startDateParsed !== undefined ? { startDate: startDateParsed } : {}),
         ...(endDateParsed !== undefined ? { endDate: endDateParsed } : {}),
         ...(enrollmentOpen !== undefined ? { enrollmentOpen: !!enrollmentOpen } : {}),
+        ...(instructorIdValue !== undefined ? { instructorId: instructorIdValue } : {}),
       },
     });
 
@@ -291,9 +351,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireUniversity();
+    const user = await requireUniversityOrInstructor();
+    if (user.role === "INSTRUCTOR") {
+      return errorResponse("Instructors cannot delete courses", 403, "INSTRUCTOR_NO_DELETE");
+    }
     const { id } = await params;
-    const owned = await verifyOwnership(id, user.universityId!);
+    const owned = await verifyOwnership(id, user);
     if (!owned) return errorResponse("Not found", 404);
 
     await db.course.delete({ where: { id } });

@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireUniversity, handleAuthError, errorResponse } from "@/lib/auth";
+import {
+  requireUniversityOrInstructor,
+  handleAuthError,
+  errorResponse,
+} from "@/lib/auth";
 
 /**
  * GET /api/university/discussions/[id]
@@ -11,14 +15,21 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireUniversity();
+    const user = await requireUniversityOrInstructor();
     const { id } = await params;
 
     const discussion = await db.discussion.findUnique({
       where: { id },
       include: {
         author: { select: { id: true, name: true, profilePhoto: true, role: true } },
-        course: { select: { id: true, title: true, universityId: true } },
+        course: {
+          select: {
+            id: true,
+            title: true,
+            universityId: true,
+            instructorId: true,
+          },
+        },
         replies: {
           include: {
             author: { select: { id: true, name: true, profilePhoto: true, role: true } },
@@ -32,6 +43,14 @@ export async function GET(
 
     // Verify ownership — discussion must belong to a course in this university
     if (discussion.course.universityId !== user.universityId) {
+      return errorResponse("Not found", 404);
+    }
+    // Instructors can only see discussions in their assigned courses.
+    if (
+      user.role === "INSTRUCTOR" &&
+      (!user.instructorId ||
+        discussion.course.instructorId !== user.instructorId)
+    ) {
       return errorResponse("Not found", 404);
     }
 
@@ -80,14 +99,23 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireUniversity();
+    const user = await requireUniversityOrInstructor();
     const { id } = await params;
 
     const existing = await db.discussion.findUnique({
       where: { id },
-      include: { course: { select: { universityId: true } } },
+      include: {
+        course: { select: { universityId: true, instructorId: true } },
+      },
     });
     if (!existing || existing.course.universityId !== user.universityId) {
+      return errorResponse("Not found", 404);
+    }
+    if (
+      user.role === "INSTRUCTOR" &&
+      (!user.instructorId ||
+        existing.course.instructorId !== user.instructorId)
+    ) {
       return errorResponse("Not found", 404);
     }
 
@@ -126,14 +154,23 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireUniversity();
+    const user = await requireUniversityOrInstructor();
     const { id } = await params;
 
     const existing = await db.discussion.findUnique({
       where: { id },
-      include: { course: { select: { universityId: true } } },
+      include: {
+        course: { select: { universityId: true, instructorId: true } },
+      },
     });
     if (!existing || existing.course.universityId !== user.universityId) {
+      return errorResponse("Not found", 404);
+    }
+    if (
+      user.role === "INSTRUCTOR" &&
+      (!user.instructorId ||
+        existing.course.instructorId !== user.instructorId)
+    ) {
       return errorResponse("Not found", 404);
     }
 

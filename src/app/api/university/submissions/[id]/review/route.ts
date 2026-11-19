@@ -1,17 +1,22 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireUniversity, handleAuthError, errorResponse } from "@/lib/auth";
+import {
+  requireUniversityOrInstructor,
+  handleAuthError,
+  errorResponse,
+} from "@/lib/auth";
 
 /**
  * PATCH /api/university/submissions/[id]/review
  * Review a submission — verifies ownership via the assignment's course.
+ * Instructors can only review submissions for their assigned courses.
  */
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireUniversity();
+    const user = await requireUniversityOrInstructor();
     const { id } = await params;
     const body = await req.json();
     const { status, reviewNotes } = body as {
@@ -24,13 +29,23 @@ export async function PATCH(
       include: {
         assignment: {
           select: {
-            course: { select: { universityId: true } },
+            course: {
+              select: { universityId: true, instructorId: true },
+            },
           },
         },
       },
     });
     if (!existing) return errorResponse("Not found", 404);
     if (existing.assignment.course.universityId !== user.universityId) {
+      return errorResponse("Not found", 404);
+    }
+    // Instructors can only review their assigned courses' submissions.
+    if (
+      user.role === "INSTRUCTOR" &&
+      (!user.instructorId ||
+        existing.assignment.course.instructorId !== user.instructorId)
+    ) {
       return errorResponse("Not found", 404);
     }
 

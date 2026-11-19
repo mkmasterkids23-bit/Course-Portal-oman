@@ -13,6 +13,7 @@ export interface PublicUser {
   universityId: string | null;
   universityName: string | null;
   universityLogo: string | null;
+  instructorId?: string | null;
 }
 
 export interface SubscriptionPlanPublic {

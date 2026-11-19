@@ -53,6 +53,24 @@ const NAV_SECTIONS = [
   },
 ];
 
+// Simplified sidebar for instructors — only the items they need access to.
+const INSTRUCTOR_NAV_SECTIONS = [
+  {
+    label: "nav.teaching" as const,
+    items: [
+      { label: "nav.overview" as const, icon: Building2, segments: ["university", "overview"] },
+      { label: "common.courses" as const, icon: BookOpen, segments: ["university", "courses"] },
+    ],
+  },
+  {
+    label: "nav.assessment" as const,
+    items: [
+      { label: "common.submissions" as const, icon: Inbox, segments: ["university", "submissions"] },
+      { label: "common.discussions" as const, icon: MessageSquare, segments: ["university", "discussions"] },
+    ],
+  },
+];
+
 export function UniversitySidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useI18n();
   const segments = useAppStore((s) => s.segments);
@@ -60,6 +78,9 @@ export function UniversitySidebar({ onNavigate }: { onNavigate?: () => void }) {
   const refreshUser = useAppStore((s) => s.refreshUser);
   const user = useAppStore((s) => s.user);
   const current = segments[1] || "overview";
+
+  const isInstructor = user?.role === "INSTRUCTOR";
+  const sections = isInstructor ? INSTRUCTOR_NAV_SECTIONS : NAV_SECTIONS;
 
   async function logout() {
     await apiPost("/api/auth/logout", null, { method: "POST" });
@@ -99,14 +120,14 @@ export function UniversitySidebar({ onNavigate }: { onNavigate?: () => void }) {
             {uniName}
           </p>
           <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70">
-            {t("dashboard.adminConsole")}
+            {isInstructor ? t("nav.teaching") : t("dashboard.adminConsole")}
           </p>
         </div>
       </div>
 
       <ScrollArea className="flex-1 px-3 py-5">
         <nav className="space-y-6">
-          {NAV_SECTIONS.map((section) => (
+          {sections.map((section) => (
             <div key={section.label} className="space-y-1">
               <p className="px-3 pb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground/60">
                 {t(section.label)}

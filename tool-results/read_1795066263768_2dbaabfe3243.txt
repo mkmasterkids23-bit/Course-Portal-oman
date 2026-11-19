@@ -1,0 +1,2002 @@
+     1→"use client";
+     2→
+     3→import { useCallback, useEffect, useMemo, useState } from "react";
+     4→import {
+     5→  Card,
+     6→  CardContent,
+     7→  CardHeader,
+     8→  CardTitle,
+     9→  CardDescription,
+    10→} from "@/components/ui/card";
+    11→import { Button } from "@/components/ui/button";
+    12→import { Input } from "@/components/ui/input";
+    13→import { Label } from "@/components/ui/label";
+    14→import { Badge } from "@/components/ui/badge";
+    15→import { Skeleton } from "@/components/ui/skeleton";
+    16→import { Textarea } from "@/components/ui/textarea";
+    17→import { Switch } from "@/components/ui/switch";
+    18→import { Checkbox } from "@/components/ui/checkbox";
+    19→import { Separator } from "@/components/ui/separator";
+    20→import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+    21→import {
+    22→  Select,
+    23→  SelectContent,
+    24→  SelectItem,
+    25→  SelectTrigger,
+    26→  SelectValue,
+    27→} from "@/components/ui/select";
+    28→import {
+    29→  Dialog,
+    30→  DialogContent,
+    31→  DialogDescription,
+    32→  DialogFooter,
+    33→  DialogHeader,
+    34→  DialogTitle,
+    35→} from "@/components/ui/dialog";
+    36→import {
+    37→  AlertDialog,
+    38→  AlertDialogAction,
+    39→  AlertDialogCancel,
+    40→  AlertDialogContent,
+    41→  AlertDialogDescription,
+    42→  AlertDialogFooter,
+    43→  AlertDialogHeader,
+    44→  AlertDialogTitle,
+    45→} from "@/components/ui/alert-dialog";
+    46→import { EmptyState } from "@/components/shared/empty-state";
+    47→import { useApiFetch, apiPost, apiUpload } from "@/hooks/use-api";
+    48→import { useAppStore } from "@/stores/app-store";
+    49→import { useI18n } from "@/lib/i18n/store";
+    50→import { toast } from "@/hooks/use-toast";
+    51→import { cn } from "@/lib/utils";
+    52→import { formatDate, formatDateTime, type SubscriptionPlanPublic } from "@/types";
+    53→import {
+    54→  ArrowLeft, Plus, Pencil, Trash2, ChevronUp, ChevronDown, Video as VideoIcon,
+    55→  FileText, ClipboardList, Award, Settings, BookOpen, Upload, Eye, EyeOff,
+    56→  GripVertical, ExternalLink, Save, Info,
+    57→  ListChecks, Check, Clock, PlusCircle, X, HelpCircle,
+    58→} from "lucide-react";
+    59→
+    60→interface CourseDetail {
+    61→  id: string;
+    62→  title: string;
+    63→  description: string | null;
+    64→  thumbnail: string | null;
+    65→  category: string | null;
+    66→  accessType: "FREE" | "PAID";
+    67→  isPublished: boolean;
+    68→  createdAt: string;
+    69→  updatedAt: string;
+    70→  topics: TopicRow[];
+    71→  materials: MaterialRow[];
+    72→  assignments: AssignmentRow[];
+    73→  certificateTemplate: CertTemplate | null;
+    74→  planAccess: { id: string; planId: string; planName: string }[];
+    75→}
+    76→
+    77→interface TopicRow {
+    78→  id: string;
+    79→  title: string;
+    80→  description: string | null;
+    81→  displayOrder: number;
+    82→  videos: VideoRow[];
+    83→  materials: MaterialRow[];
+    84→}
+    85→
+    86→interface VideoRow {
+    87→  id: string;
+    88→  title: string;
+    89→  description: string | null;
+    90→  source: "UPLOAD" | "YOUTUBE" | "URL";
+    91→  videoUrl: string;
+    92→  thumbnail: string | null;
+    93→  displayOrder: number;
+    94→  isPublished: boolean;
+    95→  duration: number;
+    96→  topicId: string | null;
+    97→}
+    98→
+    99→interface VideoQuestion {
+   100→  id: string;
+   101→  videoId: string;
+   102→  question: string;
+   103→  options: string[];
+   104→  correctAnswer: number;
+   105→  timestamp: number;
+   106→}
+   107→
+   108→interface QuestionsResponse {
+   109→  questions: VideoQuestion[];
+   110→}
+   111→
+   112→interface MaterialRow {
+   113→  id: string;
+   114→  title: string;
+   115→  description: string | null;
+   116→  type: "PDF" | "DOC" | "PRESENTATION" | "LINK";
+   117→  fileUrl: string;
+   118→  isPublished: boolean;
+   119→  topic: { id: string; title: string } | null;
+   120→}
+   121→
+   122→interface AssignmentRow {
+   123→  id: string;
+   124→  title: string;
+   125→  description: string | null;
+   126→  instructions: string | null;
+   127→  fileUrl: string | null;
+   128→  dueDate: string | null;
+   129→  isPublished: boolean;
+   130→  allowResubmission: boolean;
+   131→  submissionsCount: number;
+   132→  createdAt: string;
+   133→}
+   134→
+   135→interface CertTemplate {
+   136→  id: string;
+   137→  isEnabled: boolean;
+   138→  title: string;
+   139→  bodyText: string;
+   140→  organizationName: string;
+   141→  layout: "CLASSIC" | "MODERN" | "MINIMAL";
+   142→}
+   143→
+   144→interface PlansResponse {
+   145→  plans: SubscriptionPlanPublic[];
+   146→}
+   147→
+   148→export function UniversityCourseEditor({
+   149→  courseId,
+   150→  onBack,
+   151→}: {
+   152→  courseId: string;
+   153→  onBack: () => void;
+   154→}) {
+   155→  const navigate = useAppStore((s) => s.navigate);
+   156→  const query = useAppStore((s) => s.query);
+   157→  const { t } = useI18n();
+   158→  const [activeTab, setActiveTab] = useState<string>("topics");
+   159→
+   160→  // Deep link via ?tab=certificate — React 19 "store previous value" pattern
+   161→  const [lastTab, setLastTab] = useState<string | undefined>(undefined);
+   162→  if (query.tab !== lastTab) {
+   163→    setLastTab(query.tab);
+   164→    if (query.tab) setActiveTab(query.tab);
+   165→  }
+   166→
+   167→  const { data, loading, error, refetch } = useApiFetch<{ course: CourseDetail }>(
+   168→    `/api/university/courses/${courseId}`
+   169→  );
+   170→  const { data: plansData } = useApiFetch<PlansResponse>("/api/public/plans");
+   171→
+   172→  const course = data?.course;
+   173→
+   174→  return (
+   175→    <div className="space-y-4">
+   176→      {/* Header */}
+   177→      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+   178→        <div className="flex items-center gap-3">
+   179→          <Button
+   180→            variant="outline"
+   181→            size="icon"
+   182→            className="h-9 w-9 shrink-0"
+   183→            onClick={onBack}
+   184→            aria-label={t("common.back")}
+   185→          >
+   186→            <ArrowLeft className="h-4 w-4" />
+   187→          </Button>
+   188→          <div className="min-w-0">
+   189→            {loading ? (
+   190→              <>
+   191→                <Skeleton className="h-6 w-48 mb-1" />
+   192→                <Skeleton className="h-3 w-32" />
+   193→              </>
+   194→            ) : (
+   195→              <>
+   196→                <h2 className="font-heading text-xl font-bold text-foreground truncate">
+   197→                  {course?.title || "Course"}
+   198→                </h2>
+   199→                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-1">
+   200→                  {course?.category && (
+   201→                    <Badge variant="outline" className="text-[10px] uppercase tracking-wider">
+   202→                      {course.category}
+   203→                    </Badge>
+   204→                  )}
+   205→                  {course?.accessType === "FREE" ? (
+   206→                    <Badge className="bg-success/15 text-success">{t("common.free")}</Badge>
+   207→                  ) : (
+   208→                    <Badge className="bg-primary text-primary-foreground">{t("common.paid")}</Badge>
+   209→                  )}
+   210→                  {course?.isPublished ? (
+   211→                    <Badge className="bg-success/15 text-success gap-1">
+   212→                      <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" /> Published
+   213→                    </Badge>
+   214→                  ) : (
+   215→                    <Badge variant="outline" className="text-muted-foreground">
+   216→                      Draft
+   217→                    </Badge>
+   218→                  )}
+   219→                  <span className="text-muted-foreground">
+   220→                    Updated {course ? formatDate(course.updatedAt) : ""}
+   221→                  </span>
+   222→                </div>
+   223→              </>
+   224→            )}
+   225→          </div>
+   226→        </div>
+   227→        <Button
+   228→          variant="outline"
+   229→          size="sm"
+   230→          disabled
+   231→          className="h-9 text-muted-foreground"
+   232→          title="Student preview is not available in university view"
+   233→        >
+   234→          <Eye className="h-4 w-4" /> Open in student view
+   235→        </Button>
+   236→      </div>
+   237→
+   238→      {error ? (
+   239→        <EmptyState
+   240→          icon={<BookOpen className="h-5 w-5" />}
+   241→          title="Couldn't load course"
+   242→          description={error}
+   243→          action={<Button variant="outline" onClick={onBack}>Back to courses</Button>}
+   244→        />
+   245→      ) : loading || !course ? (
+   246→        <Skeleton className="h-96 w-full" />
+   247→      ) : (
+   248→        <Tabs value={activeTab} onValueChange={setActiveTab}>
+   249→          <div className="rounded-lg border border-border bg-card p-1 shadow-sm overflow-x-auto scrollbar-thin">
+   250→            <TabsList className="w-full justify-start h-auto flex-wrap bg-transparent gap-1">
+   251→              <TabsTrigger
+   252→                value="topics"
+   253→                className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-sm"
+   254→              >
+   255→                <VideoIcon className="h-3.5 w-3.5" /> Topics &amp; Videos
+   256→              </TabsTrigger>
+   257→              <TabsTrigger
+   258→                value="materials"
+   259→                className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-sm"
+   260→              >
+   261→                <FileText className="h-3.5 w-3.5" /> Materials
+   262→              </TabsTrigger>
+   263→              <TabsTrigger
+   264→                value="assignments"
+   265→                className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-sm"
+   266→              >
+   267→                <ClipboardList className="h-3.5 w-3.5" /> Assignments
+   268→              </TabsTrigger>
+   269→              <TabsTrigger
+   270→                value="certificate"
+   271→                className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-sm"
+   272→              >
+   273→                <Award className="h-3.5 w-3.5" /> Certificate
+   274→              </TabsTrigger>
+   275→              <TabsTrigger
+   276→                value="settings"
+   277→                className="gap-1.5 rounded-lg data-[state=active]:bg-soft-sage data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-sm"
+   278→              >
+   279→                <Settings className="h-3.5 w-3.5" /> Settings
+   280→              </TabsTrigger>
+   281→            </TabsList>
+   282→          </div>
+   283→
+   284→          <TabsContent value="topics" className="mt-4">
+   285→            <TopicsTab course={course} onRefresh={refetch} />
+   286→          </TabsContent>
+   287→          <TabsContent value="materials" className="mt-4">
+   288→            <MaterialsTab course={course} onRefresh={refetch} />
+   289→          </TabsContent>
+   290→          <TabsContent value="assignments" className="mt-4">
+   291→            <AssignmentsTab course={course} onRefresh={refetch} />
+   292→          </TabsContent>
+   293→          <TabsContent value="certificate" className="mt-4">
+   294→            <CertificateTab course={course} onRefresh={refetch} />
+   295→          </TabsContent>
+   296→          <TabsContent value="settings" className="mt-4">
+   297→            <SettingsTab
+   298→              course={course}
+   299→              plans={plansData?.plans || []}
+   300→              onRefresh={refetch}
+   301→              onDeleted={() => navigate(["university", "courses"])}
+   302→            />
+   303→          </TabsContent>
+   304→        </Tabs>
+   305→      )}
+   306→    </div>
+   307→  );
+   308→}
+   309→
+   310→// ============= TOPICS & VIDEOS TAB =============
+   311→function TopicsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () => void }) {
+   312→  const { t } = useI18n();
+   313→  const [addTopicOpen, setAddTopicOpen] = useState(false);
+   314→  const [expandedId, setExpandedId] = useState<string | null>(null);
+   315→  const [editTopic, setEditTopic] = useState<TopicRow | null>(null);
+   316→  const [deleteTopic, setDeleteTopic] = useState<TopicRow | null>(null);
+   317→  const [addVideoFor, setAddVideoFor] = useState<TopicRow | null>(null);
+   318→  const [editVideo, setEditVideo] = useState<VideoRow | null>(null);
+   319→  const [deleteVideo, setDeleteVideo] = useState<VideoRow | null>(null);
+   320→  const [questionsOpenFor, setQuestionsOpenFor] = useState<string | null>(null);
+   321→  const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
+   322→  const reportCount = useCallback((videoId: string, n: number) => {
+   323→    setQuestionCounts((prev) => (prev[videoId] === n ? prev : { ...prev, [videoId]: n }));
+   324→  }, []);
+   325→
+   326→  async function moveTopic(topic: TopicRow, dir: -1 | 1) {
+   327→    const sorted = [...course.topics].sort((a, b) => a.displayOrder - b.displayOrder);
+   328→    const idx = sorted.findIndex((t) => t.id === topic.id);
+   329→    const target = idx + dir;
+   330→    if (target < 0 || target >= sorted.length) return;
+   331→    const reordered = [...sorted];
+   332→    [reordered[idx], reordered[target]] = [reordered[target], reordered[idx]];
+   333→    try {
+   334→      await apiPost(`/api/university/courses/${course.id}/topics/reorder`, {
+   335→        orderedIds: reordered.map((t) => t.id),
+   336→      });
+   337→      onRefresh();
+   338→    } catch {
+   339→      /* toast */
+   340→    }
+   341→  }
+   342→
+   343→  return (
+   344→    <div className="space-y-4">
+   345→      <div className="flex items-center justify-between">
+   346→        <div>
+   347→          <h3 className="font-heading text-base font-semibold text-foreground">Course Topics</h3>
+   348→          <p className="text-xs text-muted-foreground mt-0.5">
+   349→            {course.topics.length} topic{course.topics.length === 1 ? "" : "s"} ·{" "}
+   350→            {course.topics.reduce((a, t) => a + t.videos.length, 0)} videos
+   351→          </p>
+   352→        </div>
+   353→        <Button className="h-9 gap-2" onClick={() => setAddTopicOpen(true)}>
+   354→          <Plus className="h-4 w-4" /> Add Topic
+   355→        </Button>
+   356→      </div>
+   357→
+   358→      {course.topics.length === 0 ? (
+   359→        <EmptyState
+   360→          icon={<VideoIcon className="h-5 w-5" />}
+   361→          title="No topics yet"
+   362→          description="Topics are containers for video lessons. Add your first topic to get started."
+   363→          action={
+   364→            <Button onClick={() => setAddTopicOpen(true)} className="gap-2">
+   365→              <Plus className="h-4 w-4" /> Add Topic
+   366→            </Button>
+   367→          }
+   368→        />
+   369→      ) : (
+   370→        <div className="space-y-2">
+   371→          {course.topics.map((topic, idx) => (
+   372→            <Card
+   373→              key={topic.id}
+   374→              className="overflow-hidden rounded-lg border-border bg-card p-0 shadow-sm transition-shadow hover:shadow-md"
+   375→            >
+   376→              <div className="flex items-center gap-2 p-3 bg-gradient-to-r from-muted/40 to-muted/10">
+   377→                <div className="flex flex-col">
+   378→                  <Button
+   379→                    variant="ghost"
+   380→                    size="icon"
+   381→                    className="h-5 w-5"
+   382→                    disabled={idx === 0}
+   383→                    onClick={() => moveTopic(topic, -1)}
+   384→                    aria-label="Move topic up"
+   385→                  >
+   386→                    <ChevronUp className="h-3 w-3" />
+   387→                  </Button>
+   388→                  <Button
+   389→                    variant="ghost"
+   390→                    size="icon"
+   391→                    className="h-5 w-5"
+   392→                    disabled={idx === course.topics.length - 1}
+   393→                    onClick={() => moveTopic(topic, 1)}
+   394→                    aria-label="Move topic down"
+   395→                  >
+   396→                    <ChevronDown className="h-3 w-3" />
+   397→                  </Button>
+   398→                </div>
+   399→                <GripVertical className="h-4 w-4 text-muted-foreground/40 hidden sm:block" />
+   400→                <button
+   401→                  className="flex flex-1 items-center gap-2 text-left min-w-0"
+   402→                  onClick={() => setExpandedId(expandedId === topic.id ? null : topic.id)}
+   403→                >
+   404→                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0 ring-1 ring-border">
+   405→                    {idx + 1}
+   406→                  </span>
+   407→                  <div className="min-w-0">
+   408→                    <p className="font-medium text-foreground truncate">{topic.title}</p>
+   409→                    <p className="text-xs text-muted-foreground truncate">
+   410→                      {topic.videos.length} video{topic.videos.length === 1 ? "" : "s"}
+   411→                      {topic.materials.length > 0 &&
+   412→                        ` · ${topic.materials.length} material${topic.materials.length === 1 ? "" : "s"}`}
+   413→                    </p>
+   414→                  </div>
+   415→                </button>
+   416→                <div className="flex items-center gap-1">
+   417→                  <Button
+   418→                    variant="ghost"
+   419→                    size="sm"
+   420→                    className="h-8 gap-1 text-muted-foreground hover:text-accent"
+   421→                    onClick={() => setAddVideoFor(topic)}
+   422→                  >
+   423→                    <Plus className="h-3.5 w-3.5" /> Add Video
+   424→                  </Button>
+   425→                  <Button
+   426→                    variant="ghost"
+   427→                    size="icon"
+   428→                    aria-label="Edit topic"
+   429→                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+   430→                    onClick={() => setEditTopic(topic)}
+   431→                  >
+   432→                    <Pencil className="h-3.5 w-3.5" />
+   433→                  </Button>
+   434→                  <Button
+   435→                    variant="ghost"
+   436→                    size="icon"
+   437→                    aria-label="Delete topic"
+   438→                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+   439→                    onClick={() => setDeleteTopic(topic)}
+   440→                  >
+   441→                    <Trash2 className="h-3.5 w-3.5" />
+   442→                  </Button>
+   443→                </div>
+   444→              </div>
+   445→
+   446→              {expandedId === topic.id && (
+   447→                <div className="border-t border-border p-3 bg-card">
+   448→                  {topic.description && (
+   449→                    <p className="text-sm text-muted-foreground mb-3">{topic.description}</p>
+   450→                  )}
+   451→                  {topic.videos.length === 0 ? (
+   452→                    <div className="text-center py-6">
+   453→                      <VideoIcon className="h-6 w-6 text-muted-foreground/40 mx-auto mb-2" />
+   454→                      <p className="text-sm text-muted-foreground">No videos in this topic yet</p>
+   455→                      <Button
+   456→                        variant="outline"
+   457→                        size="sm"
+   458→                        className="mt-3 gap-1.5 h-8"
+   459→                        onClick={() => setAddVideoFor(topic)}
+   460→                      >
+   461→                        <Plus className="h-3.5 w-3.5" /> Add First Video
+   462→                      </Button>
+   463→                    </div>
+   464→                  ) : (
+   465→                    <ul className="divide-y divide-border">
+   466→                      {topic.videos.map((v, vi) => {
+   467→                        const qOpen = questionsOpenFor === v.id;
+   468→                        const qCount = questionCounts[v.id] ?? 0;
+   469→                        return (
+   470→                        <li key={v.id} className="-mx-2 px-2 rounded">
+   471→                          <div className="flex items-center gap-3 py-2.5 transition-colors hover:bg-muted/40">
+   472→                            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-accent/10 text-accent text-[11px] font-semibold shrink-0">
+   473→                              {vi + 1}
+   474→                            </span>
+   475→                            <div className="min-w-0 flex-1">
+   476→                              <p className="text-sm font-medium text-foreground truncate">{v.title}</p>
+   477→                              <p className="text-xs text-muted-foreground truncate">
+   478→                                {v.source === "UPLOAD"
+   479→                                  ? "Uploaded video"
+   480→                                  : v.source === "YOUTUBE"
+   481→                                  ? "YouTube"
+   482→                                  : "External URL"}
+   483→                              </p>
+   484→                            </div>
+   485→                            {qCount > 0 && (
+   486→                              <Badge
+   487→                                variant="outline"
+   488→                                className="gap-1 border-accent/30 bg-accent/5 text-accent text-[10px]"
+   489→                                title={`${qCount} question${qCount === 1 ? "" : "s"}`}
+   490→                              >
+   491→                                <ListChecks className="h-3 w-3" />
+   492→                                {qCount}
+   493→                              </Badge>
+   494→                            )}
+   495→                            {v.isPublished ? (
+   496→                              <Badge className="bg-success/15 text-success text-[10px]">{t("common.published")}</Badge>
+   497→                            ) : (
+   498→                              <Badge variant="outline" className="text-muted-foreground text-[10px]">
+   499→                                Draft
+   500→                              </Badge>
+   501→                            )}
+   502→                            <Button
+   503→                              variant={qOpen ? "secondary" : "ghost"}
+   504→                              size="icon"
+   505→                              aria-label="Manage questions"
+   506→                              aria-pressed={qOpen}
+   507→                              className={cn(
+   508→                                "h-7 w-7 shrink-0",
+   509→                                qOpen ? "text-accent" : "text-muted-foreground hover:text-accent"
+   510→                              )}
+   511→                              onClick={() => setQuestionsOpenFor(qOpen ? null : v.id)}
+   512→                            >
+   513→                              <ListChecks className="h-3.5 w-3.5" />
+   514→                            </Button>
+   515→                            <Button
+   516→                              variant="ghost"
+   517→                              size="icon"
+   518→                              aria-label="Edit video"
+   519→                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+   520→                              onClick={() => setEditVideo(v)}
+   521→                            >
+   522→                              <Pencil className="h-3.5 w-3.5" />
+   523→                            </Button>
+   524→                            <Button
+   525→                              variant="ghost"
+   526→                              size="icon"
+   527→                              aria-label="Delete video"
+   528→                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+   529→                              onClick={() => setDeleteVideo(v)}
+   530→                            >
+   531→                              <Trash2 className="h-3.5 w-3.5" />
+   532→                            </Button>
+   533→                            <VideoQuestionsBadge
+   534→                              videoId={v.id}
+   535→                              active={!qOpen}
+   536→                              reportCount={reportCount}
+   537→                            />
+   538→                          </div>
+   539→                          {qOpen && (
+   540→                            <div className="pb-3 pt-0.5">
+   541→                              <VideoQuestionsPanel
+   542→                                videoId={v.id}
+   543→                                videoTitle={v.title}
+   544→                                onClose={() => setQuestionsOpenFor(null)}
+   545→                                reportCount={reportCount}
+   546→                              />
+   547→                            </div>
+   548→                          )}
+   549→                        </li>
+   550→                        );
+   551→                      })}
+   552→                    </ul>
+   553→                  )}
+   554→                </div>
+   555→              )}
+   556→            </Card>
+   557→          ))}
+   558→        </div>
+   559→      )}
+   560→
+   561→      <TopicFormDialog
+   562→        open={addTopicOpen}
+   563→        onOpenChange={setAddTopicOpen}
+   564→        courseId={course.id}
+   565→        onSaved={() => {
+   566→          onRefresh();
+   567→          setAddTopicOpen(false);
+   568→        }}
+   569→      />
+   570→      <TopicFormDialog
+   571→        open={!!editTopic}
+   572→        onOpenChange={(v) => !v && setEditTopic(null)}
+   573→        courseId={course.id}
+   574→        target={editTopic}
+   575→        onSaved={() => {
+   576→          onRefresh();
+   577→          setEditTopic(null);
+   578→        }}
+   579→      />
+   580→      <AlertDialog
+   581→        open={!!deleteTopic}
+   582→        onOpenChange={(v) => !v && setDeleteTopic(null)}
+   583→      >
+   584→        <AlertDialogContent>
+   585→          <AlertDialogHeader>
+   586→            <AlertDialogTitle>Delete topic?</AlertDialogTitle>
+   587→            <AlertDialogDescription>
+   588→              This will permanently delete <strong>{deleteTopic?.title}</strong> and all its videos
+   589→              and materials.
+   590→            </AlertDialogDescription>
+   591→          </AlertDialogHeader>
+   592→          <AlertDialogFooter>
+   593→            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+   594→            <AlertDialogAction
+   595→              className="bg-destructive text-white hover:bg-destructive/90"
+   596→              onClick={async () => {
+   597→                if (!deleteTopic) return;
+   598→                try {
+   599→                  await apiPost(
+   600→                    `/api/university/topics/${deleteTopic.id}`,
+   601→                    null,
+   602→                    { method: "DELETE" }
+   603→                  );
+   604→                  toast({ title: "Topic deleted" });
+   605→                  setDeleteTopic(null);
+   606→                  onRefresh();
+   607→                } catch {
+   608→                  /* toast */
+   609→                }
+   610→              }}
+   611→            >
+   612→              Delete
+   613→            </AlertDialogAction>
+   614→          </AlertDialogFooter>
+   615→        </AlertDialogContent>
+   616→      </AlertDialog>
+   617→
+   618→      <VideoFormDialog
+   619→        open={!!addVideoFor}
+   620→        onOpenChange={(v) => !v && setAddVideoFor(null)}
+   621→        courseId={course.id}
+   622→        topicId={addVideoFor?.id || null}
+   623→        topics={course.topics}
+   624→        onSaved={() => {
+   625→          onRefresh();
+   626→          setAddVideoFor(null);
+   627→        }}
+   628→      />
+   629→      <VideoFormDialog
+   630→        open={!!editVideo}
+   631→        onOpenChange={(v) => !v && setEditVideo(null)}
+   632→        courseId={course.id}
+   633→        topicId={editVideo?.topicId || null}
+   634→        topics={course.topics}
+   635→        target={editVideo}
+   636→        onSaved={() => {
+   637→          onRefresh();
+   638→          setEditVideo(null);
+   639→        }}
+   640→      />
+   641→      <AlertDialog
+   642→        open={!!deleteVideo}
+   643→        onOpenChange={(v) => !v && setDeleteVideo(null)}
+   644→      >
+   645→        <AlertDialogContent>
+   646→          <AlertDialogHeader>
+   647→            <AlertDialogTitle>Delete video?</AlertDialogTitle>
+   648→            <AlertDialogDescription>
+   649→              <strong>{deleteVideo?.title}</strong> will be permanently removed.
+   650→            </AlertDialogDescription>
+   651→          </AlertDialogHeader>
+   652→          <AlertDialogFooter>
+   653→            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+   654→            <AlertDialogAction
+   655→              className="bg-destructive text-white hover:bg-destructive/90"
+   656→              onClick={async () => {
+   657→                if (!deleteVideo) return;
+   658→                try {
+   659→                  await apiPost(
+   660→                    `/api/university/videos/${deleteVideo.id}`,
+   661→                    null,
+   662→                    { method: "DELETE" }
+   663→                  );
+   664→                  toast({ title: "Video deleted" });
+   665→                  setDeleteVideo(null);
+   666→                  onRefresh();
+   667→                } catch {
+   668→                  /* toast */
+   669→                }
+   670→              }}
+   671→            >
+   672→              Delete
+   673→            </AlertDialogAction>
+   674→          </AlertDialogFooter>
+   675→        </AlertDialogContent>
+   676→      </AlertDialog>
+   677→    </div>
+   678→  );
+   679→}
+   680→
+   681→function TopicFormDialog({
+   682→  open,
+   683→  onOpenChange,
+   684→  courseId,
+   685→  target,
+   686→  onSaved,
+   687→}: {
+   688→  open: boolean;
+   689→  onOpenChange: (v: boolean) => void;
+   690→  courseId: string;
+   691→  target?: TopicRow | null;
+   692→  onSaved: () => void;
+   693→}) {
+   694→  const [title, setTitle] = useState("");
+   695→  const [description, setDescription] = useState("");
+   696→  const [saving, setSaving] = useState(false);
+   697→
+   698→  useEffect(() => {
+   699→    if (target) {
+   700→      setTitle(target.title);
+   701→      setDescription(target.description || "");
+   702→    } else if (open) {
+   703→      setTitle("");
+   704→      setDescription("");
+   705→    }
+   706→  }, [target, open]);
+   707→
+   708→  async function submit() {
+   709→    if (!title.trim()) {
+   710→      toast({ title: "Title required", variant: "destructive" });
+   711→      return;
+   712→    }
+   713→    setSaving(true);
+   714→    try {
+   715→      if (target) {
+   716→        await apiPost(`/api/university/topics/${target.id}`, {
+   717→          title: title.trim(),
+   718→          description: description.trim() || null,
+   719→        }, { method: "PUT" });
+   720→        toast({ title: "Topic updated" });
+   721→      } else {
+   722→        await apiPost(`/api/university/courses/${courseId}/topics`, {
+   723→          title: title.trim(),
+   724→          description: description.trim() || null,
+   725→        });
+   726→        toast({ title: "Topic added" });
+   727→      }
+   728→      onSaved();
+   729→    } catch {
+   730→      /* toast */
+   731→    } finally {
+   732→      setSaving(false);
+   733→    }
+   734→  }
+   735→
+   736→  return (
+   737→    <Dialog open={open} onOpenChange={onOpenChange}>
+   738→      <DialogContent className="animate-scale-in w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
+   739→        <DialogHeader>
+   740→          <DialogTitle className="font-heading text-lg font-semibold">
+   741→            {target ? "Edit Topic" : "Add Topic"}
+   742→          </DialogTitle>
+   743→          <DialogDescription>A topic groups related video lessons.</DialogDescription>
+   744→        </DialogHeader>
+   745→        <div className="space-y-3">
+   746→          <div className="space-y-1.5">
+   747→            <Label htmlFor="t-title" className="text-xs font-medium text-muted-foreground">
+   748→              Title
+   749→            </Label>
+   750→            <Input
+   751→              id="t-title"
+   752→              value={title}
+   753→              onChange={(e) => setTitle(e.target.value)}
+   754→              placeholder="e.g. Introduction to Marketing"
+   755→              className="h-9 rounded-lg"
+   756→            />
+   757→          </div>
+   758→          <div className="space-y-1.5">
+   759→            <Label htmlFor="t-desc" className="text-xs font-medium text-muted-foreground">
+   760→              Description (optional)
+   761→            </Label>
+   762→            <Textarea
+   763→              id="t-desc"
+   764→              value={description}
+   765→              onChange={(e) => setDescription(e.target.value)}
+   766→              rows={3}
+   767→              className="rounded-lg"
+   768→            />
+   769→          </div>
+   770→        </div>
+   771→        <DialogFooter>
+   772→          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>
+   773→            Cancel
+   774→          </Button>
+   775→          <Button disabled={saving} className="h-9" onClick={submit}>
+   776→            {saving ? "Saving…" : target ? "Save Changes" : "Add Topic"}
+   777→          </Button>
+   778→        </DialogFooter>
+   779→      </DialogContent>
+   780→    </Dialog>
+   781→  );
+   782→}
+   783→
+   784→function VideoFormDialog({
+   785→  open,
+   786→  onOpenChange,
+   787→  courseId,
+   788→  topicId,
+   789→  topics,
+   790→  target,
+   791→  onSaved,
+   792→}: {
+   793→  open: boolean;
+   794→  onOpenChange: (v: boolean) => void;
+   795→  courseId: string;
+   796→  topicId: string | null;
+   797→  topics: TopicRow[];
+   798→  target?: VideoRow | null;
+   799→  onSaved: () => void;
+   800→}) {
+   801→  const [title, setTitle] = useState("");
+   802→  const [description, setDescription] = useState("");
+   803→  const [selectedTopicId, setSelectedTopicId] = useState<string>(topicId || "");
+   804→  const [source, setSource] = useState<"UPLOAD" | "YOUTUBE" | "URL">("UPLOAD");
+   805→  const [videoUrl, setVideoUrl] = useState("");
+   806→  const [file, setFile] = useState<File | null>(null);
+   807→  const [thumbFile, setThumbFile] = useState<File | null>(null);
+   808→  const [displayOrder, setDisplayOrder] = useState("");
+   809→  const [isPublished, setIsPublished] = useState(true);
+   810→  const [saving, setSaving] = useState(false);
+   811→  const [uploadingFile, setUploadingFile] = useState(false);
+   812→
+   813→  useEffect(() => {
+   814→    if (target) {
+   815→      setTitle(target.title);
+   816→      setDescription(target.description || "");
+   817→      setSelectedTopicId(topicId || "");
+   818→      setSource(target.source);
+   819→      setVideoUrl(target.source !== "UPLOAD" ? target.videoUrl : "");
+   820→      setDisplayOrder(String(target.displayOrder));
+   821→      setIsPublished(target.isPublished);
+   822→    } else if (open) {
+   823→      setTitle("");
+   824→      setDescription("");
+   825→      setSelectedTopicId(topicId || "");
+   826→      setSource("UPLOAD");
+   827→      setVideoUrl("");
+   828→      setDisplayOrder("");
+   829→      setIsPublished(true);
+   830→    }
+   831→    setFile(null);
+   832→    setThumbFile(null);
+   833→  }, [target, open, topicId]);
+   834→
+   835→  async function submit() {
+   836→    if (!title.trim()) {
+   837→      toast({ title: "Title required", variant: "destructive" });
+   838→      return;
+   839→    }
+   840→    if (!selectedTopicId) {
+   841→      toast({ title: "Select a topic", variant: "destructive" });
+   842→      return;
+   843→    }
+   844→    if (source === "UPLOAD" && !file && !target) {
+   845→      toast({ title: "Video file required", variant: "destructive" });
+   846→      return;
+   847→    }
+   848→    if (source !== "UPLOAD" && !videoUrl.trim() && !target) {
+   849→      toast({ title: "Video URL required", variant: "destructive" });
+   850→      return;
+   851→    }
+   852→
+   853→    const fd = new FormData();
+   854→    fd.append("title", title.trim());
+   855→    fd.append("description", description.trim());
+   856→    fd.append("topicId", selectedTopicId);
+   857→    fd.append("source", source);
+   858→    if (source !== "UPLOAD") fd.append("videoUrl", videoUrl.trim());
+   859→    if (file) fd.append("file", file);
+   860→    if (thumbFile) fd.append("thumbnail", thumbFile);
+   861→    if (displayOrder) fd.append("displayOrder", displayOrder);
+   862→    fd.append("isPublished", String(isPublished));
+   863→
+   864→    setSaving(true);
+   865→    setUploadingFile(!!file);
+   866→    try {
+   867→      if (target) {
+   868→        // Use fetch directly for PUT (edit) — reliable and works through the gateway.
+   869→        const res = await fetch(`/api/university/videos/${target.id}`, {
+   870→          method: "PUT",
+   871→          body: fd,
+   872→          credentials: "include",
+   873→        });
+   874→        const json = await res.json();
+   875→        if (!res.ok) throw new Error(json.error || "Failed");
+   876→        toast({ title: "Video updated" });
+   877→      } else {
+   878→        await apiUpload(`/api/university/courses/${courseId}/videos`, fd);
+   879→        toast({ title: "Video added" });
+   880→      }
+   881→      onSaved();
+   882→    } catch (e) {
+   883→      if (e instanceof Error) {
+   884→        toast({ title: "Error", description: e.message, variant: "destructive" });
+   885→      }
+   886→    } finally {
+   887→      setSaving(false);
+   888→      setUploadingFile(false);
+   889→    }
+   890→  }
+   891→
+   892→  return (
+   893→    <Dialog open={open} onOpenChange={onOpenChange}>
+   894→      <DialogContent className="animate-scale-in w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
+   895→        <DialogHeader>
+   896→          <DialogTitle className="font-heading text-lg font-semibold">
+   897→            {target ? "Edit Video" : "Add Video Lesson"}
+   898→          </DialogTitle>
+   899→          <DialogDescription>
+   900→            Upload a video file, paste a YouTube link, or use an external URL.
+   901→          </DialogDescription>
+   902→        </DialogHeader>
+   903→        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
+   904→          <div className="space-y-1.5">
+   905→            <Label htmlFor="v-title" className="text-xs font-medium text-muted-foreground">
+   906→              Title
+   907→            </Label>
+   908→            <Input
+   909→              id="v-title"
+   910→              value={title}
+   911→              onChange={(e) => setTitle(e.target.value)}
+   912→              placeholder="e.g. Lesson 1 — Marketing Mix"
+   913→              className="h-9 rounded-lg"
+   914→            />
+   915→          </div>
+   916→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+   917→            <div className="space-y-1.5">
+   918→              <Label className="text-xs font-medium text-muted-foreground">Topic</Label>
+   919→              <Select value={selectedTopicId} onValueChange={setSelectedTopicId}>
+   920→                <SelectTrigger className="w-full h-9 rounded-lg">
+   921→                  <SelectValue placeholder="Select topic" />
+   922→                </SelectTrigger>
+   923→                <SelectContent>
+   924→                  {topics.map((t) => (
+   925→                    <SelectItem key={t.id} value={t.id}>
+   926→                      {t.title}
+   927→                    </SelectItem>
+   928→                  ))}
+   929→                </SelectContent>
+   930→              </Select>
+   931→            </div>
+   932→            <div className="space-y-1.5">
+   933→              <Label className="text-xs font-medium text-muted-foreground">Source</Label>
+   934→              <Select
+   935→                value={source}
+   936→                onValueChange={(v) => setSource(v as "UPLOAD" | "YOUTUBE" | "URL")}
+   937→              >
+   938→                <SelectTrigger className="w-full h-9 rounded-lg">
+   939→                  <SelectValue />
+   940→                </SelectTrigger>
+   941→                <SelectContent>
+   942→                  <SelectItem value="UPLOAD">Upload file</SelectItem>
+   943→                  <SelectItem value="YOUTUBE">YouTube</SelectItem>
+   944→                  <SelectItem value="URL">External URL</SelectItem>
+   945→                </SelectContent>
+   946→              </Select>
+   947→            </div>
+   948→          </div>
+   949→          <div className="space-y-1.5">
+   950→            <Label htmlFor="v-desc" className="text-xs font-medium text-muted-foreground">
+   951→              Description (optional)
+   952→            </Label>
+   953→            <Textarea
+   954→              id="v-desc"
+   955→              value={description}
+   956→              onChange={(e) => setDescription(e.target.value)}
+   957→              rows={2}
+   958→              className="rounded-lg"
+   959→            />
+   960→          </div>
+   961→          {source === "UPLOAD" && (
+   962→            <div className="space-y-1.5">
+   963→              <Label htmlFor="v-file" className="text-xs font-medium text-muted-foreground">
+   964→                Video file (.mp4, .webm, .mov, .mkv)
+   965→              </Label>
+   966→              <Input
+   967→                id="v-file"
+   968→                type="file"
+   969→                onChange={(e) => setFile(e.target.files?.[0] || null)}
+   970→                accept=".mp4,.webm,.mov,.mkv"
+   971→              />
+   972→              {file && (
+   973→                <p className="text-xs text-muted-foreground">
+   974→                  Selected: {file.name} ({(file.size / (1024 * 1024)).toFixed(1)} MB)
+   975→                </p>
+   976→              )}
+   977→              {target && !file && (
+   978→                <p className="text-xs text-muted-foreground">Leave empty to keep existing video.</p>
+   979→              )}
+   980→            </div>
+   981→          )}
+   982→          {source !== "UPLOAD" && (
+   983→            <div className="space-y-1.5">
+   984→              <Label htmlFor="v-url" className="text-xs font-medium text-muted-foreground">
+   985→                {source === "YOUTUBE" ? "YouTube URL" : "Video URL"}
+   986→              </Label>
+   987→              <Input
+   988→                id="v-url"
+   989→                value={videoUrl}
+   990→                onChange={(e) => setVideoUrl(e.target.value)}
+   991→                placeholder={
+   992→                  source === "YOUTUBE"
+   993→                    ? "https://www.youtube.com/watch?v=…"
+   994→                    : "https://example.com/video.mp4"
+   995→                }
+   996→                className="h-9 rounded-lg"
+   997→              />
+   998→              {source === "YOUTUBE" && (
+   999→                <p className="text-xs text-muted-foreground">
+  1000→                  Accepts watch URLs, youtu.be links and embed URLs.
+  1001→                </p>
+  1002→              )}
+  1003→            </div>
+  1004→          )}
+  1005→          <div className="space-y-1.5">
+  1006→            <Label htmlFor="v-thumb" className="text-xs font-medium text-muted-foreground">
+  1007→              Thumbnail (optional)
+  1008→            </Label>
+  1009→            <Input
+  1010→              id="v-thumb"
+  1011→              type="file"
+  1012→              accept="image/*"
+  1013→              onChange={(e) => setThumbFile(e.target.files?.[0] || null)}
+  1014→            />
+  1015→          </div>
+  1016→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+  1017→            <div className="space-y-1.5">
+  1018→              <Label htmlFor="v-order" className="text-xs font-medium text-muted-foreground">
+  1019→                Display Order (optional)
+  1020→              </Label>
+  1021→              <Input
+  1022→                id="v-order"
+  1023→                type="number"
+  1024→                value={displayOrder}
+  1025→                onChange={(e) => setDisplayOrder(e.target.value)}
+  1026→                placeholder="auto"
+  1027→                className="h-9 rounded-lg"
+  1028→              />
+  1029→            </div>
+  1030→            <div className="flex items-center justify-between rounded-lg border border-border px-3">
+  1031→              <Label htmlFor="v-pub" className="text-sm font-medium">
+  1032→                Published
+  1033→              </Label>
+  1034→              <Switch id="v-pub" checked={isPublished} onCheckedChange={setIsPublished} />
+  1035→            </div>
+  1036→          </div>
+  1037→        </div>
+  1038→        <DialogFooter className="flex-col gap-3">
+  1039→          {uploadingFile && (
+  1040→            <div className="w-full flex items-center gap-2 rounded-lg bg-soft-sage/40 px-3 py-2.5">
+  1041→              <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+  1042→              <span className="text-xs text-muted-foreground">
+  1043→                Uploading video file{file ? ` (${(file.size / (1024 * 1024)).toFixed(1)} MB)` : ""}… large files may take a minute.
+  1044→              </span>
+  1045→            </div>
+  1046→          )}
+  1047→          <div className="flex gap-2">
+  1048→            <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)} disabled={saving}>
+  1049→              Cancel
+  1050→            </Button>
+  1051→            <Button disabled={saving} className="h-9" onClick={submit}>
+  1052→              {saving
+  1053→                ? uploadingFile
+  1054→                  ? "Uploading…"
+  1055→                  : "Saving…"
+  1056→                : target ? "Save Changes" : "Add Video"}
+  1057→            </Button>
+  1058→          </div>
+  1059→        </DialogFooter>
+  1060→      </DialogContent>
+  1061→    </Dialog>
+  1062→  );
+  1063→}
+  1064→
+  1065→// ============= MATERIALS TAB =============
+  1066→function MaterialsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () => void }) {
+  1067→  const { t } = useI18n();
+  1068→  const [addOpen, setAddOpen] = useState(false);
+  1069→  const [editTarget, setEditTarget] = useState<MaterialRow | null>(null);
+  1070→  const [deleteTarget, setDeleteTarget] = useState<MaterialRow | null>(null);
+  1071→
+  1072→  const grouped = useMemo(() => {
+  1073→    const map = new Map<string, { topicId: string; topicTitle: string | null; items: MaterialRow[] }>();
+  1074→    for (const m of course.materials) {
+  1075→      const key = m.topic?.id || "none";
+  1076→      if (!map.has(key)) {
+  1077→        map.set(key, { topicId: key, topicTitle: m.topic?.title || null, items: [] });
+  1078→      }
+  1079→      map.get(key)!.items.push(m);
+  1080→    }
+  1081→    return Array.from(map.values());
+  1082→  }, [course.materials]);
+  1083→
+  1084→  return (
+  1085→    <div className="space-y-4">
+  1086→      <div className="flex items-center justify-between">
+  1087→        <div>
+  1088→          <h3 className="font-heading text-base font-semibold text-foreground">
+  1089→            Learning Materials
+  1090→          </h3>
+  1091→          <p className="text-xs text-muted-foreground mt-0.5">
+  1092→            {course.materials.length} materials across this course
+  1093→          </p>
+  1094→        </div>
+  1095→        <Button className="h-9 gap-2" onClick={() => setAddOpen(true)}>
+  1096→          <Plus className="h-4 w-4" /> Add Material
+  1097→        </Button>
+  1098→      </div>
+  1099→
+  1100→      {course.materials.length === 0 ? (
+  1101→        <EmptyState
+  1102→          icon={<FileText className="h-5 w-5" />}
+  1103→          title={t("common.learningMaterials")}
+  1104→          description="Add downloadable PDFs, docs, slide decks or external links to support the video lessons."
+  1105→          action={
+  1106→            <Button onClick={() => setAddOpen(true)} className="gap-2">
+  1107→              <Plus className="h-4 w-4" /> Add Material
+  1108→            </Button>
+  1109→          }
+  1110→        />
+  1111→      ) : (
+  1112→        <div className="space-y-3">
+  1113→          {grouped.map((g) => (
+  1114→            <Card key={g.topicId} className="overflow-hidden rounded-lg border-border bg-card p-0 shadow-sm">
+  1115→              <div className="border-b border-border bg-muted/30 px-4 py-2.5">
+  1116→                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+  1117→                  {g.topicTitle || "Unassigned materials"}
+  1118→                </p>
+  1119→              </div>
+  1120→              <ul className="divide-y divide-border">
+  1121→                {g.items.map((m) => (
+  1122→                  <li
+  1123→                    key={m.id}
+  1124→                    className="flex items-center gap-3 p-3 transition-colors hover:bg-muted/40"
+  1125→                  >
+  1126→                    <Badge
+  1127→                      variant="outline"
+  1128→                      className="text-[10px] uppercase tracking-wider shrink-0 bg-muted/40"
+  1129→                    >
+  1130→                      {m.type}
+  1131→                    </Badge>
+  1132→                    <div className="min-w-0 flex-1">
+  1133→                      <p className="text-sm font-medium text-foreground truncate">{m.title}</p>
+  1134→                      {m.description && (
+  1135→                        <p className="text-xs text-muted-foreground truncate">{m.description}</p>
+  1136→                      )}
+  1137→                    </div>
+  1138→                    <a
+  1139→                      href={m.fileUrl}
+  1140→                      target="_blank"
+  1141→                      rel="noopener noreferrer"
+  1142→                      className="text-muted-foreground transition-colors hover:text-accent"
+  1143→                      aria-label="Open material"
+  1144→                    >
+  1145→                      <ExternalLink className="h-3.5 w-3.5" />
+  1146→                    </a>
+  1147→                    <Button
+  1148→                      variant="ghost"
+  1149→                      size="icon"
+  1150→                      aria-label="Edit material"
+  1151→                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+  1152→                      onClick={() => setEditTarget(m)}
+  1153→                    >
+  1154→                      <Pencil className="h-3.5 w-3.5" />
+  1155→                    </Button>
+  1156→                    <Button
+  1157→                      variant="ghost"
+  1158→                      size="icon"
+  1159→                      aria-label="Delete material"
+  1160→                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+  1161→                      onClick={() => setDeleteTarget(m)}
+  1162→                    >
+  1163→                      <Trash2 className="h-3.5 w-3.5" />
+  1164→                    </Button>
+  1165→                  </li>
+  1166→                ))}
+  1167→              </ul>
+  1168→            </Card>
+  1169→          ))}
+  1170→        </div>
+  1171→      )}
+  1172→
+  1173→      <MaterialFormDialog
+  1174→        open={addOpen}
+  1175→        onOpenChange={setAddOpen}
+  1176→        course={course}
+  1177→        onSaved={() => {
+  1178→          onRefresh();
+  1179→          setAddOpen(false);
+  1180→        }}
+  1181→      />
+  1182→      <MaterialFormDialog
+  1183→        open={!!editTarget}
+  1184→        onOpenChange={(v) => !v && setEditTarget(null)}
+  1185→        course={course}
+  1186→        target={editTarget}
+  1187→        onSaved={() => {
+  1188→          onRefresh();
+  1189→          setEditTarget(null);
+  1190→        }}
+  1191→      />
+  1192→      <AlertDialog
+  1193→        open={!!deleteTarget}
+  1194→        onOpenChange={(v) => !v && setDeleteTarget(null)}
+  1195→      >
+  1196→        <AlertDialogContent>
+  1197→          <AlertDialogHeader>
+  1198→            <AlertDialogTitle>Delete material?</AlertDialogTitle>
+  1199→            <AlertDialogDescription>
+  1200→              <strong>{deleteTarget?.title}</strong> will be permanently removed.
+  1201→            </AlertDialogDescription>
+  1202→          </AlertDialogHeader>
+  1203→          <AlertDialogFooter>
+  1204→            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+  1205→            <AlertDialogAction
+  1206→              className="bg-destructive text-white hover:bg-destructive/90"
+  1207→              onClick={async () => {
+  1208→                if (!deleteTarget) return;
+  1209→                try {
+  1210→                  await apiPost(
+  1211→                    `/api/university/materials/${deleteTarget.id}`,
+  1212→                    null,
+  1213→                    { method: "DELETE" }
+  1214→                  );
+  1215→                  toast({ title: "Material deleted" });
+  1216→                  setDeleteTarget(null);
+  1217→                  onRefresh();
+  1218→                } catch {
+  1219→                  /* toast */
+  1220→                }
+  1221→              }}
+  1222→            >
+  1223→              Delete
+  1224→            </AlertDialogAction>
+  1225→          </AlertDialogFooter>
+  1226→        </AlertDialogContent>
+  1227→      </AlertDialog>
+  1228→    </div>
+  1229→  );
+  1230→}
+  1231→
+  1232→function MaterialFormDialog({
+  1233→  open,
+  1234→  onOpenChange,
+  1235→  course,
+  1236→  target,
+  1237→  onSaved,
+  1238→}: {
+  1239→  open: boolean;
+  1240→  onOpenChange: (v: boolean) => void;
+  1241→  course: CourseDetail;
+  1242→  target?: MaterialRow | null;
+  1243→  onSaved: () => void;
+  1244→}) {
+  1245→  const [title, setTitle] = useState("");
+  1246→  const [description, setDescription] = useState("");
+  1247→  const [topicId, setTopicId] = useState<string>("none");
+  1248→  const [type, setType] = useState<"PDF" | "DOC" | "PRESENTATION" | "LINK">("PDF");
+  1249→  const [fileUrl, setFileUrl] = useState("");
+  1250→  const [isPublished, setIsPublished] = useState(true);
+  1251→  const [file, setFile] = useState<File | null>(null);
+  1252→  const [saving, setSaving] = useState(false);
+  1253→
+  1254→  useEffect(() => {
+  1255→    if (target) {
+  1256→      setTitle(target.title);
+  1257→      setDescription(target.description || "");
+  1258→      setTopicId(target.topic?.id || "none");
+  1259→      setType(target.type);
+  1260→      setFileUrl(target.type === "LINK" ? target.fileUrl : "");
+  1261→      setIsPublished(target.isPublished);
+  1262→    } else if (open) {
+  1263→      setTitle("");
+  1264→      setDescription("");
+  1265→      setTopicId("none");
+  1266→      setType("PDF");
+  1267→      setFileUrl("");
+  1268→      setIsPublished(true);
+  1269→    }
+  1270→    setFile(null);
+  1271→  }, [target, open]);
+  1272→
+  1273→  async function submit() {
+  1274→    if (!title.trim()) {
+  1275→      toast({ title: "Title required", variant: "destructive" });
+  1276→      return;
+  1277→    }
+  1278→    if (type === "LINK" && !fileUrl.trim() && !target) {
+  1279→      toast({ title: "Link URL required", variant: "destructive" });
+  1280→      return;
+  1281→    }
+  1282→    if (type !== "LINK" && !file && !target) {
+  1283→      toast({ title: "File required", variant: "destructive" });
+  1284→      return;
+  1285→    }
+  1286→
+  1287→    const fd = new FormData();
+  1288→    fd.append("title", title.trim());
+  1289→    fd.append("description", description.trim());
+  1290→    fd.append("topicId", topicId === "none" ? "" : topicId);
+  1291→    fd.append("type", type);
+  1292→    if (type === "LINK") fd.append("fileUrl", fileUrl.trim());
+  1293→    if (file) fd.append("file", file);
+  1294→    fd.append("isPublished", String(isPublished));
+  1295→
+  1296→    setSaving(true);
+  1297→    try {
+  1298→      if (target) {
+  1299→        const res = await fetch(`/api/university/materials/${target.id}`, {
+  1300→          method: "PUT",
+  1301→          body: fd,
+  1302→          credentials: "include",
+  1303→        });
+  1304→        const json = await res.json();
+  1305→        if (!res.ok) throw new Error(json.error || "Failed");
+  1306→        toast({ title: "Material updated" });
+  1307→      } else {
+  1308→        await apiUpload(`/api/university/courses/${course.id}/materials`, fd);
+  1309→        toast({ title: "Material added" });
+  1310→      }
+  1311→      onSaved();
+  1312→    } catch (e) {
+  1313→      if (e instanceof Error) {
+  1314→        toast({ title: "Error", description: e.message, variant: "destructive" });
+  1315→      }
+  1316→    } finally {
+  1317→      setSaving(false);
+  1318→    }
+  1319→  }
+  1320→
+  1321→  return (
+  1322→    <Dialog open={open} onOpenChange={onOpenChange}>
+  1323→      <DialogContent className="animate-scale-in w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
+  1324→        <DialogHeader>
+  1325→          <DialogTitle className="font-heading text-lg font-semibold">
+  1326→            {target ? "Edit Material" : "Add Learning Material"}
+  1327→          </DialogTitle>
+  1328→          <DialogDescription>
+  1329→            Upload a downloadable file or attach an external link.
+  1330→          </DialogDescription>
+  1331→        </DialogHeader>
+  1332→        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
+  1333→          <div className="space-y-1.5">
+  1334→            <Label htmlFor="m-title" className="text-xs font-medium text-muted-foreground">
+  1335→              Title
+  1336→            </Label>
+  1337→            <Input
+  1338→              id="m-title"
+  1339→              value={title}
+  1340→              onChange={(e) => setTitle(e.target.value)}
+  1341→              placeholder="e.g. Lesson 1 — Reference Slides"
+  1342→              className="h-9 rounded-lg"
+  1343→            />
+  1344→          </div>
+  1345→          <div className="space-y-1.5">
+  1346→            <Label htmlFor="m-desc" className="text-xs font-medium text-muted-foreground">
+  1347→              Description (optional)
+  1348→            </Label>
+  1349→            <Textarea
+  1350→              id="m-desc"
+  1351→              value={description}
+  1352→              onChange={(e) => setDescription(e.target.value)}
+  1353→              rows={2}
+  1354→              className="rounded-lg"
+  1355→            />
+  1356→          </div>
+  1357→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+  1358→            <div className="space-y-1.5">
+  1359→              <Label className="text-xs font-medium text-muted-foreground">Topic (optional)</Label>
+  1360→              <Select value={topicId} onValueChange={setTopicId}>
+  1361→                <SelectTrigger className="w-full h-9 rounded-lg">
+  1362→                  <SelectValue placeholder="No topic" />
+  1363→                </SelectTrigger>
+  1364→                <SelectContent>
+  1365→                  <SelectItem value="none">No topic</SelectItem>
+  1366→                  {course.topics.map((t) => (
+  1367→                    <SelectItem key={t.id} value={t.id}>
+  1368→                      {t.title}
+  1369→                    </SelectItem>
+  1370→                  ))}
+  1371→                </SelectContent>
+  1372→              </Select>
+  1373→            </div>
+  1374→            <div className="space-y-1.5">
+  1375→              <Label className="text-xs font-medium text-muted-foreground">Type</Label>
+  1376→              <Select
+  1377→                value={type}
+  1378→                onValueChange={(v) => setType(v as "PDF" | "DOC" | "PRESENTATION" | "LINK")}
+  1379→              >
+  1380→                <SelectTrigger className="w-full h-9 rounded-lg">
+  1381→                  <SelectValue />
+  1382→                </SelectTrigger>
+  1383→                <SelectContent>
+  1384→                  <SelectItem value="PDF">PDF</SelectItem>
+  1385→                  <SelectItem value="DOC">Document</SelectItem>
+  1386→                  <SelectItem value="PRESENTATION">Presentation</SelectItem>
+  1387→                  <SelectItem value="LINK">External Link</SelectItem>
+  1388→                </SelectContent>
+  1389→              </Select>
+  1390→            </div>
+  1391→          </div>
+  1392→
+  1393→          {type === "LINK" ? (
+  1394→            <div className="space-y-1.5">
+  1395→              <Label htmlFor="m-url" className="text-xs font-medium text-muted-foreground">
+  1396→                Link URL
+  1397→              </Label>
+  1398→              <Input
+  1399→                id="m-url"
+  1400→                value={fileUrl}
+  1401→                onChange={(e) => setFileUrl(e.target.value)}
+  1402→                placeholder="https://…"
+  1403→                className="h-9 rounded-lg"
+  1404→              />
+  1405→            </div>
+  1406→          ) : (
+  1407→            <div className="space-y-1.5">
+  1408→              <Label htmlFor="m-file" className="text-xs font-medium text-muted-foreground">
+  1409→                File (.pdf, .doc, .docx, .ppt, .pptx, .txt)
+  1410→              </Label>
+  1411→              <Input
+  1412→                id="m-file"
+  1413→                type="file"
+  1414→                onChange={(e) => setFile(e.target.files?.[0] || null)}
+  1415→                accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
+  1416→              />
+  1417→              {target && !file && (
+  1418→                <p className="text-xs text-muted-foreground">Leave empty to keep existing file.</p>
+  1419→              )}
+  1420→            </div>
+  1421→          )}
+  1422→
+  1423→          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+  1424→            <Label htmlFor="m-pub" className="text-sm font-medium">
+  1425→              Published
+  1426→            </Label>
+  1427→            <Switch id="m-pub" checked={isPublished} onCheckedChange={setIsPublished} />
+  1428→          </div>
+  1429→        </div>
+  1430→        <DialogFooter>
+  1431→          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>
+  1432→            Cancel
+  1433→          </Button>
+  1434→          <Button disabled={saving} className="h-9" onClick={submit}>
+  1435→            {saving ? "Saving…" : target ? "Save Changes" : "Add Material"}
+  1436→          </Button>
+  1437→        </DialogFooter>
+  1438→      </DialogContent>
+  1439→    </Dialog>
+  1440→  );
+  1441→}
+  1442→
+  1443→// ============= ASSIGNMENTS TAB =============
+  1444→function AssignmentsTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () => void }) {
+  1445→  const { t } = useI18n();
+  1446→  const navigate = useAppStore((s) => s.navigate);
+  1447→  const [addOpen, setAddOpen] = useState(false);
+  1448→  const [editTarget, setEditTarget] = useState<AssignmentRow | null>(null);
+  1449→  const [deleteTarget, setDeleteTarget] = useState<AssignmentRow | null>(null);
+  1450→
+  1451→  return (
+  1452→    <div className="space-y-4">
+  1453→      <div className="flex items-center justify-between">
+  1454→        <div>
+  1455→          <h3 className="font-heading text-base font-semibold text-foreground">
+  1456→            Course Assignments
+  1457→          </h3>
+  1458→          <p className="text-xs text-muted-foreground mt-0.5">
+  1459→            {course.assignments.length} assignment{course.assignments.length === 1 ? "" : "s"} ·{" "}
+  1460→            {course.assignments.reduce((a, x) => a + x.submissionsCount, 0)} total submissions
+  1461→          </p>
+  1462→        </div>
+  1463→        <Button className="h-9 gap-2" onClick={() => setAddOpen(true)}>
+  1464→          <Plus className="h-4 w-4" /> Add Assignment
+  1465→        </Button>
+  1466→      </div>
+  1467→
+  1468→      {course.assignments.length === 0 ? (
+  1469→        <EmptyState
+  1470→          icon={<ClipboardList className="h-5 w-5" />}
+  1471→          title={t("common.assignments")}
+  1472→          description="Add assignments to test student understanding and award completion certificates."
+  1473→          action={
+  1474→            <Button onClick={() => setAddOpen(true)} className="gap-2">
+  1475→              <Plus className="h-4 w-4" /> Add Assignment
+  1476→            </Button>
+  1477→          }
+  1478→        />
+  1479→      ) : (
+  1480→        <div className="grid gap-3 md:grid-cols-2">
+  1481→          {course.assignments.map((a) => (
+  1482→            <Card
+  1483→              key={a.id}
+  1484→              className="rounded-lg p-4 space-y-3 border-border bg-card shadow-sm transition-shadow hover:shadow-md"
+  1485→            >
+  1486→              <div className="flex items-start justify-between gap-2">
+  1487→                <div className="min-w-0">
+  1488→                  <p className="font-heading font-semibold text-foreground truncate">{a.title}</p>
+  1489→                  {a.dueDate && (
+  1490→                    <p className="text-xs text-muted-foreground mt-0.5">Due {formatDate(a.dueDate)}</p>
+  1491→                  )}
+  1492→                </div>
+  1493→                {a.isPublished ? (
+  1494→                  <Badge className="bg-success/15 text-success shrink-0">{t("common.published")}</Badge>
+  1495→                ) : (
+  1496→                  <Badge variant="outline" className="text-muted-foreground shrink-0">
+  1497→                    Draft
+  1498→                  </Badge>
+  1499→                )}
+  1500→              </div>
+  1501→              {a.description && (
+  1502→                <p className="text-sm text-muted-foreground line-clamp-2">{a.description}</p>
+  1503→              )}
+  1504→              <div className="flex flex-wrap gap-2 text-xs">
+  1505→                <Badge variant="outline" className="bg-accent/10 text-accent">
+  1506→                  {a.submissionsCount} submission{a.submissionsCount === 1 ? "" : "s"}
+  1507→                </Badge>
+  1508→                {a.allowResubmission && (
+  1509→                  <Badge variant="outline" className="text-muted-foreground">
+  1510→                    Resubmission allowed
+  1511→                  </Badge>
+  1512→                )}
+  1513→                {a.fileUrl && (
+  1514→                  <a
+  1515→                    href={a.fileUrl}
+  1516→                    target="_blank"
+  1517→                    rel="noopener noreferrer"
+  1518→                    className="inline-flex items-center gap-1 text-accent hover:underline"
+  1519→                  >
+  1520→                    <ExternalLink className="h-3 w-3" /> Brief
+  1521→                  </a>
+  1522→                )}
+  1523→              </div>
+  1524→              <Separator />
+  1525→              <div className="flex items-center justify-between">
+  1526→                <Button
+  1527→                  variant="outline"
+  1528→                  size="sm"
+  1529→                  className="h-8 gap-1"
+  1530→                  onClick={() => navigate(["university", "submissions"], { assignmentId: a.id })}
+  1531→                >
+  1532→                  <ClipboardList className="h-3.5 w-3.5" /> View Submissions
+  1533→                </Button>
+  1534→                <div className="flex items-center gap-1">
+  1535→                  <Button
+  1536→                    variant="ghost"
+  1537→                    size="icon"
+  1538→                    aria-label="Edit assignment"
+  1539→                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+  1540→                    onClick={() => setEditTarget(a)}
+  1541→                  >
+  1542→                    <Pencil className="h-3.5 w-3.5" />
+  1543→                  </Button>
+  1544→                  <Button
+  1545→                    variant="ghost"
+  1546→                    size="icon"
+  1547→                    aria-label="Delete assignment"
+  1548→                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+  1549→                    onClick={() => setDeleteTarget(a)}
+  1550→                  >
+  1551→                    <Trash2 className="h-3.5 w-3.5" />
+  1552→                  </Button>
+  1553→                </div>
+  1554→              </div>
+  1555→            </Card>
+  1556→          ))}
+  1557→        </div>
+  1558→      )}
+  1559→
+  1560→      <AssignmentFormDialog
+  1561→        open={addOpen}
+  1562→        onOpenChange={setAddOpen}
+  1563→        courseId={course.id}
+  1564→        onSaved={() => {
+  1565→          onRefresh();
+  1566→          setAddOpen(false);
+  1567→        }}
+  1568→      />
+  1569→      <AssignmentFormDialog
+  1570→        open={!!editTarget}
+  1571→        onOpenChange={(v) => !v && setEditTarget(null)}
+  1572→        courseId={course.id}
+  1573→        target={editTarget}
+  1574→        onSaved={() => {
+  1575→          onRefresh();
+  1576→          setEditTarget(null);
+  1577→        }}
+  1578→      />
+  1579→      <AlertDialog
+  1580→        open={!!deleteTarget}
+  1581→        onOpenChange={(v) => !v && setDeleteTarget(null)}
+  1582→      >
+  1583→        <AlertDialogContent>
+  1584→          <AlertDialogHeader>
+  1585→            <AlertDialogTitle>Delete assignment?</AlertDialogTitle>
+  1586→            <AlertDialogDescription>
+  1587→              This will permanently delete <strong>{deleteTarget?.title}</strong> and all its
+  1588→              submissions.
+  1589→            </AlertDialogDescription>
+  1590→          </AlertDialogHeader>
+  1591→          <AlertDialogFooter>
+  1592→            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+  1593→            <AlertDialogAction
+  1594→              className="bg-destructive text-white hover:bg-destructive/90"
+  1595→              onClick={async () => {
+  1596→                if (!deleteTarget) return;
+  1597→                try {
+  1598→                  await apiPost(
+  1599→                    `/api/university/assignments/${deleteTarget.id}`,
+  1600→                    null,
+  1601→                    { method: "DELETE" }
+  1602→                  );
+  1603→                  toast({ title: "Assignment deleted" });
+  1604→                  setDeleteTarget(null);
+  1605→                  onRefresh();
+  1606→                } catch {
+  1607→                  /* toast */
+  1608→                }
+  1609→              }}
+  1610→            >
+  1611→              Delete
+  1612→            </AlertDialogAction>
+  1613→          </AlertDialogFooter>
+  1614→        </AlertDialogContent>
+  1615→      </AlertDialog>
+  1616→    </div>
+  1617→  );
+  1618→}
+  1619→
+  1620→function AssignmentFormDialog({
+  1621→  open,
+  1622→  onOpenChange,
+  1623→  courseId,
+  1624→  target,
+  1625→  onSaved,
+  1626→}: {
+  1627→  open: boolean;
+  1628→  onOpenChange: (v: boolean) => void;
+  1629→  courseId: string;
+  1630→  target?: AssignmentRow | null;
+  1631→  onSaved: () => void;
+  1632→}) {
+  1633→  const [title, setTitle] = useState("");
+  1634→  const [description, setDescription] = useState("");
+  1635→  const [instructions, setInstructions] = useState("");
+  1636→  const [dueDate, setDueDate] = useState("");
+  1637→  const [isPublished, setIsPublished] = useState(true);
+  1638→  const [allowResubmission, setAllowResubmission] = useState(false);
+  1639→  const [file, setFile] = useState<File | null>(null);
+  1640→  const [clearFile, setClearFile] = useState(false);
+  1641→  const [saving, setSaving] = useState(false);
+  1642→
+  1643→  useEffect(() => {
+  1644→    if (target) {
+  1645→      setTitle(target.title);
+  1646→      setDescription(target.description || "");
+  1647→      setInstructions(target.instructions || "");
+  1648→      setDueDate(target.dueDate ? target.dueDate.slice(0, 10) : "");
+  1649→      setIsPublished(target.isPublished);
+  1650→      setAllowResubmission(target.allowResubmission);
+  1651→    } else if (open) {
+  1652→      setTitle("");
+  1653→      setDescription("");
+  1654→      setInstructions("");
+  1655→      setDueDate("");
+  1656→      setIsPublished(true);
+  1657→      setAllowResubmission(false);
+  1658→    }
+  1659→    setFile(null);
+  1660→    setClearFile(false);
+  1661→  }, [target, open]);
+  1662→
+  1663→  async function submit() {
+  1664→    if (!title.trim()) {
+  1665→      toast({ title: "Title required", variant: "destructive" });
+  1666→      return;
+  1667→    }
+  1668→    const fd = new FormData();
+  1669→    fd.append("title", title.trim());
+  1670→    fd.append("description", description.trim());
+  1671→    fd.append("instructions", instructions.trim());
+  1672→    if (dueDate) fd.append("dueDate", dueDate);
+  1673→    fd.append("isPublished", String(isPublished));
+  1674→    fd.append("allowResubmission", String(allowResubmission));
+  1675→    if (file) fd.append("file", file);
+  1676→    if (clearFile) fd.append("clearFile", "true");
+  1677→
+  1678→    setSaving(true);
+  1679→    try {
+  1680→      if (target) {
+  1681→        const res = await fetch(`/api/university/assignments/${target.id}`, {
+  1682→          method: "PUT",
+  1683→          body: fd,
+  1684→          credentials: "include",
+  1685→        });
+  1686→        const json = await res.json();
+  1687→        if (!res.ok) throw new Error(json.error || "Failed");
+  1688→        toast({ title: "Assignment updated" });
+  1689→      } else {
+  1690→        await apiUpload(`/api/university/courses/${courseId}/assignments`, fd);
+  1691→        toast({ title: "Assignment added" });
+  1692→      }
+  1693→      onSaved();
+  1694→    } catch (e) {
+  1695→      if (e instanceof Error) {
+  1696→        toast({ title: "Error", description: e.message, variant: "destructive" });
+  1697→      }
+  1698→    } finally {
+  1699→      setSaving(false);
+  1700→    }
+  1701→  }
+  1702→
+  1703→  return (
+  1704→    <Dialog open={open} onOpenChange={onOpenChange}>
+  1705→      <DialogContent className="animate-scale-in w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
+  1706→        <DialogHeader>
+  1707→          <DialogTitle className="font-heading text-lg font-semibold">
+  1708→            {target ? "Edit Assignment" : "Add Assignment"}
+  1709→          </DialogTitle>
+  1710→          <DialogDescription>Create a task for students to complete and submit.</DialogDescription>
+  1711→        </DialogHeader>
+  1712→        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
+  1713→          <div className="space-y-1.5">
+  1714→            <Label htmlFor="a-title" className="text-xs font-medium text-muted-foreground">
+  1715→              Title
+  1716→            </Label>
+  1717→            <Input
+  1718→              id="a-title"
+  1719→              value={title}
+  1720→              onChange={(e) => setTitle(e.target.value)}
+  1721→              placeholder="e.g. Final Project — Brand Identity"
+  1722→              className="h-9 rounded-lg"
+  1723→            />
+  1724→          </div>
+  1725→          <div className="space-y-1.5">
+  1726→            <Label htmlFor="a-desc" className="text-xs font-medium text-muted-foreground">
+  1727→              Short Description
+  1728→            </Label>
+  1729→            <Textarea
+  1730→              id="a-desc"
+  1731→              value={description}
+  1732→              onChange={(e) => setDescription(e.target.value)}
+  1733→              rows={2}
+  1734→              className="rounded-lg"
+  1735→            />
+  1736→          </div>
+  1737→          <div className="space-y-1.5">
+  1738→            <Label htmlFor="a-ins" className="text-xs font-medium text-muted-foreground">
+  1739→              Detailed Instructions
+  1740→            </Label>
+  1741→            <Textarea
+  1742→              id="a-ins"
+  1743→              value={instructions}
+  1744→              onChange={(e) => setInstructions(e.target.value)}
+  1745→              rows={4}
+  1746→              placeholder="Step-by-step instructions students will see…"
+  1747→              className="rounded-lg"
+  1748→            />
+  1749→          </div>
+  1750→          <div className="space-y-1.5">
+  1751→            <Label htmlFor="a-due" className="text-xs font-medium text-muted-foreground">
+  1752→              Due Date (optional)
+  1753→            </Label>
+  1754→            <Input
+  1755→              id="a-due"
+  1756→              type="date"
+  1757→              value={dueDate}
+  1758→              onChange={(e) => setDueDate(e.target.value)}
+  1759→              className="h-9 rounded-lg"
+  1760→            />
+  1761→          </div>
+  1762→          <div className="space-y-1.5">
+  1763→            <Label htmlFor="a-file" className="text-xs font-medium text-muted-foreground">
+  1764→              Attachment File (optional)
+  1765→            </Label>
+  1766→            <Input
+  1767→              id="a-file"
+  1768→              type="file"
+  1769→              onChange={(e) => setFile(e.target.files?.[0] || null)}
+  1770→              accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
+  1771→            />
+  1772→            {target?.fileUrl && (
+  1773→              <div className="flex items-center gap-2 text-xs">
+  1774→                <a
+  1775→                  href={target.fileUrl}
+  1776→                  target="_blank"
+  1777→                  rel="noopener noreferrer"
+  1778→                  className="text-accent hover:underline inline-flex items-center gap-1"
+  1779→                >
+  1780→                  <ExternalLink className="h-3 w-3" /> Current file
+  1781→                </a>
+  1782→                <label className="flex items-center gap-1 text-muted-foreground">
+  1783→                  <Checkbox checked={clearFile} onCheckedChange={(v) => setClearFile(!!v)} />
+  1784→                  Remove existing file
+  1785→                </label>
+  1786→              </div>
+  1787→            )}
+  1788→          </div>
+  1789→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+  1790→            <div className="flex items-center justify-between rounded-lg border border-border p-3">
+  1791→              <Label htmlFor="a-pub" className="text-sm font-medium">
+  1792→                Published
+  1793→              </Label>
+  1794→              <Switch id="a-pub" checked={isPublished} onCheckedChange={setIsPublished} />
+  1795→            </div>
+  1796→            <div className="flex items-center justify-between rounded-lg border border-border p-3">
+  1797→              <Label htmlFor="a-resub" className="text-sm font-medium">
+  1798→                Allow resubmission
+  1799→              </Label>
+  1800→              <Switch
+  1801→                id="a-resub"
+  1802→                checked={allowResubmission}
+  1803→                onCheckedChange={setAllowResubmission}
+  1804→              />
+  1805→            </div>
+  1806→          </div>
+  1807→        </div>
+  1808→        <DialogFooter>
+  1809→          <Button variant="outline" className="h-9" onClick={() => onOpenChange(false)}>
+  1810→            Cancel
+  1811→          </Button>
+  1812→          <Button disabled={saving} className="h-9" onClick={submit}>
+  1813→            {saving ? "Saving…" : target ? "Save Changes" : "Add Assignment"}
+  1814→          </Button>
+  1815→        </DialogFooter>
+  1816→      </DialogContent>
+  1817→    </Dialog>
+  1818→  );
+  1819→}
+  1820→
+  1821→// ============= CERTIFICATE TAB =============
+  1822→function CertificateTab({ course, onRefresh }: { course: CourseDetail; onRefresh: () => void }) {
+  1823→  const { t } = useI18n();
+  1824→  const template = course.certificateTemplate;
+  1825→  const [isEnabled, setIsEnabled] = useState(template?.isEnabled ?? true);
+  1826→  const [title, setTitle] = useState(template?.title || "Certificate of Completion");
+  1827→  const [bodyText, setBodyText] = useState(
+  1828→    template?.bodyText ||
+  1829→      "This certificate is proudly presented to {{studentName}} for successfully completing the course {{courseName}}."
+  1830→  );
+  1831→  const [organizationName, setOrganizationName] = useState(
+  1832→    template?.organizationName || "CourseLearn"
+  1833→  );
+  1834→  const [layout, setLayout] = useState<"CLASSIC" | "MODERN" | "MINIMAL">(
+  1835→    template?.layout || "CLASSIC"
+  1836→  );
+  1837→  const [saving, setSaving] = useState(false);
+  1838→
+  1839→  useEffect(() => {
+  1840→    if (template) {
+  1841→      setIsEnabled(template.isEnabled);
+  1842→      setTitle(template.title);
+  1843→      setBodyText(template.bodyText);
+  1844→      setOrganizationName(template.organizationName);
+  1845→      setLayout(template.layout);
+  1846→    }
+  1847→  }, [template]);
+  1848→
+  1849→  async function save() {
+  1850→    setSaving(true);
+  1851→    try {
+  1852→      await apiPost(
+  1853→        `/api/university/courses/${course.id}/certificate`,
+  1854→        {
+  1855→          isEnabled,
+  1856→          title,
+  1857→          bodyText,
+  1858→          organizationName,
+  1859→          layout,
+  1860→        },
+  1861→        { method: "PUT" }
+  1862→      );
+  1863→      toast({ title: "Certificate template saved" });
+  1864→      onRefresh();
+  1865→    } catch {
+  1866→      /* toast */
+  1867→    } finally {
+  1868→      setSaving(false);
+  1869→    }
+  1870→  }
+  1871→
+  1872→  const previewText = bodyText
+  1873→    .replace(/\{\{studentName\}\}/g, "Aisha Khalid")
+  1874→    .replace(/\{\{courseName\}\}/g, course.title)
+  1875→    .replace(/\{\{issueDate\}\}/g, formatDate(new Date()))
+  1876→    .replace(/\{\{certificateNumber\}\}/g, "UNI-SAMPLE-001")
+  1877→    .replace(/\{\{organizationName\}\}/g, organizationName);
+  1878→
+  1879→  return (
+  1880→    <div className="space-y-4">
+  1881→      <div className="flex items-center justify-between">
+  1882→        <div>
+  1883→          <h3 className="font-heading text-base font-semibold text-foreground">
+  1884→            Completion Certificate
+  1885→          </h3>
+  1886→          <p className="text-xs text-muted-foreground mt-0.5">
+  1887→            Configure the template issued to students who complete this course.
+  1888→          </p>
+  1889→        </div>
+  1890→        <Button className="h-9 gap-2" disabled={saving} onClick={save}>
+  1891→          <Save className="h-4 w-4" /> {saving ? "Saving…" : "Save Template"}
+  1892→        </Button>
+  1893→      </div>
+  1894→
+  1895→      <div className="grid gap-4 lg:grid-cols-2">
+  1896→        <Card className="rounded-lg p-5 space-y-3 border-border bg-card shadow-sm">
+  1897→          <CardHeader className="p-0">
+  1898→            <CardTitle className="text-sm font-heading font-semibold">
+  1899→              Template Settings
+  1900→            </CardTitle>
+  1901→            <CardDescription className="mt-1">
+  1902→              Use placeholders for dynamic content.
+  1903→            </CardDescription>
+  1904→          </CardHeader>
+  1905→          <CardContent className="p-0 space-y-3">
+  1906→            <div className="rounded-lg border border-accent/20 bg-soft-sage/50 p-3">
+  1907→              <div className="flex items-start gap-2">
+  1908→                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-accent/15 text-accent shrink-0 mt-0.5">
+  1909→                  <Info className="h-3.5 w-3.5" />
+  1910→                </div>
+  1911→                <div className="text-xs space-y-1.5">
+  1912→                  <p className="font-semibold text-foreground">How certificates work</p>
+  1913→                  <p className="text-muted-foreground">
+  1914→                    Certificates are <strong>automatically issued</strong> to students when they
+  1915→                    complete all video lessons in this course. You have three options:
+  1916→                  </p>
+  1917→                  <ul className="space-y-1 text-muted-foreground pl-3 list-disc">
+  1918→                    <li>
+  1919→                      <strong>Save a template (enabled)</strong> → Your custom design is used.
+  1920→                    </li>
+  1921→                    <li>
+  1922→                      <strong>Save a template (disabled)</strong> → No certificate is issued.
+  1923→                    </li>
+  1924→                    <li>
+  1925→                      <strong>Don&apos;t save a template</strong> → A default certificate with the
+  1926→                      student&apos;s name is auto-generated.
+  1927→                    </li>
+  1928→                  </ul>
+  1929→                </div>
+  1930→              </div>
+  1931→            </div>
+  1932→            <div className="flex items-center justify-between rounded-lg border border-border p-3">
+  1933→              <Label htmlFor="c-enabled" className="text-sm font-medium">
+  1934→                Enable certificates for this course
+  1935→              </Label>
+  1936→              <Switch
+  1937→                id="c-enabled"
+  1938→                checked={isEnabled}
+  1939→                onCheckedChange={setIsEnabled}
+  1940→              />
+  1941→            </div>
+  1942→            <div className="space-y-1.5">
+  1943→              <Label htmlFor="c-title" className="text-xs font-medium text-muted-foreground">
+  1944→                Certificate Title
+  1945→              </Label>
+  1946→              <Input
+  1947→                id="c-title"
+  1948→                value={title}
+  1949→                onChange={(e) => setTitle(e.target.value)}
+  1950→                className="h-9 rounded-lg"
+  1951→              />
+  1952→            </div>
+  1953→            <div className="space-y-1.5">
+  1954→              <Label htmlFor="c-body" className="text-xs font-medium text-muted-foreground">
+  1955→                Body Text
+  1956→              </Label>
+  1957→              <Textarea
+  1958→                id="c-body"
+  1959→                value={bodyText}
+  1960→                onChange={(e) => setBodyText(e.target.value)}
+  1961→                rows={4}
+  1962→                className="rounded-lg"
+  1963→              />
+  1964→              <p className="text-xs text-muted-foreground">
+  1965→                Placeholders:{" "}
+  1966→                <code className="bg-muted px-1 py-0.5 rounded">{"{{studentName}}"}</code>{" "}
+  1967→                <code className="bg-muted px-1 py-0.5 rounded">{"{{courseName}}"}</code>{" "}
+  1968→                <code className="bg-muted px-1 py-0.5 rounded">{"{{issueDate}}"}</code>{" "}
+  1969→                <code className="bg-muted px-1 py-0.5 rounded">{"{{certificateNumber}}"}</code>{" "}
+  1970→                <code className="bg-muted px-1 py-0.5 rounded">{"{{organizationName}}"}</code>
+  1971→              </p>
+  1972→            </div>
+  1973→            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+  1974→              <div className="space-y-1.5">
+  1975→                <Label htmlFor="c-org" className="text-xs font-medium text-muted-foreground">
+  1976→                  Organization Name
+  1977→                </Label>
+  1978→                <Input
+  1979→                  id="c-org"
+  1980→                  value={organizationName}
+  1981→                  onChange={(e) => setOrganizationName(e.target.value)}
+  1982→                  className="h-9 rounded-lg"
+  1983→                />
+  1984→              </div>
+  1985→              <div className="space-y-1.5">
+  1986→                <Label className="text-xs font-medium text-muted-foreground">Layout</Label>
+  1987→                <Select
+  1988→                  value={layout}
+  1989→                  onValueChange={(v) => setLayout(v as "CLASSIC" | "MODERN" | "MINIMAL")}
+  1990→                >
+  1991→                  <SelectTrigger className="w-full h-9 rounded-lg">
+  1992→                    <SelectValue />
+  1993→                  </SelectTrigger>
+  1994→                  <SelectContent>
+  1995→                    <SelectItem value="CLASSIC">Classic</SelectItem>
+  1996→                    <SelectItem value="MODERN">Modern</SelectItem>
+  1997→                    <SelectItem value="MINIMAL">Minimal</SelectItem>
+  1998→                  </SelectContent>
+  1999→                </Select>
+  2000→              </div>
+
+[showing lines 1-2000 of 2860; use offset=2001 with limit to continue reading]

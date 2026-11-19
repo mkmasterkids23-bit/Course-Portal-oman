@@ -13,6 +13,7 @@ export interface CurrentUser {
   universityId: string | null;
   universityName: string | null;
   universityLogo: string | null;
+  instructorId?: string | null;
 }
 
 export async function getSession(): Promise<SessionPayload | null> {
@@ -39,17 +40,44 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     },
   });
   if (!user) return null;
+
+  let instructorId: string | null = null;
+  let universityId: string | null = user.university?.id ?? null;
+  let universityName: string | null = user.university?.name ?? null;
+  let universityLogo: string | null = user.university?.logo ?? null;
+
+  // For instructors, fetch their Instructor record to get the
+  // university context (and the instructorId for filtering courses).
+  if (user.role === "INSTRUCTOR") {
+    const instructor = await db.instructor.findUnique({
+      where: { userId: user.id },
+      select: {
+        id: true,
+        university: { select: { id: true, name: true, logo: true } },
+      },
+    });
+    if (instructor) {
+      instructorId = instructor.id;
+      if (instructor.university) {
+        universityId = instructor.university.id;
+        universityName = instructor.university.name;
+        universityLogo = instructor.university.logo;
+      }
+    }
+  }
+
   return {
     id: user.id,
     email: user.email,
     name: user.name,
-    role: user.role as "ADMIN" | "STUDENT" | "UNIVERSITY",
+    role: user.role as "ADMIN" | "STUDENT" | "UNIVERSITY" | "INSTRUCTOR",
     phone: user.phone,
     bio: user.bio,
     profilePhoto: user.profilePhoto,
-    universityId: user.university?.id ?? null,
-    universityName: user.university?.name ?? null,
-    universityLogo: user.university?.logo ?? null,
+    universityId,
+    universityName,
+    universityLogo,
+    instructorId,
   };
 }
 
@@ -73,6 +101,19 @@ export async function requireUniversity(): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user || user.role !== "UNIVERSITY" || !user.universityId) {
     throw new Error("UNIVERSITY_ONLY");
+  }
+  return user;
+}
+
+/** Allow either UNIVERSITY or INSTRUCTOR role (instructors belong to a university). */
+export async function requireUniversityOrInstructor(): Promise<CurrentUser> {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("UNIVERSITY_OR_INSTRUCTOR_ONLY");
+  if (user.role !== "UNIVERSITY" && user.role !== "INSTRUCTOR") {
+    throw new Error("UNIVERSITY_OR_INSTRUCTOR_ONLY");
+  }
+  if (!user.universityId) {
+    throw new Error("UNIVERSITY_OR_INSTRUCTOR_ONLY");
   }
   return user;
 }
@@ -164,6 +205,7 @@ export async function handleAuthError(e: unknown) {
     if (e.message === "STUDENT_ONLY") return errorResponse("Student access required", 403, "STUDENT_ONLY");
     if (e.message === "UNIVERSITY_ONLY") return errorResponse("University access required", 403, "UNIVERSITY_ONLY");
     if (e.message === "ADMIN_OR_UNIVERSITY_ONLY") return errorResponse("Admin or university access required", 403, "ADMIN_OR_UNIVERSITY_ONLY");
+    if (e.message === "UNIVERSITY_OR_INSTRUCTOR_ONLY") return errorResponse("University or instructor access required", 403, "UNIVERSITY_OR_INSTRUCTOR_ONLY");
   }
   return null;
 }

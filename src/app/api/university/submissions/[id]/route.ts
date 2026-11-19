@@ -1,17 +1,22 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireUniversity, handleAuthError, errorResponse } from "@/lib/auth";
+import {
+  requireUniversityOrInstructor,
+  handleAuthError,
+  errorResponse,
+} from "@/lib/auth";
 
 /**
  * GET /api/university/submissions/[id]
  * Fetch a submission — verifies ownership via the assignment's course.
+ * Instructors can only access submissions for their assigned courses.
  */
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireUniversity();
+    const user = await requireUniversityOrInstructor();
     const { id } = await params;
 
     const submission = await db.assignmentSubmission.findUnique({
@@ -34,13 +39,28 @@ export async function GET(
             instructions: true,
             fileUrl: true,
             dueDate: true,
-            course: { select: { id: true, title: true, universityId: true } },
+            course: {
+              select: {
+                id: true,
+                title: true,
+                universityId: true,
+                instructorId: true,
+              },
+            },
           },
         },
       },
     });
     if (!submission) return errorResponse("Not found", 404);
     if (submission.assignment.course.universityId !== user.universityId) {
+      return errorResponse("Not found", 404);
+    }
+    // Instructors can only access submissions for their assigned courses.
+    if (
+      user.role === "INSTRUCTOR" &&
+      (!user.instructorId ||
+        submission.assignment.course.instructorId !== user.instructorId)
+    ) {
       return errorResponse("Not found", 404);
     }
 

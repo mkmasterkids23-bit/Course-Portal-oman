@@ -36,7 +36,7 @@ export default function Home() {
       if (!hash.startsWith("/admin")) {
         window.location.hash = "/admin";
       }
-    } else if (user?.role === "UNIVERSITY") {
+    } else if (user?.role === "UNIVERSITY" || user?.role === "INSTRUCTOR") {
       if (!hash.startsWith("/university")) {
         window.location.hash = "/university";
       }
@@ -69,7 +69,7 @@ export default function Home() {
     return <AdminDashboard />;
   }
 
-  if (user?.role === "UNIVERSITY") {
+  if (user?.role === "UNIVERSITY" || user?.role === "INSTRUCTOR") {
     return <UniversityDashboard />;
   }
 
