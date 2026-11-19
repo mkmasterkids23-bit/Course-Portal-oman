@@ -1188,13 +1188,13 @@ function VideoPlayer({
   );
   const [posting, setPosting] = useState(false);
 
-  // Are question popups active for this viewing session?
-  // They are NOT active if the student has already passed the assessment —
-  // in that case the video plays freely and the "Passed" badge is shown.
+  // Question popups are ALWAYS active when the video has questions —
+  // regardless of whether the assessment was already passed. This ensures
+  // questions appear at their timestamps every time the video plays, even
+  // after a page refresh or re-watching a completed video.
   const questionsActive = Boolean(
     questionsData &&
-      questionsData.questions.length > 0 &&
-      questionsData.assessment?.passed !== true
+      questionsData.questions.length > 0
   );
 
   // Reset on video change
@@ -1383,6 +1383,13 @@ function VideoPlayer({
   // Ended event — submit final progress with completion hint.
   const handleEnded = () => {
     void postProgress(true);
+    // Reset answered questions so they re-trigger if the video is replayed
+    // (the student clicks play again after the video ends). This ensures
+    // questions always pop up at their timestamps, every time.
+    setAnsweredMap(new Map());
+    setActiveQuestion(null);
+    setShowFeedback(false);
+    setAssessmentResult(null);
   };
 
   const postProgress = useCallback(
