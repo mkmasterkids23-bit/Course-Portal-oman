@@ -69,6 +69,8 @@ interface CourseRow {
   endDate: string | null;
   availabilityMode: "ALWAYS" | "SCHEDULED" | "LIMITED";
   enrollmentOpen: boolean;
+  instructorId?: string | null;
+  instructorName?: string | null;
   createdAt: string;
   topicsCount: number;
   videosCount: number;

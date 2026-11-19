@@ -23,59 +23,47 @@ export async function GET() {
       ? { universityId, instructorId }
       : { universityId };
 
-    // Pull all aggregate stats in parallel
+    // Pull aggregate stats in small batches (3 at a time) to avoid
+    // exhausting the remote PostgreSQL connection pool.
     const [
       totalCourses,
       totalPublishedCourses,
       totalVideoLessons,
-      pendingReviews,
-      totalCertificatesIssued,
-      totalAssignments,
-      totalSubmittedAssignments,
-      recentSubmissionsRaw,
-      recentCoursesRaw,
     ] = await Promise.all([
       db.course.count({ where: courseFilter }),
       db.course.count({ where: { ...courseFilter, isPublished: true } }),
-      db.videoLesson.count({
-        where: { course: courseFilter, isPublished: true },
-      }),
-      db.assignmentSubmission.count({
-        where: {
-          status: "SUBMITTED",
-          assignment: { course: courseFilter },
-        },
-      }),
+      db.videoLesson.count({ where: { course: courseFilter, isPublished: true } }),
+    ]);
+
+    const [
+      pendingReviews,
+      totalCertificatesIssued,
+      totalAssignments,
+    ] = await Promise.all([
+      db.assignmentSubmission.count({ where: { status: "SUBMITTED", assignment: { course: courseFilter } } }),
       db.certificate.count({ where: { course: courseFilter } }),
       db.assignment.count({ where: { course: courseFilter } }),
-      db.assignmentSubmission.count({
-        where: { assignment: { course: courseFilter } },
-      }),
+    ]);
+
+    const totalSubmittedAssignments = await db.assignmentSubmission.count({
+      where: { assignment: { course: courseFilter } },
+    });
+
+    const [recentSubmissionsRaw, recentCoursesRaw] = await Promise.all([
       db.assignmentSubmission.findMany({
         where: { assignment: { course: courseFilter } },
         orderBy: { submittedAt: "desc" },
         take: 6,
         include: {
           student: { select: { id: true, name: true, email: true } },
-          assignment: {
-            select: {
-              id: true,
-              title: true,
-              course: { select: { id: true, title: true } },
-            },
-          },
+          assignment: { select: { id: true, title: true, course: { select: { id: true, title: true } } } },
         },
       }),
       db.course.findMany({
         where: courseFilter,
         orderBy: { createdAt: "desc" },
         take: 5,
-        select: {
-          id: true,
-          title: true,
-          createdAt: true,
-          isPublished: true,
-        },
+        select: { id: true, title: true, createdAt: true, isPublished: true },
       }),
     ]);
 

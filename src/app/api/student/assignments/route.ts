@@ -10,16 +10,9 @@ export async function GET() {
   try {
     const user = await requireStudent();
 
-    // ─── BATCH: Fetch ALL data in parallel ───
-    const [
-      subscription,
-      assignments,
-      allCourses,
-      allVideoProgress,
-      allVideoQuestions,
-      allPassedAssessments,
-      allPublishedVideos,
-    ] = await Promise.all([
+    // ─── Fetch data in small batches (3 at a time) to avoid exhausting
+    // the remote PostgreSQL connection pool ───
+    const [subscription, assignments, allCourses] = await Promise.all([
       getStudentSubscription(user.id),
       db.assignment.findMany({
         where: { isPublished: true, course: { isPublished: true } },
@@ -28,40 +21,27 @@ export async function GET() {
           course: { select: { id: true, title: true } },
           submissions: {
             where: { studentId: user.id },
-            select: {
-              id: true, fileUrl: true, submittedAt: true,
-              status: true, reviewNotes: true, reviewedAt: true,
-            },
+            select: { id: true, fileUrl: true, submittedAt: true, status: true, reviewNotes: true, reviewedAt: true },
             take: 1,
           },
         },
       }),
-      // All courses with planAccess for access check
       db.course.findMany({
         where: { isPublished: true },
         select: { id: true, accessType: true, planAccess: { select: { planId: true } } },
       }),
-      // ALL video progress
-      db.videoProgress.findMany({
-        where: { studentId: user.id },
-        select: { videoId: true, isCompleted: true },
-      }),
-      // ALL video questions (distinct videoIds)
-      db.videoQuestion.findMany({
-        distinct: ["videoId"],
-        select: { videoId: true },
-      }),
-      // ALL passed assessments
-      db.videoAssessment.findMany({
-        where: { studentId: user.id, passed: true },
-        select: { videoId: true },
-      }),
-      // ALL published videos
-      db.videoLesson.findMany({
-        where: { isPublished: true },
-        select: { id: true, courseId: true },
-      }),
     ]);
+
+    const [allVideoProgress, allVideoQuestions, allPassedAssessments] = await Promise.all([
+      db.videoProgress.findMany({ where: { studentId: user.id }, select: { videoId: true, isCompleted: true } }),
+      db.videoQuestion.findMany({ distinct: ["videoId"], select: { videoId: true } }),
+      db.videoAssessment.findMany({ where: { studentId: user.id, passed: true }, select: { videoId: true } }),
+    ]);
+
+    const allPublishedVideos = await db.videoLesson.findMany({
+      where: { isPublished: true },
+      select: { id: true, courseId: true },
+    });
 
     // ─── Build lookup maps ───
     const isSubActive = subscription?.status === "ACTIVE";
