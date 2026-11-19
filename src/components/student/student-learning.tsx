@@ -1820,7 +1820,6 @@ function VideoPlayer({
                   onEnded={handleEnded}
                 />
               )}
-              {videoOverlays}
             </div>
           </div>
         </div>
@@ -1870,7 +1869,6 @@ function VideoPlayer({
                 <span className="hidden sm:inline">Expand</span>
               </button>
             )}
-            {!expanded && videoOverlays}
           </div>
         </div>
 
@@ -1920,6 +1918,12 @@ function VideoPlayer({
               Player API. No manual "Mark as complete" button needed. */}
         </CardContent>
       </Card>
+
+      {/* Video overlays (question popups + assessment results) rendered at
+          root level so the fixed-position modal is in the global stacking
+          context — above both the expanded fullscreen view and the compact
+          view. This ensures question popups appear in expanded mode. */}
+      {videoOverlays}
     </>
   );
 }
